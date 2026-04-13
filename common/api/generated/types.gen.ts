@@ -36,8 +36,8 @@ export type GithubComStacklokToolhiveCoreRegistryTypesRegistry = {
 }
 
 /**
- * Shared defines a token bucket shared across all users for this specific tool.
- * +kubebuilder:validation:Required
+ * PerUser token bucket configuration for this tool.
+ * +optional
  */
 export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket =
   {
@@ -58,6 +58,7 @@ export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket =
  */
 export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitConfig =
   {
+    perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
     shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
     /**
      * Tools defines per-tool rate limit overrides.
@@ -78,6 +79,7 @@ export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1ToolRateLimitConfi
      * +kubebuilder:validation:MinLength=1
      */
     name?: string
+    perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
     shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
   }
 
@@ -1814,6 +1816,7 @@ export type PkgApiV1CreateRequest = {
    * Port for the HTTP proxy to listen on
    */
   proxy_port?: number
+  runtime_config?: GithubComStacklokToolhivePkgContainerTemplatesRuntimeConfig
   /**
    * Secret parameters to inject
    */
@@ -1992,9 +1995,11 @@ export type PkgApiV1HeaderForwardConfig = {
  */
 export type PkgApiV1InstallSkillRequest = {
   /**
-   * Client is the target client (e.g., "claude-code")
+   * Clients lists target client identifiers (e.g., "claude-code"),
+   * or ["all"] to target every skill-supporting client.
+   * Omitting this field installs to all available clients.
    */
-  client?: string
+  clients?: Array<string>
   /**
    * Force allows overwriting unmanaged skill directories
    */
@@ -2333,6 +2338,7 @@ export type PkgApiV1UpdateRequest = {
    * Port for the HTTP proxy to listen on
    */
   proxy_port?: number
+  runtime_config?: GithubComStacklokToolhivePkgContainerTemplatesRuntimeConfig
   /**
    * Secret parameters to inject
    */

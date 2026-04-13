@@ -38,7 +38,7 @@
         "type": "object"
       },
       "github_com_stacklok_toolhive_cmd_thv-operator_api_v1alpha1.RateLimitBucket": {
-        "description": "Shared defines a token bucket shared across all users for this specific tool.\n+kubebuilder:validation:Required",
+        "description": "PerUser token bucket configuration for this tool.\n+optional",
         "properties": {
           "maxTokens": {
             "description": "MaxTokens is the maximum number of tokens (bucket capacity).\nThis is also the burst size: the maximum number of requests that can be served\ninstantaneously before the bucket is depleted.\n+kubebuilder:validation:Required\n+kubebuilder:validation:Minimum=1",
@@ -53,6 +53,9 @@
       "github_com_stacklok_toolhive_cmd_thv-operator_api_v1alpha1.RateLimitConfig": {
         "description": "RateLimitConfig contains the CRD rate limiting configuration.\nWhen set, rate limiting middleware is added to the proxy middleware chain.",
         "properties": {
+          "perUser": {
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_cmd_thv-operator_api_v1alpha1.RateLimitBucket"
+          },
           "shared": {
             "$ref": "#/components/schemas/github_com_stacklok_toolhive_cmd_thv-operator_api_v1alpha1.RateLimitBucket"
           },
@@ -72,6 +75,9 @@
           "name": {
             "description": "Name is the MCP tool name this limit applies to.\n+kubebuilder:validation:Required\n+kubebuilder:validation:MinLength=1",
             "type": "string"
+          },
+          "perUser": {
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_cmd_thv-operator_api_v1alpha1.RateLimitBucket"
           },
           "shared": {
             "$ref": "#/components/schemas/github_com_stacklok_toolhive_cmd_thv-operator_api_v1alpha1.RateLimitBucket"
@@ -2093,6 +2099,9 @@
             "description": "Port for the HTTP proxy to listen on",
             "type": "integer"
           },
+          "runtime_config": {
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_container_templates.RuntimeConfig"
+          },
           "secrets": {
             "description": "Secret parameters to inject",
             "items": {
@@ -2297,9 +2306,13 @@
       "pkg_api_v1.installSkillRequest": {
         "description": "Request to install a skill",
         "properties": {
-          "client": {
-            "description": "Client is the target client (e.g., \"claude-code\")",
-            "type": "string"
+          "clients": {
+            "description": "Clients lists target client identifiers (e.g., \"claude-code\"),\nor [\"all\"] to target every skill-supporting client.\nOmitting this field installs to all available clients.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
           },
           "force": {
             "description": "Force allows overwriting unmanaged skill directories",
@@ -2693,6 +2706,9 @@
           "proxy_port": {
             "description": "Port for the HTTP proxy to listen on",
             "type": "integer"
+          },
+          "runtime_config": {
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_container_templates.RuntimeConfig"
           },
           "secrets": {
             "description": "Secret parameters to inject",
