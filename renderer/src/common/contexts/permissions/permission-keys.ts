@@ -12,6 +12,7 @@
  */
 export const PERMISSION_KEYS = {
   AUTO_UPDATE: 'auto-update',
+  NON_REGISTRY_SERVERS: 'non-registry-servers',
   PLAYGROUND_MENU: 'playground-menu',
   SETTINGS_REGISTRY_TAB: 'settings-registry-tab',
 } as const
