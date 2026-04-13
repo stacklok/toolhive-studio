@@ -38,7 +38,7 @@ function renderGrid(permissions?: Record<string, boolean>) {
 }
 
 describe('GridCardsMcpServers', () => {
-  describe('when custom-mcp-servers permission is true (default)', () => {
+  describe('when non-registry-servers permission is true (default)', () => {
     it('shows all servers including custom ones', async () => {
       renderGrid()
 
@@ -49,9 +49,9 @@ describe('GridCardsMcpServers', () => {
     })
   })
 
-  describe('when custom-mcp-servers permission is false', () => {
-    it('hides custom servers and shows only registry servers', async () => {
-      renderGrid({ [PERMISSION_KEYS.CUSTOM_MCP_SERVERS]: false })
+  describe('when non-registry-servers permission is false', () => {
+    it('hides non-registry servers and shows only registry servers', async () => {
+      renderGrid({ [PERMISSION_KEYS.NON_REGISTRY_SERVERS]: false })
 
       await waitFor(() => {
         expect(screen.getByText('osv')).toBeVisible()
