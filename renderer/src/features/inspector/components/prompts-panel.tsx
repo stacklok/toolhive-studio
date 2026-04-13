@@ -53,8 +53,8 @@ export function PromptsPanel({ prompts }: PromptsPanelProps) {
                         className={cn(
                           'rounded px-1.5 py-0.5 font-mono text-[10px]',
                           a.required
-                            ? `border border-yellow-500/50 bg-yellow-500/10
-                              text-yellow-400`
+                            ? `border-warning/50 bg-warning/10 text-warning
+                              border`
                             : 'bg-muted text-muted-foreground'
                         )}
                       >

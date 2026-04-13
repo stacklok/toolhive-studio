@@ -31,7 +31,7 @@ function AnnotationBadge({
   const styles = {
     green: 'bg-success/10 text-success',
     red: 'bg-destructive/10 text-destructive',
-    blue: 'bg-blue-500/10 text-blue-400',
+    blue: 'bg-info/10 text-info',
     muted: 'bg-muted text-muted-foreground',
   }
   return (

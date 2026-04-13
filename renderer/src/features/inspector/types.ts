@@ -4,7 +4,7 @@ export type ActivePanel =
   | 'prompts'
   | 'headers'
   | 'history'
-export type Transport = 'streamable-http' | 'sse' | 'stdio'
+export type Transport = 'streamable-http' | 'sse'
 export type ResultTab = 'text' | 'json' | 'image' | 'raw'
 export type LogFilter =
   | 'all'

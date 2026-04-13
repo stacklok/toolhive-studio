@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef, useEffect } from 'react'
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useSearch } from '@tanstack/react-router'
 import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import type {
@@ -61,9 +62,33 @@ export function InspectorPage() {
     refetchInterval: 15000,
   })
 
-  const runningWorkloads = (workloadsData?.workloads ?? []).filter(
-    (w: CoreWorkload) => w.status === 'running'
+  const runningWorkloads = useMemo(
+    () =>
+      (workloadsData?.workloads ?? []).filter(
+        (w: CoreWorkload) => w.status === 'running'
+      ),
+    [workloadsData?.workloads]
   )
+
+  const { serverName: searchServerName } = useSearch({
+    from: '/inspector',
+  })
+
+  // Auto-select workload from search params (e.g. navigating from server card)
+  const autoSelectedRef = useRef(false)
+  useEffect(() => {
+    if (
+      searchServerName &&
+      !autoSelectedRef.current &&
+      runningWorkloads.length > 0
+    ) {
+      const match = runningWorkloads.find((w) => w.name === searchServerName)
+      if (match) {
+        autoSelectedRef.current = true
+        handleWorkloadSelect(match)
+      }
+    }
+  }, [searchServerName, runningWorkloads])
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent) => {

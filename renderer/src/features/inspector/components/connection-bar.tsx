@@ -7,7 +7,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/common/components/ui/select'
-import { Unplug, Zap, Loader2 } from 'lucide-react'
+import { Unplug, Zap, Loader2, Info } from 'lucide-react'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
 import type { Transport } from '../types'
 
 interface ConnectionBarProps {
@@ -47,7 +52,22 @@ export function ConnectionBar({
         <SelectContent>
           <SelectItem value="streamable-http">Streamable HTTP</SelectItem>
           <SelectItem value="sse">SSE</SelectItem>
-          <SelectItem value="stdio">stdio</SelectItem>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <SelectItem value="stdio" disabled>
+                  stdio
+                </SelectItem>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              <p className="flex items-center gap-1.5">
+                <Info className="size-3.5 shrink-0" />
+                stdio servers communicate over standard I/O, which doesn&apos;t
+                expose an HTTP endpoint for the inspector to connect to
+              </p>
+            </TooltipContent>
+          </Tooltip>
         </SelectContent>
       </Select>
       <Input

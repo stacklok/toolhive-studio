@@ -18,6 +18,7 @@ import { CustomizeToolsMenuItem } from './items/customize-tools-menu-item'
 import { RemoveServerMenuItem } from './items/remove-server-menu-item'
 import { UpdateVersionMenuItem } from './items/update-version-menu-item'
 import { AddServerToGroupMenuItem } from './items/add-server-to-group-menu-item'
+import { InspectorMenuItem } from './items/inspector-menu-item'
 
 interface ServerActionsDropdownProps {
   name: string
@@ -86,6 +87,7 @@ export function ServerActionsDropdown({
         {repositoryUrl && (
           <GithubRepositoryMenuItem repositoryUrl={repositoryUrl} />
         )}
+        <InspectorMenuItem serverName={name} status={status} />
         <LogsMenuItem serverName={name} remote={remote} group={group} />
         <CustomizeToolsMenuItem serverName={name} status={status} />
         <RemoveServerMenuItem serverName={name} group={group} />

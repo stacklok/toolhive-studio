@@ -61,6 +61,8 @@
 
   /* Status colors */
   --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-info: var(--info);
 
   /* Brand colors */
   --color-brand-green-light: var(--brand-green-light);
@@ -115,6 +117,8 @@
 
   /* Status colors */
   --success: oklch(0.5849 0.095 159.91);
+  --warning: oklch(0.68 0.155 85.81);
+  --info: oklch(0.5456 0.192 262.88);
 
   /* Brand colors */
   --brand-green-light: oklch(0.9522 0.0524 164.2);
@@ -168,6 +172,8 @@
 
   /* Status colors */
   --success: oklch(0.724 0.1091 160.66);
+  --warning: oklch(0.852 0.199 91.94);
+  --info: oklch(0.707 0.165 254.62);
 
   /* Brand colors */
   --brand-green-light: oklch(0.3262 0.0342 161.99);

@@ -122,7 +122,7 @@ export function ProtocolLog({
                     rounded px-2 py-1 font-mono text-xs leading-relaxed
                     transition-colors`,
                   e.isError && 'bg-destructive/10',
-                  e.isWarning && 'bg-yellow-500/10'
+                  e.isWarning && 'bg-warning/10'
                 )}
               >
                 <span
@@ -136,7 +136,7 @@ export function ProtocolLog({
                     'min-w-[14px] text-center font-bold',
                     e.dir === 'out' && 'text-nav-button-active-bg',
                     e.dir === 'in' && 'text-success',
-                    e.dir === 'notif' && 'text-yellow-400'
+                    e.dir === 'notif' && 'text-warning'
                   )}
                 >
                   {e.dir === 'out' ? '→' : e.dir === 'in' ? '←' : '●'}
@@ -147,7 +147,7 @@ export function ProtocolLog({
                     e.isError
                       ? 'text-destructive'
                       : e.isWarning
-                        ? 'text-yellow-400'
+                        ? 'text-warning'
                         : 'text-foreground'
                   )}
                 >
