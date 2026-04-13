@@ -139,10 +139,16 @@ function GroupRoute() {
             illustration={IllustrationNoConnection}
           >
             <div className="my-6">
-              {isCustomMcpServerEnabled && (
+              {isCustomMcpServerEnabled ? (
                 <DropdownMenuRunMcpServer
                   openRunCommandDialog={setServerDialogOpen}
                 />
+              ) : (
+                <Button variant="action" asChild>
+                  <LinkViewTransition to="/registry">
+                    Browse registry
+                  </LinkViewTransition>
+                </Button>
               )}
             </div>
           </EmptyState>
