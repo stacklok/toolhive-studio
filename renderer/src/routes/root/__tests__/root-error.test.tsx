@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { ALREADY_RUNNING } from '@common/types/toolhive-status'
 import { RootErrorComponent } from '../root-error'
 
 vi.mock('@tanstack/react-router', () => ({
@@ -80,5 +81,22 @@ describe('RootErrorComponent', () => {
     renderWithProviders(<RootErrorComponent error={error} />)
 
     expect(screen.getByText('Oops, something went wrong')).toBeInTheDocument()
+  })
+
+  it('renders AlreadyRunningError when processError is ALREADY_RUNNING', () => {
+    const error = new Error('Health check failed', {
+      cause: {
+        isToolhiveRunning: false,
+        containerEngineAvailable: true,
+        processError: ALREADY_RUNNING,
+      },
+    })
+
+    renderWithProviders(<RootErrorComponent error={error} />)
+
+    expect(screen.getByText('ToolHive Is Already Running')).toBeInTheDocument()
+    expect(
+      screen.queryByText('Oops, something went wrong')
+    ).not.toBeInTheDocument()
   })
 })

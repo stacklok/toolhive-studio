@@ -1,5 +1,14 @@
 import type { QueryClient } from '@tanstack/react-query'
-import type { ToolhiveStatus } from '@common/types/toolhive-status'
+import type {
+  ToolhiveProcessError,
+  ToolhiveStatus,
+} from '@common/types/toolhive-status'
+
+export interface HealthCheckErrorCause {
+  isToolhiveRunning: boolean
+  containerEngineAvailable: boolean
+  processError?: ToolhiveProcessError
+}
 import { getHealth } from '@common/api/generated/sdk.gen'
 import { client } from '@common/api/generated/client.gen'
 import * as Sentry from '@sentry/electron/renderer'
@@ -47,13 +56,13 @@ export async function checkHealth(queryClient: QueryClient): Promise<void> {
       clientConfig
     )
 
-    throw new Error('Health check failed', {
-      cause: {
-        isToolhiveRunning: freshStatus.isRunning,
-        containerEngineAvailable: containerEngineStatus.available,
-        processError: freshStatus.processError,
-      },
-    })
+    const cause: HealthCheckErrorCause = {
+      isToolhiveRunning: freshStatus.isRunning,
+      containerEngineAvailable: containerEngineStatus.available,
+      processError: freshStatus.processError,
+    }
+
+    throw new Error('Health check failed', { cause })
   }
 }
 
