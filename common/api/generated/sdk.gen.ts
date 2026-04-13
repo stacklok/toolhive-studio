@@ -302,7 +302,8 @@ export const deleteApiV1BetaClientsByNameGroupsByGroup = <
 /**
  * List all clients status
  *
- * List all clients compatible with ToolHive and their status
+ * List all clients compatible with ToolHive and their status.
+ * Each object includes supports_skills when ToolHive can install skills for that client.
  */
 export const getApiV1BetaDiscoveryClients = <
   ThrowOnError extends boolean = false,
