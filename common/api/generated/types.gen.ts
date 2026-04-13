@@ -36,8 +36,8 @@ export type GithubComStacklokToolhiveCoreRegistryTypesRegistry = {
 }
 
 /**
- * Shared defines a token bucket shared across all users for this specific tool.
- * +kubebuilder:validation:Required
+ * PerUser token bucket configuration for this tool.
+ * +optional
  */
 export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket =
   {
@@ -58,6 +58,7 @@ export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket =
  */
 export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitConfig =
   {
+    perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
     shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
     /**
      * Tools defines per-tool rate limit overrides.
@@ -78,6 +79,7 @@ export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1ToolRateLimitConfi
      * +kubebuilder:validation:MinLength=1
      */
     name?: string
+    perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
     shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
   }
 
