@@ -9,11 +9,53 @@ export const mockedGetApiV1BetaDiscoveryClients = AutoAPIMock<
   GetApiV1BetaDiscoveryClientsData
 >({
   clients: [
-    { client_type: 'roo-code', installed: false, registered: false },
-    { client_type: 'cline', installed: true, registered: false },
-    { client_type: 'vscode-insider', installed: true, registered: false },
-    { client_type: 'vscode', installed: true, registered: false },
-    { client_type: 'cursor', installed: true, registered: false },
-    { client_type: 'claude-code', installed: true, registered: false },
+    {
+      client_type: 'roo-code',
+      installed: false,
+      registered: false,
+      supports_skills: false,
+    },
+    {
+      client_type: 'cline',
+      installed: true,
+      registered: false,
+      supports_skills: false,
+    },
+    {
+      client_type: 'vscode-insider',
+      installed: true,
+      registered: false,
+      supports_skills: false,
+    },
+    {
+      client_type: 'vscode',
+      installed: true,
+      registered: false,
+      supports_skills: false,
+    },
+    {
+      client_type: 'cursor',
+      installed: true,
+      registered: false,
+      supports_skills: false,
+    },
+    {
+      client_type: 'claude-code',
+      installed: true,
+      registered: false,
+      supports_skills: true,
+    },
+    {
+      client_type: 'opencode',
+      installed: true,
+      registered: false,
+      supports_skills: true,
+    },
+    {
+      client_type: 'codex',
+      installed: true,
+      registered: false,
+      supports_skills: true,
+    },
   ],
 }).scenario('empty', (mock) => mock.override(() => ({ clients: [] })))
