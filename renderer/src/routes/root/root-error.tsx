@@ -1,5 +1,7 @@
+import { AlreadyRunningError } from '@/common/components/error/already-running-error'
 import { Error as ErrorComponent } from '@/common/components/error'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
+import { ALREADY_RUNNING } from '@common/types/toolhive-status'
 import log from 'electron-log/renderer'
 
 /**
@@ -13,6 +15,16 @@ export function RootErrorComponent({ error }: { error: unknown }) {
     cause?: { containerEngineAvailable?: boolean }
   }
   const cause = errorData instanceof Error ? errorData.cause : undefined
+
+  if (
+    cause &&
+    typeof cause === 'object' &&
+    'processError' in cause &&
+    cause.processError === ALREADY_RUNNING
+  ) {
+    log.info('[HealthCheckError] Another ToolHive server is already running')
+    return <AlreadyRunningError />
+  }
 
   if (
     cause &&

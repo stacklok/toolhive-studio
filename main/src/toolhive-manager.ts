@@ -9,6 +9,7 @@ import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
 import { readSetting } from './db/readers/settings-reader'
 import {
+  ALREADY_RUNNING,
   REGISTRY_AUTH_REQUIRED,
   type ToolhiveProcessError,
   type ToolhiveStatus,
@@ -204,6 +205,9 @@ export async function startToolhive(): Promise<void> {
         }
         if (output.includes('registry authentication required')) {
           processError = REGISTRY_AUTH_REQUIRED
+        }
+        if (output.includes('another ToolHive server is already running')) {
+          processError = ALREADY_RUNNING
         }
         log.info(`[ToolHive stderr] ${output}`)
         scope.addBreadcrumb({
