@@ -70,7 +70,7 @@ function GroupRoute() {
   const { groupName } = Route.useParams()
   const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
   const { canShow } = usePermissions()
-  const isCustomMcpServerEnabled = canShow(PERMISSION_KEYS.NON_REGISTRY_SERVERS)
+  const isCustomMcpServerEnabled = canShow(PERMISSION_KEYS.CUSTOM_MCP_SERVERS)
 
   const { data, refetch } = useSuspenseQuery({
     ...getApiV1BetaWorkloadsOptions({

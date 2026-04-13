@@ -43,7 +43,7 @@ function createDropdownTestRouter() {
 }
 
 describe('DropdownMenuRunMcpServer', () => {
-  describe('when non-registry-servers permission is true (default)', () => {
+  describe('when custom-mcp-servers permission is true (default)', () => {
     it('shows all three menu options', async () => {
       const router = createDropdownTestRouter()
       renderRoute(router)
@@ -73,12 +73,12 @@ describe('DropdownMenuRunMcpServer', () => {
     })
   })
 
-  describe('when non-registry-servers permission is false', () => {
+  describe('when custom-mcp-servers permission is false', () => {
     it('hides local and remote options but keeps registry', async () => {
       const router = createDropdownTestRouter()
       renderRoute(router, {
         permissions: {
-          [PERMISSION_KEYS.NON_REGISTRY_SERVERS]: false,
+          [PERMISSION_KEYS.CUSTOM_MCP_SERVERS]: false,
         } as never,
       })
 
