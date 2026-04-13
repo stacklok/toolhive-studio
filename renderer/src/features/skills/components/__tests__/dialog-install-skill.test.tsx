@@ -146,15 +146,49 @@ describe('DialogInstallSkill', () => {
   })
 
   it('populates client dropdown from discovery API when clients are available', async () => {
-    // Reset to default fixture which has installed clients
+    // Reset to default fixture which has installed clients with supports_skills: true
     mockedGetApiV1BetaDiscoveryClients.reset()
 
     renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
 
-    // When installed clients are present, the client field renders as a Select (combobox)
+    // When skill-supporting clients are present, the client field renders as a Select (combobox)
     // so there are 2 comboboxes: scope + client
     await waitFor(() => {
       expect(screen.getAllByRole('combobox')).toHaveLength(2)
+    })
+  })
+
+  it('shows only clients that support skills in the dropdown', async () => {
+    const user = userEvent.setup()
+    mockedGetApiV1BetaDiscoveryClients.reset()
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('combobox')).toHaveLength(2)
+    })
+
+    await user.click(screen.getByRole('combobox', { name: /client/i }))
+
+    await waitFor(() => {
+      // Clients with supports_skills: true
+      expect(
+        screen.getByRole('option', { name: 'claude-code' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('option', { name: 'opencode' })
+      ).toBeInTheDocument()
+      expect(screen.getByRole('option', { name: 'codex' })).toBeInTheDocument()
+      // Installed clients without supports_skills should NOT appear
+      expect(
+        screen.queryByRole('option', { name: 'cline' })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('option', { name: 'cursor' })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('option', { name: 'vscode' })
+      ).not.toBeInTheDocument()
     })
   })
 
