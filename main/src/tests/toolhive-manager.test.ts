@@ -8,6 +8,7 @@ import {
   startToolhive,
   getToolhivePort,
   getToolhiveMcpPort,
+  getToolhiveStatus,
   isToolhiveRunning,
   stopToolhive,
   restartToolhive,
@@ -98,6 +99,7 @@ const mockGetQuittingState = vi.mocked(getQuittingState)
 class MockProcess extends EventEmitter {
   pid = 12345
   killed = false
+  stderr = new EventEmitter()
   kill() {
     // Don't automatically set killed - let tests control this
     // This allows testing delayed SIGKILL scenarios
@@ -462,6 +464,48 @@ describe('toolhive-manager', () => {
 
       const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
       expect(spawnArgs.some((a) => a.startsWith('--sentry-'))).toBe(false)
+    })
+
+    it('sets processError to ALREADY_RUNNING when stderr reports another server running', async () => {
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      expect(getToolhiveStatus().processError).toBeUndefined()
+
+      mockProcess.stderr.emit(
+        'data',
+        Buffer.from(
+          'Error: another ToolHive server is already running at http://127.0.0.1:50061 (PID 52799)'
+        )
+      )
+
+      expect(getToolhiveStatus().processError).toBe('already-running')
+    })
+
+    it('resets processError on restart', async () => {
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      mockProcess.stderr.emit(
+        'data',
+        Buffer.from('Error: another ToolHive server is already running')
+      )
+
+      expect(getToolhiveStatus().processError).toBe('already-running')
+
+      const newMockProcess = new MockProcess()
+      mockSpawn.mockReturnValue(
+        newMockProcess as unknown as ReturnType<typeof spawn>
+      )
+
+      const restartPromise = restartToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await restartPromise
+      await vi.advanceTimersByTimeAsync(5000)
+
+      expect(getToolhiveStatus().processError).toBeUndefined()
     })
   })
 

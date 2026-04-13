@@ -20,6 +20,10 @@ vi.mock('@common/api/generated/client.gen', () => {
 const { getHealth } = await import('@common/api/generated/sdk.gen')
 const { client } = await import('@common/api/generated/client.gen')
 
+function mockToolhiveStatus(status: ToolhiveStatus) {
+  window.electronAPI.getToolhiveStatus = vi.fn().mockResolvedValue(status)
+}
+
 describe('checkHealth', () => {
   let queryClient: QueryClient
 
@@ -30,6 +34,7 @@ describe('checkHealth', () => {
     queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     })
+    mockToolhiveStatus(runningStatus)
     window.electronAPI.checkContainerEngine = vi.fn().mockResolvedValue({
       available: true,
       docker: true,
@@ -41,16 +46,14 @@ describe('checkHealth', () => {
   it('resolves when health check succeeds', async () => {
     vi.mocked(getHealth).mockResolvedValue(null as never)
 
-    await expect(
-      checkHealth(queryClient, runningStatus)
-    ).resolves.toBeUndefined()
+    await expect(checkHealth(queryClient)).resolves.toBeUndefined()
   })
 
   it('throws with structured cause when health check fails', async () => {
     vi.mocked(getHealth).mockRejectedValue(new Error('fetch failed'))
 
     try {
-      await checkHealth(queryClient, runningStatus)
+      await checkHealth(queryClient)
       expect.fail('should have thrown')
     } catch (error) {
       expect(error).toBeInstanceOf(Error)
@@ -65,8 +68,9 @@ describe('checkHealth', () => {
 
   it('reports to Sentry when toolhive is not running', async () => {
     vi.mocked(getHealth).mockRejectedValue(new Error('fetch failed'))
+    mockToolhiveStatus(stoppedStatus)
 
-    await checkHealth(queryClient, stoppedStatus).catch(() => {})
+    await checkHealth(queryClient).catch(() => {})
 
     expect(Sentry.captureException).toHaveBeenCalledWith(
       expect.any(Error),
@@ -86,7 +90,7 @@ describe('checkHealth', () => {
       rancherDesktop: false,
     })
 
-    await checkHealth(queryClient, runningStatus).catch(() => {})
+    await checkHealth(queryClient).catch(() => {})
 
     expect(Sentry.captureException).toHaveBeenCalled()
   })
@@ -95,7 +99,7 @@ describe('checkHealth', () => {
     vi.mocked(getHealth).mockRejectedValue(new Error('fetch failed'))
     vi.mocked(client.getConfig).mockReturnValue({ baseUrl: '' })
 
-    await checkHealth(queryClient, runningStatus).catch(() => {})
+    await checkHealth(queryClient).catch(() => {})
 
     expect(Sentry.captureException).toHaveBeenCalled()
   })
@@ -106,7 +110,7 @@ describe('checkHealth', () => {
       baseUrl: 'https://foo.bar.com',
     })
 
-    await checkHealth(queryClient, runningStatus).catch(() => {})
+    await checkHealth(queryClient).catch(() => {})
 
     expect(Sentry.captureException).not.toHaveBeenCalled()
   })

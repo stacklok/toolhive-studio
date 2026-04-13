@@ -1,5 +1,8 @@
+import { AlreadyRunningError } from '@/common/components/error/already-running-error'
 import { Error as ErrorComponent } from '@/common/components/error'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
+import { ALREADY_RUNNING } from '@common/types/toolhive-status'
+import type { HealthCheckErrorCause } from './guards/check-health'
 import log from 'electron-log/renderer'
 
 /**
@@ -9,19 +12,15 @@ import log from 'electron-log/renderer'
  * Falls back to the generic error page for all other errors.
  */
 export function RootErrorComponent({ error }: { error: unknown }) {
-  const errorData = error as Error & {
-    cause?: { containerEngineAvailable?: boolean }
-  }
+  const errorData = error as Error & { cause?: HealthCheckErrorCause }
   const cause = errorData instanceof Error ? errorData.cause : undefined
 
-  if (
-    cause &&
-    typeof cause === 'object' &&
-    'isToolhiveRunning' in cause &&
-    'containerEngineAvailable' in cause &&
-    cause.isToolhiveRunning &&
-    cause.containerEngineAvailable
-  ) {
+  if (cause?.processError === ALREADY_RUNNING) {
+    log.info('[HealthCheckError] Another ToolHive server is already running')
+    return <AlreadyRunningError />
+  }
+
+  if (cause?.isToolhiveRunning && cause.containerEngineAvailable) {
     log.info(`[HealthCheckError] Server not ready`)
     return <StartingToolHive />
   }
