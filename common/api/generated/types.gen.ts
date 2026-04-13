@@ -36,6 +36,52 @@ export type GithubComStacklokToolhiveCoreRegistryTypesRegistry = {
 }
 
 /**
+ * Shared defines a token bucket shared across all users for this specific tool.
+ * +kubebuilder:validation:Required
+ */
+export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket =
+  {
+    /**
+     * MaxTokens is the maximum number of tokens (bucket capacity).
+     * This is also the burst size: the maximum number of requests that can be served
+     * instantaneously before the bucket is depleted.
+     * +kubebuilder:validation:Required
+     * +kubebuilder:validation:Minimum=1
+     */
+    maxTokens?: number
+    refillPeriod?: V1Duration
+  }
+
+/**
+ * RateLimitConfig contains the CRD rate limiting configuration.
+ * When set, rate limiting middleware is added to the proxy middleware chain.
+ */
+export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitConfig =
+  {
+    shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
+    /**
+     * Tools defines per-tool rate limit overrides.
+     * Each entry applies additional rate limits to calls targeting a specific tool name.
+     * A request must pass both the server-level limit and the per-tool limit.
+     * +listType=map
+     * +listMapKey=name
+     * +optional
+     */
+    tools?: Array<GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1ToolRateLimitConfig>
+  }
+
+export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1ToolRateLimitConfig =
+  {
+    /**
+     * Name is the MCP tool name this limit applies to.
+     * +kubebuilder:validation:Required
+     * +kubebuilder:validation:MinLength=1
+     */
+    name?: string
+    shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
+  }
+
+/**
  * DEPRECATED: Middleware configuration.
  * AuditConfig contains the audit logging configuration
  */
@@ -743,6 +789,10 @@ export type GithubComStacklokToolhivePkgClientClientAppStatus = {
    * Registered indicates whether the client is registered in the ToolHive configuration
    */
   registered?: boolean
+  /**
+   * SupportsSkills indicates whether ToolHive can install skills for this client
+   */
+  supports_skills?: boolean
 }
 
 export type GithubComStacklokToolhivePkgClientRegisteredClient = {
@@ -1010,6 +1060,11 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    */
   middleware_configs?: Array<GithubComStacklokToolhivePkgTransportTypesMiddlewareConfig>
   /**
+   * MutatingWebhooks contains the configuration for mutating webhook middleware.
+   * Mutating webhooks run before validating webhooks, per RFC THV-0017 ordering.
+   */
+  mutating_webhooks?: Array<GithubComStacklokToolhivePkgWebhookConfig>
+  /**
    * Name is the name of the MCP server
    */
   name?: string
@@ -1027,11 +1082,21 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Publish lists ports to publish to the host in format "hostPort:containerPort"
    */
   publish?: Array<string>
+  rate_limit_config?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitConfig
+  /**
+   * RateLimitNamespace is the Kubernetes namespace for Redis key derivation.
+   */
+  rate_limit_namespace?: string
   /**
    * RegistryAPIURL is the registry API URL that served this server's metadata.
    * Empty when the server was not discovered via registry lookup.
    */
   registry_api_url?: string
+  /**
+   * RegistryServerName is the registry entry name used to look up this server's metadata.
+   * Empty when the server was not discovered via registry lookup.
+   */
+  registry_server_name?: string
   /**
    * RegistryURL is the registry URL that served this server's metadata.
    * Empty when the server was not discovered via registry lookup.
@@ -1299,6 +1364,13 @@ export type GithubComStacklokToolhivePkgSkillsValidationResult = {
  * TelemetryConfig contains the OpenTelemetry configuration
  */
 export type GithubComStacklokToolhivePkgTelemetryConfig = {
+  /**
+   * CACertPath is the file path to a CA certificate bundle for the OTLP endpoint.
+   * When set, the OTLP exporters use this CA to verify the collector's TLS certificate
+   * instead of relying solely on the system CA pool.
+   * +optional
+   */
+  caCertPath?: string
   /**
    * CustomAttributes contains custom resource attributes to be added to all telemetry signals.
    * These are parsed from CLI flags (--otel-custom-attributes) or environment variables
@@ -2717,6 +2789,16 @@ export type RegistryVerifiedAttestation = {
   predicate_type?: string
 }
 
+/**
+ * RefillPeriod is the duration to fully refill the bucket from zero to maxTokens.
+ * The effective refill rate is maxTokens / refillPeriod tokens per second.
+ * Format: Go duration string (e.g., "1m0s", "30s", "1h0m0s").
+ * +kubebuilder:validation:Required
+ */
+export type V1Duration = {
+  [key: string]: unknown
+}
+
 export type GetApiOpenapiJsonData = {
   body?: never
   path?: never
@@ -3206,6 +3288,10 @@ export type DeleteApiV1BetaRegistryByNameData = {
 
 export type DeleteApiV1BetaRegistryByNameErrors = {
   /**
+   * Forbidden - blocked by policy
+   */
+  403: string
+  /**
    * Not Found
    */
   404: string
@@ -3280,6 +3366,10 @@ export type PutApiV1BetaRegistryByNameErrors = {
    * Bad Request
    */
   400: string
+  /**
+   * Forbidden - blocked by policy
+   */
+  403: string
   /**
    * Not Found
    */

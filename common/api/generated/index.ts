@@ -195,6 +195,9 @@ export type {
   GetHealthData,
   GetHealthResponse,
   GetHealthResponses,
+  GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket,
+  GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitConfig,
+  GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1ToolRateLimitConfig,
   GithubComStacklokToolhiveCoreRegistryTypesRegistry,
   GithubComStacklokToolhivePkgAuditConfig,
   GithubComStacklokToolhivePkgAuthAwsstsConfig,
@@ -416,4 +419,5 @@ export type {
   RegistryProvenance,
   RegistryRemoteServerMetadata,
   RegistryVerifiedAttestation,
+  V1Duration,
 } from './types.gen'
