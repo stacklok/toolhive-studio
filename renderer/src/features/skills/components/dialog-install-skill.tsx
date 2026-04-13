@@ -70,7 +70,9 @@ export function DialogInstallSkill({
     enabled: open,
   })
   const installedClients = (
-    clientsData?.clients?.filter((c) => c.installed && c.client_type) ?? []
+    clientsData?.clients?.filter(
+      (c) => c.installed && c.client_type && c.supports_skills
+    ) ?? []
   ).sort((a, b) => a.client_type!.localeCompare(b.client_type!))
 
   const form = useForm<FormSchema>({
