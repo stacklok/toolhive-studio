@@ -3,6 +3,18 @@ import { getHeaders } from '../headers'
 import { getInstanceId, isOfficialReleaseBuild } from '../util'
 import { getWorkloadAvailableTools } from '../utils/mcp-tools'
 
+interface Workload {
+  name: string
+  [key: string]: unknown
+}
+
+function isWorkload(value: unknown): value is Workload {
+  if (typeof value !== 'object' || value === null) {
+    return false
+  }
+  return true
+}
+
 export function register() {
   ipcMain.handle('telemetry-headers', () => {
     return getHeaders()
@@ -17,7 +29,10 @@ export function register() {
     return instanceId
   })
 
-  ipcMain.handle('utils:get-workload-available-tools', async (_, workload) =>
-    getWorkloadAvailableTools(workload)
-  )
+  ipcMain.handle('utils:get-workload-available-tools', async (_, workload) => {
+    if (!isWorkload(workload)) {
+      throw new Error('Invalid workload parameter: expected an object with a name property')
+    }
+    return getWorkloadAvailableTools(workload)
+  })
 }
