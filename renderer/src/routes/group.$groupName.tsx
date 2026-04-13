@@ -22,6 +22,7 @@ import { Button } from '@/common/components/ui/button'
 import { Sparkles } from 'lucide-react'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { useAutoResumePolling } from '@/common/hooks/use-auto-resume-polling'
+import { PERMISSION_KEYS, usePermissions } from '@/common/contexts/permissions'
 
 export const Route = createFileRoute('/group/$groupName')({
   loader: ({ context: { queryClient }, params: { groupName } }) =>
@@ -68,6 +69,8 @@ function getPageTitle(groupName: string, isOptimizedGroupName: boolean) {
 function GroupRoute() {
   const { groupName } = Route.useParams()
   const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
+  const { canShow } = usePermissions()
+  const isCustomMcpServerEnabled = canShow(PERMISSION_KEYS.CUSTOM_MCP_SERVERS)
 
   const { data, refetch } = useSuspenseQuery({
     ...getApiV1BetaWorkloadsOptions({
@@ -101,9 +104,11 @@ function GroupRoute() {
               {workloads.length > 0 && (
                 <>
                   <RefreshButton refresh={refetch} />
-                  <DropdownMenuRunMcpServer
-                    openRunCommandDialog={setServerDialogOpen}
-                  />
+                  {isCustomMcpServerEnabled && (
+                    <DropdownMenuRunMcpServer
+                      openRunCommandDialog={setServerDialogOpen}
+                    />
+                  )}
                 </>
               )}
               <ManageClientsButton
@@ -126,13 +131,25 @@ function GroupRoute() {
         {!filteredWorkloads.length ? (
           <EmptyState
             title="Add your first MCP server"
-            body="Add a server manually or browse the MCP Server registry"
+            body={
+              isCustomMcpServerEnabled
+                ? 'Add a server manually or browse the MCP Server registry'
+                : 'Browse the MCP server registry to add a server'
+            }
             illustration={IllustrationNoConnection}
           >
             <div className="my-6">
-              <DropdownMenuRunMcpServer
-                openRunCommandDialog={setServerDialogOpen}
-              />
+              {isCustomMcpServerEnabled ? (
+                <DropdownMenuRunMcpServer
+                  openRunCommandDialog={setServerDialogOpen}
+                />
+              ) : (
+                <Button variant="action" asChild>
+                  <LinkViewTransition to="/registry">
+                    Browse registry
+                  </LinkViewTransition>
+                </Button>
+              )}
             </div>
           </EmptyState>
         ) : (

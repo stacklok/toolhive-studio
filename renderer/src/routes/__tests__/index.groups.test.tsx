@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { GroupsManager } from '@/features/mcp-servers/components/groups-manager'
 import { renderRoute } from '@/common/test/render-route'
@@ -13,6 +13,13 @@ import {
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
 import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { setFeatureFlags } from '@mocks/electronAPI'
+import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
+import { Route as GroupGroupNameRouteImport } from '@/routes/group.$groupName'
+import { createFileRouteTestRouter } from '@/common/test/create-file-route-test-router'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { RouterProvider } from '@tanstack/react-router'
+import { PromptProvider } from '@/common/contexts/prompt/provider'
+import { PermissionsProvider } from '@/common/contexts/permissions/permissions-provider'
 
 function createGroupsTestRouter() {
   const rootRoute = createRootRoute({
@@ -119,5 +126,51 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     })
 
     expect(screen.queryByText(MCP_OPTIMIZER_GROUP_NAME)).not.toBeInTheDocument()
+  })
+})
+
+describe('Group route — custom MCP servers permission', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+
+    window.electronAPI.shutdownStore = {
+      getLastShutdownServers: vi.fn().mockResolvedValue([]),
+      clearShutdownHistory: vi.fn().mockResolvedValue(undefined),
+    } as typeof window.electronAPI.shutdownStore
+    window.electronAPI.onServerShutdown = vi.fn().mockReturnValue(() => {})
+    setFeatureFlags({})
+  })
+
+  it('hides the "Add an MCP server" dropdown when CUSTOM_MCP_SERVERS permission is false', async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+
+    const groupRouter = createFileRouteTestRouter(
+      GroupGroupNameRouteImport,
+      '/group/$groupName',
+      '/group/default',
+      queryClient
+    )
+
+    render(
+      <PermissionsProvider
+        value={{ [PERMISSION_KEYS.CUSTOM_MCP_SERVERS]: false }}
+      >
+        <PromptProvider>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={groupRouter} />
+          </QueryClientProvider>
+        </PromptProvider>
+      </PermissionsProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('default')).toBeVisible()
+    })
+
+    expect(
+      screen.queryByRole('button', { name: /add an mcp server/i })
+    ).not.toBeInTheDocument()
   })
 })
