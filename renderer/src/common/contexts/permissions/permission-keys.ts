@@ -12,7 +12,7 @@
  */
 export const PERMISSION_KEYS = {
   AUTO_UPDATE: 'auto-update',
-  CUSTOM_MCP_SERVERS: 'custom-mcp-servers',
+  CUSTOM_MCP_SERVERS: 'non_registry_servers',
   PLAYGROUND_MENU: 'playground-menu',
   SETTINGS_REGISTRY_TAB: 'settings-registry-tab',
 } as const
