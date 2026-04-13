@@ -60,9 +60,8 @@ describe('handleRegistryAuthRedirect', () => {
         .fn()
         .mockResolvedValue(statusWithAuthError)
 
-      const result = await handleRegistryAuthRedirect(queryClient, '/settings')
+      await handleRegistryAuthRedirect(queryClient, '/settings')
 
-      expect(result).toEqual(statusWithAuthError)
       expect(
         queryClient.getQueryData(REGISTRY_PENDING_TOAST_KEY)
       ).toBeUndefined()
@@ -75,9 +74,8 @@ describe('handleRegistryAuthRedirect', () => {
 
       queryClient.setQueryData(['registry-auth-redirected'], true)
 
-      const result = await handleRegistryAuthRedirect(queryClient, '/')
+      await handleRegistryAuthRedirect(queryClient, '/')
 
-      expect(result).toEqual(statusWithAuthError)
       expect(
         queryClient.getQueryData(REGISTRY_PENDING_TOAST_KEY)
       ).toBeUndefined()
@@ -117,9 +115,8 @@ describe('handleRegistryAuthRedirect', () => {
     it('does not redirect when already on /settings', async () => {
       mockGetRegistry.mockRejectedValue({ code: 'registry_auth_required' })
 
-      const result = await handleRegistryAuthRedirect(queryClient, '/settings')
+      await handleRegistryAuthRedirect(queryClient, '/settings')
 
-      expect(result).toEqual(healthyStatus)
       expect(
         queryClient.getQueryData(REGISTRY_PENDING_TOAST_KEY)
       ).toBeUndefined()
@@ -129,9 +126,8 @@ describe('handleRegistryAuthRedirect', () => {
       mockGetRegistry.mockRejectedValue({ code: 'registry_auth_required' })
       queryClient.setQueryData(['registry-auth-redirected'], true)
 
-      const result = await handleRegistryAuthRedirect(queryClient, '/')
+      await handleRegistryAuthRedirect(queryClient, '/')
 
-      expect(result).toEqual(healthyStatus)
       expect(
         queryClient.getQueryData(REGISTRY_PENDING_TOAST_KEY)
       ).toBeUndefined()
@@ -152,23 +148,21 @@ describe('handleRegistryAuthRedirect', () => {
     it('does not redirect for unknown registry errors', async () => {
       mockGetRegistry.mockRejectedValue({ code: 'some_other_error' })
 
-      const result = await handleRegistryAuthRedirect(queryClient, '/')
+      await handleRegistryAuthRedirect(queryClient, '/')
 
-      expect(result).toEqual(healthyStatus)
       expect(
         queryClient.getQueryData(REGISTRY_PENDING_TOAST_KEY)
       ).toBeUndefined()
     })
   })
 
-  it('returns status without redirect when no auth error', async () => {
+  it('does not redirect when no auth error', async () => {
     window.electronAPI.getToolhiveStatus = vi
       .fn()
       .mockResolvedValue(healthyStatus)
 
-    const result = await handleRegistryAuthRedirect(queryClient, '/')
+    await handleRegistryAuthRedirect(queryClient, '/')
 
-    expect(result).toEqual(healthyStatus)
     expect(queryClient.getQueryData(REGISTRY_PENDING_TOAST_KEY)).toBeUndefined()
   })
 })

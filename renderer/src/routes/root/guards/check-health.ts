@@ -15,10 +15,7 @@ import log from 'electron-log/renderer'
  * errorComponent can render the appropriate fallback (StartingToolHive or
  * generic error).
  */
-export async function checkHealth(
-  queryClient: QueryClient,
-  toolhiveStatus: ToolhiveStatus
-): Promise<void> {
+export async function checkHealth(queryClient: QueryClient): Promise<void> {
   try {
     await queryClient.ensureQueryData({
       queryKey: ['health'],
@@ -29,6 +26,9 @@ export async function checkHealth(
       gcTime: 0,
     })
   } catch (error) {
+    // Re-fetch status to capture errors that occurred after the initial check
+    // (e.g. "already running" detected via stderr after process was spawned)
+    const freshStatus = await window.electronAPI.getToolhiveStatus()
     const containerEngineStatus =
       await window.electronAPI.checkContainerEngine()
     const clientConfig = client.getConfig()
@@ -37,21 +37,21 @@ export async function checkHealth(
       `[beforeLoad] Client baseUrl: ${clientConfig.baseUrl || 'NOT SET'}`
     )
     log.error(
-      `[beforeLoad] ToolHive status: running=${toolhiveStatus.isRunning}, processError=${toolhiveStatus.processError ?? 'none'}`
+      `[beforeLoad] ToolHive status: running=${freshStatus.isRunning}, processError=${freshStatus.processError ?? 'none'}`
     )
 
     reportToSentryIfInfraFailure(
       error,
-      toolhiveStatus,
+      freshStatus,
       containerEngineStatus,
       clientConfig
     )
 
     throw new Error('Health check failed', {
       cause: {
-        isToolhiveRunning: toolhiveStatus.isRunning,
+        isToolhiveRunning: freshStatus.isRunning,
         containerEngineAvailable: containerEngineStatus.available,
-        processError: toolhiveStatus.processError,
+        processError: freshStatus.processError,
       },
     })
   }

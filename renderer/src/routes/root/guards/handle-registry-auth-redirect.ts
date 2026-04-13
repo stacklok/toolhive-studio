@@ -1,8 +1,5 @@
 import type { QueryClient } from '@tanstack/react-query'
-import {
-  REGISTRY_AUTH_REQUIRED,
-  type ToolhiveStatus,
-} from '@common/types/toolhive-status'
+import { REGISTRY_AUTH_REQUIRED } from '@common/types/toolhive-status'
 import { redirect } from '@tanstack/react-router'
 import log from 'electron-log/renderer'
 import { getApiV1BetaRegistry } from '@common/api/generated/sdk.gen'
@@ -42,7 +39,7 @@ function performRedirect(queryClient: QueryClient, message: string): never {
 export async function handleRegistryAuthRedirect(
   queryClient: QueryClient,
   pathname: string
-): Promise<ToolhiveStatus> {
+): Promise<void> {
   const toolhiveStatus = await window.electronAPI.getToolhiveStatus()
 
   if (
@@ -60,6 +57,4 @@ export async function handleRegistryAuthRedirect(
       performRedirect(queryClient, toastMessage)
     }
   }
-
-  return toolhiveStatus
 }

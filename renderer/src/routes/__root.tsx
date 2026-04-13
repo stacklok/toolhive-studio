@@ -77,11 +77,8 @@ export const Route = createRootRouteWithContext<{
     if (await checkUpdateInProgress()) return
     await validateCliAlignment(location.pathname)
     await ensureToolhiveRunning(queryClient)
-    const toolhiveStatus = await handleRegistryAuthRedirect(
-      queryClient,
-      location.pathname
-    )
-    await checkHealth(queryClient, toolhiveStatus)
+    await handleRegistryAuthRedirect(queryClient, location.pathname)
+    await checkHealth(queryClient)
   },
   loader: async ({ context: { queryClient } }) => {
     const isRunning = await window.electronAPI.isToolhiveRunning()
