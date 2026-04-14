@@ -91,7 +91,7 @@ describe('useMutationInstallSkill', () => {
     )
   })
 
-  it('shows error toast on failure', async () => {
+  it('rejects with an error on failure', async () => {
     mockedPostApiV1BetaSkills.activateScenario('server-error')
 
     const { Wrapper } = createQueryClientWrapper()
@@ -107,8 +107,6 @@ describe('useMutationInstallSkill', () => {
     await waitFor(() => {
       expect(result.current.isError).toBe(true)
     })
-
-    expect(toast.error).toHaveBeenCalledWith('Failed to install skill')
   })
 
   it('invalidates skills list query on success', async () => {

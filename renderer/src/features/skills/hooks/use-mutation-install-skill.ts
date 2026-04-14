@@ -18,8 +18,5 @@ export function useMutationInstallSkill() {
         queryKey: getApiV1BetaSkillsQueryKey(),
       })
     },
-    onError: () => {
-      toast.error('Failed to install skill')
-    },
   })
 }
