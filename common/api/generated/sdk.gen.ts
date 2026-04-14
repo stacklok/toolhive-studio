@@ -87,6 +87,12 @@ import type {
   GetApiV1BetaWorkloadsResponses,
   GetHealthData,
   GetHealthResponses,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameErrors,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponses,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsData,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsErrors,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsResponses,
   PostApiV1BetaClientsData,
   PostApiV1BetaClientsErrors,
   PostApiV1BetaClientsRegisterData,
@@ -1096,3 +1102,43 @@ export const getHealth = <ThrowOnError extends boolean = false>(
     url: '/health',
     ...options,
   })
+
+/**
+ * List available registry skills
+ *
+ * Get a paginated list of skills from the registry. Supports optional full-text search and pagination.
+ */
+export const getRegistryByRegistryNameV01xDevToolhiveSkills = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsData,
+    ThrowOnError
+  >
+) =>
+  (options.client ?? client).get<
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsResponses,
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsErrors,
+    ThrowOnError
+  >({ url: '/registry/{registryName}/v0.1/x/dev.toolhive/skills', ...options })
+
+/**
+ * Get a registry skill
+ *
+ * Retrieve a single skill by its namespace and name from the registry.
+ */
+export const getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillName =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData,
+      ThrowOnError
+    >
+  ) =>
+    (options.client ?? client).get<
+      GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponses,
+      GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameErrors,
+      ThrowOnError
+    >({
+      url: '/registry/{registryName}/v0.1/x/dev.toolhive/skills/{namespace}/{skillName}',
+      ...options,
+    })
