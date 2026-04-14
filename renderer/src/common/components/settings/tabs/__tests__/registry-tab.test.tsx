@@ -14,8 +14,14 @@ import {
   REGISTRY_WRONG_AUTH_TOAST,
   REGISTRY_AUTH_REQUIRED_UI_MESSAGE,
 } from '../../registry/registry-errors-message'
+import { PermissionsProvider } from '@/common/contexts/permissions/permissions-provider'
+import type { Permissions } from '@/common/contexts/permissions'
+import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 
-const renderWithProviders = (component: React.ReactElement) => {
+const renderWithProviders = (
+  component: React.ReactElement,
+  options?: { permissions?: Partial<Permissions> }
+) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false },
@@ -25,11 +31,13 @@ const renderWithProviders = (component: React.ReactElement) => {
 
   return {
     ...render(
-      <PromptProvider>
-        <QueryClientProvider client={queryClient}>
-          {component}
-        </QueryClientProvider>
-      </PromptProvider>
+      <PermissionsProvider value={options?.permissions}>
+        <PromptProvider>
+          <QueryClientProvider client={queryClient}>
+            {component}
+          </QueryClientProvider>
+        </PromptProvider>
+      </PermissionsProvider>
     ),
     queryClient,
   }
@@ -1067,5 +1075,22 @@ describe('RegistryTab', () => {
     expect(screen.getByRole('combobox')).toHaveTextContent(
       'Registry Server API'
     )
+  })
+
+  it('disables form fields and hides buttons when permission is disabled', async () => {
+    renderWithProviders(<RegistryTab />, {
+      permissions: { [PERMISSION_KEYS.SETTINGS_REGISTRY_TAB]: false },
+    })
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toBeDisabled()
+    })
+
+    expect(
+      screen.queryByRole('button', { name: 'Save' })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Reset Registry' })
+    ).not.toBeInTheDocument()
   })
 })

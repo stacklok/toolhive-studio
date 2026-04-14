@@ -1,8 +1,12 @@
 import { RegistryForm } from './registry-form'
 import { SettingsSectionTitle } from '../tabs/components/settings-section-title'
 import { useRegistryForm } from './use-registry-form'
+import { usePermissions } from '@/common/contexts/permissions'
+import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 
 export function RegistryTab() {
+  const { canShow } = usePermissions()
+  const readOnly = !canShow(PERMISSION_KEYS.SETTINGS_REGISTRY_TAB)
   const {
     form,
     onSubmit,
@@ -33,6 +37,7 @@ export function RegistryTab() {
         hasRegistryError={hasRegistryError}
         isUnavailableError={isUnavailableError}
         registryAuthRequiredMessage={registryAuthRequiredMessage}
+        readOnly={readOnly}
       />
     </div>
   )

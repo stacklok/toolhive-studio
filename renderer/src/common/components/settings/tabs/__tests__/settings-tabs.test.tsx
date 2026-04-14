@@ -244,19 +244,26 @@ describe('SettingsTabs', () => {
     expect(updateIcon).not.toBeInTheDocument()
   })
 
-  it('hides Registry tab when SETTINGS_REGISTRY_TAB permission is disabled', () => {
+  it('shows Registry tab as read-only when SETTINGS_REGISTRY_TAB permission is disabled', async () => {
     renderWithProviders(<SettingsTabs />, {
       permissions: { [PERMISSION_KEYS.SETTINGS_REGISTRY_TAB]: false },
     })
 
-    expect(
-      screen.queryByRole('tab', { name: 'Registry' })
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: 'Registry' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'General' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Secrets' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'CLI' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Version' })).toBeVisible()
     expect(screen.getByRole('tab', { name: 'Logs' })).toBeVisible()
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Registry' }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('combobox')).toBeDisabled()
+    })
+    expect(
+      screen.queryByRole('button', { name: 'Save' })
+    ).not.toBeInTheDocument()
   })
 
   it('does not show update icon on other tabs', async () => {
