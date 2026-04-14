@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import {
   Card,
-  CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
@@ -28,10 +27,13 @@ export function CardSkill({ skill }: { skill: InstalledSkill }) {
   const [uninstallOpen, setUninstallOpen] = useState(false)
 
   const title = skill.metadata?.name ?? skill.reference ?? 'Unknown skill'
-  const description = skill.metadata?.description
-  const reference = skill.reference
   const status = skill.status
   const scope = skill.scope
+  const clients = skill.clients
+  const projectRoot = skill.project_root
+  const projectRootLabel = projectRoot
+    ? `/${projectRoot.split('/').filter(Boolean).at(-1) ?? projectRoot}`
+    : null
 
   return (
     <>
@@ -64,23 +66,27 @@ export function CardSkill({ skill }: { skill: InstalledSkill }) {
                 {scope}
               </Badge>
             )}
+            {projectRootLabel && (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant="outline" className="font-mono">
+                    {projectRootLabel}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs font-mono text-xs break-all">
+                  {projectRoot}
+                </TooltipContent>
+              </Tooltip>
+            )}
+            {clients?.map((client) => (
+              <Badge key={client} variant="outline">
+                {client}
+              </Badge>
+            ))}
           </div>
         </CardHeader>
 
-        <CardContent className="flex-1">
-          {description && (
-            <p className="text-muted-foreground mb-2 text-sm select-none">
-              {description}
-            </p>
-          )}
-          {reference && (
-            <p className="text-muted-foreground truncate font-mono text-xs">
-              {reference}
-            </p>
-          )}
-        </CardContent>
-
-        <CardFooter className="mt-auto flex items-center justify-end gap-2">
+        <CardFooter className="mt-auto flex items-center justify-start gap-2">
           <Button
             variant="ghost"
             size="sm"
