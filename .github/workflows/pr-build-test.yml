@@ -28,7 +28,7 @@ jobs:
     steps:
       - name: Parse command flags
         id: parse-flags
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const comment = context.payload.comment.body;
@@ -44,7 +44,7 @@ jobs:
             }
 
       - name: Check write permission
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const commenter = context.payload.comment.user.login;
@@ -62,7 +62,7 @@ jobs:
             core.info(`✅ ${commenter} has ${permissionLevel.permission} permission`);
 
       - name: React to comment
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         id: react
         with:
           script: |
@@ -76,7 +76,7 @@ jobs:
 
       - name: Get PR info
         id: pr-info
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const pr = await github.rest.pulls.get({
@@ -100,7 +100,7 @@ jobs:
             core.setOutput('base_ref', pr.data.base.ref);
 
       - name: Check if branch is up-to-date with base
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const baseBranch = '${{ steps.pr-info.outputs.base_ref }}';
@@ -239,7 +239,7 @@ jobs:
           echo "url=${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" >> $GITHUB_OUTPUT
 
       - name: Post comment with results
-        uses: actions/github-script@ed597411d8f924073f98dfc5c65a23a2325f34cd # v8
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           script: |
             const prNumber = ${{ needs.check-trigger.outputs.pr_number }};
