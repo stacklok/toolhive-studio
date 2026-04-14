@@ -2,6 +2,8 @@
 
 import {
   type DefaultError,
+  type InfiniteData,
+  infiniteQueryOptions,
   queryOptions,
   type UseMutationOptions,
 } from '@tanstack/react-query'
@@ -38,6 +40,8 @@ import {
   getApiV1BetaWorkloadsByNameProxyLogs,
   getApiV1BetaWorkloadsByNameStatus,
   getHealth,
+  getRegistryByRegistryNameV01xDevToolhiveSkills,
+  getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillName,
   type Options,
   postApiV1BetaClients,
   postApiV1BetaClientsRegister,
@@ -147,6 +151,12 @@ import type {
   GetApiV1BetaWorkloadsResponse,
   GetHealthData,
   GetHealthResponse,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameError,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponse,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsData,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsError,
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse,
   PostApiV1BetaClientsData,
   PostApiV1BetaClientsError,
   PostApiV1BetaClientsRegisterData,
@@ -1783,3 +1793,172 @@ export const getHealthOptions = (options?: Options<GetHealthData>) =>
     },
     queryKey: getHealthQueryKey(options),
   })
+
+export const getRegistryByRegistryNameV01xDevToolhiveSkillsQueryKey = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
+) => createQueryKey('getRegistryByRegistryNameV01XDevToolhiveSkills', options)
+
+/**
+ * List available registry skills
+ *
+ * Get a paginated list of skills from the registry. Supports optional full-text search and pagination.
+ */
+export const getRegistryByRegistryNameV01xDevToolhiveSkillsOptions = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
+) =>
+  queryOptions<
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse,
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsError,
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse,
+    ReturnType<typeof getRegistryByRegistryNameV01xDevToolhiveSkillsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getRegistryByRegistryNameV01xDevToolhiveSkills({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getRegistryByRegistryNameV01xDevToolhiveSkillsQueryKey(options),
+  })
+
+const createInfiniteParams = <
+  K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>,
+>(
+  queryKey: QueryKey<Options>,
+  page: K
+) => {
+  const params = { ...queryKey[0] }
+  if (page.body) {
+    params.body = {
+      ...(queryKey[0].body as any),
+      ...(page.body as any),
+    }
+  }
+  if (page.headers) {
+    params.headers = {
+      ...queryKey[0].headers,
+      ...page.headers,
+    }
+  }
+  if (page.path) {
+    params.path = {
+      ...(queryKey[0].path as any),
+      ...(page.path as any),
+    }
+  }
+  if (page.query) {
+    params.query = {
+      ...(queryKey[0].query as any),
+      ...(page.query as any),
+    }
+  }
+  return params as unknown as typeof page
+}
+
+export const getRegistryByRegistryNameV01xDevToolhiveSkillsInfiniteQueryKey = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
+): QueryKey<Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>> =>
+  createQueryKey(
+    'getRegistryByRegistryNameV01XDevToolhiveSkills',
+    options,
+    true
+  )
+
+/**
+ * List available registry skills
+ *
+ * Get a paginated list of skills from the registry. Supports optional full-text search and pagination.
+ */
+export const getRegistryByRegistryNameV01xDevToolhiveSkillsInfiniteOptions = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
+) =>
+  infiniteQueryOptions<
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse,
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsError,
+    InfiniteData<GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse>,
+    QueryKey<Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>>,
+    | number
+    | Pick<
+        QueryKey<
+          Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
+        >[0],
+        'body' | 'headers' | 'path' | 'query'
+      >
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<
+          QueryKey<
+            Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
+          >[0],
+          'body' | 'headers' | 'path' | 'query'
+        > =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              }
+        const params = createInfiniteParams(queryKey, page)
+        const { data } = await getRegistryByRegistryNameV01xDevToolhiveSkills({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        })
+        return data
+      },
+      queryKey:
+        getRegistryByRegistryNameV01xDevToolhiveSkillsInfiniteQueryKey(options),
+    }
+  )
+
+export const getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameQueryKey =
+  (
+    options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData>
+  ) =>
+    createQueryKey(
+      'getRegistryByRegistryNameV01XDevToolhiveSkillsByNamespaceBySkillName',
+      options
+    )
+
+/**
+ * Get a registry skill
+ *
+ * Retrieve a single skill by its namespace and name from the registry.
+ */
+export const getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameOptions =
+  (
+    options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData>
+  ) =>
+    queryOptions<
+      GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponse,
+      GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameError,
+      GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponse,
+      ReturnType<
+        typeof getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameQueryKey
+      >
+    >({
+      queryFn: async ({ queryKey, signal }) => {
+        const { data } =
+          await getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillName(
+            {
+              ...options,
+              ...queryKey[0],
+              signal,
+              throwOnError: true,
+            }
+          )
+        return data
+      },
+      queryKey:
+        getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameQueryKey(
+          options
+        ),
+    })

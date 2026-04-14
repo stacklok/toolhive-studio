@@ -309,6 +309,12 @@ export type GithubComStacklokToolhivePkgAuthRemoteConfig = {
    * Resource is the OAuth 2.0 resource indicator (RFC 8707).
    */
   resource?: string
+  /**
+   * ScopeParamName overrides the query parameter name used to send scopes in the
+   * authorization URL. When empty, the standard "scope" parameter is used.
+   * Some providers require a non-standard name (e.g., Slack uses "user_scope").
+   */
+  scope_param_name?: string
   scopes?: Array<string>
   skip_browser?: boolean
   timeout?: string
@@ -780,6 +786,8 @@ export type GithubComStacklokToolhivePkgClientClientApp =
   | 'vscode-server'
   | 'mistral-vibe'
   | 'codex'
+  | 'kimi-cli'
+  | 'factory'
 
 export type GithubComStacklokToolhivePkgClientClientAppStatus = {
   client_type?: GithubComStacklokToolhivePkgClientClientApp
@@ -1120,6 +1128,13 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Format: "<secret name>,target=<target environment variable>"
    */
   secrets?: Array<string>
+  /**
+   * Stateless indicates the server only supports POST (no SSE/GET).
+   * When true, the proxy returns 405 for incoming GET requests and uses a
+   * POST-based health check instead of the default GET probe.
+   * Applies to both remote URLs and local container workloads.
+   */
+  stateless?: boolean
   /**
    * TargetHost is the host to forward traffic to (only applicable to SSE transport)
    */
@@ -2124,6 +2139,11 @@ export type PkgApiV1PushSkillRequest = {
   reference?: string
 }
 
+export type PkgApiV1RegistryErrorResponse = {
+  code?: string
+  message?: string
+}
+
 /**
  * Basic information about a registry
  */
@@ -2275,6 +2295,35 @@ export type PkgApiV1SkillListResponse = {
    * List of installed skills
    */
   skills?: Array<GithubComStacklokToolhivePkgSkillsInstalledSkill>
+}
+
+/**
+ * Metadata contains pagination information
+ */
+export type PkgApiV1SkillsV01Metadata = {
+  /**
+   * Limit is the maximum number of skills per page
+   */
+  limit?: number
+  /**
+   * Page is the current page number (1-based)
+   */
+  page?: number
+  /**
+   * Total is the total number of skills matching the query
+   */
+  total?: number
+}
+
+/**
+ * Paginated list of skills from the registry
+ */
+export type PkgApiV1SkillsV01Response = {
+  metadata?: PkgApiV1SkillsV01Metadata
+  /**
+   * Skills is the list of skills on the current page
+   */
+  skills?: Array<RegistrySkill>
 }
 
 /**
@@ -2786,6 +2835,143 @@ export type RegistryRemoteServerMetadata = {
   transport?: string
   /**
    * URL is the endpoint URL for the remote MCP server (e.g., https://api.example.com/mcp)
+   */
+  url?: string
+}
+
+export type RegistrySkill = {
+  /**
+   * Meta is an opaque payload with extended meta data details of the skill.
+   */
+  _meta?: {
+    [key: string]: unknown
+  }
+  /**
+   * AllowedTools is the list of tools that the skill is compatible with.
+   * This is experimental.
+   */
+  allowedTools?: Array<string>
+  /**
+   * Compatibility is the environment requirements of the skill.
+   */
+  compatibility?: string
+  /**
+   * Description is the description of the skill.
+   */
+  description?: string
+  /**
+   * Icons is the list of icons for the skill.
+   */
+  icons?: Array<RegistrySkillIcon>
+  /**
+   * License is the SPDX license identifier of the skill.
+   */
+  license?: string
+  /**
+   * Metadata is the official metadata of the skill as reported in the
+   * SKILL.md file.
+   */
+  metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Name is the name of the skill.
+   * The format is that of identifiers, e.g. "my-skill".
+   */
+  name?: string
+  /**
+   * Namespace is the namespace of the skill.
+   * The format is reverse-DNS, e.g. "io.github.user".
+   */
+  namespace?: string
+  /**
+   * Packages is the list of packages for the skill.
+   */
+  packages?: Array<RegistrySkillPackage>
+  repository?: RegistrySkillRepository
+  /**
+   * Status is the status of the skill.
+   * Can be one of "active", "deprecated", or "archived".
+   */
+  status?: string
+  /**
+   * Title is the title of the skill.
+   * This is for human consumption, not an identifier.
+   */
+  title?: string
+  /**
+   * Version is the version of the skill.
+   * Any non-empty string is valid, but ideally it should be either a
+   * semantic version or a commit hash.
+   */
+  version?: string
+}
+
+export type RegistrySkillIcon = {
+  /**
+   * Label is the label of the icon.
+   */
+  label?: string
+  /**
+   * Size is the size of the icon.
+   */
+  size?: string
+  /**
+   * Src is the source of the icon.
+   */
+  src?: string
+  /**
+   * Type is the type of the icon.
+   */
+  type?: string
+}
+
+export type RegistrySkillPackage = {
+  /**
+   * Commit is the commit of the package.
+   */
+  commit?: string
+  /**
+   * Digest is the digest of the package.
+   */
+  digest?: string
+  /**
+   * Identifier is the OCI identifier of the package.
+   */
+  identifier?: string
+  /**
+   * MediaType is the media type of the package.
+   */
+  mediaType?: string
+  /**
+   * Ref is the reference of the package.
+   */
+  ref?: string
+  /**
+   * RegistryType is the type of registry the package is from.
+   * Can be "oci" or "git".
+   */
+  registryType?: string
+  /**
+   * Subfolder is the subfolder of the package.
+   */
+  subfolder?: string
+  /**
+   * URL is the URL of the package.
+   */
+  url?: string
+}
+
+/**
+ * Repository is the source repository of the skill.
+ */
+export type RegistrySkillRepository = {
+  /**
+   * Type is the type of the repository.
+   */
+  type?: string
+  /**
+   * URL is the URL of the repository.
    */
   url?: string
 }
@@ -4608,3 +4794,103 @@ export type GetHealthResponses = {
 }
 
 export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses]
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsData = {
+  body?: never
+  path: {
+    /**
+     * Registry name (currently ignored, uses the default provider)
+     */
+    registryName: string
+  }
+  query?: {
+    /**
+     * Search filter — matches against skill name, namespace, and description
+     */
+    q?: string
+    /**
+     * Page number, 1-based (default: 1)
+     */
+    page?: number
+    /**
+     * Items per page, max 200 (default: 50)
+     */
+    limit?: number
+  }
+  url: '/registry/{registryName}/v0.1/x/dev.toolhive/skills'
+}
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsErrors = {
+  /**
+   * Internal server error
+   */
+  500: PkgApiV1RegistryErrorResponse
+  /**
+   * Registry authentication required or upstream registry unavailable
+   */
+  503: PkgApiV1RegistryErrorResponse
+}
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsError =
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsErrors[keyof GetRegistryByRegistryNameV01xDevToolhiveSkillsErrors]
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsResponses = {
+  /**
+   * OK
+   */
+  200: PkgApiV1SkillsV01Response
+}
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse =
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsResponses[keyof GetRegistryByRegistryNameV01xDevToolhiveSkillsResponses]
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData =
+  {
+    body?: never
+    path: {
+      /**
+       * Registry name (currently ignored, uses the default provider)
+       */
+      registryName: string
+      /**
+       * Skill namespace in reverse-DNS format (e.g. io.github.stacklok)
+       */
+      namespace: string
+      /**
+       * Skill name
+       */
+      skillName: string
+    }
+    query?: never
+    url: '/registry/{registryName}/v0.1/x/dev.toolhive/skills/{namespace}/{skillName}'
+  }
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameErrors =
+  {
+    /**
+     * Skill not found
+     */
+    404: PkgApiV1RegistryErrorResponse
+    /**
+     * Internal server error
+     */
+    500: PkgApiV1RegistryErrorResponse
+    /**
+     * Registry authentication required or upstream registry unavailable
+     */
+    503: PkgApiV1RegistryErrorResponse
+  }
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameError =
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameErrors[keyof GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameErrors]
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponses =
+  {
+    /**
+     * OK
+     */
+    200: RegistrySkill
+  }
+
+export type GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponse =
+  GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponses[keyof GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponses]
