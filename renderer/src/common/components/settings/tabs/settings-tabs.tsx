@@ -1,6 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../ui/tabs'
 import { ScrollArea } from '../../ui/scroll-area'
-import { GeneralTab } from './general-tab'
+import { GeneralTab } from '@/common/components/settings/tabs/general-tab'
 import { VersionTab } from './version-tab'
 import { LogsTab } from './logs-tab'
 import { CliTab } from './cli-tab'
