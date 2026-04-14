@@ -71,7 +71,7 @@
     "@vitest/coverage-v8": "^4.1.4",
     "autoprefixer": "^10.4.27",
     "dotenv": "^17.4.1",
-    "electron": "41.1.1",
+    "electron": "41.2.0",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.19",
