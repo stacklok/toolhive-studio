@@ -6,6 +6,7 @@ import React from 'react'
 import { DialogInstallSkill } from '../dialog-install-skill'
 import { recordRequests } from '@/common/mocks/node'
 import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
+import { mockedPostApiV1BetaSkills } from '@/common/mocks/fixtures/skills/post'
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -20,7 +21,7 @@ const renderWithProviders = (component: React.ReactElement) => {
 }
 
 beforeEach(() => {
-  // Default: no installed clients so we get plain text input for client field
+  // Default: no installed clients so we get the empty state for clients field
   mockedGetApiV1BetaDiscoveryClients.activateScenario('empty')
 })
 
@@ -33,7 +34,7 @@ describe('DialogInstallSkill', () => {
     ).toBeInTheDocument()
     expect(screen.getByLabelText(/name or reference/i)).toBeInTheDocument()
     expect(screen.getByText(/scope/i)).toBeInTheDocument()
-    expect(screen.getByText(/client/i)).toBeInTheDocument()
+    expect(screen.getAllByText(/clients/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/version/i)).toBeInTheDocument()
   })
 
@@ -64,7 +65,7 @@ describe('DialogInstallSkill', () => {
     })
   })
 
-  it('sends POST to /api/v1beta/skills with correct body on submit', async () => {
+  it('sends POST to /api/v1beta/skills without clients when none selected', async () => {
     const user = userEvent.setup()
     const rec = recordRequests()
 
@@ -85,6 +86,53 @@ describe('DialogInstallSkill', () => {
         name: 'ghcr.io/org/skill:v1',
         scope: 'user',
       })
+      expect(postCall?.payload).not.toHaveProperty('clients')
+    })
+  })
+
+  it('sends clients array when specific clients are checked', async () => {
+    const user = userEvent.setup()
+    const rec = recordRequests()
+    mockedGetApiV1BetaDiscoveryClients.reset()
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /select clients/i })
+      ).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /select clients/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('menuitemcheckbox', { name: 'claude-code' })
+      ).toBeInTheDocument()
+    })
+
+    await user.click(
+      screen.getByRole('menuitemcheckbox', { name: 'claude-code' })
+    )
+    await user.click(screen.getByRole('menuitemcheckbox', { name: 'opencode' }))
+
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      const postCall = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/skills'
+      )
+      expect(postCall).toBeDefined()
+      expect(postCall?.payload).toMatchObject({
+        name: 'my-skill',
+        scope: 'user',
+        clients: expect.arrayContaining(['claude-code', 'opencode']),
+      })
+      expect((postCall?.payload as { clients: string[] }).clients).toHaveLength(
+        2
+      )
     })
   })
 
@@ -94,7 +142,6 @@ describe('DialogInstallSkill', () => {
 
     expect(screen.queryByText(/project root/i)).not.toBeInTheDocument()
 
-    // Scope select accessible name comes from FormLabel "Scope"
     await user.click(screen.getByRole('combobox', { name: /scope/i }))
     await user.click(screen.getByRole('option', { name: /project/i }))
 
@@ -145,16 +192,30 @@ describe('DialogInstallSkill', () => {
     })
   })
 
-  it('populates client dropdown from discovery API when clients are available', async () => {
-    // Reset to default fixture which has installed clients with supports_skills: true
+  it('renders dropdown items for each skill-supporting client when clients are available', async () => {
+    const user = userEvent.setup()
     mockedGetApiV1BetaDiscoveryClients.reset()
 
     renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
 
-    // When skill-supporting clients are present, the client field renders as a Select (combobox)
-    // so there are 2 comboboxes: scope + client
     await waitFor(() => {
-      expect(screen.getAllByRole('combobox')).toHaveLength(2)
+      expect(
+        screen.getByRole('button', { name: /select clients/i })
+      ).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /select clients/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('menuitemcheckbox', { name: 'claude-code' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('menuitemcheckbox', { name: 'opencode' })
+      ).toBeInTheDocument()
+      expect(
+        screen.getByRole('menuitemcheckbox', { name: 'codex' })
+      ).toBeInTheDocument()
     })
   })
 
@@ -165,42 +226,84 @@ describe('DialogInstallSkill', () => {
     renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
 
     await waitFor(() => {
-      expect(screen.getAllByRole('combobox')).toHaveLength(2)
+      expect(
+        screen.getByRole('button', { name: /select clients/i })
+      ).toBeInTheDocument()
     })
 
-    await user.click(screen.getByRole('combobox', { name: /client/i }))
+    await user.click(screen.getByRole('button', { name: /select clients/i }))
 
     await waitFor(() => {
-      // Clients with supports_skills: true
       expect(
-        screen.getByRole('option', { name: 'claude-code' })
+        screen.getByRole('menuitemcheckbox', { name: 'claude-code' })
       ).toBeInTheDocument()
-      expect(
-        screen.getByRole('option', { name: 'opencode' })
-      ).toBeInTheDocument()
-      expect(screen.getByRole('option', { name: 'codex' })).toBeInTheDocument()
-      // Installed clients without supports_skills should NOT appear
-      expect(
-        screen.queryByRole('option', { name: 'cline' })
-      ).not.toBeInTheDocument()
-      expect(
-        screen.queryByRole('option', { name: 'cursor' })
-      ).not.toBeInTheDocument()
-      expect(
-        screen.queryByRole('option', { name: 'vscode' })
-      ).not.toBeInTheDocument()
     })
+
+    // Installed clients without supports_skills should NOT appear
+    expect(
+      screen.queryByRole('menuitemcheckbox', { name: 'cline' })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('menuitemcheckbox', { name: 'cursor' })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('menuitemcheckbox', { name: 'vscode' })
+    ).not.toBeInTheDocument()
   })
 
-  it('falls back to text input for client when no clients discovered', async () => {
+  it('shows empty state message when no skill-supporting clients are detected', async () => {
     // beforeEach already activates 'empty' scenario
     renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
 
     await waitFor(() => {
       expect(
-        screen.getByPlaceholderText(/e\.g\. claude-code/i)
+        screen.getByText(/no skill-supporting clients detected/i)
       ).toBeInTheDocument()
     })
+  })
+
+  it('shows "all detected clients" placeholder when no clients are selected', async () => {
+    mockedGetApiV1BetaDiscoveryClients.reset()
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /select clients/i })
+      ).toHaveTextContent(/all detected clients/i)
+    })
+  })
+
+  it('shows error alert inside the dialog when install fails', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkills.activateScenario('server-error')
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+  })
+
+  it('clears the error alert when the dialog is closed and reopened', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkills.activateScenario('server-error')
+    const onOpenChange = vi.fn()
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={onOpenChange} />)
+
+    await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+    expect(onOpenChange).toHaveBeenCalledWith(false)
   })
 
   it('calls onOpenChange(false) after successful install', async () => {

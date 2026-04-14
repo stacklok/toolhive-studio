@@ -1,9 +1,17 @@
+import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import z from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaDiscoveryClientsOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import { Alert, AlertDescription } from '@/common/components/ui/alert'
 import { Button } from '@/common/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuTrigger,
+} from '@/common/components/ui/dropdown-menu'
 import {
   Dialog,
   DialogContent,
@@ -16,6 +24,7 @@ import { Input } from '@/common/components/ui/input'
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -28,7 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/common/components/ui/select'
-import { FolderOpenIcon } from 'lucide-react'
+import { ChevronDown, FolderOpenIcon, TriangleAlertIcon } from 'lucide-react'
 import { useMutationInstallSkill } from '../hooks/use-mutation-install-skill'
 
 const formSchema = z
@@ -36,7 +45,7 @@ const formSchema = z
     name: z.string().min(1, 'Name or reference is required'),
     scope: z.enum(['user', 'project']),
     project_root: z.string().optional(),
-    client: z.string().optional(),
+    clients: z.array(z.string()).optional(),
     version: z.string().optional(),
   })
   .check((ctx) => {
@@ -64,6 +73,7 @@ export function DialogInstallSkill({
   defaultReference,
 }: DialogInstallSkillProps) {
   const { mutateAsync: installSkill, isPending } = useMutationInstallSkill()
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const { data: clientsData } = useQuery({
     ...getApiV1BetaDiscoveryClientsOptions(),
@@ -81,7 +91,7 @@ export function DialogInstallSkill({
       name: defaultReference ?? '',
       scope: 'user',
       project_root: '',
-      client: '',
+      clients: [],
       version: '',
     },
   })
@@ -90,6 +100,7 @@ export function DialogInstallSkill({
 
   function handleClose() {
     form.reset()
+    setSubmitError(null)
     onOpenChange(false)
   }
 
@@ -101,6 +112,7 @@ export function DialogInstallSkill({
   }
 
   async function onSubmit(values: FormSchema) {
+    setSubmitError(null)
     try {
       await installSkill({
         body: {
@@ -108,13 +120,21 @@ export function DialogInstallSkill({
           scope: values.scope,
           project_root:
             values.scope === 'project' ? values.project_root : undefined,
-          client: values.client || undefined,
+          clients: values.clients?.length ? values.clients : undefined,
           version: values.version || undefined,
         },
       })
       handleClose()
-    } catch {
-      // Error toast is handled by useMutationInstallSkill onError
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'error' in err
+            ? String((err as { error: unknown }).error)
+            : typeof err === 'string'
+              ? err
+              : 'Failed to install skill'
+      setSubmitError(message)
     }
   }
 
@@ -127,6 +147,12 @@ export function DialogInstallSkill({
             Install a skill by providing its name or OCI reference.
           </DialogDescription>
         </DialogHeader>
+        {submitError && (
+          <Alert variant="destructive">
+            <TriangleAlertIcon className="size-4" />
+            <AlertDescription>{submitError}</AlertDescription>
+          </Alert>
+        )}
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -211,41 +237,69 @@ export function DialogInstallSkill({
             )}
             <FormField
               control={form.control}
-              name="client"
+              name="clients"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>
-                    Client{' '}
+                    Clients{' '}
                     <span className="text-muted-foreground font-normal">
                       (optional)
                     </span>
                   </FormLabel>
                   {installedClients.length > 0 ? (
-                    <Select
-                      value={field.value ?? ''}
-                      onValueChange={field.onChange}
-                    >
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a client..." />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {installedClients.map((c) => (
-                          <SelectItem
-                            key={c.client_type}
-                            value={c.client_type!}
-                          >
-                            {c.client_type}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="w-full justify-between font-normal"
+                          aria-label="Select clients"
+                        >
+                          <span className="truncate">
+                            {field.value?.length
+                              ? field.value.join(', ')
+                              : 'All detected clients'}
+                          </span>
+                          <ChevronDown className="size-4 shrink-0 opacity-50" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent
+                        className="w-(--radix-dropdown-menu-trigger-width)"
+                        align="start"
+                      >
+                        {installedClients.map((c) => {
+                          const clientType = c.client_type!
+                          return (
+                            <DropdownMenuCheckboxItem
+                              key={clientType}
+                              checked={
+                                field.value?.includes(clientType) ?? false
+                              }
+                              onCheckedChange={(isChecked) => {
+                                const current = field.value ?? []
+                                field.onChange(
+                                  isChecked
+                                    ? [...current, clientType]
+                                    : current.filter((v) => v !== clientType)
+                                )
+                              }}
+                              onSelect={(e) => e.preventDefault()}
+                            >
+                              {clientType}
+                            </DropdownMenuCheckboxItem>
+                          )
+                        })}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   ) : (
-                    <FormControl>
-                      <Input {...field} placeholder="e.g. claude-code" />
-                    </FormControl>
+                    <p className="text-muted-foreground text-sm">
+                      No skill-supporting clients detected — will install for
+                      all available clients
+                    </p>
                   )}
+                  <FormDescription>
+                    Leave empty to install for all detected clients
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
