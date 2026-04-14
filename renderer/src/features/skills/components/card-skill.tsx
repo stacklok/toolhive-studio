@@ -30,9 +30,9 @@ export function CardSkill({ skill }: { skill: InstalledSkill }) {
   const status = skill.status
   const scope = skill.scope
   const clients = skill.clients
-  const projectRoot = skill.project_root
+  const projectRoot = scope === 'project' ? skill.project_root : undefined
   const projectRootLabel = projectRoot
-    ? `/${projectRoot.split('/').filter(Boolean).at(-1) ?? projectRoot}`
+    ? `/${projectRoot.split(/[\\/]/).filter(Boolean).at(-1) ?? projectRoot}`
     : null
 
   return (

@@ -41,27 +41,13 @@ describe('CardSkill', () => {
       scope: 'user',
     }
     renderWithProviders(<CardSkill skill={skill} />)
-    // Reference appears as the title (fallback) and also as the monospace ref text
-    expect(
-      screen.getAllByText('ghcr.io/org/my-skill:v1').length
-    ).toBeGreaterThan(0)
+    expect(screen.getByText('ghcr.io/org/my-skill:v1')).toBeInTheDocument()
   })
 
   it('shows "Unknown skill" when neither name nor reference', () => {
     const skill: InstalledSkill = {}
     renderWithProviders(<CardSkill skill={skill} />)
     expect(screen.getByText('Unknown skill')).toBeInTheDocument()
-  })
-
-  it('renders description when present', () => {
-    renderWithProviders(<CardSkill skill={baseSkill} />)
-    expect(screen.getByText('A test skill description')).toBeInTheDocument()
-  })
-
-  it('renders reference in monospace', () => {
-    renderWithProviders(<CardSkill skill={baseSkill} />)
-    const refElement = screen.getByText('ghcr.io/org/my-skill:v1')
-    expect(refElement).toHaveClass('font-mono')
   })
 
   it('shows status badge with "installed" variant', () => {

@@ -75,7 +75,7 @@ export function DialogInstallSkill({
   const { mutateAsync: installSkill, isPending } = useMutationInstallSkill()
   const [submitError, setSubmitError] = useState<string | null>(null)
 
-  const { data: clientsData } = useQuery({
+  const { data: clientsData, isLoading: isLoadingClients } = useQuery({
     ...getApiV1BetaDiscoveryClientsOptions(),
     enabled: open,
   })
@@ -291,12 +291,12 @@ export function DialogInstallSkill({
                         })}
                       </DropdownMenuContent>
                     </DropdownMenu>
-                  ) : (
+                  ) : !isLoadingClients ? (
                     <p className="text-muted-foreground text-sm">
                       No skill-supporting clients detected — will install for
                       all available clients
                     </p>
-                  )}
+                  ) : null}
                   <FormDescription>
                     Leave empty to install for all detected clients
                   </FormDescription>

@@ -91,6 +91,8 @@ describe('DialogInstallSkill', () => {
   })
 
   it('sends clients array when specific clients are checked', async () => {
+    // Suppress React 19 + Radix "suspended inside act" warning during dropdown close
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
     const user = userEvent.setup()
     const rec = recordRequests()
     mockedGetApiV1BetaDiscoveryClients.reset()
@@ -99,6 +101,7 @@ describe('DialogInstallSkill', () => {
 
     await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
 
+    // Wait for clients dropdown to appear, open it, and select two clients
     await waitFor(() => {
       expect(
         screen.getByRole('button', { name: /select clients/i })
@@ -118,6 +121,14 @@ describe('DialogInstallSkill', () => {
     )
     await user.click(screen.getByRole('menuitemcheckbox', { name: 'opencode' }))
 
+    // Radix traps focus in the dropdown and sets pointer-events:none on the
+    // dialog, so submit the form via keyboard instead of clicking Install
+    await user.keyboard('{Escape}')
+    // Wait for dropdown to close and dialog to regain pointer events
+    await waitFor(() => {
+      expect(screen.queryByRole('menuitemcheckbox')).not.toBeInTheDocument()
+    })
+
     await user.click(screen.getByRole('button', { name: /^install$/i }))
 
     await waitFor(() => {
@@ -134,6 +145,8 @@ describe('DialogInstallSkill', () => {
         2
       )
     })
+
+    consoleSpy.mockRestore()
   })
 
   it('shows project_root field only when scope is "project"', async () => {
@@ -288,12 +301,11 @@ describe('DialogInstallSkill', () => {
     })
   })
 
-  it('clears the error alert when the dialog is closed and reopened', async () => {
+  it('clears the error alert when the dialog is closed', async () => {
     const user = userEvent.setup()
     mockedPostApiV1BetaSkills.activateScenario('server-error')
-    const onOpenChange = vi.fn()
 
-    renderWithProviders(<DialogInstallSkill open onOpenChange={onOpenChange} />)
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
 
     await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
     await user.click(screen.getByRole('button', { name: /^install$/i }))
@@ -302,8 +314,12 @@ describe('DialogInstallSkill', () => {
       expect(screen.getByRole('alert')).toBeInTheDocument()
     })
 
+    // Cancel runs handleClose which clears the error
     await user.click(screen.getByRole('button', { name: /cancel/i }))
-    expect(onOpenChange).toHaveBeenCalledWith(false)
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
   })
 
   it('calls onOpenChange(false) after successful install', async () => {
