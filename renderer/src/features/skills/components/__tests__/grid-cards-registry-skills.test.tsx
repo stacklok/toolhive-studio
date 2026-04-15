@@ -1,4 +1,4 @@
-import { screen } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import { expect, it, describe, beforeEach } from 'vitest'
 import { renderRoute } from '@/common/test/render-route'
 import { createTestRouter } from '@/common/test/create-test-router'
@@ -36,27 +36,33 @@ beforeEach(() => {
 })
 
 describe('GridCardsRegistrySkills', () => {
-  it('renders a card for each skill', () => {
+  it('renders a card for each skill', async () => {
     renderRoute(createGridRouter(testSkills))
 
-    expect(screen.getByText('skill-alpha')).toBeInTheDocument()
-    expect(screen.getByText('skill-beta')).toBeInTheDocument()
-    expect(screen.getByText('skill-gamma')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('skill-alpha')).toBeInTheDocument()
+      expect(screen.getByText('skill-beta')).toBeInTheDocument()
+      expect(screen.getByText('skill-gamma')).toBeInTheDocument()
+    })
   })
 
-  it('shows empty message when skills array is empty', () => {
+  it('shows empty message when skills array is empty', async () => {
     renderRoute(createGridRouter([]))
 
-    expect(
-      screen.getByText('No skills found matching the current filter')
-    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.getByText('No skills found matching the current filter')
+      ).toBeInTheDocument()
+    })
   })
 
-  it('renders descriptions for each skill', () => {
+  it('renders descriptions for each skill', async () => {
     renderRoute(createGridRouter(testSkills))
 
-    expect(screen.getByText('First skill')).toBeInTheDocument()
-    expect(screen.getByText('Second skill')).toBeInTheDocument()
-    expect(screen.getByText('Third skill')).toBeInTheDocument()
+    await waitFor(() => {
+      expect(screen.getByText('First skill')).toBeInTheDocument()
+      expect(screen.getByText('Second skill')).toBeInTheDocument()
+      expect(screen.getByText('Third skill')).toBeInTheDocument()
+    })
   })
 })
