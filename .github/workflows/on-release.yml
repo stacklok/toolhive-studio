@@ -59,6 +59,10 @@ jobs:
     name: Build and Release on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     needs: [security, static-checks, unit-tests]
+    # Required for Azure Artifact Signing OIDC (federated credential subject). Use an
+    # Environment **without** required reviewers, or each matrix leg will wait on its
+    # own deployment approval (see stacklok/infra Azure signing Terraform defaults).
+    environment: artifact-signing
     strategy:
       matrix:
         include:
@@ -145,6 +149,40 @@ jobs:
           APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
+
+      # Optional Azure Artifact Signing (OIDC via user-assigned MI). Configure repo Variables
+      # from stacklok/infra terraform outputs (see infra PR / issue #4395). Runs after DigiCert
+      # publish so we can add an Azure signature (append) during migration.
+      - name: Azure login (Artifact Signing OIDC)
+        if: runner.os == 'Windows' && vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID != ''
+        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v2.2.0
+        with:
+          client-id: ${{ vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_ARTIFACT_SIGNING_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID }}
+
+      - name: Sign Windows release artifacts with Azure Artifact Signing
+        if: runner.os == 'Windows' && vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID != ''
+        uses: azure/artifact-signing-action@48da903ca5e2d362da62c631a42d77c02ec7eadb # v1.2.0
+        with:
+          azure-tenant-id: ${{ vars.AZURE_ARTIFACT_SIGNING_TENANT_ID }}
+          azure-client-id: ${{ vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID }}
+          endpoint: ${{ vars.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          signing-account-name: ${{ vars.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
+          certificate-profile-name: ${{ vars.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
+          files-folder: ${{ github.workspace }}\out\make
+          files-folder-filter: exe,dll
+          files-folder-recurse: true
+          file-digest: SHA256
+          timestamp-rfc3161: 'http://timestamp.acs.microsoft.com'
+          timestamp-digest: SHA256
+          append-signature: true
+          exclude-environment-credential: false
+          exclude-workload-identity-credential: true
+          exclude-managed-identity-credential: true
+          exclude-azure-cli-credential: true
+          exclude-azure-powershell-credential: true
+          exclude-interactive-browser-credential: true
 
       - name: Copy macOS update manifest to stable path
         id: macos-manifest
