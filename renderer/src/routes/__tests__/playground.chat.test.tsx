@@ -7,13 +7,9 @@ import {
   createRoute,
   Outlet,
   Router,
-  RouterProvider,
 } from '@tanstack/react-router'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { PermissionsProvider } from '@/common/contexts/permissions/permissions-provider'
-import { PromptProvider } from '@/common/contexts/prompt/provider'
-import { NewsletterModalProvider } from '@/common/contexts/newsletter-modal-provider'
-import { render } from '@testing-library/react'
+import { renderRoute } from '@/common/test/render-route'
+import { createTestRouter } from '@/common/test/create-test-router'
 import type { PlaygroundThread } from '@/features/chat/hooks/use-playground-threads'
 
 // ---------------------------------------------------------------------------
@@ -145,20 +141,9 @@ function renderChatRoute(
     defaultNotFoundComponent: () => null,
   })
 
-  const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false } },
-  })
-
-  const utils = render(
-    <NewsletterModalProvider>
-      <PermissionsProvider value={permissions}>
-        <PromptProvider>
-          <QueryClientProvider client={queryClient}>
-            <RouterProvider router={router} />
-          </QueryClientProvider>
-        </PromptProvider>
-      </PermissionsProvider>
-    </NewsletterModalProvider>
+  const utils = renderRoute(
+    router as unknown as ReturnType<typeof createTestRouter>,
+    { permissions }
   )
 
   return { ...utils, router }
