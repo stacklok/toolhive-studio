@@ -59,8 +59,9 @@ function getViewTransition(
 
 export const LinkViewTransition = forwardRef<
   HTMLAnchorElement,
-  Omit<ComponentProps<typeof Link>, 'viewTransition' | 'params'> & {
+  Omit<ComponentProps<typeof Link>, 'viewTransition' | 'params' | 'search'> & {
     params?: Record<string, unknown>
+    search?: Record<string, unknown>
   }
 >((props, ref) => {
   const routeId = useRouterState({ select: (s) => s.location.pathname })
