@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { trackEvent } from '@/common/lib/analytics'
@@ -18,6 +18,8 @@ export function usePlaygroundThreads(activeThreadId: string) {
   const queryClient = useQueryClient()
   const [threads, setThreads] = useState<PlaygroundThread[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  const threadsRef = useRef(threads)
+  threadsRef.current = threads
 
   useEffect(() => {
     async function loadThreads() {
@@ -97,9 +99,9 @@ export function usePlaygroundThreads(activeThreadId: string) {
         trackEvent('Playground: delete thread', {
           'thread.was_active': activeThreadId === threadId,
         })
-        // Compute remaining list from current closure — avoids relying on
-        // the functional updater running synchronously in React 18.
-        const remaining = threads.filter((t) => t.id !== threadId)
+        // Read from ref to get the latest threads snapshot and avoid
+        // overwriting concurrent state updates (e.g. from refreshThread).
+        const remaining = threadsRef.current.filter((t) => t.id !== threadId)
         setThreads(remaining)
         return remaining[0]?.id ?? null
       } catch (err) {
@@ -107,7 +109,7 @@ export function usePlaygroundThreads(activeThreadId: string) {
         return null
       }
     },
-    [activeThreadId, threads]
+    [activeThreadId]
   )
 
   const updateThreadTitle = useCallback((threadId: string, title: string) => {
