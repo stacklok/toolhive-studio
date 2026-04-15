@@ -14,10 +14,9 @@ export interface PlaygroundThread {
 const sortByRecent = (a: PlaygroundThread, b: PlaygroundThread) =>
   b.lastEditTimestamp - a.lastEditTimestamp
 
-export function usePlaygroundThreads() {
+export function usePlaygroundThreads(activeThreadId: string) {
   const queryClient = useQueryClient()
   const [threads, setThreads] = useState<PlaygroundThread[]>([])
-  const [activeThreadId, setActiveThreadId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
@@ -38,11 +37,6 @@ export function usePlaygroundThreads() {
           })
         )
         setThreads(lightweight)
-
-        if (lightweight.length > 0 && lightweight[0]) {
-          setActiveThreadId(lightweight[0].id)
-          window.electronAPI.chat.setActiveThreadId(lightweight[0].id)
-        }
       } catch (err) {
         log.error('[usePlaygroundThreads] Failed to load threads:', err)
       } finally {
@@ -53,7 +47,13 @@ export function usePlaygroundThreads() {
     loadThreads()
   }, [])
 
-  const createThread = useCallback(async () => {
+  // Persist the URL-driven active thread to IPC whenever it changes
+  useEffect(() => {
+    window.electronAPI.chat.setActiveThreadId(activeThreadId)
+  }, [activeThreadId])
+
+  /** Creates a new thread and returns its ID for navigation, or null on failure. */
+  const createThread = useCallback(async (): Promise<string | null> => {
     try {
       const result = await window.electronAPI.chat.createChatThread()
       if (!result.success || !result.threadId) {
@@ -61,7 +61,7 @@ export function usePlaygroundThreads() {
           '[usePlaygroundThreads] Failed to create thread:',
           result.error
         )
-        return
+        return null
       }
       const now = Date.now()
       const newThread: PlaygroundThread = {
@@ -71,22 +71,20 @@ export function usePlaygroundThreads() {
         createdAt: now,
       }
       setThreads((prev) => [newThread, ...prev])
-      setActiveThreadId(result.threadId)
-      window.electronAPI.chat.setActiveThreadId(result.threadId)
       trackEvent('Playground: create thread')
+      return result.threadId
     } catch (err) {
       log.error('[usePlaygroundThreads] Failed to create thread:', err)
+      return null
     }
   }, [])
 
-  const selectThread = useCallback((threadId: string) => {
-    setActiveThreadId(threadId)
-    window.electronAPI.chat.setActiveThreadId(threadId)
-    trackEvent('Playground: switch thread')
-  }, [])
-
+  /**
+   * Deletes a thread and returns the next thread ID for navigation,
+   * or null when no threads remain.
+   */
   const deleteThread = useCallback(
-    async (threadId: string) => {
+    async (threadId: string): Promise<string | null> => {
       try {
         const result = await window.electronAPI.chat.deleteThread(threadId)
         if (!result.success) {
@@ -94,27 +92,22 @@ export function usePlaygroundThreads() {
             '[usePlaygroundThreads] Failed to delete thread:',
             result.error
           )
-          return
+          return null
         }
         trackEvent('Playground: delete thread', {
           'thread.was_active': activeThreadId === threadId,
         })
-        setThreads((prev) => {
-          const updated = prev.filter((t) => t.id !== threadId)
-          if (activeThreadId === threadId) {
-            const next = updated[0] ?? null
-            setActiveThreadId(next?.id ?? null)
-            if (next) {
-              window.electronAPI.chat.setActiveThreadId(next.id)
-            }
-          }
-          return updated
-        })
+        // Compute remaining list from current closure — avoids relying on
+        // the functional updater running synchronously in React 18.
+        const remaining = threads.filter((t) => t.id !== threadId)
+        setThreads(remaining)
+        return remaining[0]?.id ?? null
       } catch (err) {
         log.error('[usePlaygroundThreads] Failed to delete thread:', err)
+        return null
       }
     },
-    [activeThreadId]
+    [activeThreadId, threads]
   )
 
   const updateThreadTitle = useCallback((threadId: string, title: string) => {
@@ -141,8 +134,6 @@ export function usePlaygroundThreads() {
       setThreads((prev) => {
         const exists = prev.some((t) => t.id === threadId)
         if (!exists) {
-          setActiveThreadId(threadId)
-          window.electronAPI.chat.setActiveThreadId(threadId)
           return [lightweight, ...prev].sort(sortByRecent)
         }
         return prev
@@ -217,11 +208,9 @@ export function usePlaygroundThreads() {
 
   return {
     threads,
-    activeThreadId,
     isLoading,
     hasThreads: threads.length > 0,
     createThread,
-    selectThread,
     deleteThread,
     updateThreadTitle,
     renameThread,
