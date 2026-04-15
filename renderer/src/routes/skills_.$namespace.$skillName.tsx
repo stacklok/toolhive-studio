@@ -8,6 +8,34 @@ import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationNoSearchResults } from '@/common/components/illustrations/illustration-no-search-results'
 import { SkillDetailPage } from '@/features/skills/components/skill-detail-page'
 
+function skillQueryOptions(params: { namespace: string; skillName: string }) {
+  const pathOptions = {
+    path: {
+      registryName: 'default' as const,
+      namespace: params.namespace,
+      skillName: params.skillName,
+    },
+  }
+  return {
+    ...getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameOptions(
+      pathOptions
+    ),
+    queryFn: async ({ signal }: { signal: AbortSignal }) => {
+      const result =
+        await getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillName(
+          { ...pathOptions, signal }
+        )
+      if (result.error !== undefined) {
+        if (result.response?.status === 404) {
+          throw notFound()
+        }
+        throw result.error
+      }
+      return result.data
+    },
+  }
+}
+
 function SkillNotFound() {
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
@@ -17,7 +45,9 @@ function SkillNotFound() {
         body="The skill you're looking for doesn't exist in the registry or has been removed."
         actions={[
           <Button asChild key="skills" variant="action">
-            <LinkViewTransition to="/skills">Browse Skills</LinkViewTransition>
+            <LinkViewTransition to="/skills" search={{ tab: 'registry' }}>
+              Browse Skills
+            </LinkViewTransition>
           </Button>,
         ]}
       />
@@ -26,52 +56,15 @@ function SkillNotFound() {
 }
 
 export const Route = createFileRoute('/skills_/$namespace/$skillName')({
-  loader: async ({ context: { queryClient }, params }) => {
-    const pathOptions = {
-      path: {
-        registryName: 'default' as const,
-        namespace: params.namespace,
-        skillName: params.skillName,
-      },
-    }
-    return queryClient.ensureQueryData({
-      ...getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameOptions(
-        pathOptions
-      ),
-      queryFn: async ({ signal }) => {
-        const result =
-          await getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillName(
-            { ...pathOptions, signal }
-          )
-        if (result.error !== undefined) {
-          if (result.response.status === 404) {
-            throw notFound()
-          }
-          throw result.error
-        }
-        return result.data
-      },
-    })
-  },
+  loader: ({ context: { queryClient }, params }) =>
+    queryClient.ensureQueryData(skillQueryOptions(params)),
   component: SkillDetail,
   notFoundComponent: SkillNotFound,
 })
 
 function SkillDetail() {
-  const { namespace, skillName } = useParams({
-    from: '/skills_/$namespace/$skillName',
-  })
-  const { data: skill } = useSuspenseQuery(
-    getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameOptions(
-      {
-        path: {
-          registryName: 'default',
-          namespace,
-          skillName,
-        },
-      }
-    )
-  )
+  const params = useParams({ from: '/skills_/$namespace/$skillName' })
+  const { data: skill } = useSuspenseQuery(skillQueryOptions(params))
 
   if (!skill) return null
 
