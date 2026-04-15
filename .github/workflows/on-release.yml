@@ -155,7 +155,7 @@ jobs:
       # publish so we can add an Azure signature (append) during migration.
       - name: Azure login (Artifact Signing OIDC)
         if: runner.os == 'Windows' && vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID != ''
-        uses: azure/login@532459ea530d8321f2fb9bb10d1e0bcf23869a43 # v2.2.0
+        uses: azure/login@93381592711f247e165c389ebb30b596c84cdc48 # v3.0.0
         with:
           client-id: ${{ vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_ARTIFACT_SIGNING_TENANT_ID }}
