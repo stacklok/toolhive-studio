@@ -24,8 +24,11 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
   const name = skill.name ?? 'Unknown skill'
   const namespace = skill.namespace
   const description = skill.description
-  const defaultReference =
+  const isOci = skill.packages?.some((p) => p.registryType === 'oci')
+  const base =
     namespace && name !== 'Unknown skill' ? `${namespace}/${name}` : name
+  const defaultReference =
+    isOci && skill.version ? `${base}:${skill.version}` : base
 
   const canNavigate = !!(namespace && skill.name)
 

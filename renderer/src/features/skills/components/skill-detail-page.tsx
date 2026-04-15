@@ -17,8 +17,10 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
   const description = skill.description
   const version = skill.version
   const license = skill.license
-  const defaultReference =
+  const isOci = skill.packages?.some((p) => p.registryType === 'oci')
+  const base =
     namespace && name !== 'Unknown skill' ? `${namespace}/${name}` : name
+  const defaultReference = isOci && version ? `${base}:${version}` : base
 
   return (
     <>
