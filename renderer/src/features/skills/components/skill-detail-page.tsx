@@ -62,9 +62,9 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
         </div>
 
         {/* Main content: two columns */}
-        <div className="flex gap-10">
+        <div className="flex flex-col gap-10 md:flex-row">
           {/* Left: Summary + Install */}
-          <div className="flex w-5/12 flex-col gap-6">
+          <div className="flex w-full flex-col gap-6 md:w-5/12">
             <div className="flex flex-col gap-2">
               <h4
                 className="text-foreground text-xl font-semibold tracking-tight"
