@@ -133,7 +133,19 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
+      # Publish: default is a single `electron-forge publish`. When Windows + full Azure Artifact
+      # Signing vars are set, use `publish --dry-run` → Azure sign local artifacts →
+      # `publish --from-dry-run` so GitHub/S3 uploads include the Azure signature (Forge
+      # resumes by artifact path and re-reads files from disk).
       - name: Build and Publish
+        if: >-
+          runner.os != 'Windows' ||
+          vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID == '' ||
+          vars.AZURE_ARTIFACT_SIGNING_TENANT_ID == '' ||
+          vars.AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID == '' ||
+          vars.AZURE_ARTIFACT_SIGNING_ENDPOINT == '' ||
+          vars.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME == '' ||
+          vars.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME == ''
         run: pnpm run publish
         env:
           # Ensure the correct Node.js version is used for native modules
@@ -150,9 +162,31 @@ jobs:
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
 
+      - name: Build release (publish dry-run, Windows / Azure Artifact Signing)
+        if: >-
+          runner.os == 'Windows' &&
+          vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_TENANT_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_ENDPOINT != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME != ''
+        run: pnpm exec electron-forge publish --dry-run
+        env:
+          npm_config_target_platform: win32
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+          VITE_SENTRY_THV_DSN: ${{ vars.VITE_SENTRY_THV_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_RELEASE: ${{ env.SENTRY_RELEASE }}
+          APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
+          APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
+          APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
+
       # Optional Azure Artifact Signing (OIDC via user-assigned MI). Configure repo Variables
-      # from stacklok/infra terraform outputs (see infra PR / issue #4395). Runs after DigiCert
-      # publish so we can add an Azure signature (append) during migration.
+      # from stacklok/infra terraform outputs (see infra PR / issue #4395).
       # All AZURE_ARTIFACT_SIGNING_* vars below must be set together; partial config is skipped.
       - name: Azure login (Artifact Signing OIDC)
         if: >-
@@ -198,6 +232,29 @@ jobs:
           exclude-azure-cli-credential: false
           exclude-azure-powershell-credential: true
           exclude-interactive-browser-credential: true
+
+      - name: Publish release (from dry-run, Windows / Azure Artifact Signing)
+        if: >-
+          runner.os == 'Windows' &&
+          vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_TENANT_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_ENDPOINT != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME != ''
+        run: pnpm exec electron-forge publish --from-dry-run
+        env:
+          npm_config_target_platform: win32
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+          VITE_SENTRY_THV_DSN: ${{ vars.VITE_SENTRY_THV_DSN }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+          SENTRY_RELEASE: ${{ env.SENTRY_RELEASE }}
+          APPLE_API_KEY: ${{ env.APPLE_API_KEY_PATH }}
+          APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
+          APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
 
       - name: Copy macOS update manifest to stable path
         id: macos-manifest
