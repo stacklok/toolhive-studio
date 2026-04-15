@@ -44,9 +44,18 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
           'relative flex flex-col',
           'transition-[box-shadow,color]',
           canNavigate && 'cursor-pointer hover:ring',
-          'has-[button:focus-visible]:ring'
+          'has-[button:focus-visible]:ring',
+          'focus-visible:ring focus-visible:outline-none'
         )}
         onClick={handleCardClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            handleCardClick()
+          }
+        }}
+        role={canNavigate ? 'link' : undefined}
+        tabIndex={canNavigate ? 0 : undefined}
       >
         <CardHeader>
           <CardTitle className="flex items-start justify-between gap-2 text-xl">
