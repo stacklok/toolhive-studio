@@ -19,6 +19,7 @@ import { Route as IndexRouteImport } from "./routes/index"
 import { Route as GroupGroupNameRouteImport } from "./routes/group.$groupName"
 import { Route as CustomizeToolsServerNameRouteImport } from "./routes/customize-tools.$serverName"
 import { Route as registryRegistryRouteImport } from "./routes/(registry)/registry"
+import { Route as SkillsNamespaceSkillNameRouteImport } from "./routes/skills_.$namespace.$skillName"
 import { Route as LogsGroupNameServerNameRouteImport } from "./routes/logs.$groupName.$serverName"
 import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/registry_.$name"
 import { Route as registryRegistryGroupNameRouteImport } from "./routes/(registry)/registry-group_.$name"
@@ -74,6 +75,12 @@ const registryRegistryRoute = registryRegistryRouteImport.update({
   path: "/registry",
   getParentRoute: () => rootRouteImport,
 } as any)
+const SkillsNamespaceSkillNameRoute =
+  SkillsNamespaceSkillNameRouteImport.update({
+    id: "/skills_/$namespace/$skillName",
+    path: "/skills/$namespace/$skillName",
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const LogsGroupNameServerNameRoute = LogsGroupNameServerNameRouteImport.update({
   id: "/logs/$groupName/$serverName",
   path: "/logs/$groupName/$serverName",
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   "/registry-group/$name": typeof registryRegistryGroupNameRoute
   "/registry/$name": typeof registryRegistryNameRoute
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
+  "/skills/$namespace/$skillName": typeof SkillsNamespaceSkillNameRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
@@ -120,6 +128,7 @@ export interface FileRoutesByTo {
   "/registry-group/$name": typeof registryRegistryGroupNameRoute
   "/registry/$name": typeof registryRegistryNameRoute
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
+  "/skills/$namespace/$skillName": typeof SkillsNamespaceSkillNameRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -136,6 +145,7 @@ export interface FileRoutesById {
   "/(registry)/registry-group_/$name": typeof registryRegistryGroupNameRoute
   "/(registry)/registry_/$name": typeof registryRegistryNameRoute
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
+  "/skills_/$namespace/$skillName": typeof SkillsNamespaceSkillNameRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -153,6 +163,7 @@ export interface FileRouteTypes {
     | "/registry-group/$name"
     | "/registry/$name"
     | "/logs/$groupName/$serverName"
+    | "/skills/$namespace/$skillName"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
@@ -168,6 +179,7 @@ export interface FileRouteTypes {
     | "/registry-group/$name"
     | "/registry/$name"
     | "/logs/$groupName/$serverName"
+    | "/skills/$namespace/$skillName"
   id:
     | "__root__"
     | "/"
@@ -183,6 +195,7 @@ export interface FileRouteTypes {
     | "/(registry)/registry-group_/$name"
     | "/(registry)/registry_/$name"
     | "/logs/$groupName/$serverName"
+    | "/skills_/$namespace/$skillName"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -199,6 +212,7 @@ export interface RootRouteChildren {
   registryRegistryGroupNameRoute: typeof registryRegistryGroupNameRoute
   registryRegistryNameRoute: typeof registryRegistryNameRoute
   LogsGroupNameServerNameRoute: typeof LogsGroupNameServerNameRoute
+  SkillsNamespaceSkillNameRoute: typeof SkillsNamespaceSkillNameRoute
 }
 
 declare module "@tanstack/react-router" {
@@ -273,6 +287,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof registryRegistryRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/skills_/$namespace/$skillName": {
+      id: "/skills_/$namespace/$skillName"
+      path: "/skills/$namespace/$skillName"
+      fullPath: "/skills/$namespace/$skillName"
+      preLoaderRoute: typeof SkillsNamespaceSkillNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/logs/$groupName/$serverName": {
       id: "/logs/$groupName/$serverName"
       path: "/logs/$groupName/$serverName"
@@ -311,6 +332,7 @@ const rootRouteChildren: RootRouteChildren = {
   registryRegistryGroupNameRoute: registryRegistryGroupNameRoute,
   registryRegistryNameRoute: registryRegistryNameRoute,
   LogsGroupNameServerNameRoute: LogsGroupNameServerNameRoute,
+  SkillsNamespaceSkillNameRoute: SkillsNamespaceSkillNameRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
