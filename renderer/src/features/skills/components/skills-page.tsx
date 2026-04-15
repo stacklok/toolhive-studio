@@ -54,7 +54,9 @@ export function SkillsPage() {
   const { data: registryData } = useQuery(
     getRegistryByRegistryNameV01xDevToolhiveSkillsOptions({
       path: { registryName: 'default' },
-      query: debouncedRegistrySearch ? { q: debouncedRegistrySearch } : {},
+      query: debouncedRegistrySearch
+        ? { q: debouncedRegistrySearch }
+        : undefined,
     })
   )
   const registrySkills = registryData?.skills ?? []
