@@ -180,7 +180,7 @@ jobs:
           exclude-environment-credential: false
           exclude-workload-identity-credential: true
           exclude-managed-identity-credential: true
-          exclude-azure-cli-credential: true
+          exclude-azure-cli-credential: false
           exclude-azure-powershell-credential: true
           exclude-interactive-browser-credential: true
 
