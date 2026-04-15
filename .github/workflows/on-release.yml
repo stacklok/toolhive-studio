@@ -153,8 +153,16 @@ jobs:
       # Optional Azure Artifact Signing (OIDC via user-assigned MI). Configure repo Variables
       # from stacklok/infra terraform outputs (see infra PR / issue #4395). Runs after DigiCert
       # publish so we can add an Azure signature (append) during migration.
+      # All AZURE_ARTIFACT_SIGNING_* vars below must be set together; partial config is skipped.
       - name: Azure login (Artifact Signing OIDC)
-        if: runner.os == 'Windows' && vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID != ''
+        if: >-
+          runner.os == 'Windows' &&
+          vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_TENANT_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_ENDPOINT != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME != ''
         uses: azure/login@93381592711f247e165c389ebb30b596c84cdc48 # v3.0.0
         with:
           client-id: ${{ vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID }}
@@ -162,7 +170,14 @@ jobs:
           subscription-id: ${{ vars.AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID }}
 
       - name: Sign Windows release artifacts with Azure Artifact Signing
-        if: runner.os == 'Windows' && vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID != ''
+        if: >-
+          runner.os == 'Windows' &&
+          vars.AZURE_ARTIFACT_SIGNING_CLIENT_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_TENANT_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_ENDPOINT != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME != '' &&
+          vars.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME != ''
         uses: azure/artifact-signing-action@48da903ca5e2d362da62c631a42d77c02ec7eadb # v1.2.0
         with:
           azure-tenant-id: ${{ vars.AZURE_ARTIFACT_SIGNING_TENANT_ID }}
