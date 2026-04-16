@@ -62,11 +62,19 @@ runs:
       run: |
         $ErrorActionPreference = 'Stop'
 
+        # Pin the Trusted Signing client package so CI is deterministic and a
+        # future release that reorganises the DLib path cannot silently break
+        # signing. Bump this version intentionally and re-run the signing
+        # pipeline end-to-end when upgrading. Available versions:
+        # https://www.nuget.org/packages/Microsoft.Trusted.Signing.Client
+        $trustedSigningClientVersion = '1.0.95'
+
         $stage = 'C:\azsign'
         New-Item -ItemType Directory -Force -Path $stage | Out-Null
 
-        Write-Host "Downloading Microsoft.Trusted.Signing.Client from NuGet..."
+        Write-Host "Downloading Microsoft.Trusted.Signing.Client $trustedSigningClientVersion from NuGet..."
         nuget install Microsoft.Trusted.Signing.Client `
+          -Version $trustedSigningClientVersion `
           -OutputDirectory $stage `
           -ExcludeVersion `
           -Verbosity quiet
