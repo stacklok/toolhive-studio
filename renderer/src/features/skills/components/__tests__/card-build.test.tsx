@@ -46,19 +46,15 @@ describe('CardBuild', () => {
     expect(screen.getByText('Unnamed build')).toBeInTheDocument()
   })
 
-  it('renders description when present', () => {
+  it('renders description and digest in content', () => {
     renderWithProviders(<CardBuild build={baseBuild} />)
-    expect(screen.getByText('A locally built skill')).toBeInTheDocument()
+    expect(screen.getByText(/A locally built skill/)).toBeInTheDocument()
+    expect(screen.getByText(/sha256:/)).toBeInTheDocument()
   })
 
   it('renders version badge', () => {
     renderWithProviders(<CardBuild build={baseBuild} />)
     expect(screen.getByText('v1.0.0')).toBeInTheDocument()
-  })
-
-  it('renders a truncated digest', () => {
-    renderWithProviders(<CardBuild build={baseBuild} />)
-    expect(screen.getByText(/sha256:/)).toBeInTheDocument()
   })
 
   it('opens install dialog when Install button is clicked', async () => {
