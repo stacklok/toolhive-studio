@@ -16,10 +16,12 @@ import { Route as PlaygroundRouteImport } from "./routes/playground"
 import { Route as McpOptimizerRouteImport } from "./routes/mcp-optimizer"
 import { Route as CliIssueRouteImport } from "./routes/cli-issue"
 import { Route as IndexRouteImport } from "./routes/index"
+import { Route as PlaygroundIndexRouteImport } from "./routes/playground.index"
 import { Route as GroupGroupNameRouteImport } from "./routes/group.$groupName"
 import { Route as CustomizeToolsServerNameRouteImport } from "./routes/customize-tools.$serverName"
 import { Route as registryRegistryRouteImport } from "./routes/(registry)/registry"
 import { Route as SkillsNamespaceSkillNameRouteImport } from "./routes/skills_.$namespace.$skillName"
+import { Route as PlaygroundChatThreadIdRouteImport } from "./routes/playground.chat.$threadId"
 import { Route as LogsGroupNameServerNameRouteImport } from "./routes/logs.$groupName.$serverName"
 import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/registry_.$name"
 import { Route as registryRegistryGroupNameRouteImport } from "./routes/(registry)/registry-group_.$name"
@@ -59,6 +61,11 @@ const IndexRoute = IndexRouteImport.update({
   path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlaygroundIndexRoute = PlaygroundIndexRouteImport.update({
+  id: "/",
+  path: "/",
+  getParentRoute: () => PlaygroundRoute,
+} as any)
 const GroupGroupNameRoute = GroupGroupNameRouteImport.update({
   id: "/group/$groupName",
   path: "/group/$groupName",
@@ -81,6 +88,11 @@ const SkillsNamespaceSkillNameRoute =
     path: "/skills/$namespace/$skillName",
     getParentRoute: () => rootRouteImport,
   } as any)
+const PlaygroundChatThreadIdRoute = PlaygroundChatThreadIdRouteImport.update({
+  id: "/chat/$threadId",
+  path: "/chat/$threadId",
+  getParentRoute: () => PlaygroundRoute,
+} as any)
 const LogsGroupNameServerNameRoute = LogsGroupNameServerNameRouteImport.update({
   id: "/logs/$groupName/$serverName",
   path: "/logs/$groupName/$serverName",
@@ -102,32 +114,35 @@ export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
   "/cli-issue": typeof CliIssueRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
-  "/playground": typeof PlaygroundRoute
+  "/playground": typeof PlaygroundRouteWithChildren
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/skills": typeof SkillsRoute
   "/registry": typeof registryRegistryRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
+  "/playground/": typeof PlaygroundIndexRoute
   "/registry-group/$name": typeof registryRegistryGroupNameRoute
   "/registry/$name": typeof registryRegistryNameRoute
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
+  "/playground/chat/$threadId": typeof PlaygroundChatThreadIdRoute
   "/skills/$namespace/$skillName": typeof SkillsNamespaceSkillNameRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
   "/cli-issue": typeof CliIssueRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
-  "/playground": typeof PlaygroundRoute
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/skills": typeof SkillsRoute
   "/registry": typeof registryRegistryRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
+  "/playground": typeof PlaygroundIndexRoute
   "/registry-group/$name": typeof registryRegistryGroupNameRoute
   "/registry/$name": typeof registryRegistryNameRoute
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
+  "/playground/chat/$threadId": typeof PlaygroundChatThreadIdRoute
   "/skills/$namespace/$skillName": typeof SkillsNamespaceSkillNameRoute
 }
 export interface FileRoutesById {
@@ -135,16 +150,18 @@ export interface FileRoutesById {
   "/": typeof IndexRoute
   "/cli-issue": typeof CliIssueRoute
   "/mcp-optimizer": typeof McpOptimizerRoute
-  "/playground": typeof PlaygroundRoute
+  "/playground": typeof PlaygroundRouteWithChildren
   "/settings": typeof SettingsRoute
   "/shutdown": typeof ShutdownRoute
   "/skills": typeof SkillsRoute
   "/(registry)/registry": typeof registryRegistryRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
+  "/playground/": typeof PlaygroundIndexRoute
   "/(registry)/registry-group_/$name": typeof registryRegistryGroupNameRoute
   "/(registry)/registry_/$name": typeof registryRegistryNameRoute
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
+  "/playground/chat/$threadId": typeof PlaygroundChatThreadIdRoute
   "/skills_/$namespace/$skillName": typeof SkillsNamespaceSkillNameRoute
 }
 export interface FileRouteTypes {
@@ -160,25 +177,28 @@ export interface FileRouteTypes {
     | "/registry"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
+    | "/playground/"
     | "/registry-group/$name"
     | "/registry/$name"
     | "/logs/$groupName/$serverName"
+    | "/playground/chat/$threadId"
     | "/skills/$namespace/$skillName"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
     | "/cli-issue"
     | "/mcp-optimizer"
-    | "/playground"
     | "/settings"
     | "/shutdown"
     | "/skills"
     | "/registry"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
+    | "/playground"
     | "/registry-group/$name"
     | "/registry/$name"
     | "/logs/$groupName/$serverName"
+    | "/playground/chat/$threadId"
     | "/skills/$namespace/$skillName"
   id:
     | "__root__"
@@ -192,9 +212,11 @@ export interface FileRouteTypes {
     | "/(registry)/registry"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
+    | "/playground/"
     | "/(registry)/registry-group_/$name"
     | "/(registry)/registry_/$name"
     | "/logs/$groupName/$serverName"
+    | "/playground/chat/$threadId"
     | "/skills_/$namespace/$skillName"
   fileRoutesById: FileRoutesById
 }
@@ -202,7 +224,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CliIssueRoute: typeof CliIssueRoute
   McpOptimizerRoute: typeof McpOptimizerRoute
-  PlaygroundRoute: typeof PlaygroundRoute
+  PlaygroundRoute: typeof PlaygroundRouteWithChildren
   SettingsRoute: typeof SettingsRoute
   ShutdownRoute: typeof ShutdownRoute
   SkillsRoute: typeof SkillsRoute
@@ -266,6 +288,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/playground/": {
+      id: "/playground/"
+      path: "/"
+      fullPath: "/playground/"
+      preLoaderRoute: typeof PlaygroundIndexRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
     "/group/$groupName": {
       id: "/group/$groupName"
       path: "/group/$groupName"
@@ -294,6 +323,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof SkillsNamespaceSkillNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/playground/chat/$threadId": {
+      id: "/playground/chat/$threadId"
+      path: "/chat/$threadId"
+      fullPath: "/playground/chat/$threadId"
+      preLoaderRoute: typeof PlaygroundChatThreadIdRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
     "/logs/$groupName/$serverName": {
       id: "/logs/$groupName/$serverName"
       path: "/logs/$groupName/$serverName"
@@ -318,11 +354,25 @@ declare module "@tanstack/react-router" {
   }
 }
 
+interface PlaygroundRouteChildren {
+  PlaygroundIndexRoute: typeof PlaygroundIndexRoute
+  PlaygroundChatThreadIdRoute: typeof PlaygroundChatThreadIdRoute
+}
+
+const PlaygroundRouteChildren: PlaygroundRouteChildren = {
+  PlaygroundIndexRoute: PlaygroundIndexRoute,
+  PlaygroundChatThreadIdRoute: PlaygroundChatThreadIdRoute,
+}
+
+const PlaygroundRouteWithChildren = PlaygroundRoute._addFileChildren(
+  PlaygroundRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CliIssueRoute: CliIssueRoute,
   McpOptimizerRoute: McpOptimizerRoute,
-  PlaygroundRoute: PlaygroundRoute,
+  PlaygroundRoute: PlaygroundRouteWithChildren,
   SettingsRoute: SettingsRoute,
   ShutdownRoute: ShutdownRoute,
   SkillsRoute: SkillsRoute,

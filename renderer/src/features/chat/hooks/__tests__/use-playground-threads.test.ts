@@ -59,9 +59,10 @@ beforeEach(() => {
 describe('usePlaygroundThreads', () => {
   describe('initial load', () => {
     it('starts in loading state', () => {
-      const { result } = renderHook(() => usePlaygroundThreads(), {
-        wrapper: createWrapper(),
-      })
+      const { result } = renderHook(
+        () => usePlaygroundThreads('initial-thread'),
+        { wrapper: createWrapper() }
+      )
       expect(result.current.isLoading).toBe(true)
     })
 
@@ -70,108 +71,108 @@ describe('usePlaygroundThreads', () => {
         makeDbThread({ id: 'old', lastEditTimestamp: 1000 }),
         makeDbThread({ id: 'new', lastEditTimestamp: 3000 }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
-        wrapper: createWrapper(),
-      })
+      const { result } = renderHook(
+        () => usePlaygroundThreads('initial-thread'),
+        { wrapper: createWrapper() }
+      )
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.threads[0]!.id).toBe('new')
       expect(result.current.threads[1]!.id).toBe('old')
     })
 
-    it('sets activeThreadId to the first thread', async () => {
+    it('calls setActiveThreadId with the provided activeThreadId via IPC', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
-        makeDbThread({ id: 'first' }),
+        makeDbThread({ id: 'thread-from-url' }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      renderHook(() => usePlaygroundThreads('thread-from-url'), {
         wrapper: createWrapper(),
       })
-      await waitFor(() => expect(result.current.isLoading).toBe(false))
-      expect(result.current.activeThreadId).toBe('first')
-      expect(mockChatAPI.setActiveThreadId).toHaveBeenCalledWith('first')
+      await waitFor(() =>
+        expect(mockChatAPI.setActiveThreadId).toHaveBeenCalledWith(
+          'thread-from-url'
+        )
+      )
     })
 
-    it('leaves activeThreadId null when DB is empty', async () => {
+    it('updates setActiveThreadId when activeThreadId changes', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      let activeId = 'thread-a'
+      const { rerender } = renderHook(() => usePlaygroundThreads(activeId), {
         wrapper: createWrapper(),
       })
-      await waitFor(() => expect(result.current.isLoading).toBe(false))
-      expect(result.current.activeThreadId).toBeNull()
-      expect(result.current.hasThreads).toBe(false)
-      expect(mockChatAPI.setActiveThreadId).not.toHaveBeenCalled()
+      await waitFor(() =>
+        expect(mockChatAPI.setActiveThreadId).toHaveBeenCalledWith('thread-a')
+      )
+
+      activeId = 'thread-b'
+      rerender()
+
+      await waitFor(() =>
+        expect(mockChatAPI.setActiveThreadId).toHaveBeenCalledWith('thread-b')
+      )
     })
 
     it('maps starred field from DB thread', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ starred: true }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
-        wrapper: createWrapper(),
-      })
+      const { result } = renderHook(
+        () => usePlaygroundThreads('initial-thread'),
+        { wrapper: createWrapper() }
+      )
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.threads[0]!.starred).toBe(true)
+    })
+
+    it('has no threads when DB is empty', async () => {
+      mockChatAPI.getAllThreads.mockResolvedValue([])
+      const { result } = renderHook(
+        () => usePlaygroundThreads('initial-thread'),
+        { wrapper: createWrapper() }
+      )
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+      expect(result.current.hasThreads).toBe(false)
     })
   })
 
   describe('createThread', () => {
-    it('calls createChatThread and prepends new thread to list', async () => {
+    it('calls createChatThread, prepends new thread to list, and returns the new thread ID', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 'existing' }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('existing'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
+      let returnedId: string | null = null
       await act(async () => {
-        await result.current.createThread()
+        returnedId = await result.current.createThread()
       })
 
       expect(mockChatAPI.createChatThread).toHaveBeenCalledOnce()
       expect(result.current.threads[0]!.id).toBe('new-thread')
-      expect(result.current.activeThreadId).toBe('new-thread')
-      expect(mockChatAPI.setActiveThreadId).toHaveBeenLastCalledWith(
-        'new-thread'
-      )
+      expect(returnedId).toBe('new-thread')
     })
 
-    it('does nothing when createChatThread returns failure', async () => {
+    it('returns null when createChatThread returns failure', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([])
       mockChatAPI.createChatThread.mockResolvedValue({
         success: false,
         error: 'db error',
       })
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('any-thread'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
+      let returnedId: string | null = 'sentinel'
       await act(async () => {
-        await result.current.createThread()
+        returnedId = await result.current.createThread()
       })
 
       expect(result.current.threads).toHaveLength(0)
-      expect(result.current.activeThreadId).toBeNull()
-    })
-  })
-
-  describe('selectThread', () => {
-    it('updates activeThreadId and calls setActiveThreadId IPC', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
-        makeDbThread({ id: 't1' }),
-        makeDbThread({ id: 't2' }),
-      ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
-        wrapper: createWrapper(),
-      })
-      await waitFor(() => expect(result.current.isLoading).toBe(false))
-
-      act(() => {
-        result.current.selectThread('t2')
-      })
-
-      expect(result.current.activeThreadId).toBe('t2')
-      expect(mockChatAPI.setActiveThreadId).toHaveBeenLastCalledWith('t2')
+      expect(returnedId).toBeNull()
     })
   })
 
@@ -180,7 +181,7 @@ describe('usePlaygroundThreads', () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 'thread-1' }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('thread-1'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -192,43 +193,43 @@ describe('usePlaygroundThreads', () => {
       expect(result.current.threads).toHaveLength(0)
     })
 
-    it('selects the next thread when active thread is deleted', async () => {
+    it('returns the next thread ID when the deleted thread has a successor', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 'active', lastEditTimestamp: 2000 }),
         makeDbThread({ id: 'next', lastEditTimestamp: 1000 }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('active'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
-      expect(result.current.activeThreadId).toBe('active')
 
+      let nextId: string | null = null
       await act(async () => {
-        await result.current.deleteThread('active')
+        nextId = await result.current.deleteThread('active')
       })
 
-      expect(result.current.activeThreadId).toBe('next')
-      expect(mockChatAPI.setActiveThreadId).toHaveBeenLastCalledWith('next')
+      expect(nextId).toBe('next')
     })
 
-    it('sets activeThreadId to null when last thread is deleted', async () => {
+    it('returns null when the last thread is deleted', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 'only' }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('only'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
+      let nextId: string | null = 'sentinel'
       await act(async () => {
-        await result.current.deleteThread('only')
+        nextId = await result.current.deleteThread('only')
       })
 
-      expect(result.current.activeThreadId).toBeNull()
+      expect(nextId).toBeNull()
       expect(result.current.hasThreads).toBe(false)
     })
 
-    it('does not change state when deleteThread returns failure', async () => {
+    it('returns null and does not change state when deleteThread returns failure', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 'thread-1' }),
       ])
@@ -236,16 +237,18 @@ describe('usePlaygroundThreads', () => {
         success: false,
         error: 'not found',
       })
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('thread-1'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
+      let nextId: string | null = 'sentinel'
       await act(async () => {
-        await result.current.deleteThread('thread-1')
+        nextId = await result.current.deleteThread('thread-1')
       })
 
       expect(result.current.threads).toHaveLength(1)
+      expect(nextId).toBeNull()
     })
   })
 
@@ -254,7 +257,7 @@ describe('usePlaygroundThreads', () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 't1', title: 'Old' }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('t1'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -278,7 +281,7 @@ describe('usePlaygroundThreads', () => {
       mockChatAPI.getThread.mockResolvedValue(
         makeDbThread({ id: 't1', title: 'Renamed' })
       )
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('t1'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -303,7 +306,7 @@ describe('usePlaygroundThreads', () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 't1', starred: false }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('t1'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -324,7 +327,7 @@ describe('usePlaygroundThreads', () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 't1', starred: true }),
       ])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('t1'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -343,7 +346,7 @@ describe('usePlaygroundThreads', () => {
 
     it('is a no-op for an unknown thread id', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([makeDbThread({ id: 't1' })])
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('t1'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -364,7 +367,7 @@ describe('usePlaygroundThreads', () => {
       mockChatAPI.getThread.mockResolvedValue(
         makeDbThread({ id: 't1', title: 'After' })
       )
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('t1'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -378,12 +381,12 @@ describe('usePlaygroundThreads', () => {
       )
     })
 
-    it('prepends and activates a new thread when it is not in the list', async () => {
+    it('prepends a new thread to the list when it is not found', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([])
       mockChatAPI.getThread.mockResolvedValue(
         makeDbThread({ id: 'brand-new', title: 'New' })
       )
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('brand-new'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -393,13 +396,13 @@ describe('usePlaygroundThreads', () => {
       })
 
       expect(result.current.threads).toHaveLength(1)
-      expect(result.current.activeThreadId).toBe('brand-new')
+      expect(result.current.threads[0]!.id).toBe('brand-new')
     })
 
     it('does nothing when getThread returns null', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([makeDbThread({ id: 't1' })])
       mockChatAPI.getThread.mockResolvedValue(null)
-      const { result } = renderHook(() => usePlaygroundThreads(), {
+      const { result } = renderHook(() => usePlaygroundThreads('t1'), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
@@ -432,7 +435,10 @@ describe('usePlaygroundThreads', () => {
           children
         )
 
-      const { result } = renderHook(() => usePlaygroundThreads(), { wrapper })
+      const { result } = renderHook(
+        () => usePlaygroundThreads('streaming-thread'),
+        { wrapper }
+      )
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
       // Simulate the streamingComplete signal
