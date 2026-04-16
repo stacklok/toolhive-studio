@@ -133,12 +133,16 @@ jobs:
     name: Build on ${{ matrix.os }}${{ matrix.arch && format(' ({0})', matrix.arch) || '' }}
     needs: check-trigger
     runs-on: ${{ matrix.os }}
-    # Activate the `artifact-signing` environment only when Windows signing is
-    # requested. The Azure OIDC federated credential is scoped to
-    # `repo:stacklok/toolhive-studio:environment:artifact-signing`, so the
-    # job must run in that environment for the token exchange to succeed.
-    # Leaving it empty keeps unsigned builds from requiring any approvals.
-    environment: ${{ needs.check-trigger.outputs.sign_windows == 'true' && 'artifact-signing' || '' }}
+    # Activate the `artifact-signing` environment only for the Windows matrix
+    # row when Windows signing is requested. The Azure OIDC federated
+    # credential is scoped to
+    # `repo:stacklok/toolhive-studio:environment:artifact-signing`, so only
+    # the Windows signing job should run in that environment for the token
+    # exchange to succeed. Scoping to `matrix.platform == 'win32'` keeps the
+    # Linux/macOS matrix rows out of the environment so they don't receive
+    # environment-scoped signing secrets or trigger environment approvals.
+    # Leaving it empty for non-signing builds keeps them free of approvals.
+    environment: ${{ needs.check-trigger.outputs.sign_windows == 'true' && matrix.platform == 'win32' && 'artifact-signing' || '' }}
     strategy:
       fail-fast: false
       matrix:
