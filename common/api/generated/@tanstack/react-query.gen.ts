@@ -32,6 +32,7 @@ import {
   getApiV1BetaSkills,
   getApiV1BetaSkillsBuilds,
   getApiV1BetaSkillsByName,
+  getApiV1BetaSkillsContent,
   getApiV1BetaVersion,
   getApiV1BetaWorkloads,
   getApiV1BetaWorkloadsByName,
@@ -40,6 +41,8 @@ import {
   getApiV1BetaWorkloadsByNameProxyLogs,
   getApiV1BetaWorkloadsByNameStatus,
   getHealth,
+  getRegistryByRegistryNameV01Servers,
+  getRegistryByRegistryNameV01ServersByServerNameVersionsLatest,
   getRegistryByRegistryNameV01xDevToolhiveSkills,
   getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillName,
   type Options,
@@ -126,6 +129,9 @@ import type {
   GetApiV1BetaSkillsByNameData,
   GetApiV1BetaSkillsByNameError,
   GetApiV1BetaSkillsByNameResponse,
+  GetApiV1BetaSkillsContentData,
+  GetApiV1BetaSkillsContentError,
+  GetApiV1BetaSkillsContentResponse,
   GetApiV1BetaSkillsData,
   GetApiV1BetaSkillsError,
   GetApiV1BetaSkillsResponse,
@@ -151,6 +157,12 @@ import type {
   GetApiV1BetaWorkloadsResponse,
   GetHealthData,
   GetHealthResponse,
+  GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestData,
+  GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestError,
+  GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponse,
+  GetRegistryByRegistryNameV01ServersData,
+  GetRegistryByRegistryNameV01ServersError,
+  GetRegistryByRegistryNameV01ServersResponse,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameError,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponse,
@@ -1206,6 +1218,37 @@ export const deleteApiV1BetaSkillsBuildsByTagMutation = (
   return mutationOptions
 }
 
+export const getApiV1BetaSkillsContentQueryKey = (
+  options: Options<GetApiV1BetaSkillsContentData>
+) => createQueryKey('getApiV1BetaSkillsContent', options)
+
+/**
+ * Get skill content
+ *
+ * Retrieve the SKILL.md body and file listing from an artifact
+ * without installing it. Accepts OCI refs, git refs, or local tags.
+ */
+export const getApiV1BetaSkillsContentOptions = (
+  options: Options<GetApiV1BetaSkillsContentData>
+) =>
+  queryOptions<
+    GetApiV1BetaSkillsContentResponse,
+    GetApiV1BetaSkillsContentError,
+    GetApiV1BetaSkillsContentResponse,
+    ReturnType<typeof getApiV1BetaSkillsContentQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaSkillsContent({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaSkillsContentQueryKey(options),
+  })
+
 /**
  * Push a skill
  *
@@ -1794,26 +1837,26 @@ export const getHealthOptions = (options?: Options<GetHealthData>) =>
     queryKey: getHealthQueryKey(options),
   })
 
-export const getRegistryByRegistryNameV01xDevToolhiveSkillsQueryKey = (
-  options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
-) => createQueryKey('getRegistryByRegistryNameV01XDevToolhiveSkills', options)
+export const getRegistryByRegistryNameV01ServersQueryKey = (
+  options: Options<GetRegistryByRegistryNameV01ServersData>
+) => createQueryKey('getRegistryByRegistryNameV01Servers', options)
 
 /**
- * List available registry skills
+ * List available registry servers
  *
- * Get a paginated list of skills from the registry. Supports optional full-text search and pagination.
+ * Get a paginated list of servers from the registry. Supports optional full-text search and pagination.
  */
-export const getRegistryByRegistryNameV01xDevToolhiveSkillsOptions = (
-  options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
+export const getRegistryByRegistryNameV01ServersOptions = (
+  options: Options<GetRegistryByRegistryNameV01ServersData>
 ) =>
   queryOptions<
-    GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse,
-    GetRegistryByRegistryNameV01xDevToolhiveSkillsError,
-    GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse,
-    ReturnType<typeof getRegistryByRegistryNameV01xDevToolhiveSkillsQueryKey>
+    GetRegistryByRegistryNameV01ServersResponse,
+    GetRegistryByRegistryNameV01ServersError,
+    GetRegistryByRegistryNameV01ServersResponse,
+    ReturnType<typeof getRegistryByRegistryNameV01ServersQueryKey>
   >({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await getRegistryByRegistryNameV01xDevToolhiveSkills({
+      const { data } = await getRegistryByRegistryNameV01Servers({
         ...options,
         ...queryKey[0],
         signal,
@@ -1821,7 +1864,7 @@ export const getRegistryByRegistryNameV01xDevToolhiveSkillsOptions = (
       })
       return data
     },
-    queryKey: getRegistryByRegistryNameV01xDevToolhiveSkillsQueryKey(options),
+    queryKey: getRegistryByRegistryNameV01ServersQueryKey(options),
   })
 
 const createInfiniteParams = <
@@ -1857,6 +1900,130 @@ const createInfiniteParams = <
   }
   return params as unknown as typeof page
 }
+
+export const getRegistryByRegistryNameV01ServersInfiniteQueryKey = (
+  options: Options<GetRegistryByRegistryNameV01ServersData>
+): QueryKey<Options<GetRegistryByRegistryNameV01ServersData>> =>
+  createQueryKey('getRegistryByRegistryNameV01Servers', options, true)
+
+/**
+ * List available registry servers
+ *
+ * Get a paginated list of servers from the registry. Supports optional full-text search and pagination.
+ */
+export const getRegistryByRegistryNameV01ServersInfiniteOptions = (
+  options: Options<GetRegistryByRegistryNameV01ServersData>
+) =>
+  infiniteQueryOptions<
+    GetRegistryByRegistryNameV01ServersResponse,
+    GetRegistryByRegistryNameV01ServersError,
+    InfiniteData<GetRegistryByRegistryNameV01ServersResponse>,
+    QueryKey<Options<GetRegistryByRegistryNameV01ServersData>>,
+    | number
+    | Pick<
+        QueryKey<Options<GetRegistryByRegistryNameV01ServersData>>[0],
+        'body' | 'headers' | 'path' | 'query'
+      >
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<
+          QueryKey<Options<GetRegistryByRegistryNameV01ServersData>>[0],
+          'body' | 'headers' | 'path' | 'query'
+        > =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              }
+        const params = createInfiniteParams(queryKey, page)
+        const { data } = await getRegistryByRegistryNameV01Servers({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        })
+        return data
+      },
+      queryKey: getRegistryByRegistryNameV01ServersInfiniteQueryKey(options),
+    }
+  )
+
+export const getRegistryByRegistryNameV01ServersByServerNameVersionsLatestQueryKey =
+  (
+    options: Options<GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestData>
+  ) =>
+    createQueryKey(
+      'getRegistryByRegistryNameV01ServersByServerNameVersionsLatest',
+      options
+    )
+
+/**
+ * Get a registry server
+ *
+ * Retrieve a single server by name. Names use reverse-DNS format; URL-encode slashes.
+ */
+export const getRegistryByRegistryNameV01ServersByServerNameVersionsLatestOptions =
+  (
+    options: Options<GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestData>
+  ) =>
+    queryOptions<
+      GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponse,
+      GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestError,
+      GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponse,
+      ReturnType<
+        typeof getRegistryByRegistryNameV01ServersByServerNameVersionsLatestQueryKey
+      >
+    >({
+      queryFn: async ({ queryKey, signal }) => {
+        const { data } =
+          await getRegistryByRegistryNameV01ServersByServerNameVersionsLatest({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true,
+          })
+        return data
+      },
+      queryKey:
+        getRegistryByRegistryNameV01ServersByServerNameVersionsLatestQueryKey(
+          options
+        ),
+    })
+
+export const getRegistryByRegistryNameV01xDevToolhiveSkillsQueryKey = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
+) => createQueryKey('getRegistryByRegistryNameV01XDevToolhiveSkills', options)
+
+/**
+ * List available registry skills
+ *
+ * Get a paginated list of skills from the registry. Supports optional full-text search and pagination.
+ */
+export const getRegistryByRegistryNameV01xDevToolhiveSkillsOptions = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
+) =>
+  queryOptions<
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse,
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsError,
+    GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse,
+    ReturnType<typeof getRegistryByRegistryNameV01xDevToolhiveSkillsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getRegistryByRegistryNameV01xDevToolhiveSkills({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getRegistryByRegistryNameV01xDevToolhiveSkillsQueryKey(options),
+  })
 
 export const getRegistryByRegistryNameV01xDevToolhiveSkillsInfiniteQueryKey = (
   options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
