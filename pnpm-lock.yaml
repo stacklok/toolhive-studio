@@ -39,7 +39,7 @@ importers:
         specifier: ^3.0.69
         version: 3.0.69(zod@4.3.6)
       '@ai-sdk/google':
-        specifier: ^3.0.61
+        specifier: ^3.0.62
         version: 3.0.63(zod@4.3.6)
       '@ai-sdk/mcp':
         specifier: ^1.0.36
