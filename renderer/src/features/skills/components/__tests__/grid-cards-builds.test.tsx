@@ -1,21 +1,48 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { screen, waitFor } from '@testing-library/react'
 import { expect, it, vi, describe, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import React from 'react'
+import {
+  createRootRoute,
+  createRoute,
+  Outlet,
+  Router,
+  createMemoryHistory,
+} from '@tanstack/react-router'
+import { renderRoute } from '@/common/test/render-route'
+import { createTestRouter } from '@/common/test/create-test-router'
 import { GridCardsBuilds } from '../grid-cards-builds'
 import { mockedGetApiV1BetaSkillsBuilds } from '@/common/mocks/fixtures/skills_builds/get'
 
-const renderWithProviders = (component: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
+function createGridTestRouter(
+  props: { filter: string; onBuild: () => void } = {
+    filter: '',
+    onBuild: vi.fn(),
+  }
+) {
+  const rootRoute = createRootRoute({
+    component: Outlet,
+    errorComponent: ({ error }) => <div>{String(error)}</div>,
   })
-  return render(
-    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>
-  )
+
+  const buildsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/skills',
+    component: () => (
+      <GridCardsBuilds filter={props.filter} onBuild={props.onBuild} />
+    ),
+  })
+
+  const buildDetailRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/skills/builds/$tag',
+    component: () => <div data-testid="build-detail-page" />,
+  })
+
+  return new Router({
+    routeTree: rootRoute.addChildren([buildsRoute, buildDetailRoute]),
+    history: createMemoryHistory({ initialEntries: ['/skills'] }),
+    defaultNotFoundComponent: () => null,
+  })
 }
 
 beforeEach(() => {
@@ -24,7 +51,11 @@ beforeEach(() => {
 
 describe('GridCardsBuilds', () => {
   it('renders a card for each build', async () => {
-    renderWithProviders(<GridCardsBuilds filter="" onBuild={vi.fn()} />)
+    const router = createGridTestRouter() as unknown as ReturnType<
+      typeof createTestRouter
+    >
+    await router.navigate({ to: '/skills' })
+    renderRoute(router)
 
     await waitFor(() => {
       expect(screen.getByText('my-skill')).toBeInTheDocument()
@@ -34,8 +65,11 @@ describe('GridCardsBuilds', () => {
 
   it('shows empty state when there are no builds', async () => {
     mockedGetApiV1BetaSkillsBuilds.activateScenario('empty')
-
-    renderWithProviders(<GridCardsBuilds filter="" onBuild={vi.fn()} />)
+    const router = createGridTestRouter() as unknown as ReturnType<
+      typeof createTestRouter
+    >
+    await router.navigate({ to: '/skills' })
+    renderRoute(router)
 
     await waitFor(() => {
       expect(screen.getByText('No local builds')).toBeInTheDocument()
@@ -46,8 +80,12 @@ describe('GridCardsBuilds', () => {
     mockedGetApiV1BetaSkillsBuilds.activateScenario('empty')
     const user = userEvent.setup()
     const onBuild = vi.fn()
-
-    renderWithProviders(<GridCardsBuilds filter="" onBuild={onBuild} />)
+    const router = createGridTestRouter({
+      filter: '',
+      onBuild,
+    }) as unknown as ReturnType<typeof createTestRouter>
+    await router.navigate({ to: '/skills' })
+    renderRoute(router)
 
     await waitFor(() => {
       expect(screen.getByText('No local builds')).toBeInTheDocument()
@@ -59,9 +97,12 @@ describe('GridCardsBuilds', () => {
   })
 
   it('shows filtered-empty message when filter matches nothing', async () => {
-    renderWithProviders(
-      <GridCardsBuilds filter="zzz-no-match-zzz" onBuild={vi.fn()} />
-    )
+    const router = createGridTestRouter({
+      filter: 'zzz-no-match-zzz',
+      onBuild: vi.fn(),
+    }) as unknown as ReturnType<typeof createTestRouter>
+    await router.navigate({ to: '/skills' })
+    renderRoute(router)
 
     await waitFor(() => {
       expect(
@@ -71,7 +112,12 @@ describe('GridCardsBuilds', () => {
   })
 
   it('filters builds by name', async () => {
-    renderWithProviders(<GridCardsBuilds filter="my-skill" onBuild={vi.fn()} />)
+    const router = createGridTestRouter({
+      filter: 'my-skill',
+      onBuild: vi.fn(),
+    }) as unknown as ReturnType<typeof createTestRouter>
+    await router.navigate({ to: '/skills' })
+    renderRoute(router)
 
     await waitFor(() => {
       expect(screen.getByText('my-skill')).toBeInTheDocument()
