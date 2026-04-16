@@ -127,6 +127,7 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
   const { data: appVersion } = useAppVersion()
   const isProduction = import.meta.env.MODE === 'production'
   const isActive = useIsActive()
+  const { canShow } = usePermissions()
   const showUpdateBadge = !!(appVersion?.isNewVersionAvailable && isProduction)
 
   useEffect(() => {
@@ -186,10 +187,12 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
           </Button>
         )}
         <div className="flex h-full items-center gap-1 pl-2">
-          <HelpDropdown
-            className="app-region-no-drag"
-            isEnterprise={isEnterprise}
-          />
+          {canShow(PERMISSION_KEYS.HELP_MENU) && (
+            <HelpDropdown
+              className="app-region-no-drag"
+              isEnterprise={isEnterprise}
+            />
+          )}
           <NavIconButton
             asChild
             isActive={isActive(['/settings'])}
