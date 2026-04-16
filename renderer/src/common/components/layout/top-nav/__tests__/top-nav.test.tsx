@@ -64,6 +64,25 @@ describe('TopNav', () => {
     expect(screen.queryByText('Playground')).not.toBeInTheDocument()
   })
 
+  it('renders Help button when HELP_MENU permission is enabled', async () => {
+    renderTopNav()
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /help/i })).toBeInTheDocument()
+    })
+  })
+
+  it('hides Help button when HELP_MENU permission is disabled', async () => {
+    renderTopNavWithPermissions({
+      [PERMISSION_KEYS.HELP_MENU]: false,
+    })
+    await waitFor(() => {
+      expect(screen.getByText('MCP Servers')).toBeInTheDocument()
+    })
+    expect(
+      screen.queryByRole('button', { name: /help/i })
+    ).not.toBeInTheDocument()
+  })
+
   it('renders Settings button', async () => {
     renderTopNav()
     await waitFor(() => {
