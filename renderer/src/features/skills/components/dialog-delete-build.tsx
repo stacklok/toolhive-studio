@@ -14,12 +14,14 @@ interface DialogDeleteBuildProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   build: LocalBuild | null
+  onSuccess?: () => void
 }
 
 export function DialogDeleteBuild({
   open,
   onOpenChange,
   build,
+  onSuccess,
 }: DialogDeleteBuildProps) {
   const { mutateAsync: deleteBuild, isPending } = useMutationDeleteBuild()
 
@@ -31,6 +33,7 @@ export function DialogDeleteBuild({
     try {
       await deleteBuild({ path: { tag } })
       onOpenChange(false)
+      onSuccess?.()
     } catch {
       // Error toast is handled by useMutationDeleteBuild onError
     }

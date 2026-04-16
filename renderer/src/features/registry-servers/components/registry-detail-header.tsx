@@ -6,6 +6,7 @@ import type { ReactNode } from 'react'
 type RegistryDetailHeaderProps = {
   title: string
   backTo?: string
+  backSearch?: Record<string, unknown>
   badges?: ReactNode
   description?: string | null
 }
@@ -13,13 +14,14 @@ type RegistryDetailHeaderProps = {
 export function RegistryDetailHeader({
   title,
   backTo = '/registry',
+  backSearch,
   badges,
   description,
 }: RegistryDetailHeaderProps) {
   return (
     <div className="w-full">
       <div className="mb-5">
-        <LinkViewTransition to={backTo}>
+        <LinkViewTransition to={backTo} search={backSearch}>
           <Button variant="outline" aria-label="Back" className="rounded-full">
             <ChevronLeft className="size-4" />
             Back

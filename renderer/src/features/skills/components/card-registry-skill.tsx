@@ -1,21 +1,9 @@
 import { useState } from 'react'
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/common/components/ui/card'
 import { Button } from '@/common/components/ui/button'
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from '@/common/components/ui/tooltip'
-import { cn } from '@/common/lib/utils'
 import { useNavigate } from '@tanstack/react-router'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
+import { CardSkillBase } from './card-skill-base'
 
 export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
   const [installOpen, setInstallOpen] = useState(false)
@@ -42,62 +30,15 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
 
   return (
     <>
-      <Card
-        className={cn(
-          'relative flex flex-col',
-          'transition-[box-shadow,color]',
-          canNavigate && 'cursor-pointer hover:ring',
-          'has-[button:focus-visible]:ring',
-          'focus-visible:ring focus-visible:outline-none'
-        )}
-        onClick={handleCardClick}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            handleCardClick()
-          }
-        }}
-        role={canNavigate ? 'link' : undefined}
-        tabIndex={canNavigate ? 0 : undefined}
-      >
-        <CardHeader>
-          <CardTitle className="flex items-start justify-between gap-2 text-xl">
-            <Tooltip onlyWhenTruncated>
-              <TooltipTrigger asChild>
-                <span className="truncate select-none">{name}</span>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">{name}</TooltipContent>
-            </Tooltip>
-          </CardTitle>
-          {namespace && (
-            <p className="text-muted-foreground truncate text-sm select-none">
-              {namespace}
-            </p>
-          )}
-        </CardHeader>
-
-        <CardContent className="flex-1">
-          {description && (
-            <Tooltip onlyWhenTruncated>
-              <TooltipTrigger asChild>
-                <p
-                  className="text-muted-foreground line-clamp-3 text-sm
-                    select-none"
-                >
-                  {description}
-                </p>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">
-                {description}
-              </TooltipContent>
-            </Tooltip>
-          )}
-        </CardContent>
-
-        <CardFooter className="mt-auto">
+      <CardSkillBase
+        title={name}
+        subtitle={namespace}
+        description={description}
+        onClick={canNavigate ? handleCardClick : undefined}
+        footer={
           <Button
             variant="secondary"
-            size="sm"
+            className="rounded-full"
             onClick={(e) => {
               e.stopPropagation()
               setInstallOpen(true)
@@ -105,8 +46,8 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
           >
             Install
           </Button>
-        </CardFooter>
-      </Card>
+        }
+      />
 
       <DialogInstallSkill
         open={installOpen}

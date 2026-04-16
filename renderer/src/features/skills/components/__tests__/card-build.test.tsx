@@ -1,22 +1,17 @@
-import { render, screen } from '@testing-library/react'
-import { expect, it, describe } from 'vitest'
+import { screen, waitFor } from '@testing-library/react'
+import { expect, it, describe, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import React from 'react'
+import {
+  createRootRoute,
+  createRoute,
+  Outlet,
+  Router,
+  createMemoryHistory,
+} from '@tanstack/react-router'
+import { renderRoute } from '@/common/test/render-route'
+import { createTestRouter } from '@/common/test/create-test-router'
 import { CardBuild } from '../card-build'
 import type { GithubComStacklokToolhivePkgSkillsLocalBuild as LocalBuild } from '@common/api/generated/types.gen'
-
-const renderWithProviders = (component: React.ReactElement) => {
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      queries: { retry: false },
-      mutations: { retry: false },
-    },
-  })
-  return render(
-    <QueryClientProvider client={queryClient}>{component}</QueryClientProvider>
-  )
-}
 
 const baseBuild: LocalBuild = {
   name: 'my-skill',
@@ -27,80 +22,137 @@ const baseBuild: LocalBuild = {
     'sha256:abc123def456abc123def456abc123def456abc123def456abc123def456abc1',
 }
 
+function createCardTestRouter(build: LocalBuild = baseBuild) {
+  const rootRoute = createRootRoute({
+    component: Outlet,
+    errorComponent: ({ error }) => <div>{String(error)}</div>,
+  })
+
+  const buildsRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/skills',
+    component: () => <CardBuild build={build} />,
+  })
+
+  const buildDetailRoute = createRoute({
+    getParentRoute: () => rootRoute,
+    path: '/skills/builds/$tag',
+    component: () => <div data-testid="build-detail-page" />,
+  })
+
+  return new Router({
+    routeTree: rootRoute.addChildren([buildsRoute, buildDetailRoute]),
+    history: createMemoryHistory({ initialEntries: ['/skills'] }),
+    defaultNotFoundComponent: () => null,
+  })
+}
+
+const router = createCardTestRouter() as unknown as ReturnType<
+  typeof createTestRouter
+>
+
+beforeEach(async () => {
+  await router.navigate({ to: '/skills' })
+})
+
 describe('CardBuild', () => {
   it('renders skill name from build.name', () => {
-    renderWithProviders(<CardBuild build={baseBuild} />)
+    renderRoute(router)
     expect(screen.getByText('my-skill')).toBeInTheDocument()
   })
 
-  it('falls back to tag when name is absent', () => {
-    const build: LocalBuild = { tag: 'localhost/my-skill:v1.0.0' }
-    renderWithProviders(<CardBuild build={build} />)
+  it('falls back to tag when name is absent', async () => {
+    const buildRouter = createCardTestRouter({
+      tag: 'localhost/my-skill:v1.0.0',
+    }) as unknown as ReturnType<typeof createTestRouter>
+    await buildRouter.navigate({ to: '/skills' })
+    renderRoute(buildRouter)
     expect(
       screen.getAllByText('localhost/my-skill:v1.0.0').length
     ).toBeGreaterThan(0)
   })
 
-  it('shows "Unnamed build" when neither name nor tag', () => {
-    renderWithProviders(<CardBuild build={{}} />)
+  it('shows "Unnamed build" when neither name nor tag', async () => {
+    const buildRouter = createCardTestRouter({}) as unknown as ReturnType<
+      typeof createTestRouter
+    >
+    await buildRouter.navigate({ to: '/skills' })
+    renderRoute(buildRouter)
     expect(screen.getByText('Unnamed build')).toBeInTheDocument()
   })
 
-  it('renders description when present', () => {
-    renderWithProviders(<CardBuild build={baseBuild} />)
-    expect(screen.getByText('A locally built skill')).toBeInTheDocument()
+  it('renders description and digest in content', () => {
+    renderRoute(router)
+    expect(screen.getAllByText(/A locally built skill/).length).toBeGreaterThan(
+      0
+    )
+    expect(screen.getAllByText(/sha256:/).length).toBeGreaterThan(0)
   })
 
   it('renders version badge', () => {
-    renderWithProviders(<CardBuild build={baseBuild} />)
+    renderRoute(router)
     expect(screen.getByText('v1.0.0')).toBeInTheDocument()
-  })
-
-  it('renders a truncated digest', () => {
-    renderWithProviders(<CardBuild build={baseBuild} />)
-    expect(screen.getByText(/sha256:/)).toBeInTheDocument()
   })
 
   it('opens install dialog when Install button is clicked', async () => {
     const user = userEvent.setup()
-    renderWithProviders(<CardBuild build={baseBuild} />)
+    renderRoute(router)
 
     await user.click(screen.getByRole('button', { name: /install my-skill/i }))
 
-    expect(
-      screen.getByRole('heading', { name: /install skill/i })
-    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /install skill/i })
+      ).toBeInTheDocument()
+    })
   })
 
   it('prefills install dialog with the build tag as reference', async () => {
     const user = userEvent.setup()
-    renderWithProviders(<CardBuild build={baseBuild} />)
+    renderRoute(router)
 
     await user.click(screen.getByRole('button', { name: /install my-skill/i }))
 
-    expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
-      'localhost/my-skill:v1.0.0'
-    )
+    await waitFor(() => {
+      expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
+        'localhost/my-skill:v1.0.0'
+      )
+    })
   })
 
   it('opens remove dialog when Remove button is clicked', async () => {
     const user = userEvent.setup()
-    renderWithProviders(<CardBuild build={baseBuild} />)
+    renderRoute(router)
 
     await user.click(screen.getByRole('button', { name: /remove my-skill/i }))
 
-    expect(
-      screen.getByRole('heading', { name: /remove build/i })
-    ).toBeInTheDocument()
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: /remove build/i })
+      ).toBeInTheDocument()
+    })
   })
 
   it('shows build name in remove dialog confirmation text', async () => {
     const user = userEvent.setup()
-    renderWithProviders(<CardBuild build={baseBuild} />)
+    renderRoute(router)
 
     await user.click(screen.getByRole('button', { name: /remove my-skill/i }))
 
-    const dialog = screen.getByRole('dialog')
-    expect(dialog).toHaveTextContent('my-skill')
+    await waitFor(() => {
+      const dialog = screen.getByRole('dialog')
+      expect(dialog).toHaveTextContent('my-skill')
+    })
+  })
+
+  it('navigates to build detail page when card is clicked', async () => {
+    const user = userEvent.setup()
+    renderRoute(router)
+
+    await user.click(screen.getByText('my-skill'))
+
+    await waitFor(() => {
+      expect(router.state.location.pathname).toMatch(/\/skills\/builds\//)
+    })
   })
 })
