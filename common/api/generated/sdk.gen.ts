@@ -62,6 +62,9 @@ import type {
   GetApiV1BetaSkillsByNameData,
   GetApiV1BetaSkillsByNameErrors,
   GetApiV1BetaSkillsByNameResponses,
+  GetApiV1BetaSkillsContentData,
+  GetApiV1BetaSkillsContentErrors,
+  GetApiV1BetaSkillsContentResponses,
   GetApiV1BetaSkillsData,
   GetApiV1BetaSkillsErrors,
   GetApiV1BetaSkillsResponses,
@@ -87,6 +90,12 @@ import type {
   GetApiV1BetaWorkloadsResponses,
   GetHealthData,
   GetHealthResponses,
+  GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestData,
+  GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestErrors,
+  GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponses,
+  GetRegistryByRegistryNameV01ServersData,
+  GetRegistryByRegistryNameV01ServersErrors,
+  GetRegistryByRegistryNameV01ServersResponses,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameErrors,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponses,
@@ -746,6 +755,21 @@ export const deleteApiV1BetaSkillsBuildsByTag = <
   >({ url: '/api/v1beta/skills/builds/{tag}', ...options })
 
 /**
+ * Get skill content
+ *
+ * Retrieve the SKILL.md body and file listing from an artifact
+ * without installing it. Accepts OCI refs, git refs, or local tags.
+ */
+export const getApiV1BetaSkillsContent = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1BetaSkillsContentData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    GetApiV1BetaSkillsContentResponses,
+    GetApiV1BetaSkillsContentErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/skills/content', ...options })
+
+/**
  * Push a skill
  *
  * Push a built skill artifact to a remote registry
@@ -1100,6 +1124,44 @@ export const getHealth = <ThrowOnError extends boolean = false>(
 ) =>
   (options?.client ?? client).get<GetHealthResponses, unknown, ThrowOnError>({
     url: '/health',
+    ...options,
+  })
+
+/**
+ * List available registry servers
+ *
+ * Get a paginated list of servers from the registry. Supports optional full-text search and pagination.
+ */
+export const getRegistryByRegistryNameV01Servers = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetRegistryByRegistryNameV01ServersData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    GetRegistryByRegistryNameV01ServersResponses,
+    GetRegistryByRegistryNameV01ServersErrors,
+    ThrowOnError
+  >({ url: '/registry/{registryName}/v0.1/servers', ...options })
+
+/**
+ * Get a registry server
+ *
+ * Retrieve a single server by name. Names use reverse-DNS format; URL-encode slashes.
+ */
+export const getRegistryByRegistryNameV01ServersByServerNameVersionsLatest = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestData,
+    ThrowOnError
+  >
+) =>
+  (options.client ?? client).get<
+    GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponses,
+    GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestErrors,
+    ThrowOnError
+  >({
+    url: '/registry/{registryName}/v0.1/servers/{serverName}/versions/latest',
     ...options,
   })
 

@@ -1330,6 +1330,44 @@ export type GithubComStacklokToolhivePkgSkillsLocalBuild = {
  */
 export type GithubComStacklokToolhivePkgSkillsScope = 'user' | 'project'
 
+export type GithubComStacklokToolhivePkgSkillsSkillContent = {
+  /**
+   * Body is the raw SKILL.md markdown content.
+   */
+  body?: string
+  /**
+   * Description is the skill description from the OCI config labels.
+   */
+  description?: string
+  /**
+   * Files is the list of all files in the artifact with their sizes.
+   */
+  files?: Array<GithubComStacklokToolhivePkgSkillsSkillFileEntry>
+  /**
+   * License is the SPDX license identifier from the OCI config labels.
+   */
+  license?: string
+  /**
+   * Name is the skill name from the OCI config labels.
+   */
+  name?: string
+  /**
+   * Version is the skill version from the OCI config labels.
+   */
+  version?: string
+}
+
+export type GithubComStacklokToolhivePkgSkillsSkillFileEntry = {
+  /**
+   * Path is the file path within the artifact.
+   */
+  path?: string
+  /**
+   * Size is the uncompressed file size in bytes.
+   */
+  size?: number
+}
+
 export type GithubComStacklokToolhivePkgSkillsSkillInfo = {
   installed_skill?: GithubComStacklokToolhivePkgSkillsInstalledSkill
   metadata?: GithubComStacklokToolhivePkgSkillsSkillMetadata
@@ -1567,6 +1605,123 @@ export type GithubComStacklokToolhivePkgWebhookTlsConfig = {
    * WARNING: This should only be used for development/testing.
    */
   insecure_skip_verify?: boolean
+}
+
+export type ModelArgument = {
+  choices?: Array<string>
+  default?: string
+  description?: string
+  format?: ModelFormat
+  isRepeated?: boolean
+  isRequired?: boolean
+  isSecret?: boolean
+  name?: string
+  placeholder?: string
+  type?: ModelArgumentType
+  value?: string
+  valueHint?: string
+  variables?: {
+    [key: string]: ModelInput
+  }
+}
+
+export type ModelArgumentType = 'positional' | 'named'
+
+export type ModelFormat = 'string' | 'number' | 'boolean' | 'filepath'
+
+export type ModelIcon = {
+  mimeType?: string
+  sizes?: Array<string>
+  src?: string
+  theme?: string
+}
+
+export type ModelInput = {
+  choices?: Array<string>
+  default?: string
+  description?: string
+  format?: ModelFormat
+  isRequired?: boolean
+  isSecret?: boolean
+  placeholder?: string
+  value?: string
+}
+
+export type ModelKeyValueInput = {
+  choices?: Array<string>
+  default?: string
+  description?: string
+  format?: ModelFormat
+  isRequired?: boolean
+  isSecret?: boolean
+  name?: string
+  placeholder?: string
+  value?: string
+  variables?: {
+    [key: string]: ModelInput
+  }
+}
+
+export type ModelPackage = {
+  /**
+   * EnvironmentVariables are set when running the package
+   */
+  environmentVariables?: Array<ModelKeyValueInput>
+  /**
+   * FileSHA256 is the SHA-256 hash for integrity verification (required for mcpb, optional for others)
+   */
+  fileSha256?: string
+  /**
+   * Identifier is the package identifier:
+   * - For NPM/PyPI/NuGet: package name or ID
+   * - For OCI: full image reference (e.g., "ghcr.io/owner/repo:v1.0.0")
+   * - For MCPB: direct download URL
+   */
+  identifier?: string
+  /**
+   * PackageArguments are passed to the package's binary
+   */
+  packageArguments?: Array<ModelArgument>
+  /**
+   * RegistryBaseURL is the base URL of the package registry (used by npm, pypi, nuget; not used by oci, mcpb)
+   */
+  registryBaseUrl?: string
+  /**
+   * RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "nuget", "mcpb")
+   */
+  registryType?: string
+  /**
+   * RuntimeArguments are passed to the package's runtime command (e.g., docker, npx)
+   */
+  runtimeArguments?: Array<ModelArgument>
+  /**
+   * RunTimeHint suggests the appropriate runtime for the package
+   */
+  runtimeHint?: string
+  transport?: ModelTransport
+  /**
+   * Version is the package version (required for npm, pypi, nuget; optional for mcpb; not used by oci where version is in the identifier)
+   */
+  version?: string
+}
+
+export type ModelRepository = {
+  id?: string
+  source?: string
+  subfolder?: string
+  url?: string
+}
+
+/**
+ * Transport is required and specifies the transport protocol configuration
+ */
+export type ModelTransport = {
+  headers?: Array<ModelKeyValueInput>
+  type?: string
+  url?: string
+  variables?: {
+    [key: string]: ModelInput
+  }
 }
 
 /**
@@ -2104,6 +2259,24 @@ export type PkgApiV1OidcOptions = {
 }
 
 /**
+ * Metadata contains pagination information
+ */
+export type PkgApiV1PaginationV01Metadata = {
+  /**
+   * Limit is the maximum number of items per page
+   */
+  limit?: number
+  /**
+   * Page is the current page number (1-based)
+   */
+  page?: number
+  /**
+   * Total is the total number of items matching the query
+   */
+  total?: number
+}
+
+/**
  * Capabilities of the secrets provider
  */
 export type PkgApiV1ProviderCapabilitiesResponse = {
@@ -2139,8 +2312,17 @@ export type PkgApiV1PushSkillRequest = {
   reference?: string
 }
 
+/**
+ * Structured error response returned by registry endpoints
+ */
 export type PkgApiV1RegistryErrorResponse = {
+  /**
+   * Code is a machine-readable error code (e.g. "not_found", "registry_auth_required")
+   */
   code?: string
+  /**
+   * Message is a human-readable description of the error
+   */
   message?: string
 }
 
@@ -2259,6 +2441,17 @@ export type PkgApiV1SecretKeyResponse = {
 }
 
 /**
+ * Paginated list of servers from the registry
+ */
+export type PkgApiV1ServersV01Response = {
+  metadata?: PkgApiV1PaginationV01Metadata
+  /**
+   * Servers is the list of servers on the current page
+   */
+  servers?: Array<V0ServerJson>
+}
+
+/**
  * Request to setup a secrets provider
  */
 export type PkgApiV1SetupSecretsRequest = {
@@ -2298,28 +2491,10 @@ export type PkgApiV1SkillListResponse = {
 }
 
 /**
- * Metadata contains pagination information
- */
-export type PkgApiV1SkillsV01Metadata = {
-  /**
-   * Limit is the maximum number of skills per page
-   */
-  limit?: number
-  /**
-   * Page is the current page number (1-based)
-   */
-  page?: number
-  /**
-   * Total is the total number of skills matching the query
-   */
-  total?: number
-}
-
-/**
  * Paginated list of skills from the registry
  */
 export type PkgApiV1SkillsV01Response = {
-  metadata?: PkgApiV1SkillsV01Metadata
+  metadata?: PkgApiV1PaginationV01Metadata
   /**
    * Skills is the list of skills on the current page
    */
@@ -2979,6 +3154,26 @@ export type RegistrySkillRepository = {
 export type RegistryVerifiedAttestation = {
   predicate?: unknown
   predicate_type?: string
+}
+
+export type V0ServerJson = {
+  $schema?: string
+  _meta?: V0ServerMeta
+  description?: string
+  icons?: Array<ModelIcon>
+  name?: string
+  packages?: Array<ModelPackage>
+  remotes?: Array<ModelTransport>
+  repository?: ModelRepository
+  title?: string
+  version?: string
+  websiteUrl?: string
+}
+
+export type V0ServerMeta = {
+  'io.modelcontextprotocol.registry/publisher-provided'?: {
+    [key: string]: unknown
+  }
 }
 
 /**
@@ -4089,6 +4284,46 @@ export type DeleteApiV1BetaSkillsBuildsByTagResponses = {
 export type DeleteApiV1BetaSkillsBuildsByTagResponse =
   DeleteApiV1BetaSkillsBuildsByTagResponses[keyof DeleteApiV1BetaSkillsBuildsByTagResponses]
 
+export type GetApiV1BetaSkillsContentData = {
+  body?: never
+  path?: never
+  query: {
+    /**
+     * OCI reference or local build tag
+     */
+    ref: string
+  }
+  url: '/api/v1beta/skills/content'
+}
+
+export type GetApiV1BetaSkillsContentErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+  /**
+   * Bad Gateway
+   */
+  502: string
+}
+
+export type GetApiV1BetaSkillsContentError =
+  GetApiV1BetaSkillsContentErrors[keyof GetApiV1BetaSkillsContentErrors]
+
+export type GetApiV1BetaSkillsContentResponses = {
+  /**
+   * OK
+   */
+  200: GithubComStacklokToolhivePkgSkillsSkillContent
+}
+
+export type GetApiV1BetaSkillsContentResponse =
+  GetApiV1BetaSkillsContentResponses[keyof GetApiV1BetaSkillsContentResponses]
+
 export type PostApiV1BetaSkillsPushData = {
   /**
    * Push request
@@ -4794,6 +5029,106 @@ export type GetHealthResponses = {
 }
 
 export type GetHealthResponse = GetHealthResponses[keyof GetHealthResponses]
+
+export type GetRegistryByRegistryNameV01ServersData = {
+  body?: never
+  path: {
+    /**
+     * Registry name (currently ignored, uses the default provider)
+     */
+    registryName: string
+  }
+  query?: {
+    /**
+     * Search filter — matches against server name and description
+     */
+    q?: string
+    /**
+     * Page number, 1-based (default: 1)
+     */
+    page?: number
+    /**
+     * Items per page, max 200 (default: 50)
+     */
+    limit?: number
+  }
+  url: '/registry/{registryName}/v0.1/servers'
+}
+
+export type GetRegistryByRegistryNameV01ServersErrors = {
+  /**
+   * Internal server error
+   */
+  500: PkgApiV1RegistryErrorResponse
+  /**
+   * Registry authentication required or upstream registry unavailable
+   */
+  503: PkgApiV1RegistryErrorResponse
+}
+
+export type GetRegistryByRegistryNameV01ServersError =
+  GetRegistryByRegistryNameV01ServersErrors[keyof GetRegistryByRegistryNameV01ServersErrors]
+
+export type GetRegistryByRegistryNameV01ServersResponses = {
+  /**
+   * OK
+   */
+  200: PkgApiV1ServersV01Response
+}
+
+export type GetRegistryByRegistryNameV01ServersResponse =
+  GetRegistryByRegistryNameV01ServersResponses[keyof GetRegistryByRegistryNameV01ServersResponses]
+
+export type GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestData =
+  {
+    body?: never
+    path: {
+      /**
+       * Registry name (currently ignored, uses the default provider)
+       */
+      registryName: string
+      /**
+       * Server name (URL-encoded reverse-DNS format)
+       */
+      serverName: string
+    }
+    query?: never
+    url: '/registry/{registryName}/v0.1/servers/{serverName}/versions/latest'
+  }
+
+export type GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestErrors =
+  {
+    /**
+     * Invalid server name encoding
+     */
+    400: PkgApiV1RegistryErrorResponse
+    /**
+     * Server not found
+     */
+    404: PkgApiV1RegistryErrorResponse
+    /**
+     * Internal server error
+     */
+    500: PkgApiV1RegistryErrorResponse
+    /**
+     * Registry authentication required or upstream registry unavailable
+     */
+    503: PkgApiV1RegistryErrorResponse
+  }
+
+export type GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestError =
+  GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestErrors[keyof GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestErrors]
+
+export type GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponses =
+  {
+    /**
+     * OK
+     */
+    200: V0ServerJson
+  }
+
+export type GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponse =
+  GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponses[keyof GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponses]
 
 export type GetRegistryByRegistryNameV01xDevToolhiveSkillsData = {
   body?: never
