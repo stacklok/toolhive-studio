@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Button } from '@/common/components/ui/button'
-import { LinkViewTransition } from '@/common/components/link-view-transition'
-import { ChevronLeft, TagIcon, GitForkIcon, ScaleIcon } from 'lucide-react'
+import { TagIcon, GitForkIcon, ScaleIcon } from 'lucide-react'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
+import { SkillDetailLayout } from './skill-detail-layout'
 
 interface SkillDetailPageProps {
   skill: RegistrySkill
@@ -22,72 +22,55 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
     namespace && name !== 'Unknown skill' ? `${namespace}/${name}` : name
   const defaultReference = isOci && version ? `${base}:${version}` : base
 
+  const hasBadges = !!(version || namespace || license)
+
   return (
     <>
-      <div className="flex w-full flex-col gap-8">
-        {/* Header */}
-        <div className="flex flex-col gap-3">
-          <div>
-            <LinkViewTransition to="/skills" search={{ tab: 'registry' }}>
-              <Button variant="outline" className="rounded-full">
-                <ChevronLeft className="size-4" />
-                Back
-              </Button>
-            </LinkViewTransition>
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <h1 className="text-page-title m-0 p-0">{name}</h1>
-            <div
-              className="text-muted-foreground flex items-center gap-4 text-sm"
-            >
+      <SkillDetailLayout
+        title={name}
+        backTo="/skills"
+        backSearch={{ tab: 'registry' }}
+        badges={
+          hasBadges ? (
+            <>
               {version && (
-                <span className="flex items-center gap-1">
+                <span
+                  className="text-muted-foreground flex items-center gap-1
+                    text-sm"
+                >
                   <TagIcon className="size-4" />
                   {version}
                 </span>
               )}
               {namespace && (
-                <span className="flex items-center gap-1">
+                <span
+                  className="text-muted-foreground flex items-center gap-1
+                    text-sm"
+                >
                   <GitForkIcon className="size-4" />
                   {namespace}
                 </span>
               )}
               {license && (
-                <span className="flex items-center gap-1">
+                <span
+                  className="text-muted-foreground flex items-center gap-1
+                    text-sm"
+                >
                   <ScaleIcon className="size-4" />
                   {license}
                 </span>
               )}
-            </div>
-          </div>
-        </div>
-
-        {/* Main content: two columns */}
-        <div className="flex flex-col gap-10 md:flex-row">
-          {/* Left: Summary + Install */}
-          <div className="flex w-full flex-col gap-6 md:w-5/12">
-            <div className="flex flex-col gap-2">
-              <h4
-                className="text-foreground text-xl font-semibold tracking-tight"
-              >
-                Summary
-              </h4>
-              {description && (
-                <p className="text-muted-foreground text-base leading-7">
-                  {description}
-                </p>
-              )}
-            </div>
-            <div>
-              <Button variant="action" onClick={() => setInstallOpen(true)}>
-                Install
-              </Button>
-            </div>
-          </div>
-
-          {/* Right: Skill.md */}
-          <div className="flex flex-1 flex-col gap-3">
+            </>
+          ) : undefined
+        }
+        description={description}
+        actions={
+          <Button variant="action" onClick={() => setInstallOpen(true)}>
+            Install
+          </Button>
+        }
+        rightPanel={
+          <>
             <h4 className="text-foreground text-xl font-semibold tracking-tight">
               Skill.md
             </h4>
@@ -102,9 +85,9 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
                 Skill.md rendering is not yet available.
               </p>
             </div>
-          </div>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       <DialogInstallSkill
         open={installOpen}
