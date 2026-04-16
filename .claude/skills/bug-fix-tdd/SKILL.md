@@ -135,21 +135,26 @@ expect(request?.payload).toMatchObject({ name: 'my-server' })
 
 ```markdown
 ## Bug Summary
+
 <1-2 sentences describing the bug>
 
 ## Root Cause
+
 <Technical explanation of why the bug occurs>
 
 ## Relevant Files
+
 - `path/to/source.tsx` — <what it does>
 - `path/to/related.ts` — <why it's relevant>
 
-Test file: path/to/__tests__/component.test.tsx
+Test file: path/to/\_\_tests\_\_/component.test.tsx
 
 ## Proposed Fix
+
 <Description of the minimum change needed>
 
 ## Files to Modify
+
 - `path/to/file.tsx` — <what to change>
 ```
 
@@ -170,12 +175,14 @@ Fixes #<issue-number>.
 - Test reproduces the bug (fails before fix, passes after)
 
 ---
-*Automated fix by Claude Code TDD Agent*
+
+_Automated fix by Claude Code TDD Agent_
 ```
 
 ## fix-title.txt Format
 
 Single line, conventional commit format:
+
 ```
 fix(<scope>): <description> (#<issue-number>)
 ```
