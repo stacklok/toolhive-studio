@@ -25,6 +25,7 @@ import MakerTarGz from './utils/forge-makers/MakerTarGz'
 import MakerDMGWithArch from './utils/forge-makers/MakerDMGWithArch'
 import { isPrerelease } from './utils/pre-release'
 import { stripBomFromReleasesFiles } from './utils/forge-makers/strip-bom-from-releases'
+import { getAzureTrustedSigningConfig } from './utils/windows-sign-azure'
 import packageJson from './package.json'
 
 function isValidPlatform(platform: string): platform is NodeJS.Platform {
@@ -33,6 +34,23 @@ function isValidPlatform(platform: string): platform is NodeJS.Platform {
 
 function isValidArchitecture(arch: string): arch is NodeJS.Architecture {
   return ['x64', 'arm64'].includes(arch)
+}
+
+/**
+ * Resolve the Windows code-signing configuration for Electron Forge.
+ *
+ * Prefers Azure Trusted Signing (new) and falls back to DigiCert KeyLocker
+ * (legacy) during the migration. Returns `undefined` when neither is
+ * configured, which leaves the build unsigned (safe default for local dev
+ * and non-Windows CI jobs).
+ */
+function getWindowsSignConfig() {
+  const azure = getAzureTrustedSigningConfig()
+  if (azure) return azure
+  if (process.env.SM_HOST && process.env.SM_API_KEY) {
+    return { hookModulePath: './utils/digicert-hook.js' }
+  }
+  return undefined
 }
 
 const config: ForgeConfig = {
@@ -67,13 +85,9 @@ const config: ForgeConfig = {
       ? { identity: process.env.MAC_DEVELOPER_IDENTITY }
       : {}, // Auto-detect certificates
 
-    // Windows Code Signing Configuration - DigiCert KeyLocker
-    windowsSign:
-      process.env.SM_HOST && process.env.SM_API_KEY
-        ? {
-            hookModulePath: './utils/digicert-hook.js',
-          }
-        : undefined,
+    // Windows Code Signing Configuration
+    // Azure Trusted Signing (preferred) with DigiCert KeyLocker fallback.
+    windowsSign: getWindowsSignConfig(),
 
     // MacOS Notarization Configuration
     osxNotarize: (() => {
@@ -134,10 +148,7 @@ const config: ForgeConfig = {
         exe: `${EXECUTABLE_NAME}.exe`,
         name: APP_NAME,
         noDelta: true,
-        windowsSign:
-          process.env.SM_HOST && process.env.SM_API_KEY
-            ? { hookModulePath: './utils/digicert-hook.js' }
-            : undefined,
+        windowsSign: getWindowsSignConfig(),
       }),
     },
     new MakerDMGWithArch(
