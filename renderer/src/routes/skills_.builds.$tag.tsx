@@ -28,7 +28,13 @@ function BuildNotFound() {
 
 export const Route = createFileRoute('/skills_/builds/$tag')({
   params: {
-    parse: ({ tag }) => ({ tag: decodeURIComponent(tag) }),
+    parse: ({ tag }) => {
+      try {
+        return { tag: decodeURIComponent(tag) }
+      } catch {
+        return { tag }
+      }
+    },
     stringify: ({ tag }) => ({ tag: encodeURIComponent(tag) }),
   },
   loader: ({ context: { queryClient } }) =>

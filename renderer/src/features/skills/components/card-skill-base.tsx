@@ -52,8 +52,9 @@ export function CardSkillBase({
             <TooltipTrigger asChild>
               {isClickable ? (
                 <button
+                  type="button"
                   className="truncate text-left outline-none! select-none"
-                  onClick={() => onClick()}
+                  onClick={() => onClick?.()}
                 >
                   {title}
                   <span className="absolute inset-0 rounded-md" />
