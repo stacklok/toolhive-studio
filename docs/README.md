@@ -209,8 +209,9 @@ works in development mode only; packaged builds use the embedded binary.
 
 ## Code signing
 
-Supports both macOS and Windows code signing. macOS uses Apple certificates,
-Windows uses DigiCert KeyLocker for EV certificates.
+Supports both macOS and Windows code signing. macOS uses Apple certificates.
+Windows uses Azure Trusted Signing (preferred) with a DigiCert KeyLocker
+fallback during the migration.
 
 ### Local development
 
@@ -237,9 +238,37 @@ Requires these GitHub secrets:
 - `APPLE_ISSUER_ID` - Apple API Issuer ID
 - `APPLE_KEY_ID` - Apple API Key ID
 
-#### Windows Signing (DigiCert KeyLocker)
+#### Windows Signing (Azure Trusted Signing)
 
-Requires these GitHub secrets for EV certificate signing:
+Authentication uses OIDC workload identity federation — no client secret is
+stored in the repo. The signing job must run in the `artifact-signing` GitHub
+environment (its federated credential subject is
+`repo:stacklok/toolhive-studio:environment:artifact-signing`), and the six
+values below must be stored as **environment secrets** on that environment
+(Settings → Environments → `artifact-signing`):
+
+- `AZURE_ARTIFACT_SIGNING_CLIENT_ID` - Service principal client ID
+- `AZURE_ARTIFACT_SIGNING_TENANT_ID` - Azure AD tenant ID
+- `AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID` - Azure subscription ID
+- `AZURE_ARTIFACT_SIGNING_ENDPOINT` - Trusted Signing account endpoint URL
+- `AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME` - Trusted Signing account name
+- `AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME` - Certificate profile name
+
+The
+[`setup-azure-trusted-signing`](../.github/actions/setup-azure-trusted-signing/action.yml)
+composite action handles Azure login (OIDC), installs the Azure Code Signing
+DLib, and writes the `metadata.json` consumed by `signtool.exe`. Electron Forge
+picks this up through
+[`utils/windows-sign-azure.ts`](../utils/windows-sign-azure.ts) and signs the
+app + installer during `pnpm run make` / `pnpm run publish`.
+
+Try it on a PR by commenting `/build-test --sign-windows`.
+
+#### Windows Signing (DigiCert KeyLocker — legacy fallback)
+
+Kept as a fallback while Azure Trusted Signing is being validated. Used by
+[`on-release.yml`](../.github/workflows/on-release.yml) until the migration is
+complete. Requires these GitHub secrets:
 
 - `SM_HOST` - DigiCert KeyLocker host URL
 - `SM_API_KEY` - DigiCert KeyLocker API key
@@ -248,8 +277,9 @@ Requires these GitHub secrets for EV certificate signing:
 - `SM_CODE_SIGNING_CERT_SHA1_HASH` - SHA1 fingerprint of the code signing
   certificate
 
-CI auto-detects the certificates. Apps are signed automatically during the build
-process.
+`forge.config.ts` prefers Azure Trusted Signing when its env vars are present,
+and falls back to DigiCert when `SM_HOST` + `SM_API_KEY` are set. If neither is
+configured the build produces unsigned artifacts.
 
 ## ESLint configuration
 

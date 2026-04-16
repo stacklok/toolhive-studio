@@ -133,6 +133,16 @@ jobs:
     name: Build on ${{ matrix.os }}${{ matrix.arch && format(' ({0})', matrix.arch) || '' }}
     needs: check-trigger
     runs-on: ${{ matrix.os }}
+    # Activate the `artifact-signing` environment only for the Windows matrix
+    # row when Windows signing is requested. The Azure OIDC federated
+    # credential is scoped to
+    # `repo:stacklok/toolhive-studio:environment:artifact-signing`, so only
+    # the Windows signing job should run in that environment for the token
+    # exchange to succeed. Scoping to `matrix.platform == 'win32'` keeps the
+    # Linux/macOS matrix rows out of the environment so they don't receive
+    # environment-scoped signing secrets or trigger environment approvals.
+    # Leaving it empty for non-signing builds keeps them free of approvals.
+    environment: ${{ needs.check-trigger.outputs.sign_windows == 'true' && matrix.platform == 'win32' && 'artifact-signing' || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -189,15 +199,16 @@ jobs:
           apple-issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
           apple-key-id: ${{ secrets.APPLE_KEY_ID }}
 
-      - name: Setup Windows code signing
-        uses: ./.github/actions/setup-windows-codesign
+      - name: Setup Windows code signing (Azure Trusted Signing)
+        uses: ./.github/actions/setup-azure-trusted-signing
         if: runner.os == 'Windows' && needs.check-trigger.outputs.sign_windows == 'true'
         with:
-          sm-host: ${{ secrets.SM_HOST }}
-          sm-api-key: ${{ secrets.SM_API_KEY }}
-          sm-client-cert-file-b64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
-          sm-client-cert-password: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
-          sm-code-signing-cert-sha1-hash: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
+          azure-client-id: ${{ secrets.AZURE_ARTIFACT_SIGNING_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_ARTIFACT_SIGNING_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID }}
+          azure-endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          azure-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
+          azure-certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
 
       - name: Setup Flatpak (Linux only)
         uses: ./.github/actions/setup-flatpak

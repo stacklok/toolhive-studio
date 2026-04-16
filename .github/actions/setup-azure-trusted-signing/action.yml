@@ -1,0 +1,124 @@
+name: 'Setup Azure Trusted Signing'
+description: >-
+  Authenticates to Azure via OIDC and prepares the environment for Windows code
+  signing with Azure Trusted Signing (Azure Code Signing DLib + signtool.exe).
+
+inputs:
+  azure-client-id:
+    description: 'Azure App Registration (service principal) client ID'
+    required: true
+  azure-tenant-id:
+    description: 'Azure AD tenant ID'
+    required: true
+  azure-subscription-id:
+    description: 'Azure subscription ID'
+    required: true
+  azure-endpoint:
+    description: 'Azure Trusted Signing account endpoint URL'
+    required: true
+  azure-account-name:
+    description: 'Azure Trusted Signing account name'
+    required: true
+  azure-certificate-profile-name:
+    description: 'Azure Trusted Signing certificate profile name'
+    required: true
+
+runs:
+  using: 'composite'
+  steps:
+    # Authenticate to Azure via OIDC workload identity federation.
+    # Relies on the calling job running in the `artifact-signing` environment,
+    # which must match the federated credential subject configured on the
+    # Azure App Registration (e.g.
+    # `repo:<owner>/<repo>:environment:artifact-signing`).
+    #
+    # `azure/login@v2` exports AZURE_CLIENT_ID, AZURE_TENANT_ID,
+    # AZURE_SUBSCRIPTION_ID and AZURE_FEDERATED_TOKEN_FILE, which the Azure
+    # SDK's DefaultAzureCredential (used by the Trusted Signing DLib) picks
+    # up without any additional credential configuration.
+    - name: Azure login (OIDC)
+      if: runner.os == 'Windows'
+      uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5 # v2.3.0
+      with:
+        client-id: ${{ inputs.azure-client-id }}
+        tenant-id: ${{ inputs.azure-tenant-id }}
+        subscription-id: ${{ inputs.azure-subscription-id }}
+
+    # Install the Azure Code Signing DLib and write metadata.json.
+    #
+    # Both `AZURE_CODE_SIGNING_DLIB` and `AZURE_METADATA_JSON` must live at
+    # paths WITHOUT spaces, otherwise signing fails (@electron/windows-sign
+    # cannot quote the paths passed through `signWithParams`). We stage them
+    # under `C:\azsign\` to avoid `C:\Program Files (x86)\...`.
+    #
+    # See https://github.com/electron/windows-sign/issues/45
+    - name: Install Trusted Signing DLib and prepare metadata
+      if: runner.os == 'Windows'
+      shell: powershell
+      env:
+        AZURE_ENDPOINT: ${{ inputs.azure-endpoint }}
+        AZURE_ACCOUNT_NAME: ${{ inputs.azure-account-name }}
+        AZURE_CERTIFICATE_PROFILE_NAME: ${{ inputs.azure-certificate-profile-name }}
+      run: |
+        $ErrorActionPreference = 'Stop'
+
+        # Pin the Trusted Signing client package so CI is deterministic and a
+        # future release that reorganises the DLib path cannot silently break
+        # signing. Bump this version intentionally and re-run the signing
+        # pipeline end-to-end when upgrading. Available versions:
+        # https://www.nuget.org/packages/Microsoft.Trusted.Signing.Client
+        $trustedSigningClientVersion = '1.0.95'
+
+        $stage = 'C:\azsign'
+        New-Item -ItemType Directory -Force -Path $stage | Out-Null
+
+        Write-Host "Downloading Microsoft.Trusted.Signing.Client $trustedSigningClientVersion from NuGet..."
+        nuget install Microsoft.Trusted.Signing.Client `
+          -Version $trustedSigningClientVersion `
+          -OutputDirectory $stage `
+          -ExcludeVersion `
+          -Verbosity quiet
+        if ($LASTEXITCODE -ne 0) {
+          throw "nuget install failed with exit code $LASTEXITCODE"
+        }
+
+        $dlib = Join-Path $stage 'Microsoft.Trusted.Signing.Client\bin\x64\Azure.CodeSigning.Dlib.dll'
+        if (-not (Test-Path $dlib)) {
+          throw "Azure.CodeSigning.Dlib.dll not found at expected path: $dlib"
+        }
+        if ($dlib -match ' ') {
+          throw "DLib path contains spaces, which breaks @electron/windows-sign: $dlib"
+        }
+        Write-Host "DLib located at: $dlib"
+
+        Write-Host "Locating signtool.exe in the Windows SDK..."
+        $signtool = Get-ChildItem `
+          -Path 'C:\Program Files (x86)\Windows Kits\10\bin' `
+          -Recurse -Filter 'signtool.exe' -ErrorAction SilentlyContinue |
+          Where-Object { $_.FullName -match '\\x64\\signtool\.exe$' } |
+          Sort-Object -Property FullName -Descending |
+          Select-Object -First 1
+        if (-not $signtool) {
+          throw 'signtool.exe (x64) not found in the Windows SDK'
+        }
+        Write-Host "signtool located at: $($signtool.FullName)"
+
+        Write-Host "Writing Trusted Signing metadata.json..."
+        $metadataPath = Join-Path $stage 'metadata.json'
+        $metadata = [ordered]@{
+          Endpoint               = $env:AZURE_ENDPOINT
+          CodeSigningAccountName = $env:AZURE_ACCOUNT_NAME
+          CertificateProfileName = $env:AZURE_CERTIFICATE_PROFILE_NAME
+        }
+        ($metadata | ConvertTo-Json -Compress) |
+          Set-Content -Path $metadataPath -Encoding ascii -NoNewline
+        if ($metadataPath -match ' ') {
+          throw "metadata.json path contains spaces: $metadataPath"
+        }
+
+        Write-Host "Exporting environment variables for subsequent steps..."
+        "AZURE_CODE_SIGNING_DLIB=$dlib"       | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+        "AZURE_METADATA_JSON=$metadataPath"   | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+        "SIGNTOOL_PATH=$($signtool.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8
+
+        Write-Host "Azure Trusted Signing setup complete."
