@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { GeneralTab } from '../general-tab'
+import { GeneralTabWrapper } from '../components/general-tab-wrapper'
 import { PromptProvider } from '@/common/contexts/prompt/provider'
 import {
   useAutoLaunchStatus,
@@ -212,6 +213,18 @@ describe('GeneralTab', () => {
     expect(window.electronAPI.setSkipQuitConfirmation).toHaveBeenCalledWith(
       false
     )
+  })
+
+  it('hides experimental features section when isEnterprise is true', async () => {
+    renderWithProviders(<GeneralTabWrapper isEnterprise={true} />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'General' })).toBeVisible()
+    })
+
+    expect(
+      screen.queryByRole('heading', { name: 'Experimental' })
+    ).not.toBeInTheDocument()
   })
 
   describe('Experimental Features', () => {

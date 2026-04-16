@@ -174,8 +174,10 @@ function QuitConfirmationField() {
 
 export function GeneralTabWrapper({
   children = null,
+  isEnterprise = false,
 }: {
   children?: React.ReactNode
+  isEnterprise?: boolean
 }) {
   return (
     <div className="space-y-3">
@@ -191,7 +193,7 @@ export function GeneralTabWrapper({
         <Separator />
         {children}
       </div>
-      <ExperimentalFeatures />
+      {!isEnterprise && <ExperimentalFeatures />}
     </div>
   )
 }
