@@ -218,7 +218,5 @@ test.describe('Playground chat with Ollama', () => {
     ).toBeVisible({
       timeout: LONG_TIMEOUT,
     })
-
-    await clearPlaygroundState(window)
   })
 })
