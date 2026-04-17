@@ -60,16 +60,22 @@ jobs:
     runs-on: ${{ matrix.os }}
     needs: [security, static-checks, unit-tests]
     # Activate the `artifact-signing` environment only for the Windows matrix
-    # row when the release is a prerelease. The Azure OIDC federated
-    # credential for Trusted Signing is scoped to
-    # `repo:stacklok/toolhive-studio:environment:artifact-signing`, so only
-    # that row needs to enter the environment for the token exchange to
-    # succeed. Stable releases (Windows and otherwise) and all non-Windows
-    # prerelease rows stay outside the environment, which keeps them on the
-    # existing DigiCert flow and preserves their current OIDC subject for
-    # AWS (the repo-wide trust policy `repo:stacklok/toolhive-studio:*` also
-    # covers the `environment:artifact-signing` subject, so AWS keeps
-    # working from the Windows prerelease job).
+    # row when the release is a prerelease, because that is the only row
+    # that signs with Azure Trusted Signing. The Azure OIDC federated
+    # credential is scoped to
+    # `repo:stacklok/toolhive-studio:environment:artifact-signing`, so the
+    # job must run in that environment for the Azure token exchange to
+    # succeed. Every other row (Linux and macOS on any release, and
+    # Windows on stable releases) stays outside the environment so it
+    # doesn't inherit the environment-scoped Azure signing secrets or
+    # trigger environment approvals. Windows stable releases continue
+    # signing via DigiCert; Linux/macOS don't do Windows signing at all.
+    #
+    # The AWS role assumed later in the job uses OIDC with the repo-wide
+    # trust policy `repo:stacklok/toolhive-studio:*`, which covers both
+    # `ref:refs/tags/*` (default subject) and
+    # `environment:artifact-signing`, so S3 sync and CloudFront
+    # invalidation keep working from the Windows prerelease job.
     environment: ${{ github.event.release.prerelease == true && matrix.os == 'windows-latest' && 'artifact-signing' || '' }}
     strategy:
       matrix:
