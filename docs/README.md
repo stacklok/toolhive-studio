@@ -262,13 +262,25 @@ picks this up through
 [`utils/windows-sign-azure.ts`](../utils/windows-sign-azure.ts) and signs the
 app + installer during `pnpm run make` / `pnpm run publish`.
 
-Try it on a PR by commenting `/build-test --sign-windows`.
+Where it's wired up today:
+
+- [`pr-build-test.yml`](../.github/workflows/pr-build-test.yml) — any PR that
+  opts in via `/build-test --sign-windows`.
+- [`on-release.yml`](../.github/workflows/on-release.yml) — **prerelease** tags
+  only (`*-alpha`, `*-beta`, `*-rc`). Stable releases still sign via DigiCert
+  until the Azure flow is validated end-to-end on prereleases.
+
+The `artifact-signing` environment is activated only for the Windows matrix row
+of those jobs. Non-Windows rows and stable Windows releases stay outside the
+environment, so they don't pick up its secrets or gating.
 
 #### Windows Signing (DigiCert KeyLocker — legacy fallback)
 
-Kept as a fallback while Azure Trusted Signing is being validated. Used by
-[`on-release.yml`](../.github/workflows/on-release.yml) until the migration is
-complete. Requires these GitHub secrets:
+Kept for stable releases while Azure Trusted Signing is validated on
+prereleases. Used by [`on-release.yml`](../.github/workflows/on-release.yml)
+when `github.event.release.prerelease != true`. Remove the step and the
+[`setup-windows-codesign`](../.github/actions/setup-windows-codesign/action.yml)
+action once stable releases are also migrated. Requires these GitHub secrets:
 
 - `SM_HOST` - DigiCert KeyLocker host URL
 - `SM_API_KEY` - DigiCert KeyLocker API key

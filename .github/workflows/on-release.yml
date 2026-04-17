@@ -59,6 +59,24 @@ jobs:
     name: Build and Release on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     needs: [security, static-checks, unit-tests]
+    # Activate the `artifact-signing` environment only for the Windows matrix
+    # row when the release is a prerelease, because that is the only row
+    # that signs with Azure Trusted Signing. The Azure OIDC federated
+    # credential is scoped to
+    # `repo:stacklok/toolhive-studio:environment:artifact-signing`, so the
+    # job must run in that environment for the Azure token exchange to
+    # succeed. Every other row (Linux and macOS on any release, and
+    # Windows on stable releases) stays outside the environment so it
+    # doesn't inherit the environment-scoped Azure signing secrets or
+    # trigger environment approvals. Windows stable releases continue
+    # signing via DigiCert; Linux/macOS don't do Windows signing at all.
+    #
+    # The AWS role assumed later in the job uses OIDC with the repo-wide
+    # trust policy `repo:stacklok/toolhive-studio:*`, which covers both
+    # `ref:refs/tags/*` (default subject) and
+    # `environment:artifact-signing`, so S3 sync and CloudFront
+    # invalidation keep working from the Windows prerelease job.
+    environment: ${{ github.event.release.prerelease == true && matrix.os == 'windows-latest' && 'artifact-signing' || '' }}
     strategy:
       matrix:
         include:
@@ -108,9 +126,28 @@ jobs:
           apple-issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
           apple-key-id: ${{ secrets.APPLE_KEY_ID }}
 
-      - name: Setup Windows code signing
+      # Windows prerelease builds sign with Azure Trusted Signing (OIDC, no
+      # long-lived secrets). The calling job must be in the
+      # `artifact-signing` environment above so the federated credential
+      # subject `repo:.../environment:artifact-signing` is satisfied.
+      - name: Setup Windows code signing (Azure Trusted Signing — prerelease)
+        uses: ./.github/actions/setup-azure-trusted-signing
+        if: runner.os == 'Windows' && github.event.release.prerelease == true
+        with:
+          azure-client-id: ${{ secrets.AZURE_ARTIFACT_SIGNING_CLIENT_ID }}
+          azure-tenant-id: ${{ secrets.AZURE_ARTIFACT_SIGNING_TENANT_ID }}
+          azure-subscription-id: ${{ secrets.AZURE_ARTIFACT_SIGNING_SUBSCRIPTION_ID }}
+          azure-endpoint: ${{ secrets.AZURE_ARTIFACT_SIGNING_ENDPOINT }}
+          azure-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
+          azure-certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
+
+      # Windows stable releases continue to sign with DigiCert KeyLocker
+      # until the Azure flow is validated end-to-end via prereleases. Remove
+      # this step (and the `setup-windows-codesign` action) once stable
+      # releases are also migrated to Azure Trusted Signing.
+      - name: Setup Windows code signing (DigiCert KeyLocker — stable)
         uses: ./.github/actions/setup-windows-codesign
-        if: runner.os == 'Windows'
+        if: runner.os == 'Windows' && github.event.release.prerelease != true
         with:
           sm-host: ${{ secrets.SM_HOST }}
           sm-api-key: ${{ secrets.SM_API_KEY }}
