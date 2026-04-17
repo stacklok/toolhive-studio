@@ -27,6 +27,7 @@ export interface UtilsAPI {
             }
           }
         >
+      | null
       | undefined
     >
   }
