@@ -18,7 +18,7 @@ const renderWithProviders = (component: React.ReactElement) => {
   )
 }
 
-const OCI_REF = 'ghcr.io/org/my-skill:v1'
+const SKILL_REF = 'ghcr.io/org/my-skill:v1'
 
 beforeEach(() => {
   mockedGetApiV1BetaSkillsContent.reset()
@@ -26,7 +26,7 @@ beforeEach(() => {
 
 describe('SkillMarkdown', () => {
   it('renders markdown body on successful fetch', async () => {
-    renderWithProviders(<SkillMarkdown ociRef={OCI_REF} />)
+    renderWithProviders(<SkillMarkdown skillRef={SKILL_REF} />)
 
     await waitFor(() => {
       expect(screen.getByText('My Skill')).toBeInTheDocument()
@@ -34,7 +34,7 @@ describe('SkillMarkdown', () => {
   })
 
   it('renders a section from the markdown body', async () => {
-    renderWithProviders(<SkillMarkdown ociRef={OCI_REF} />)
+    renderWithProviders(<SkillMarkdown skillRef={SKILL_REF} />)
 
     await waitFor(() => {
       expect(screen.getByText('Usage')).toBeInTheDocument()
@@ -42,7 +42,7 @@ describe('SkillMarkdown', () => {
   })
 
   it('shows a skeleton while loading', () => {
-    renderWithProviders(<SkillMarkdown ociRef={OCI_REF} />)
+    renderWithProviders(<SkillMarkdown skillRef={SKILL_REF} />)
 
     // Skeletons render before data resolves
     const skeletons = document.querySelectorAll('[data-slot="skeleton"]')
@@ -54,7 +54,7 @@ describe('SkillMarkdown', () => {
       HttpResponse.json({ message: 'Not found' }, { status: 404 })
     )
 
-    renderWithProviders(<SkillMarkdown ociRef={OCI_REF} />)
+    renderWithProviders(<SkillMarkdown skillRef={SKILL_REF} />)
 
     await waitFor(() => {
       expect(
@@ -68,7 +68,7 @@ describe('SkillMarkdown', () => {
       HttpResponse.json({ message: 'Service unavailable' }, { status: 503 })
     )
 
-    renderWithProviders(<SkillMarkdown ociRef={OCI_REF} />)
+    renderWithProviders(<SkillMarkdown skillRef={SKILL_REF} />)
 
     await waitFor(() => {
       expect(
@@ -82,7 +82,7 @@ describe('SkillMarkdown', () => {
       HttpResponse.json({ message: 'Internal server error' }, { status: 500 })
     )
 
-    renderWithProviders(<SkillMarkdown ociRef={OCI_REF} />)
+    renderWithProviders(<SkillMarkdown skillRef={SKILL_REF} />)
 
     await waitFor(() => {
       expect(screen.getByText('Failed to load SKILL.md.')).toBeInTheDocument()
@@ -95,7 +95,7 @@ describe('SkillMarkdown', () => {
       body: '---\nname: my-skill\ndescription: A helpful skill\n---\n\n# My Skill\n\nBody content.',
     }))
 
-    renderWithProviders(<SkillMarkdown ociRef={OCI_REF} stripFrontmatter />)
+    renderWithProviders(<SkillMarkdown skillRef={SKILL_REF} stripFrontmatter />)
 
     await waitFor(() => {
       expect(screen.getByText('My Skill')).toBeInTheDocument()
@@ -112,7 +112,7 @@ describe('SkillMarkdown', () => {
       body: '---\nname: my-skill\n---\n\n# Heading',
     }))
 
-    renderWithProviders(<SkillMarkdown ociRef={OCI_REF} />)
+    renderWithProviders(<SkillMarkdown skillRef={SKILL_REF} />)
 
     await waitFor(() => {
       expect(screen.getByText(/name: my-skill/)).toBeInTheDocument()
@@ -125,7 +125,7 @@ describe('SkillMarkdown', () => {
       body: undefined,
     }))
 
-    renderWithProviders(<SkillMarkdown ociRef={OCI_REF} />)
+    renderWithProviders(<SkillMarkdown skillRef={SKILL_REF} />)
 
     await waitFor(() => {
       expect(

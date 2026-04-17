@@ -84,7 +84,7 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
                 dark:bg-transparent"
             >
               {ociRef ? (
-                <SkillMarkdown ociRef={ociRef} />
+                <SkillMarkdown skillRef={ociRef} />
               ) : (
                 <p className="text-muted-foreground text-sm">
                   No SKILL.md available for this skill.

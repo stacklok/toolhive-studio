@@ -106,7 +106,7 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
                 dark:bg-transparent"
             >
               {tag ? (
-                <SkillMarkdown ociRef={tag} stripFrontmatter />
+                <SkillMarkdown skillRef={tag} stripFrontmatter />
               ) : (
                 <p className="text-muted-foreground text-sm">
                   No SKILL.md available for this build.
