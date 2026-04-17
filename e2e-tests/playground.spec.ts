@@ -208,7 +208,9 @@ test.describe('Playground chat with Ollama', () => {
 
     await window
       .getByPlaceholder(/type your message/i)
-      .fill('Call the get_secret_code tool and tell me the code it returns.')
+      .fill(
+        'Use the get_secret_code tool, then reply with ONLY the exact code the tool returned. No quotes, no extra words, no punctuation.'
+      )
     await window.keyboard.press('Enter')
 
     await expect(
@@ -216,7 +218,5 @@ test.describe('Playground chat with Ollama', () => {
     ).toBeVisible({
       timeout: LONG_TIMEOUT,
     })
-
-    await clearPlaygroundState(window)
   })
 })
