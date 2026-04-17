@@ -306,7 +306,7 @@ describe('useRegistryUpdateMutation', () => {
             source: 'http://localhost:8080/api',
           } as RegistryFormData)
         )
-      ).rejects.toBeDefined()
+      ).rejects.toBe('boom: something unrelated')
     })
 
     it('rethrows PUT failures directly for non-api_url types (remote)', async () => {
@@ -326,7 +326,7 @@ describe('useRegistryUpdateMutation', () => {
             source: 'https://example.com/registry.json',
           } as RegistryFormData)
         )
-      ).rejects.toBeDefined()
+      ).rejects.toEqual({ error: 'upstream down' })
     })
   })
 
@@ -343,27 +343,22 @@ describe('useRegistryUpdateMutation', () => {
         wrapper: Wrapper,
       })
 
-      let rejection: unknown = null
-      result.current
-        .mutateAsync({
-          type: REGISTRY_FORM_TYPE.API_URL,
-          source: apiUrl,
-          client_id: 'bad-client',
-          issuer_url: 'https://issuer.example.com',
-        } as RegistryFormData)
-        .catch((e) => {
-          rejection = e
-        })
+      const mutationPromise = result.current.mutateAsync({
+        type: REGISTRY_FORM_TYPE.API_URL,
+        source: apiUrl,
+        client_id: 'bad-client',
+        issuer_url: 'https://issuer.example.com',
+      } as RegistryFormData)
+
+      await expect(mutationPromise).rejects.toMatchObject({
+        message: REGISTRY_WRONG_AUTH_TOAST,
+      })
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true)
-      })
-
-      expect(rejection).toBeInstanceOf(Error)
-      expect((rejection as Error).message).toBe(REGISTRY_WRONG_AUTH_TOAST)
-
-      expect(invalidateSpy).toHaveBeenCalledWith({
-        queryKey: getApiV1BetaRegistryQueryKey(),
+        expect(invalidateSpy).toHaveBeenCalledWith({
+          queryKey: getApiV1BetaRegistryQueryKey(),
+        })
       })
 
       await waitFor(() => {
