@@ -4,6 +4,8 @@ import { TagIcon, GitForkIcon, ScaleIcon } from 'lucide-react'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { SkillDetailLayout } from './skill-detail-layout'
+import { getSkillOciRef } from '../lib/get-skill-oci-ref'
+import { SkillMarkdown } from './skill-markdown'
 
 interface SkillDetailPageProps {
   skill: RegistrySkill
@@ -21,6 +23,7 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
   const base =
     namespace && name !== 'Unknown skill' ? `${namespace}/${name}` : name
   const defaultReference = isOci && version ? `${base}:${version}` : base
+  const ociRef = getSkillOciRef(skill)
 
   const hasBadges = !!(version || namespace || license)
 
@@ -65,25 +68,28 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
         }
         description={description}
         actions={
-          <Button variant="action" onClick={() => setInstallOpen(true)}>
-            Install
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button variant="action" onClick={() => setInstallOpen(true)}>
+              Install
+            </Button>
+          </div>
         }
         rightPanel={
           <>
             <h4 className="text-foreground text-xl font-semibold tracking-tight">
-              Skill.md
+              SKILL.md
             </h4>
             <div
-              className="border-border rounded-2xl border bg-white p-6
+              className="border-border mb-8 rounded-2xl border bg-white p-6
                 dark:bg-transparent"
             >
-              <p
-                className="text-muted-foreground font-mono text-sm
-                  leading-relaxed"
-              >
-                Skill.md rendering is not yet available.
-              </p>
+              {ociRef ? (
+                <SkillMarkdown ociRef={ociRef} />
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No SKILL.md available for this skill.
+                </p>
+              )}
             </div>
           </>
         }
