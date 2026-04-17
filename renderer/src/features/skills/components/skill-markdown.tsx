@@ -3,8 +3,17 @@ import { Streamdown } from 'streamdown'
 import { code } from '@streamdown/code'
 import { mermaid } from '@streamdown/mermaid'
 import { cjk } from '@streamdown/cjk'
-import { getApiV1BetaSkillsContentOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import { getApiV1BetaSkillsContent } from '@common/api/generated'
+import { getApiV1BetaSkillsContentQueryKey } from '@common/api/generated/@tanstack/react-query.gen'
 import { Skeleton } from '@/common/components/ui/skeleton'
+
+class SkillContentError extends Error {
+  readonly status?: number
+  constructor(message: string, status?: number) {
+    super(message)
+    this.status = status
+  }
+}
 
 const STREAMDOWN_PLUGINS = { code, mermaid, cjk }
 
@@ -34,7 +43,21 @@ export function SkillMarkdown({
   stripFrontmatter?: boolean
 }) {
   const { data, isLoading, isError, error } = useQuery({
-    ...getApiV1BetaSkillsContentOptions({ query: { ref: ociRef } }),
+    queryKey: getApiV1BetaSkillsContentQueryKey({ query: { ref: ociRef } }),
+    queryFn: async ({ signal }) => {
+      const result = await getApiV1BetaSkillsContent({
+        query: { ref: ociRef },
+        signal,
+      })
+      if (result.error !== undefined) {
+        const message =
+          typeof result.error === 'string'
+            ? result.error
+            : 'Failed to load SKILL.md.'
+        throw new SkillContentError(message, result.response?.status)
+      }
+      return result.data
+    },
     retry: false,
   })
 
@@ -43,8 +66,7 @@ export function SkillMarkdown({
   }
 
   if (isError) {
-    const status = (error as { response?: { status?: number } })?.response
-      ?.status
+    const status = error instanceof SkillContentError ? error.status : undefined
     const message =
       status === 404
         ? 'SKILL.md not found for this skill.'
