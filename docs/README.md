@@ -270,16 +270,15 @@ Where it's wired up today:
   only (`*-alpha`, `*-beta`, `*-rc`). Stable releases still sign via DigiCert
   until the Azure flow is validated end-to-end on prereleases.
 
-The `artifact-signing` environment is activated only for the Windows matrix
-row of those jobs. Non-Windows rows and stable Windows releases stay outside
-the environment, so they don't pick up its secrets or gating.
+The `artifact-signing` environment is activated only for the Windows matrix row
+of those jobs. Non-Windows rows and stable Windows releases stay outside the
+environment, so they don't pick up its secrets or gating.
 
 #### Windows Signing (DigiCert KeyLocker — legacy fallback)
 
 Kept for stable releases while Azure Trusted Signing is validated on
-prereleases. Used by
-[`on-release.yml`](../.github/workflows/on-release.yml) when
-`github.event.release.prerelease != true`. Remove the step and the
+prereleases. Used by [`on-release.yml`](../.github/workflows/on-release.yml)
+when `github.event.release.prerelease != true`. Remove the step and the
 [`setup-windows-codesign`](../.github/actions/setup-windows-codesign/action.yml)
 action once stable releases are also migrated. Requires these GitHub secrets:
 
