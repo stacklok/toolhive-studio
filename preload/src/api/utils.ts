@@ -1,4 +1,5 @@
 import { ipcRenderer } from 'electron'
+import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 
 export const utilsApi = {
   isOfficialReleaseBuild: () => ipcRenderer.invoke('is-official-release-build'),
@@ -6,7 +7,7 @@ export const utilsApi = {
   getInstanceId: () => ipcRenderer.invoke('get-instance-id'),
 
   utils: {
-    getWorkloadAvailableTools: (workload: unknown) =>
+    getWorkloadAvailableTools: (workload: CoreWorkload) =>
       ipcRenderer.invoke('utils:get-workload-available-tools', workload),
   },
 }
@@ -16,7 +17,7 @@ export interface UtilsAPI {
   getTelemetryHeaders: () => Promise<Record<string, string>>
   getInstanceId: () => Promise<string>
   utils: {
-    getWorkloadAvailableTools: (workload: unknown) => Promise<
+    getWorkloadAvailableTools: (workload: CoreWorkload) => Promise<
       | Record<
           string,
           {
