@@ -11,6 +11,7 @@ import type { GithubComStacklokToolhivePkgSkillsLocalBuild as LocalBuild } from 
 import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogDeleteBuild } from './dialog-delete-build'
 import { SkillDetailLayout } from './skill-detail-layout'
+import { SkillMarkdown } from './skill-markdown'
 
 interface BuildDetailPageProps {
   build: LocalBuild
@@ -86,30 +87,31 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
         description={description}
         actions={
           <div className="flex items-center gap-3">
-            <Button variant="action" onClick={() => setInstallOpen(true)}>
-              Install
-            </Button>
             <Button variant="secondary" onClick={() => setDeleteOpen(true)}>
               <Trash2Icon className="size-4" />
               Remove
+            </Button>
+            <Button variant="action" onClick={() => setInstallOpen(true)}>
+              Install
             </Button>
           </div>
         }
         rightPanel={
           <>
             <h4 className="text-foreground text-xl font-semibold tracking-tight">
-              Skill.md
+              SKILL.md
             </h4>
             <div
-              className="border-border rounded-2xl border bg-white p-6
+              className="border-border mb-8 rounded-2xl border bg-white p-6
                 dark:bg-transparent"
             >
-              <p
-                className="text-muted-foreground font-mono text-sm
-                  leading-relaxed"
-              >
-                Skill.md rendering is not yet available.
-              </p>
+              {tag ? (
+                <SkillMarkdown skillRef={tag} stripFrontmatter />
+              ) : (
+                <p className="text-muted-foreground text-sm">
+                  No SKILL.md available for this build.
+                </p>
+              )}
             </div>
           </>
         }
