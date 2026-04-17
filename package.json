@@ -83,7 +83,7 @@
     "knip": "^6.4.1",
     "lint-staged": "^16.4.0",
     "memfs": "^4.57.1",
-    "msw": "^2.13.2",
+    "msw": "^2.13.3",
     "prettier": "3.8.2",
     "prettier-plugin-classnames": "^0.10.1",
     "prettier-plugin-merge": "^0.10.1",
