@@ -154,7 +154,7 @@
     "nanoid": "^5.1.7",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-hook-form": "7.72.0",
+    "react-hook-form": "7.72.1",
     "regexp.escape": "^2.0.1",
     "sonner": "^2.0.7",
     "streamdown": "^2.5.0",
