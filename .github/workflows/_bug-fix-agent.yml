@@ -282,3 +282,4 @@ jobs:
             "$ANALYSIS" > /tmp/comment-body.md
 
           gh issue comment "${{ inputs.issue-number }}" --body-file /tmp/comment-body.md
+          gh issue edit "${{ inputs.issue-number }}" --remove-label "auto-fix" 2>/dev/null || true
