@@ -2,6 +2,7 @@ import * as Sentry from '@sentry/electron/renderer'
 
 export function initSentry() {
   Sentry.init({
+    enabled: !!import.meta.env.VITE_SENTRY_DSN,
     // Adds request headers and IP for users, for more info visit:
     // https://docs.sentry.io/platforms/javascript/guides/electron/configuration/options/#sendDefaultPii
     sendDefaultPii: true,
