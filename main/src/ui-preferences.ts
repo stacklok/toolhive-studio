@@ -5,6 +5,9 @@ import { writeSetting } from './db/writers/settings-writer'
 export const UI_PREFERENCE_KEYS = [
   'ui.viewMode.mcpServers',
   'ui.viewMode.skillsInstalled',
+  'ui.viewMode.registry',
+  'ui.viewMode.skillsRegistry',
+  'ui.viewMode.skillsBuilds',
 ] as const
 
 export type UiPreferenceKey = (typeof UI_PREFERENCE_KEYS)[number]
