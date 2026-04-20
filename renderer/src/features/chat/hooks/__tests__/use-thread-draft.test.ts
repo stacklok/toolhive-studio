@@ -1,15 +1,18 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 import { useThreadDraft, clearThreadDraft } from '../use-thread-draft'
 
 const STORAGE_PREFIX = 'toolhive.playground.draft.'
+const DEBOUNCE_MS = 200
 
 describe('useThreadDraft', () => {
   beforeEach(() => {
     localStorage.clear()
+    vi.useFakeTimers()
   })
 
   afterEach(() => {
+    vi.useRealTimers()
     localStorage.clear()
   })
 
@@ -24,7 +27,7 @@ describe('useThreadDraft', () => {
     expect(result.current[0]).toBe('hello')
   })
 
-  it('persists updates to localStorage', () => {
+  it('updates in-memory state synchronously but debounces the localStorage write', () => {
     const { result } = renderHook(() => useThreadDraft('t1'))
 
     act(() => {
@@ -32,10 +35,40 @@ describe('useThreadDraft', () => {
     })
 
     expect(result.current[0]).toBe('draft text')
+    // Not yet written — debounce hasn't fired
+    expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBeNull()
+
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_MS)
+    })
+
     expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBe('draft text')
   })
 
-  it('removes the key when cleared to empty string', () => {
+  it('coalesces rapid consecutive updates into a single write', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem')
+    const { result } = renderHook(() => useThreadDraft('t1'))
+
+    act(() => {
+      result.current[1]('h')
+      result.current[1]('he')
+      result.current[1]('hel')
+      result.current[1]('hell')
+      result.current[1]('hello')
+    })
+
+    expect(setItemSpy).not.toHaveBeenCalled()
+
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_MS)
+    })
+
+    expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBe('hello')
+    expect(setItemSpy).toHaveBeenCalledTimes(1)
+    setItemSpy.mockRestore()
+  })
+
+  it('removes the key when cleared to empty string (after debounce)', () => {
     localStorage.setItem(`${STORAGE_PREFIX}t1`, 'existing')
     const { result } = renderHook(() => useThreadDraft('t1'))
 
@@ -43,8 +76,28 @@ describe('useThreadDraft', () => {
       result.current[1]('')
     })
 
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_MS)
+    })
+
     expect(result.current[0]).toBe('')
     expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBeNull()
+  })
+
+  it('flushes the pending write on unmount', () => {
+    const { result, unmount } = renderHook(() => useThreadDraft('t1'))
+
+    act(() => {
+      result.current[1]('typed just before unmount')
+    })
+
+    expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBeNull()
+
+    unmount()
+
+    expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBe(
+      'typed just before unmount'
+    )
   })
 
   // The hook relies on the consuming component being keyed by threadId,
@@ -70,6 +123,9 @@ describe('useThreadDraft', () => {
     act(() => {
       result.current[1]('written to t2')
     })
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_MS)
+    })
 
     expect(localStorage.getItem(`${STORAGE_PREFIX}t2`)).toBe('written to t2')
     expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBeNull()
@@ -80,6 +136,9 @@ describe('useThreadDraft', () => {
 
     act(() => {
       result.current[1]('in-memory only')
+    })
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_MS)
     })
 
     expect(result.current[0]).toBe('in-memory only')
@@ -101,6 +160,12 @@ describe('clearThreadDraft', () => {
   it('is a no-op for undefined threadId', () => {
     localStorage.setItem(`${STORAGE_PREFIX}t1`, 'hello')
     clearThreadDraft(undefined)
+    expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBe('hello')
+  })
+
+  it('is a no-op for null threadId', () => {
+    localStorage.setItem(`${STORAGE_PREFIX}t1`, 'hello')
+    clearThreadDraft(null)
     expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBe('hello')
   })
 })
