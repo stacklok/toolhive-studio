@@ -20,6 +20,8 @@ import { GridCardsSkills } from './grid-cards-skills'
 import { GridCardsBuilds } from './grid-cards-builds'
 import { GridCardsRegistrySkills } from './grid-cards-registry-skills'
 import { TableInstalledSkills } from './table-installed-skills'
+import { TableRegistrySkills } from './table-registry-skills'
+import { TableBuilds } from './table-builds'
 import { DialogBuildSkill } from './dialog-build-skill'
 import { HammerIcon } from 'lucide-react'
 import { ViewToggle } from '@/common/components/view-toggle'
@@ -87,6 +89,12 @@ export function SkillsPage() {
   const { view: installedView, setView: setInstalledView } = useViewPreference(
     'ui.viewMode.skillsInstalled'
   )
+  const { view: registryView, setView: setRegistryView } = useViewPreference(
+    'ui.viewMode.skillsRegistry'
+  )
+  const { view: buildsView, setView: setBuildsView } = useViewPreference(
+    'ui.viewMode.skillsBuilds'
+  )
 
   return (
     <>
@@ -103,11 +111,14 @@ export function SkillsPage() {
           </TabsList>
           <div className="flex items-center gap-3">
             {tab === 'registry' && (
-              <InputSearch
-                value={registrySearch}
-                onChange={handleRegistrySearchChange}
-                placeholder="Search..."
-              />
+              <>
+                <InputSearch
+                  value={registrySearch}
+                  onChange={handleRegistrySearchChange}
+                  placeholder="Search..."
+                />
+                <ViewToggle value={registryView} onChange={setRegistryView} />
+              </>
             )}
             {tab === 'installed' && hasSkills && (
               <>
@@ -126,6 +137,7 @@ export function SkillsPage() {
                   onChange={setBuildsFilter}
                   placeholder="Search..."
                 />
+                <ViewToggle value={buildsView} onChange={setBuildsView} />
                 <Button
                   variant="action"
                   onClick={() => setBuildOpen(true)}
@@ -140,7 +152,11 @@ export function SkillsPage() {
         </div>
 
         <TabsContent value="registry">
-          <GridCardsRegistrySkills skills={registrySkills} />
+          {registryView === 'table' ? (
+            <TableRegistrySkills skills={registrySkills} />
+          ) : (
+            <GridCardsRegistrySkills skills={registrySkills} />
+          )}
         </TabsContent>
 
         <TabsContent value="installed">
@@ -167,10 +183,17 @@ export function SkillsPage() {
         </TabsContent>
 
         <TabsContent value="builds">
-          <GridCardsBuilds
-            filter={buildsFilter}
-            onBuild={() => setBuildOpen(true)}
-          />
+          {buildsView === 'table' ? (
+            <TableBuilds
+              filter={buildsFilter}
+              onBuild={() => setBuildOpen(true)}
+            />
+          ) : (
+            <GridCardsBuilds
+              filter={buildsFilter}
+              onBuild={() => setBuildOpen(true)}
+            />
+          )}
         </TabsContent>
       </Tabs>
 
