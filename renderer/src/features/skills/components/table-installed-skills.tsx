@@ -110,7 +110,7 @@ function SkillRow({ skill }: { skill: InstalledSkill }) {
           )}
         </TableCell>
 
-        <TableCell className="w-[120px] py-3">
+        <TableCell className="w-[1%] py-3 whitespace-nowrap">
           {status ? (
             <Badge variant={skillStatusVariantMap[status] ?? 'secondary'}>
               {status}
@@ -156,34 +156,35 @@ export function TableInstalledSkills({ skills }: { skills: InstalledSkill[] }) {
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40 hover:bg-muted/40">
-            <TableHead className="text-muted-foreground font-medium">
-              Skill
-            </TableHead>
-            <TableHead className="text-muted-foreground font-medium">
-              Mode
-            </TableHead>
-            <TableHead className="text-muted-foreground font-medium">
-              Destination
-            </TableHead>
-            <TableHead className="text-muted-foreground w-[120px] font-medium">
-              Status
-            </TableHead>
-            <TableHead className="w-[120px]" aria-label="Actions" />
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {skills.map((skill, index) => (
-            <SkillRow
-              key={skill.reference ?? skill.metadata?.name ?? `skill-${index}`}
-              skill={skill}
-            />
-          ))}
-        </TableBody>
-      </Table>
-    </div>
+    <Table containerClassName="overflow-hidden rounded-lg border">
+      <TableHeader>
+        <TableRow className="bg-muted/40 hover:bg-muted/40">
+          <TableHead className="text-muted-foreground font-medium">
+            Skill
+          </TableHead>
+          <TableHead className="text-muted-foreground font-medium">
+            Mode
+          </TableHead>
+          <TableHead className="text-muted-foreground font-medium">
+            Destination
+          </TableHead>
+          <TableHead
+            className="text-muted-foreground w-[1%] font-medium
+              whitespace-nowrap"
+          >
+            Status
+          </TableHead>
+          <TableHead className="w-[120px]" aria-label="Actions" />
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {skills.map((skill, index) => (
+          <SkillRow
+            key={skill.reference ?? skill.metadata?.name ?? `skill-${index}`}
+            skill={skill}
+          />
+        ))}
+      </TableBody>
+    </Table>
   )
 }
