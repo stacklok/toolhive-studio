@@ -21,6 +21,8 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       // GPT-5.4 (newest)
       'gpt-5.4',
       'gpt-5.4-pro',
+      'gpt-5.4-mini',
+      'gpt-5.4-nano',
 
       // GPT-5.3
       'gpt-5.3-chat-latest',
@@ -70,7 +72,10 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     id: 'anthropic',
     name: 'Anthropic',
     models: [
-      // Claude 4.6 (newest)
+      // Claude 4.7 (newest)
+      'claude-opus-4-7',
+
+      // Claude 4.6
       'claude-opus-4-6',
       'claude-sonnet-4-6',
 
@@ -94,6 +99,11 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     id: 'google',
     name: 'Google',
     models: [
+      // Latest aliases
+      'gemini-pro-latest',
+      'gemini-flash-latest',
+      'gemini-flash-lite-latest',
+
       // Gemini 3.1 (newest)
       'gemini-3.1-pro-preview',
       'gemini-3.1-flash-image-preview',
@@ -120,6 +130,11 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     id: 'xai',
     name: 'xAI',
     models: [
+      // Grok 4.20 (newest)
+      'grok-4.20-0309-reasoning',
+      'grok-4.20-0309-non-reasoning',
+      'grok-4.20-multi-agent-0309',
+
       // Grok 4.1
       'grok-4-1-fast-reasoning',
       'grok-4-1-fast-non-reasoning',
