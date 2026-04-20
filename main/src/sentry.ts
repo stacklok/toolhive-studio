@@ -9,6 +9,7 @@ const store = telemetryStore
 
 export function initSentry() {
   Sentry.init({
+    enabled: !!import.meta.env.VITE_SENTRY_DSN,
     dsn: isE2E ? undefined : import.meta.env.VITE_SENTRY_DSN,
     propagateTraceparent: true,
     tracePropagationTargets: ['localhost', /^https?:\/\/127\.0\.0\.1/],
