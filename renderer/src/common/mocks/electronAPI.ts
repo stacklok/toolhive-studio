@@ -40,6 +40,10 @@ function createElectronStub(): Partial<ElectronAPI> {
       disable: vi.fn().mockResolvedValue(undefined),
       getAll: vi.fn().mockResolvedValue({}),
     } as ElectronAPI['featureFlags'],
+    uiPreferences: {
+      getViewMode: vi.fn().mockResolvedValue('card'),
+      setViewMode: vi.fn().mockResolvedValue(undefined),
+    } as ElectronAPI['uiPreferences'],
     chat: {
       stream: vi.fn(),
     } as unknown as ElectronAPI['chat'],
