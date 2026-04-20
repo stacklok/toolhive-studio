@@ -49,7 +49,6 @@ function ServerRow({ server }: { server: RegistryServerItem }) {
   const title = server.title ?? server.name ?? ''
   const stars = server.metadata?.stars
   const repositoryUrl = server.repository_url
-  const isDeprecated = server.status === 'deprecated'
 
   function goToDetail() {
     if (!server.name) return
@@ -125,7 +124,7 @@ function ServerRow({ server }: { server: RegistryServerItem }) {
         )}
       </TableCell>
 
-      <TableCell className="py-3">
+      <TableCell className="py-3 pr-3">
         {repositoryUrl ? (
           <a
             href={repositoryUrl}
@@ -138,17 +137,6 @@ function ServerRow({ server }: { server: RegistryServerItem }) {
           >
             <Github className="size-4" />
           </a>
-        ) : null}
-      </TableCell>
-
-      <TableCell className="py-3 pr-3">
-        {isDeprecated ? (
-          <span
-            className="border-border text-muted-foreground bg-muted/20
-              inline-block rounded-md border px-1.5 py-0.5 text-xs"
-          >
-            {server.status}
-          </span>
         ) : null}
       </TableCell>
     </TableRow>
@@ -236,8 +224,6 @@ function GroupRow({ group }: { group: RegistryGroupItem }) {
         <span className="text-muted-foreground/60 text-sm">—</span>
       </TableCell>
 
-      <TableCell className="py-3" aria-hidden />
-
       <TableCell className="py-3 pr-3" aria-hidden />
     </TableRow>
   )
@@ -249,7 +235,7 @@ function PromoRow() {
       data-testid="registry-promo-row"
       className={cn('hover:bg-transparent', 'border-b')}
     >
-      <TableCell colSpan={6} className="p-4">
+      <TableCell colSpan={5} className="p-4">
         <CardRegistryPromo />
       </TableCell>
     </TableRow>
@@ -303,12 +289,7 @@ export function TableRegistry({
           <TableHead className="text-muted-foreground w-[110px] font-medium">
             Stars
           </TableHead>
-          <TableHead className="w-12" aria-label="Repository" />
-          <TableHead
-            className="text-muted-foreground w-[110px] pr-3 font-medium"
-          >
-            Status
-          </TableHead>
+          <TableHead className="w-12 pr-3" aria-label="Repository" />
         </TableRow>
       </TableHeader>
       <TableBody>

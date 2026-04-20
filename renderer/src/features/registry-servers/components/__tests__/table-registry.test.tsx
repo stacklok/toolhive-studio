@@ -94,16 +94,13 @@ describe('TableRegistry', () => {
     expect(
       screen.getByRole('columnheader', { name: /stars/i })
     ).toBeInTheDocument()
-    expect(
-      screen.getByRole('columnheader', { name: /status/i })
-    ).toBeInTheDocument()
 
     expect(screen.getByText('Postgres')).toBeVisible()
     expect(screen.getByText('Remote API')).toBeVisible()
     expect(screen.getByText('ai-tools')).toBeVisible()
   })
 
-  it('shows stars, type icon, GitHub link, and status pill for servers', async () => {
+  it('shows stars, type icon, and GitHub link for servers', async () => {
     const router = makeRouter(
       <TableRegistry items={[localServer, remoteServer]} />
     )
@@ -119,8 +116,6 @@ describe('TableRegistry', () => {
       name: /open repository on github/i,
     })
     expect(github).toHaveAttribute('href', 'https://github.com/org/postgres')
-
-    expect(screen.getByText('deprecated')).toBeVisible()
   })
 
   it('shows the Group badge and server count for groups', async () => {
