@@ -43,11 +43,13 @@ export function CardSkill({ skill }: { skill: InstalledSkill }) {
       {hiddenClients.length > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge
-              variant="outline"
-              aria-label={`${hiddenClients.length} more clients`}
-            >
-              +{hiddenClients.length}
+            <Badge asChild variant="outline">
+              <button
+                type="button"
+                aria-label={`${hiddenClients.length} more clients`}
+              >
+                +{hiddenClients.length}
+              </button>
             </Badge>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">
