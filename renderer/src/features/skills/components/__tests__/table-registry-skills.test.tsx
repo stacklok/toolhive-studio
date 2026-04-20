@@ -73,6 +73,9 @@ describe('TableRegistrySkills', () => {
       screen.getByRole('columnheader', { name: /skill/i })
     ).toBeInTheDocument()
     expect(
+      screen.getByRole('columnheader', { name: /author/i })
+    ).toBeInTheDocument()
+    expect(
       screen.getByRole('columnheader', { name: /about/i })
     ).toBeInTheDocument()
 

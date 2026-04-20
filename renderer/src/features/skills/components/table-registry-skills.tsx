@@ -62,29 +62,27 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
         className={canNavigate ? 'cursor-pointer' : undefined}
       >
         <TableCell className="py-3 font-medium">
-          <div className="flex min-w-0 flex-col">
+          <Tooltip onlyWhenTruncated>
+            <TooltipTrigger asChild>
+              <span className="block max-w-[280px] truncate">{title}</span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs">{title}</TooltipContent>
+          </Tooltip>
+        </TableCell>
+
+        <TableCell className="text-muted-foreground hidden py-3 lg:table-cell">
+          {namespace ? (
             <Tooltip onlyWhenTruncated>
               <TooltipTrigger asChild>
-                <span className="block max-w-[280px] truncate">{title}</span>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">{title}</TooltipContent>
-            </Tooltip>
-            {namespace && (
-              <Tooltip onlyWhenTruncated>
-                <TooltipTrigger asChild>
-                  <span
-                    className="text-muted-foreground block max-w-[280px]
-                      truncate text-xs"
-                  >
-                    {namespace}
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent className="max-w-xs">
+                <span className="block max-w-[200px] truncate text-sm">
                   {namespace}
-                </TooltipContent>
-              </Tooltip>
-            )}
-          </div>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent className="max-w-xs">{namespace}</TooltipContent>
+            </Tooltip>
+          ) : (
+            <span className="text-muted-foreground/60 text-sm">—</span>
+          )}
         </TableCell>
 
         <TableCell
@@ -147,6 +145,12 @@ export function TableRegistrySkills({ skills }: { skills: RegistrySkill[] }) {
         <TableRow className="bg-muted/40 hover:bg-muted/40">
           <TableHead className="text-muted-foreground font-medium">
             Skill
+          </TableHead>
+          <TableHead
+            className="text-muted-foreground hidden w-[200px] font-medium
+              lg:table-cell"
+          >
+            Author
           </TableHead>
           <TableHead
             className="text-muted-foreground hidden w-full max-w-0 font-medium
