@@ -14,6 +14,7 @@ import {
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
 import { Switch } from '@/common/components/ui/switch'
+import { Button } from '@/common/components/ui/button'
 import { cn } from '@/common/lib/utils'
 import { trackEvent } from '@/common/lib/analytics'
 import { ArrowUpCircle, CloudIcon, LaptopIcon } from 'lucide-react'
@@ -53,19 +54,19 @@ function UpdateVersionButton({
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
+          className="size-8"
           onClick={(e) => {
             e.stopPropagation()
             void promptUpdate('card_button')
           }}
           disabled={disabled || !isReady}
-          className="hover:bg-accent inline-flex size-8 cursor-pointer
-            items-center justify-center rounded-md disabled:pointer-events-none
-            disabled:opacity-50"
           aria-label={`Update to ${drift.registryTag}`}
         >
           <ArrowUpCircle className="size-5 text-amber-500" />
-        </button>
+        </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs">
         Update available: {drift.localTag} → {drift.registryTag}
