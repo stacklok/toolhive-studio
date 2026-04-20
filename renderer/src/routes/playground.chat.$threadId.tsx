@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ChatInterface } from '@/features/chat/components/chat-interface'
 import { PlaygroundSidebar } from '@/features/chat/components/playground-sidebar'
 import { usePlaygroundThreads } from '@/features/chat/hooks/use-playground-threads'
+import { clearThreadDraft } from '@/features/chat/hooks/use-thread-draft'
 
 export const Route = createFileRoute('/playground/chat/$threadId')({
   component: PlaygroundChat,
@@ -62,6 +63,7 @@ function PlaygroundChat() {
 
   const handleDeleteThread = async (id: string) => {
     const nextId = await deleteThread(id)
+    clearThreadDraft(id)
     if (nextId) {
       void navigate({
         to: '/playground/chat/$threadId',

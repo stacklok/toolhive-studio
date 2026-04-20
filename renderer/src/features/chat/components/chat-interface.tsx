@@ -219,6 +219,7 @@ export function ChatInterface({
                 {hasProviderAndModel && (
                   <div className="mx-auto max-w-2xl space-y-4">
                     <ChatInputPrompt
+                      key={threadId ?? 'no-thread'}
                       onSendMessage={sendMessage}
                       onStopGeneration={cancelRequest}
                       onSettingsOpen={setIsSettingsOpen}
@@ -228,6 +229,7 @@ export function ChatInterface({
                       handleProviderChange={handleProviderChange}
                       hasProviderAndModel={hasProviderAndModel}
                       hasMessages={hasMessages}
+                      threadId={threadId}
                     />
                   </div>
                 )}
@@ -263,6 +265,7 @@ export function ChatInterface({
               before:from-transparent before:content-['']"
           >
             <ChatInputPrompt
+              key={threadId ?? 'no-thread'}
               onSendMessage={sendMessage}
               onStopGeneration={cancelRequest}
               onSettingsOpen={setIsSettingsOpen}
@@ -272,6 +275,7 @@ export function ChatInterface({
               handleProviderChange={handleProviderChange}
               hasProviderAndModel={hasProviderAndModel}
               hasMessages={hasMessages}
+              threadId={threadId}
             />
           </div>
         )}

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import type { ChatStatus, FileUIPart } from 'ai'
 import log from 'electron-log/renderer'
 import {
@@ -28,6 +28,7 @@ import { McpServerSelector } from './mcp-server-selector'
 import type { ChatSettings } from '../types'
 import { toast } from 'sonner'
 import { toastVariants } from '@/common/lib/toast'
+import { useThreadDraft } from '../hooks/use-thread-draft'
 
 const errorToastConfig = {
   max_files: {
@@ -60,6 +61,7 @@ interface ChatInputProps {
   handleProviderChange: (providerId: string) => void
   hasProviderAndModel: boolean
   hasMessages: boolean
+  threadId?: string
 }
 
 function InputWithAttachments({
@@ -177,8 +179,9 @@ export function ChatInputPrompt({
   handleProviderChange,
   hasProviderAndModel,
   hasMessages,
+  threadId,
 }: ChatInputProps) {
-  const [text, setText] = useState<string>('')
+  const [text, setText] = useThreadDraft(threadId)
 
   const handleSubmit = (message: PromptInputMessage) => {
     const hasText = Boolean(message.text)
