@@ -99,11 +99,7 @@ function BuildRow({ build }: { build: LocalBuild }) {
         </TableCell>
 
         <TableCell className="py-3">
-          {version ? (
-            <Badge variant="secondary">{version}</Badge>
-          ) : (
-            <span className="text-muted-foreground/60 text-sm">—</span>
-          )}
+          <Badge variant="secondary">{version ?? 'latest'}</Badge>
         </TableCell>
 
         <TableCell className="hidden py-3 lg:table-cell">
