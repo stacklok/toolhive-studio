@@ -6,7 +6,7 @@ function storageKey(threadId: string): string {
   return `${STORAGE_PREFIX}${threadId}`
 }
 
-function readDraft(threadId: string | undefined): string {
+function readDraft(threadId: string | null | undefined): string {
   if (!threadId) return ''
   try {
     return localStorage.getItem(storageKey(threadId)) ?? ''
@@ -15,7 +15,7 @@ function readDraft(threadId: string | undefined): string {
   }
 }
 
-export function clearThreadDraft(threadId: string | undefined): void {
+export function clearThreadDraft(threadId: string | null | undefined): void {
   if (!threadId) return
   try {
     localStorage.removeItem(storageKey(threadId))
@@ -27,7 +27,7 @@ export function clearThreadDraft(threadId: string | undefined): void {
 // Expects the consuming component to be keyed by `threadId`, so switching
 // threads remounts and the lazy initializer re-reads the stored draft.
 export function useThreadDraft(
-  threadId: string | undefined
+  threadId: string | null | undefined
 ): readonly [string, (next: string) => void] {
   const [text, setText] = useState<string>(() => readDraft(threadId))
 

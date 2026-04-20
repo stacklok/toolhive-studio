@@ -61,7 +61,7 @@ interface ChatInputProps {
   handleProviderChange: (providerId: string) => void
   hasProviderAndModel: boolean
   hasMessages: boolean
-  threadId?: string
+  threadId?: string | null
 }
 
 function InputWithAttachments({
