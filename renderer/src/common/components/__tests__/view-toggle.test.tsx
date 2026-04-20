@@ -34,8 +34,15 @@ describe('ViewToggle', () => {
 
     await user.click(screen.getByRole('radio', { name: /table view/i }))
     expect(onChange).toHaveBeenCalledWith('table')
+  })
+
+  it('does not invoke onChange when clicking the already-selected option', async () => {
+    const onChange = vi.fn()
+    const user = userEvent.setup()
+
+    render(<ViewToggle value="card" onChange={onChange} />)
 
     await user.click(screen.getByRole('radio', { name: /card view/i }))
-    expect(onChange).toHaveBeenCalledWith('card')
+    expect(onChange).not.toHaveBeenCalled()
   })
 })

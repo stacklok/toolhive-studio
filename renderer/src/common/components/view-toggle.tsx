@@ -1,3 +1,4 @@
+import * as RadioGroupPrimitive from '@radix-ui/react-radio-group'
 import { LayoutGrid, List } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
 import type { ViewMode } from '../../../../main/src/ui-preferences'
@@ -9,6 +10,13 @@ interface ViewToggleProps {
   ariaLabel?: string
 }
 
+const ITEM_STYLES = `focus-visible:ring-ring/50 text-foreground
+  dark:text-muted-foreground inline-flex size-7 cursor-pointer items-center
+  justify-center rounded-full transition-colors focus-visible:ring-[3px]
+  focus-visible:outline-none
+  data-[state=checked]:bg-background data-[state=checked]:shadow-sm
+  data-[state=checked]:dark:bg-card data-[state=checked]:dark:text-foreground`
+
 export function ViewToggle({
   value,
   onChange,
@@ -16,8 +24,11 @@ export function ViewToggle({
   ariaLabel = 'View mode',
 }: ViewToggleProps) {
   return (
-    <div
-      role="radiogroup"
+    <RadioGroupPrimitive.Root
+      value={value}
+      onValueChange={(next) => {
+        if (next && next !== value) onChange(next as ViewMode)
+      }}
       aria-label={ariaLabel}
       className={cn(
         `inline-flex h-auto items-center gap-1 rounded-full bg-zinc-200 p-1
@@ -25,42 +36,20 @@ export function ViewToggle({
         className
       )}
     >
-      <button
-        type="button"
-        role="radio"
-        aria-checked={value === 'card'}
+      <RadioGroupPrimitive.Item
+        value="card"
         aria-label="Card view"
-        data-state={value === 'card' ? 'active' : 'inactive'}
-        onClick={() => onChange('card')}
-        className={cn(
-          `focus-visible:ring-ring/50 text-foreground dark:text-muted-foreground
-          inline-flex size-7 cursor-pointer items-center justify-center
-          rounded-full transition-colors focus-visible:ring-[3px]
-          focus-visible:outline-none`,
-          value === 'card' &&
-            'bg-background dark:bg-card dark:text-foreground shadow-sm'
-        )}
+        className={cn(ITEM_STYLES)}
       >
         <LayoutGrid className="size-4" aria-hidden />
-      </button>
-      <button
-        type="button"
-        role="radio"
-        aria-checked={value === 'table'}
+      </RadioGroupPrimitive.Item>
+      <RadioGroupPrimitive.Item
+        value="table"
         aria-label="Table view"
-        data-state={value === 'table' ? 'active' : 'inactive'}
-        onClick={() => onChange('table')}
-        className={cn(
-          `focus-visible:ring-ring/50 text-foreground dark:text-muted-foreground
-          inline-flex size-7 cursor-pointer items-center justify-center
-          rounded-full transition-colors focus-visible:ring-[3px]
-          focus-visible:outline-none`,
-          value === 'table' &&
-            'bg-background dark:bg-card dark:text-foreground shadow-sm'
-        )}
+        className={cn(ITEM_STYLES)}
       >
         <List className="size-4" aria-hidden />
-      </button>
-    </div>
+      </RadioGroupPrimitive.Item>
+    </RadioGroupPrimitive.Root>
   )
 }
