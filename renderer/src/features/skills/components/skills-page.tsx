@@ -4,7 +4,6 @@ import {
   getApiV1BetaSkillsOptions,
   getRegistryByRegistryNameV01xDevToolhiveSkillsOptions,
 } from '@common/api/generated/@tanstack/react-query.gen'
-import { TitlePage } from '@/common/components/title-page'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { Button } from '@/common/components/ui/button'
 import { EmptyState } from '@/common/components/empty-state'
@@ -20,16 +19,14 @@ import {
 import { GridCardsSkills } from './grid-cards-skills'
 import { GridCardsBuilds } from './grid-cards-builds'
 import { GridCardsRegistrySkills } from './grid-cards-registry-skills'
-import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogBuildSkill } from './dialog-build-skill'
-import { PlusIcon, HammerIcon } from 'lucide-react'
+import { HammerIcon } from 'lucide-react'
 import type { GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill } from '@common/api/generated/types.gen'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 
 type Tab = 'registry' | 'installed' | 'builds'
 
 export function SkillsPage() {
-  const [installOpen, setInstallOpen] = useState(false)
   const [buildOpen, setBuildOpen] = useState(false)
   const { tab } = useSearch({ from: '/skills' })
   const navigate = useNavigate({ from: '/skills' })
@@ -84,60 +81,52 @@ export function SkillsPage() {
 
   const hasSkills = skills.length > 0
 
-  const currentFilter =
-    tab === 'registry'
-      ? registrySearch
-      : tab === 'installed'
-        ? installedFilter
-        : buildsFilter
-
-  const setCurrentFilter =
-    tab === 'registry'
-      ? handleRegistrySearchChange
-      : tab === 'installed'
-        ? setInstalledFilter
-        : setBuildsFilter
-
-  const showSearch =
-    tab === 'registry' || (tab === 'installed' && hasSkills) || tab === 'builds'
-
   return (
     <>
-      <TitlePage title="Skills">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="secondary"
-            onClick={() => setBuildOpen(true)}
-            className="shrink-0"
-          >
-            <HammerIcon className="size-4" />
-            Build skill
-          </Button>
-          <Button
-            variant="action"
-            onClick={() => setInstallOpen(true)}
-            className="shrink-0"
-          >
-            <PlusIcon className="size-4" />
-            Install skill
-          </Button>
-        </div>
-      </TitlePage>
-
-      <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
+      <Tabs
+        value={tab}
+        onValueChange={(v) => setTab(v as Tab)}
+        className="gap-4"
+      >
         <div className="flex items-center justify-between gap-4">
-          <TabsList>
+          <TabsList variant="pill">
             <TabsTrigger value="registry">Registry</TabsTrigger>
             <TabsTrigger value="installed">Installed</TabsTrigger>
             <TabsTrigger value="builds">Local Builds</TabsTrigger>
           </TabsList>
-          {showSearch && (
-            <InputSearch
-              value={currentFilter}
-              onChange={(v) => setCurrentFilter(v)}
-              placeholder="Search..."
-            />
-          )}
+          <div className="flex items-center gap-3">
+            {tab === 'registry' && (
+              <InputSearch
+                value={registrySearch}
+                onChange={handleRegistrySearchChange}
+                placeholder="Search..."
+              />
+            )}
+            {tab === 'installed' && hasSkills && (
+              <InputSearch
+                value={installedFilter}
+                onChange={setInstalledFilter}
+                placeholder="Search..."
+              />
+            )}
+            {tab === 'builds' && (
+              <>
+                <InputSearch
+                  value={buildsFilter}
+                  onChange={setBuildsFilter}
+                  placeholder="Search..."
+                />
+                <Button
+                  variant="action"
+                  onClick={() => setBuildOpen(true)}
+                  className="shrink-0"
+                >
+                  <HammerIcon className="size-4" />
+                  Build skill
+                </Button>
+              </>
+            )}
+          </div>
         </div>
 
         <TabsContent value="registry">
@@ -151,12 +140,11 @@ export function SkillsPage() {
               body="Install a skill to extend your AI agent's capabilities."
               actions={[
                 <Button
-                  key="install"
+                  key="browse"
                   variant="action"
-                  onClick={() => setInstallOpen(true)}
+                  onClick={() => setTab('registry')}
                 >
-                  <PlusIcon className="size-4" />
-                  Install skill
+                  Browse registry
                 </Button>,
               ]}
               illustration={IllustrationPackage}
@@ -174,7 +162,6 @@ export function SkillsPage() {
         </TabsContent>
       </Tabs>
 
-      <DialogInstallSkill open={installOpen} onOpenChange={setInstallOpen} />
       <DialogBuildSkill open={buildOpen} onOpenChange={setBuildOpen} />
     </>
   )

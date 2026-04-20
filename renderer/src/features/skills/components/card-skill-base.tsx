@@ -76,17 +76,9 @@ export function CardSkillBase({
 
       <CardContent className="flex-1">
         {description && (
-          <Tooltip onlyWhenTruncated>
-            <TooltipTrigger asChild>
-              <p
-                className="text-muted-foreground line-clamp-3 text-sm
-                  select-none"
-              >
-                {description}
-              </p>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-xs">{description}</TooltipContent>
-          </Tooltip>
+          <p className="text-muted-foreground line-clamp-3 text-sm select-none">
+            {description}
+          </p>
         )}
       </CardContent>
 

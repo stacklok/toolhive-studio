@@ -72,4 +72,65 @@ describe('CardSkill', () => {
       screen.getByRole('heading', { name: /uninstall skill/i })
     ).toBeInTheDocument()
   })
+
+  describe('client badges overflow', () => {
+    it('renders all clients inline when count is at or below the cap', () => {
+      renderWithProviders(
+        <CardSkill
+          skill={{ ...baseSkill, clients: ['cursor', 'claude-code', 'codex'] }}
+        />
+      )
+
+      expect(screen.getByText('cursor')).toBeInTheDocument()
+      expect(screen.getByText('claude-code')).toBeInTheDocument()
+      expect(screen.getByText('codex')).toBeInTheDocument()
+      expect(
+        screen.queryByRole('button', { name: /more clients/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it('caps visible client badges at 3 and shows a "+N" overflow trigger', () => {
+      const clients = ['cursor', 'claude-code', 'codex', 'vscode', 'windsurf']
+      renderWithProviders(<CardSkill skill={{ ...baseSkill, clients }} />)
+
+      expect(screen.getByText('cursor')).toBeInTheDocument()
+      expect(screen.getByText('claude-code')).toBeInTheDocument()
+      expect(screen.getByText('codex')).toBeInTheDocument()
+      expect(screen.queryByText('vscode')).not.toBeInTheDocument()
+      expect(screen.queryByText('windsurf')).not.toBeInTheDocument()
+
+      const overflow = screen.getByRole('button', { name: '2 more clients' })
+      expect(overflow).toBeInTheDocument()
+      expect(overflow).toHaveTextContent('+2')
+    })
+
+    it('reveals hidden clients in the overflow tooltip on focus', async () => {
+      const clients = ['cursor', 'claude-code', 'codex', 'vscode', 'windsurf']
+      renderWithProviders(<CardSkill skill={{ ...baseSkill, clients }} />)
+
+      const overflow = screen.getByRole('button', { name: '2 more clients' })
+      overflow.focus()
+
+      // Radix renders tooltip content twice (visible + aria-describedby
+      // mirror for screen readers), so both matches are expected.
+      expect((await screen.findAllByText('vscode')).length).toBeGreaterThan(0)
+      expect(screen.getAllByText('windsurf').length).toBeGreaterThan(0)
+    })
+  })
+
+  describe('project-scoped card layout', () => {
+    it('shows project root badge derived from project_root', () => {
+      renderWithProviders(
+        <CardSkill
+          skill={{
+            ...baseSkill,
+            scope: 'project',
+            project_root: '/Users/me/code/my-repo',
+          }}
+        />
+      )
+
+      expect(screen.getByText('/my-repo')).toBeInTheDocument()
+    })
+  })
 })

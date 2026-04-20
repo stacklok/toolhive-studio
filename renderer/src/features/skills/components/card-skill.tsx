@@ -6,7 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
-import { Trash2Icon } from 'lucide-react'
+import { FolderGit2Icon, Trash2Icon, UserIcon } from 'lucide-react'
 import type { GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill } from '@common/api/generated/types.gen'
 import { DialogUninstallSkill } from './dialog-uninstall-skill'
 import { CardSkillBase } from './card-skill-base'
@@ -17,47 +17,90 @@ const statusVariantMap = {
   failed: 'destructive',
 } as const
 
+const MAX_VISIBLE_CLIENTS = 3
+
 export function CardSkill({ skill }: { skill: InstalledSkill }) {
   const [uninstallOpen, setUninstallOpen] = useState(false)
 
   const title = skill.metadata?.name ?? skill.reference ?? 'Unknown skill'
   const status = skill.status
   const scope = skill.scope
-  const clients = skill.clients
+  const clients = skill.clients ?? []
+  const visibleClients = clients.slice(0, MAX_VISIBLE_CLIENTS)
+  const hiddenClients = clients.slice(MAX_VISIBLE_CLIENTS)
   const projectRoot = scope === 'project' ? skill.project_root : undefined
   const projectRootLabel = projectRoot
     ? `/${projectRoot.split(/[\\/]/).filter(Boolean).at(-1) ?? projectRoot}`
     : null
 
-  const badges = (
-    <div className="flex flex-wrap gap-1.5">
-      {status && (
-        <Badge variant={statusVariantMap[status] ?? 'secondary'}>
-          {status}
-        </Badge>
-      )}
-      {scope && (
-        <Badge variant="outline" className="capitalize">
-          {scope}
-        </Badge>
-      )}
-      {projectRootLabel && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge variant="outline" className="font-mono">
-              {projectRootLabel}
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs font-mono text-xs break-all">
-            {projectRoot}
-          </TooltipContent>
-        </Tooltip>
-      )}
-      {clients?.map((client) => (
+  const clientBadges = (
+    <>
+      {visibleClients.map((client) => (
         <Badge key={client} variant="outline">
           {client}
         </Badge>
       ))}
+      {hiddenClients.length > 0 && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Badge asChild variant="outline">
+              <button
+                type="button"
+                aria-label={`${hiddenClients.length} more clients`}
+              >
+                +{hiddenClients.length}
+              </button>
+            </Badge>
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs">
+            <ul className="flex flex-col gap-0.5 text-xs">
+              {hiddenClients.map((client) => (
+                <li key={client}>{client}</li>
+              ))}
+            </ul>
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </>
+  )
+
+  const isProjectScope = scope === 'project'
+
+  const badges = (
+    <div className="flex flex-col gap-1.5">
+      <div className="flex flex-wrap gap-1.5">
+        {status && (
+          <Badge variant={statusVariantMap[status] ?? 'secondary'}>
+            {status}
+          </Badge>
+        )}
+        {scope && (
+          <Badge variant="secondary" className="capitalize">
+            {scope === 'project' ? (
+              <FolderGit2Icon aria-hidden />
+            ) : (
+              <UserIcon aria-hidden />
+            )}
+            {scope}
+          </Badge>
+        )}
+        {projectRootLabel && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge variant="outline" className="font-mono">
+                {projectRootLabel}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-xs font-mono text-xs break-all">
+              {projectRoot}
+            </TooltipContent>
+          </Tooltip>
+        )}
+        {!isProjectScope && clientBadges}
+      </div>
+      {isProjectScope && clients.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">{clientBadges}</div>
+      )}
     </div>
   )
 
