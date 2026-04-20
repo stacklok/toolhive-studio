@@ -111,8 +111,10 @@ describe('CardSkill', () => {
       const overflow = screen.getByRole('button', { name: '2 more clients' })
       overflow.focus()
 
-      expect(await screen.findByText('vscode')).toBeInTheDocument()
-      expect(screen.getByText('windsurf')).toBeInTheDocument()
+      // Radix renders tooltip content twice (visible + aria-describedby
+      // mirror for screen readers), so both matches are expected.
+      expect((await screen.findAllByText('vscode')).length).toBeGreaterThan(0)
+      expect(screen.getAllByText('windsurf').length).toBeGreaterThan(0)
     })
   })
 
