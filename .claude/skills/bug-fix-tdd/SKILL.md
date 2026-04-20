@@ -16,7 +16,7 @@ Reproduce bugs with a failing test, then apply the minimum fix. This skill is us
 3. **Write a unit test** that reproduces the bug — the test MUST FAIL
 4. **Run the test**: `pnpm run test:nonInteractive -- <test-file-path>`
 5. **Verify failure reason**: the test must fail because of the bug, not because of import errors or unrelated issues
-6. **Retry if needed**: if the test passes (bug not reproduced), try a different approach (max 5 attempts)
+6. **Retry if needed**: if the test passes (bug not reproduced), try a different approach (max 3 attempts)
 7. **Write `bug-analysis.md`** with findings (see format below)
 
 **Constraints**: Do NOT modify source files in Phase 1. Only create/edit test files and `bug-analysis.md`.
@@ -32,6 +32,20 @@ Reproduce bugs with a failing test, then apply the minimum fix. This skill is us
 7. **Write `pr-body.md` and `fix-title.txt`**
 
 **Constraints**: Do NOT run git, gh, or modify .env files.
+
+### Phase 2b — Direct Fix (Fallback)
+
+If Phase 1 cannot reproduce the bug in a test (test passes after 3 attempts), Phase 2b runs instead of Phase 2.
+
+1. **Read `bug-analysis.md`** and `issue-body.md` for context
+2. **Apply the MINIMUM fix** based on code analysis alone
+3. **If you CAN write a regression test**, do so — but it is not required
+4. **Run the full suite**: `pnpm run test:nonInteractive`
+5. **Run static checks**: `pnpm run lint` and `pnpm run type-check`
+6. **Retry if needed**: if any check fails, adjust the fix (max 5 attempts)
+7. **Write `pr-body.md` and `fix-title.txt`** — note in the PR body that no regression test was possible
+
+**Constraints**: Same as Phase 2. Do NOT run git, gh, or modify .env files.
 
 ## Test Placement Rules
 
