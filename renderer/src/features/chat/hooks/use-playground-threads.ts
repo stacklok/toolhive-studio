@@ -82,11 +82,19 @@ export function usePlaygroundThreads(activeThreadId: string) {
   }, [])
 
   /**
-   * Deletes a thread and returns the next thread ID for navigation,
-   * or null when no threads remain.
+   * Deletes a thread. On success returns `{ success: true, nextId }` where
+   * `nextId` is the next thread ID for navigation (or `null` when no threads
+   * remain). On failure returns `{ success: false }` so the caller can
+   * distinguish "the thread was deleted and had no neighbors" from "the
+   * delete failed and the thread still exists" — important for side effects
+   * like clearing persisted drafts.
    */
   const deleteThread = useCallback(
-    async (threadId: string): Promise<string | null> => {
+    async (
+      threadId: string
+    ): Promise<
+      { success: true; nextId: string | null } | { success: false }
+    > => {
       try {
         const result = await window.electronAPI.chat.deleteThread(threadId)
         if (!result.success) {
@@ -94,7 +102,7 @@ export function usePlaygroundThreads(activeThreadId: string) {
             '[usePlaygroundThreads] Failed to delete thread:',
             result.error
           )
-          return null
+          return { success: false }
         }
         trackEvent('Playground: delete thread', {
           'thread.was_active': activeThreadId === threadId,
@@ -103,10 +111,10 @@ export function usePlaygroundThreads(activeThreadId: string) {
         // overwriting concurrent state updates (e.g. from refreshThread).
         const remaining = threadsRef.current.filter((t) => t.id !== threadId)
         setThreads(remaining)
-        return remaining[0]?.id ?? null
+        return { success: true, nextId: remaining[0]?.id ?? null }
       } catch (err) {
         log.error('[usePlaygroundThreads] Failed to delete thread:', err)
-        return null
+        return { success: false }
       }
     },
     [activeThreadId]

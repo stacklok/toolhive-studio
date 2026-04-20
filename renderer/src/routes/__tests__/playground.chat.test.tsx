@@ -304,7 +304,10 @@ describe('Playground chat route (/playground/chat/$threadId)', () => {
     })
 
     it('navigates to the next thread after deleting from sidebar', async () => {
-      mockThreadsReturn.deleteThread.mockResolvedValue('other-thread')
+      mockThreadsReturn.deleteThread.mockResolvedValue({
+        success: true,
+        nextId: 'other-thread',
+      })
       const { router } = renderChatRoute('thread-1')
       await waitFor(() =>
         expect(screen.getByTestId('playground-sidebar')).toBeInTheDocument()
@@ -320,7 +323,10 @@ describe('Playground chat route (/playground/chat/$threadId)', () => {
     })
 
     it('navigates to /playground when deleting the last thread', async () => {
-      mockThreadsReturn.deleteThread.mockResolvedValue(null)
+      mockThreadsReturn.deleteThread.mockResolvedValue({
+        success: true,
+        nextId: null,
+      })
       const { router } = renderChatRoute('thread-1')
       await waitFor(() =>
         expect(screen.getByTestId('playground-sidebar')).toBeInTheDocument()
@@ -330,6 +336,23 @@ describe('Playground chat route (/playground/chat/$threadId)', () => {
 
       await waitFor(() =>
         expect(router.state.location.pathname).toBe('/playground')
+      )
+    })
+
+    it('stays on the current thread and keeps the draft when delete fails', async () => {
+      mockThreadsReturn.deleteThread.mockResolvedValue({ success: false })
+      localStorage.setItem('toolhive.playground.draft.thread-1', 'unsent draft')
+      const { router } = renderChatRoute('thread-1')
+      await waitFor(() =>
+        expect(screen.getByTestId('playground-sidebar')).toBeInTheDocument()
+      )
+
+      fireEvent.click(screen.getByTestId('sidebar-delete-btn'))
+
+      await new Promise((r) => setTimeout(r, 50))
+      expect(router.state.location.pathname).toBe('/playground/chat/thread-1')
+      expect(localStorage.getItem('toolhive.playground.draft.thread-1')).toBe(
+        'unsent draft'
       )
     })
 
@@ -361,7 +384,10 @@ describe('Playground chat route (/playground/chat/$threadId)', () => {
     })
 
     it('navigates to /playground when ChatInterface deletes the last thread', async () => {
-      mockThreadsReturn.deleteThread.mockResolvedValue(null)
+      mockThreadsReturn.deleteThread.mockResolvedValue({
+        success: true,
+        nextId: null,
+      })
       const { router } = renderChatRoute('thread-1')
       await waitFor(() =>
         expect(screen.getByTestId('chat-interface')).toBeInTheDocument()

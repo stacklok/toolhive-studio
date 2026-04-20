@@ -62,12 +62,16 @@ function PlaygroundChat() {
   }
 
   const handleDeleteThread = async (id: string) => {
-    const nextId = await deleteThread(id)
+    const result = await deleteThread(id)
+    if (!result.success) {
+      // Delete failed — the thread (and its draft) still exists.
+      return
+    }
     clearThreadDraft(id)
-    if (nextId) {
+    if (result.nextId) {
       void navigate({
         to: '/playground/chat/$threadId',
-        params: { threadId: nextId },
+        params: { threadId: result.nextId },
       })
     } else {
       // No threads remain — go to index which will create a new one
