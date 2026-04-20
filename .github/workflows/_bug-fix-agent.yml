@@ -77,7 +77,7 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         run: pnpm add -g @anthropic-ai/claude-code
 
-      - name: 'TDD Bug Fix (up to 3 attempts)'
+      - name: 'Bug Fix (up to 3 attempts)'
         id: tdd
         if: steps.guard.outputs.skip != 'true'
         continue-on-error: true
@@ -94,7 +94,7 @@ jobs:
             # Clean up previous attempt artifacts
             rm -f bug-analysis.md pr-body.md fix-title.txt
             git checkout -- . 2>/dev/null || true
-            git clean -fd -- '**/*.ts' '**/*.tsx' 2>/dev/null || true
+            git clean -fd 2>/dev/null || true
 
             # --- Phase 1: Analyze & Write Failing Test (Opus) ---
             echo "::notice::Phase 1 — Writing failing test (attempt $ATTEMPT)"
