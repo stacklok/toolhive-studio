@@ -1,4 +1,5 @@
 import { Badge } from '@/common/components/ui/badge'
+import { Button } from '@/common/components/ui/button'
 import {
   Tooltip,
   TooltipContent,
@@ -31,14 +32,14 @@ export function SkillClientsBadges({
       {hiddenClients.length > 0 && (
         <Tooltip>
           <TooltipTrigger asChild>
-            <Badge asChild variant="outline">
-              <button
-                type="button"
-                aria-label={`${hiddenClients.length} more clients`}
-              >
-                +{hiddenClients.length}
-              </button>
-            </Badge>
+            <Button
+              variant="outline"
+              size="xs"
+              className="rounded-md px-2 font-normal"
+              aria-label={`${hiddenClients.length} more clients`}
+            >
+              +{hiddenClients.length}
+            </Button>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs">
             <ul className="flex flex-col gap-0.5 text-xs">
