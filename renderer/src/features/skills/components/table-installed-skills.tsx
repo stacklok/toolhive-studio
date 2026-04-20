@@ -63,7 +63,7 @@ function SkillRow({ skill }: { skill: InstalledSkill }) {
           </div>
         </TableCell>
 
-        <TableCell className="py-3">
+        <TableCell className="w-[110px] py-3">
           {modeLabel ? (
             <span className="inline-flex items-center gap-1.5 text-sm">
               {isProjectScope ? (
@@ -78,7 +78,7 @@ function SkillRow({ skill }: { skill: InstalledSkill }) {
           )}
         </TableCell>
 
-        <TableCell className="py-3">
+        <TableCell className="w-full max-w-0 py-3">
           {isProjectScope ? (
             <div className="flex flex-col items-start gap-1.5">
               {projectRootLabel && (
@@ -156,16 +156,18 @@ export function TableInstalledSkills({ skills }: { skills: InstalledSkill[] }) {
   }
 
   return (
-    <Table containerClassName="overflow-hidden rounded-lg border">
+    <Table containerClassName="rounded-lg border">
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
           <TableHead className="text-muted-foreground font-medium">
             Skill
           </TableHead>
-          <TableHead className="text-muted-foreground font-medium">
+          <TableHead className="text-muted-foreground w-[110px] font-medium">
             Mode
           </TableHead>
-          <TableHead className="text-muted-foreground font-medium">
+          <TableHead
+            className="text-muted-foreground w-full max-w-0 font-medium"
+          >
             Destination
           </TableHead>
           <TableHead

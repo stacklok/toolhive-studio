@@ -135,7 +135,7 @@ function McpServerRow({ mcpServer }: { mcpServer: CoreWorkload }) {
           <TooltipTrigger asChild>
             <span
               className={cn(
-                'block truncate',
+                'block max-w-[260px] truncate',
                 isStopped && 'text-foreground/65'
               )}
             >
@@ -146,7 +146,10 @@ function McpServerRow({ mcpServer }: { mcpServer: CoreWorkload }) {
         </Tooltip>
       </TableCell>
 
-      <TableCell className="text-muted-foreground hidden py-3 md:table-cell">
+      <TableCell
+        className="text-muted-foreground hidden w-full max-w-0 py-3
+          md:table-cell"
+      >
         {description ? (
           <Tooltip onlyWhenTruncated>
             <TooltipTrigger asChild>
@@ -232,19 +235,14 @@ export function TableMcpServers({
   }
 
   return (
-    <Table
-      className="table-fixed"
-      containerClassName="overflow-hidden rounded-lg border"
-    >
+    <Table containerClassName="rounded-lg border">
       <TableHeader>
         <TableRow className="bg-muted/40 hover:bg-muted/40">
-          <TableHead
-            className="text-muted-foreground w-auto font-medium md:w-[28%]"
-          >
+          <TableHead className="text-muted-foreground font-medium">
             Server
           </TableHead>
           <TableHead
-            className="text-muted-foreground hidden w-auto font-medium
+            className="text-muted-foreground hidden w-full max-w-0 font-medium
               md:table-cell"
           >
             About
