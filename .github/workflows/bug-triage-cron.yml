@@ -44,7 +44,7 @@ jobs:
             --json number,title,body,labels,comments \
             --jq '[.[] | select(
               (.labels | map(.name) | (contains(["auto-fix"]) or contains(["auto-fix-skip"])) | not)
-              and (.comments | length == 0)
+              and (.comments == 0)
             )]')
 
           COUNT=$(echo "$ISSUES" | jq 'length')
@@ -118,7 +118,7 @@ jobs:
 
           claude -p --model sonnet \
             --dangerously-skip-permissions \
-            --allowedTools "Read,Grep,Glob" \
+            --allowedTools "Read,Grep,Glob,Write" \
             --max-turns 20 \
             "Read issues-for-triage.md. These are open bug reports for a React + Electron desktop app.
 
@@ -146,10 +146,10 @@ jobs:
 
              Search the codebase with Grep/Glob to verify the mentioned components/features exist.
 
-             Output ONLY a JSON array to triage-results.json, one object per issue:
+             Output ONLY a JSON array, one object per issue:
              [{\"issue\": <number>, \"suitable\": true/false, \"reason\": \"<one line>\"}]
 
-             Write the file triage-results.json with this array. Nothing else."
+             Write this JSON array to a file called triage-results.json using the Write tool. Nothing else."
 
       - name: Apply auto-fix label (max 3 per run)
         if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'

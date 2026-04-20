@@ -130,7 +130,7 @@ jobs:
               continue
             fi
 
-            TEST_FILE=$(grep "^Test file:" bug-analysis.md | sed 's/^Test file: //')
+            TEST_FILE=$(grep "^Test file:" bug-analysis.md | sed 's/^Test file: //' || true)
             if [ -z "$TEST_FILE" ]; then
               echo "::warning::No 'Test file:' line found in bug-analysis.md — skipping attempt $ATTEMPT"
               echo "::endgroup::"
@@ -177,7 +177,7 @@ jobs:
               echo "::notice::Phase 2 — Implementing fix (attempt $ATTEMPT)"
               if ! claude -p --model sonnet \
                 --dangerously-skip-permissions \
-                --allowedTools "Read,Grep,Glob,Edit,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *)" \
+                --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *)" \
                 --max-turns 150 \
                 "Read .claude/skills/bug-fix-tdd/SKILL.md and bug-analysis.md.
 
@@ -218,18 +218,8 @@ jobs:
             echo "result=failure" >> $GITHUB_OUTPUT
           fi
 
-      - name: Check for changes
-        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success'
-        id: changes
-        run: |
-          if git diff --quiet && [ -z "$(git ls-files --others --exclude-standard -- '*.ts' '*.tsx')" ]; then
-            echo "has_changes=false" >> $GITHUB_OUTPUT
-          else
-            echo "has_changes=true" >> $GITHUB_OUTPUT
-          fi
-
       - name: Create branch and commit
-        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success' && steps.changes.outputs.has_changes == 'true'
+        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success'
         id: push
         run: |
           ISSUE_NUM="${{ inputs.issue-number }}"
@@ -239,14 +229,22 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
-          git add -A -- '**/*.ts' '**/*.tsx'
-          git diff --cached --quiet && exit 0
-          git commit -m "$TITLE"
-          git push -u origin "$BRANCH"
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+
+          # Stage source files (ts/tsx) and any new test files
+          git add -A -- '*.ts' '*.tsx' '**/*.ts' '**/*.tsx'
+
+          if git diff --cached --quiet; then
+            echo "::warning::No source changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            git commit -m "$TITLE"
+            git push -u origin "$BRANCH"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          fi
 
       - name: Create Pull Request
-        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success' && steps.changes.outputs.has_changes == 'true'
+        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success' && steps.push.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
