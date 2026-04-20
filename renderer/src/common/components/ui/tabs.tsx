@@ -1,7 +1,12 @@
 import * as React from 'react'
 import * as TabsPrimitive from '@radix-ui/react-tabs'
+import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/common/lib/utils'
+
+type TabsVariant = 'default' | 'pill'
+
+const TabsVariantContext = React.createContext<TabsVariant>('default')
 
 function Tabs({
   className,
@@ -16,41 +21,80 @@ function Tabs({
   )
 }
 
+const tabsListVariants = cva(
+  'text-muted-foreground inline-flex w-fit items-center justify-center',
+  {
+    variants: {
+      variant: {
+        default: 'bg-muted h-9 rounded-lg p-[3px]',
+        pill: 'h-auto rounded-full bg-zinc-200 p-1 dark:bg-zinc-800',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+)
+
 function TabsList({
   className,
+  variant,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.List>) {
+}: React.ComponentProps<typeof TabsPrimitive.List> &
+  VariantProps<typeof tabsListVariants>) {
+  const resolvedVariant: TabsVariant = variant ?? 'default'
   return (
-    <TabsPrimitive.List
-      data-slot="tabs-list"
-      className={cn(
-        `bg-muted text-muted-foreground inline-flex h-9 w-fit items-center
-        justify-center rounded-lg p-[3px]`,
-        className
-      )}
-      {...props}
-    />
+    <TabsVariantContext.Provider value={resolvedVariant}>
+      <TabsPrimitive.List
+        data-slot="tabs-list"
+        data-variant={resolvedVariant}
+        className={cn(
+          tabsListVariants({ variant: resolvedVariant }),
+          className
+        )}
+        {...props}
+      />
+    </TabsVariantContext.Provider>
   )
 }
 
+const tabsTriggerVariants = cva(
+  `data-[state=active]:bg-background dark:data-[state=active]:bg-card
+  dark:data-[state=active]:text-foreground focus-visible:border-ring
+  focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground
+  dark:text-muted-foreground inline-flex flex-1 items-center justify-center
+  gap-1.5 border border-transparent text-sm font-medium whitespace-nowrap
+  transition-[color,box-shadow] focus-visible:ring-[3px]
+  focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50
+  [&_svg]:pointer-events-none [&_svg]:shrink-0
+  [&_svg:not([class*='size-'])]:size-4`,
+  {
+    variants: {
+      variant: {
+        default:
+          'h-[calc(100%-1px)] rounded-md px-2 py-1 data-[state=active]:shadow-sm',
+        pill: 'rounded-full px-3 py-1.5',
+      },
+    },
+    defaultVariants: {
+      variant: 'default',
+    },
+  }
+)
+
 function TabsTrigger({
   className,
+  variant,
   ...props
-}: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
+}: React.ComponentProps<typeof TabsPrimitive.Trigger> &
+  VariantProps<typeof tabsTriggerVariants>) {
+  const contextVariant = React.useContext(TabsVariantContext)
+  const resolvedVariant: TabsVariant = variant ?? contextVariant
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        `data-[state=active]:bg-background dark:data-[state=active]:bg-card
-        dark:data-[state=active]:text-foreground focus-visible:border-ring
-        focus-visible:ring-ring/50 focus-visible:outline-ring text-foreground
-        dark:text-muted-foreground inline-flex h-[calc(100%-1px)] flex-1
-        items-center justify-center gap-1.5 rounded-md border border-transparent
-        px-2 py-1 text-sm font-medium whitespace-nowrap
-        transition-[color,box-shadow] focus-visible:ring-[3px]
-        focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50
-        data-[state=active]:shadow-sm [&_svg]:pointer-events-none
-        [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4`,
+        tabsTriggerVariants({ variant: resolvedVariant }),
         className
       )}
       {...props}
