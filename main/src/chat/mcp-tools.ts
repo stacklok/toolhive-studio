@@ -27,6 +27,8 @@ import {
 } from '../utils/mcp-tools'
 import { TOOLHIVE_MCP_SERVER_NAME } from '../utils/constants'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import { readAllMcpAppUiMetadata } from '../db/readers/mcp-app-ui-metadata-reader'
+import { replaceAllMcpAppUiMetadata } from '../db/writers/mcp-app-ui-metadata-writer'
 
 // Advertised to MCP servers during initialize so they expose UI-enabled tools
 const MCP_UI_EXTENSION_CAPABILITY = {
@@ -45,10 +47,24 @@ interface UiResourceMetadata {
   prefersBorder?: boolean
 }
 
-// Module-level cache populated by createMcpTools() on each chat stream
+// Module-level cache populated by createMcpTools() on each chat stream.
+// Seeded lazily from SQLite on first access so historical MCP App tool
+// calls can render after an app restart without waiting for a new stream.
 let cachedUiMetadata: Record<string, ToolUiMetadataEntry> = {}
+let uiMetadataLoaded = false
+
+function ensureUiMetadataLoaded(): void {
+  if (uiMetadataLoaded) return
+  uiMetadataLoaded = true
+  try {
+    cachedUiMetadata = readAllMcpAppUiMetadata()
+  } catch (error) {
+    log.error('[MCP Apps] Failed to load UI metadata from DB:', error)
+  }
+}
 
 export function getCachedUiMetadata(): Record<string, ToolUiMetadataEntry> {
+  ensureUiMetadataLoaded()
   return { ...cachedUiMetadata }
 }
 
@@ -307,8 +323,10 @@ export async function createMcpTools(): Promise<{
   const mcpTools: ToolSet = {}
   const mcpClients: Awaited<ReturnType<typeof createMCPClient>>[] = []
   let enabledTools: Record<string, string[]> = {}
-  // Reset the UI metadata cache for this stream session
+  // Reset the UI metadata cache for this stream session. Mark as loaded so
+  // subsequent getCachedUiMetadata() calls don't re-read stale DB rows.
   cachedUiMetadata = {}
+  uiMetadataLoaded = true
 
   /** Registers a validated tool and caches its UI metadata if present. */
   const registerTool = (
@@ -408,6 +426,14 @@ export async function createMcpTools(): Promise<{
       level: 'info',
       data: { tools: Object.keys(cachedUiMetadata) },
     })
+  }
+
+  // Persist the freshly built cache (even when empty — a server that lost
+  // all UI tools should have its stale entries removed).
+  try {
+    replaceAllMcpAppUiMetadata(cachedUiMetadata)
+  } catch (error) {
+    log.error('[MCP Apps] Failed to persist UI metadata to DB:', error)
   }
 
   return { tools: mcpTools, clients: mcpClients, enabledTools }
