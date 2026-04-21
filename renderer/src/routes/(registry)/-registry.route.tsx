@@ -9,13 +9,16 @@ import type {
   V1ListServersResponse,
 } from '@common/api/registry-types'
 import { GridCardsRegistry } from '@/features/registry-servers/components/grid-cards-registry'
+import { TableRegistry } from '@/features/registry-servers/components/table-registry'
 import { EmptyState } from '@/common/components/empty-state'
 import { ExternalLinkIcon } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
 import { TitlePage } from '@/common/components/title-page'
 import { InputSearch } from '@/common/components/ui/input-search'
+import { ViewToggle } from '@/common/components/view-toggle'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
+import { useViewPreference } from '@/common/hooks/use-view-preference'
 import {
   DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
   MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
@@ -83,15 +86,20 @@ export default function RegistryRouteComponent() {
 
   const hasContent = servers.length > 0 || groups.length > 0
 
+  const { view, setView } = useViewPreference('ui.viewMode.registry')
+
   return (
     <>
       <TitlePage title="Registry">
         {hasContent && (
-          <InputSearch
-            value={filter}
-            onChange={(v) => setFilter(v)}
-            placeholder="Search..."
-          />
+          <div className="flex items-center gap-3">
+            <InputSearch
+              value={filter}
+              onChange={(v) => setFilter(v)}
+              placeholder="Search..."
+            />
+            <ViewToggle value={view} onChange={setView} />
+          </div>
         )}
       </TitlePage>
       {!hasContent ? (
@@ -111,6 +119,8 @@ export default function RegistryRouteComponent() {
           ]}
           illustration={IllustrationNoConnection}
         />
+      ) : view === 'table' ? (
+        <TableRegistry items={filteredData} showPromo={isDefaultRegistry} />
       ) : (
         <GridCardsRegistry items={filteredData} showPromo={isDefaultRegistry} />
       )}
