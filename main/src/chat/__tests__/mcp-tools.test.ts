@@ -209,6 +209,38 @@ describe('getCachedUiMetadata', () => {
     expect(getCachedUiMetadata()).toEqual({})
   })
 
+  it('retries loading from SQLite after a transient DB read failure', async () => {
+    // Reset the module so the `uiMetadataLoaded` latch is back to its
+    // initial false state regardless of what prior tests in this file did.
+    vi.resetModules()
+    const { getCachedUiMetadata: freshGetCached } = await import('../mcp-tools')
+
+    // First call: DB throws — the latch must stay unlocked so a later call
+    // can retry.
+    mockReadAllMcpAppUiMetadata.mockImplementationOnce(() => {
+      throw new Error('database is locked')
+    })
+    expect(freshGetCached()).toEqual({})
+    expect(log.error).toHaveBeenCalledWith(
+      '[MCP Apps] Failed to load UI metadata from DB:',
+      expect.any(Error)
+    )
+    expect(mockReadAllMcpAppUiMetadata).toHaveBeenCalledTimes(1)
+
+    // Second call: DB succeeds with persisted rows — should be returned
+    // (proving the latch did not disable retries after the first failure).
+    mockReadAllMcpAppUiMetadata.mockReturnValueOnce({
+      'persisted-tool': {
+        serverName: 'srv',
+        resourceUri: 'res://persisted',
+      },
+    })
+    expect(freshGetCached()).toEqual({
+      'persisted-tool': { serverName: 'srv', resourceUri: 'res://persisted' },
+    })
+    expect(mockReadAllMcpAppUiMetadata).toHaveBeenCalledTimes(2)
+  })
+
   it('returns a shallow copy — mutating it does not affect the cache', async () => {
     const toolWithUi = {
       ...makeToolDef(),

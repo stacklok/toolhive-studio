@@ -55,9 +55,12 @@ let uiMetadataLoaded = false
 
 function ensureUiMetadataLoaded(): void {
   if (uiMetadataLoaded) return
-  uiMetadataLoaded = true
   try {
     cachedUiMetadata = readAllMcpAppUiMetadata()
+    // Only latch after a successful load — a transient DB read error
+    // (e.g. locked DB at startup) should not disable retries for the rest
+    // of the session.
+    uiMetadataLoaded = true
   } catch (error) {
     log.error('[MCP Apps] Failed to load UI metadata from DB:', error)
   }
