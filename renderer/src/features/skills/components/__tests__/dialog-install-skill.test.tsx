@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { expect, it, vi, describe, beforeEach } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -36,6 +36,23 @@ describe('DialogInstallSkill', () => {
     expect(screen.getByText(/scope/i)).toBeInTheDocument()
     expect(screen.getAllByText(/clients/i).length).toBeGreaterThan(0)
     expect(screen.getByText(/version/i)).toBeInTheDocument()
+  })
+
+  it('shows a tooltip explaining User vs Project scope', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    const scopeLabel = screen.getByText(/scope/i).closest('div')
+    const tooltipIcon = within(scopeLabel!).getByTestId('tooltip-info-icon')
+    expect(tooltipIcon).toHaveAttribute('aria-label', 'More info')
+
+    await user.hover(tooltipIcon)
+
+    await waitFor(() => {
+      const tooltip = screen.getByRole('tooltip')
+      expect(tooltip).toHaveTextContent(/installed globally in your home/i)
+      expect(tooltip).toHaveTextContent(/installed in the root of a specific/i)
+    })
   })
 
   it('prefills name from defaultReference prop', () => {
