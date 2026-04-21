@@ -323,10 +323,13 @@ export async function createMcpTools(): Promise<{
   const mcpTools: ToolSet = {}
   const mcpClients: Awaited<ReturnType<typeof createMCPClient>>[] = []
   let enabledTools: Record<string, string[]> = {}
-  // Reset the UI metadata cache for this stream session. Mark as loaded so
-  // subsequent getCachedUiMetadata() calls don't re-read stale DB rows.
-  cachedUiMetadata = {}
-  uiMetadataLoaded = true
+  // Build the UI metadata map for this stream session into a local object
+  // and only swap it into the module-level cache (and persist it to SQLite)
+  // once discovery has completed successfully. A transient fetchWorkloads()
+  // or getEnabledMcpTools() failure must not wipe the previously persisted
+  // snapshot — historical MCP App iframes rely on it.
+  const nextCachedUiMetadata: Record<string, ToolUiMetadataEntry> = {}
+  let discoverySucceeded = false
 
   /** Registers a validated tool and caches its UI metadata if present. */
   const registerTool = (
@@ -339,7 +342,10 @@ export async function createMcpTools(): Promise<{
     if (shouldSkipAppOnlyTool(ui)) return false
     mcpTools[toolName] = toolDef
     if (ui?.resourceUri) {
-      cachedUiMetadata[toolName] = { resourceUri: ui.resourceUri, serverName }
+      nextCachedUiMetadata[toolName] = {
+        resourceUri: ui.resourceUri,
+        serverName,
+      }
     }
     return true
   }
@@ -368,6 +374,9 @@ export async function createMcpTools(): Promise<{
       getEnabledMcpTools(),
     ])
     enabledTools = resolvedEnabledTools
+    // Flag is set here, AFTER the two required calls resolved, so any
+    // rejection above propagates into the catch below without flipping it.
+    discoverySucceeded = true
 
     for (const [serverName, toolNames] of Object.entries(enabledTools)) {
       if (toolNames.length === 0) continue
@@ -418,22 +427,29 @@ export async function createMcpTools(): Promise<{
     log.error('Failed to create MCP tools:', error)
   }
 
-  const uiToolCount = Object.keys(cachedUiMetadata).length
-  if (uiToolCount > 0) {
-    Sentry.addBreadcrumb({
-      category: 'mcp-apps',
-      message: `Discovered ${uiToolCount} UI-enabled tool(s)`,
-      level: 'info',
-      data: { tools: Object.keys(cachedUiMetadata) },
-    })
-  }
+  if (discoverySucceeded) {
+    // Swap the module-level cache in and persist it. Empty maps are
+    // persisted too — a server that lost all UI tools should have its
+    // stale entries removed. When discovery failed we skip both, keeping
+    // the previously hydrated cache and DB rows intact.
+    cachedUiMetadata = nextCachedUiMetadata
+    uiMetadataLoaded = true
 
-  // Persist the freshly built cache (even when empty — a server that lost
-  // all UI tools should have its stale entries removed).
-  try {
-    replaceAllMcpAppUiMetadata(cachedUiMetadata)
-  } catch (error) {
-    log.error('[MCP Apps] Failed to persist UI metadata to DB:', error)
+    const uiToolCount = Object.keys(nextCachedUiMetadata).length
+    if (uiToolCount > 0) {
+      Sentry.addBreadcrumb({
+        category: 'mcp-apps',
+        message: `Discovered ${uiToolCount} UI-enabled tool(s)`,
+        level: 'info',
+        data: { tools: Object.keys(nextCachedUiMetadata) },
+      })
+    }
+
+    try {
+      replaceAllMcpAppUiMetadata(nextCachedUiMetadata)
+    } catch (error) {
+      log.error('[MCP Apps] Failed to persist UI metadata to DB:', error)
+    }
   }
 
   return { tools: mcpTools, clients: mcpClients, enabledTools }
