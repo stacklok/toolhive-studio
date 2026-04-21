@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ChatInterface } from '@/features/chat/components/chat-interface'
 import { PlaygroundSidebar } from '@/features/chat/components/playground-sidebar'
 import { usePlaygroundThreads } from '@/features/chat/hooks/use-playground-threads'
+import { clearThreadDraft } from '@/features/chat/hooks/use-thread-draft'
 
 export const Route = createFileRoute('/playground/chat/$threadId')({
   component: PlaygroundChat,
@@ -61,11 +62,16 @@ function PlaygroundChat() {
   }
 
   const handleDeleteThread = async (id: string) => {
-    const nextId = await deleteThread(id)
-    if (nextId) {
+    const result = await deleteThread(id)
+    if (!result.success) {
+      // Delete failed — the thread (and its draft) still exists.
+      return
+    }
+    clearThreadDraft(id)
+    if (result.nextId) {
       void navigate({
         to: '/playground/chat/$threadId',
-        params: { threadId: nextId },
+        params: { threadId: result.nextId },
       })
     } else {
       // No threads remain — go to index which will create a new one

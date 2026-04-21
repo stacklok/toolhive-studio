@@ -203,15 +203,17 @@ describe('usePlaygroundThreads', () => {
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-      let nextId: string | null = null
+      let res: Awaited<ReturnType<typeof result.current.deleteThread>> = {
+        success: false,
+      }
       await act(async () => {
-        nextId = await result.current.deleteThread('active')
+        res = await result.current.deleteThread('active')
       })
 
-      expect(nextId).toBe('next')
+      expect(res).toEqual({ success: true, nextId: 'next' })
     })
 
-    it('returns null when the last thread is deleted', async () => {
+    it('returns a success result with null nextId when the last thread is deleted', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 'only' }),
       ])
@@ -220,16 +222,18 @@ describe('usePlaygroundThreads', () => {
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-      let nextId: string | null = 'sentinel'
+      let res: Awaited<ReturnType<typeof result.current.deleteThread>> = {
+        success: false,
+      }
       await act(async () => {
-        nextId = await result.current.deleteThread('only')
+        res = await result.current.deleteThread('only')
       })
 
-      expect(nextId).toBeNull()
+      expect(res).toEqual({ success: true, nextId: null })
       expect(result.current.hasThreads).toBe(false)
     })
 
-    it('returns null and does not change state when deleteThread returns failure', async () => {
+    it('returns a failure result and does not change state when deleteThread returns failure', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 'thread-1' }),
       ])
@@ -242,13 +246,16 @@ describe('usePlaygroundThreads', () => {
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-      let nextId: string | null = 'sentinel'
+      let res: Awaited<ReturnType<typeof result.current.deleteThread>> = {
+        success: true,
+        nextId: null,
+      }
       await act(async () => {
-        nextId = await result.current.deleteThread('thread-1')
+        res = await result.current.deleteThread('thread-1')
       })
 
       expect(result.current.threads).toHaveLength(1)
-      expect(nextId).toBeNull()
+      expect(res).toEqual({ success: false })
     })
   })
 
