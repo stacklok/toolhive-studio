@@ -1,7 +1,16 @@
 import { useState, useEffect, useCallback } from 'react'
 import log from 'electron-log/renderer'
-import type { ChatUIMessage } from '../types'
 
+/**
+ * Small hook that resolves the "current" thread id.
+ *
+ * Historically this hook also loaded messages from IPC, but that is now
+ * owned by the `/playground/chat/$threadId` route loader + React Query
+ * (see `chatThreadQueryOptions`). Here we just mirror the prop-provided
+ * thread id and, if none is provided, fall back to the most-recent thread
+ * or create a new one (legacy callers that render `ChatInterface` outside
+ * the route).
+ */
 export function useThreadManagement(externalThreadId?: string | null) {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(
     externalThreadId ?? null
@@ -56,23 +65,6 @@ export function useThreadManagement(externalThreadId?: string | null) {
     getCurrentThread()
   }, [externalThreadId])
 
-  const loadMessages = useCallback(async (): Promise<ChatUIMessage[]> => {
-    if (!currentThreadId) {
-      return []
-    }
-
-    try {
-      const messages =
-        await window.electronAPI.chat.getThreadMessagesForTransport(
-          currentThreadId
-        )
-      return messages || []
-    } catch (err) {
-      log.error('Failed to load messages:', err)
-      return []
-    }
-  }, [currentThreadId])
-
   const clearMessages = useCallback(async () => {
     if (!currentThreadId) return
 
@@ -95,7 +87,6 @@ export function useThreadManagement(externalThreadId?: string | null) {
     currentThreadId,
     isLoading,
     error,
-    loadMessages,
     clearMessages,
   }
 }

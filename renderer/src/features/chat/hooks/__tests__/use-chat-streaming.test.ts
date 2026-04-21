@@ -49,7 +49,6 @@ vi.mock('../use-thread-management', () => ({
     currentThreadId: 'toolhive-chat',
     isLoading: false,
     error: null,
-    loadMessages: vi.fn().mockResolvedValue([]),
     clearMessages: vi.fn().mockResolvedValue(undefined),
   })),
 }))
@@ -67,6 +66,7 @@ const mockChatAPI = {
   getAllThreads: vi.fn(),
   setActiveThreadId: vi.fn(),
   createChatThread: vi.fn(),
+  getThread: vi.fn(),
   getThreadMessagesForTransport: vi.fn(),
   updateThreadMessages: vi.fn(),
 }
@@ -130,6 +130,7 @@ describe('useChatStreaming', () => {
       success: true,
       threadId: 'toolhive-chat',
     })
+    mockChatAPI.getThread.mockResolvedValue(null)
     mockChatAPI.getThreadMessagesForTransport.mockResolvedValue([])
     mockChatAPI.updateThreadMessages.mockResolvedValue({ success: true })
 
