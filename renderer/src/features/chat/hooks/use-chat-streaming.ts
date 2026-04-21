@@ -35,9 +35,23 @@ export function useChatStreaming(externalThreadId?: string | null) {
   // hook runs the data is already available — no loading flash on thread
   // switch. `usePlaygroundThreads` invalidates this key on streaming
   // completion to refresh titles/messages.
-  const { data: threadData, isPending: isThreadDataPending } = useQuery(
-    chatThreadQueryOptions(currentThreadId)
-  )
+  const {
+    data: threadData,
+    isPending: isThreadDataPending,
+    error: threadDataError,
+  } = useQuery(chatThreadQueryOptions(currentThreadId))
+
+  // Surface IPC/query failures via `persistentError` so they flow into
+  // `processedError` below (matches the pre-refactor try/catch behaviour).
+  useEffect(() => {
+    if (!threadDataError) return
+    const message =
+      threadDataError instanceof Error
+        ? threadDataError.message
+        : 'Failed to load chat history'
+    setPersistentError(message)
+    log.error('Failed to load persistent chat messages:', threadDataError)
+  }, [threadDataError])
 
   const ipcTransport = useMemo(
     () =>

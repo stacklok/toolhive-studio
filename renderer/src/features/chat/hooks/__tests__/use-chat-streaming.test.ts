@@ -520,6 +520,21 @@ describe('useChatStreaming', () => {
         expect(result.current.error).toBe('An unknown error occurred')
       })
     })
+
+    it('surfaces persistent-load failures from the thread query', async () => {
+      mockChatAPI.getThreadMessagesForTransport.mockRejectedValueOnce(
+        new Error('IPC boom')
+      )
+
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.error).toBe('IPC boom')
+      })
+    })
   })
 
   describe('settings integration', () => {
