@@ -38,6 +38,12 @@ const mockCreateMCPClient = vi.hoisted(() =>
   vi.fn().mockResolvedValue(mockAiMcpClient)
 )
 
+// MCP App UI metadata DB reader/writer mocks
+const mockReadAllMcpAppUiMetadata = vi.hoisted(() =>
+  vi.fn().mockReturnValue({})
+)
+const mockReplaceAllMcpAppUiMetadata = vi.hoisted(() => vi.fn())
+
 // ---------------------------------------------------------------------------
 // Module mocks
 // ---------------------------------------------------------------------------
@@ -107,6 +113,14 @@ vi.mock('@modelcontextprotocol/sdk/types.js', () => ({
 
 vi.mock('../../logger', () => ({
   default: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
+}))
+
+vi.mock('../../db/readers/mcp-app-ui-metadata-reader', () => ({
+  readAllMcpAppUiMetadata: mockReadAllMcpAppUiMetadata,
+}))
+
+vi.mock('../../db/writers/mcp-app-ui-metadata-writer', () => ({
+  replaceAllMcpAppUiMetadata: mockReplaceAllMcpAppUiMetadata,
 }))
 
 // ---------------------------------------------------------------------------
@@ -180,6 +194,10 @@ beforeEach(() => {
   mockAiMcpClient.tools.mockResolvedValue({})
   mockAiMcpClient.close.mockResolvedValue(undefined)
   mockCreateMCPClient.mockResolvedValue(mockAiMcpClient)
+
+  // MCP App UI metadata DB reader/writer
+  mockReadAllMcpAppUiMetadata.mockReturnValue({})
+  mockReplaceAllMcpAppUiMetadata.mockReset().mockImplementation(() => {})
 })
 
 // ---------------------------------------------------------------------------
@@ -189,6 +207,38 @@ beforeEach(() => {
 describe('getCachedUiMetadata', () => {
   it('returns an empty object before createMcpTools has run', () => {
     expect(getCachedUiMetadata()).toEqual({})
+  })
+
+  it('retries loading from SQLite after a transient DB read failure', async () => {
+    // Reset the module so the `uiMetadataLoaded` latch is back to its
+    // initial false state regardless of what prior tests in this file did.
+    vi.resetModules()
+    const { getCachedUiMetadata: freshGetCached } = await import('../mcp-tools')
+
+    // First call: DB throws — the latch must stay unlocked so a later call
+    // can retry.
+    mockReadAllMcpAppUiMetadata.mockImplementationOnce(() => {
+      throw new Error('database is locked')
+    })
+    expect(freshGetCached()).toEqual({})
+    expect(log.error).toHaveBeenCalledWith(
+      '[MCP Apps] Failed to load UI metadata from DB:',
+      expect.any(Error)
+    )
+    expect(mockReadAllMcpAppUiMetadata).toHaveBeenCalledTimes(1)
+
+    // Second call: DB succeeds with persisted rows — should be returned
+    // (proving the latch did not disable retries after the first failure).
+    mockReadAllMcpAppUiMetadata.mockReturnValueOnce({
+      'persisted-tool': {
+        serverName: 'srv',
+        resourceUri: 'res://persisted',
+      },
+    })
+    expect(freshGetCached()).toEqual({
+      'persisted-tool': { serverName: 'srv', resourceUri: 'res://persisted' },
+    })
+    expect(mockReadAllMcpAppUiMetadata).toHaveBeenCalledTimes(2)
   })
 
   it('returns a shallow copy — mutating it does not affect the cache', async () => {
@@ -553,7 +603,7 @@ describe('createMcpTools', () => {
     expect(Sentry.addBreadcrumb).not.toHaveBeenCalled()
   })
 
-  it('resets cachedUiMetadata at the start of each call', async () => {
+  it('replaces cachedUiMetadata after each successful discovery', async () => {
     // First call: populate cache
     const toolWithUi = {
       ...makeToolDef(),
@@ -568,6 +618,90 @@ describe('createMcpTools', () => {
     mockGetEnabledMcpTools.mockResolvedValue({})
     await createMcpTools()
     expect(getCachedUiMetadata()).toEqual({})
+  })
+
+  it('persists UI metadata to SQLite after successful discovery', async () => {
+    const uiTool = {
+      ...makeToolDef(),
+      _meta: {
+        ui: { resourceUri: 'res://persist-tool', visibility: ['model'] },
+      },
+    }
+    const workload = makeWorkload()
+    mockGetApiV1BetaWorkloads.mockResolvedValue({
+      data: { workloads: [workload] },
+    })
+    mockGetEnabledMcpTools.mockResolvedValue({
+      'test-server': ['persist-tool'],
+    })
+    mockAiMcpClient.tools.mockResolvedValue({ 'persist-tool': uiTool })
+
+    await createMcpTools()
+
+    expect(mockReplaceAllMcpAppUiMetadata).toHaveBeenCalledTimes(1)
+    expect(mockReplaceAllMcpAppUiMetadata).toHaveBeenCalledWith({
+      'persist-tool': {
+        resourceUri: 'res://persist-tool',
+        serverName: 'test-server',
+      },
+    })
+  })
+
+  it('persists an empty map when discovery succeeds with no UI tools', async () => {
+    mockGetEnabledMcpTools.mockResolvedValue({})
+
+    await createMcpTools()
+
+    // Discovery succeeded (workloads: [], enabledTools: {}), so the empty
+    // map is persisted to prune any stale rows from previous streams.
+    expect(mockReplaceAllMcpAppUiMetadata).toHaveBeenCalledTimes(1)
+    expect(mockReplaceAllMcpAppUiMetadata).toHaveBeenCalledWith({})
+  })
+
+  it('does not overwrite the DB or swap the cache when fetchWorkloads rejects', async () => {
+    // First stream: populate the cache with a known UI tool.
+    const uiTool = {
+      ...makeToolDef(),
+      _meta: {
+        ui: { resourceUri: 'res://survivor', visibility: ['model'] },
+      },
+    }
+    const workload = makeWorkload()
+    mockGetApiV1BetaWorkloads.mockResolvedValueOnce({
+      data: { workloads: [workload] },
+    })
+    mockGetEnabledMcpTools.mockResolvedValueOnce({
+      'test-server': ['survivor-tool'],
+    })
+    mockAiMcpClient.tools.mockResolvedValueOnce({ 'survivor-tool': uiTool })
+
+    await createMcpTools()
+    expect(getCachedUiMetadata()).toHaveProperty('survivor-tool')
+    expect(mockReplaceAllMcpAppUiMetadata).toHaveBeenCalledTimes(1)
+    mockReplaceAllMcpAppUiMetadata.mockClear()
+
+    // Second stream: fetchWorkloads rejects (e.g. ToolHive daemon hiccup).
+    mockGetApiV1BetaWorkloads.mockRejectedValueOnce(new Error('boom'))
+
+    await createMcpTools()
+
+    // Cache must still hold the last-good snapshot and the DB must NOT be
+    // replaced with an empty map.
+    expect(getCachedUiMetadata()).toHaveProperty('survivor-tool')
+    expect(mockReplaceAllMcpAppUiMetadata).not.toHaveBeenCalled()
+    expect(log.error).toHaveBeenCalledWith(
+      'Failed to create MCP tools:',
+      expect.any(Error)
+    )
+  })
+
+  it('does not overwrite the DB when getEnabledMcpTools rejects', async () => {
+    mockGetApiV1BetaWorkloads.mockResolvedValue({ data: { workloads: [] } })
+    mockGetEnabledMcpTools.mockRejectedValue(new Error('settings unavailable'))
+
+    await createMcpTools()
+
+    expect(mockReplaceAllMcpAppUiMetadata).not.toHaveBeenCalled()
   })
 
   it('skips servers with empty tool lists', async () => {

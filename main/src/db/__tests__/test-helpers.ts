@@ -2,6 +2,7 @@ import Database from 'better-sqlite3'
 import { up as applyInitialSchema } from '../migrations/001-initial-schema'
 import { up as applyMigration002 } from '../migrations/002-thread-title-flag'
 import { up as applyMigration003 } from '../migrations/003-thread-starred'
+import { up as applyMigration004 } from '../migrations/004-mcp-app-ui-metadata'
 
 /**
  * Creates a fresh in-memory SQLite database with the full schema applied,
@@ -13,5 +14,6 @@ export function createTestDb(): Database.Database {
   applyInitialSchema(db)
   applyMigration002(db)
   applyMigration003(db)
+  applyMigration004(db)
   return db
 }
