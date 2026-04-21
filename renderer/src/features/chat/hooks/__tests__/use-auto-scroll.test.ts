@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { renderHook, act } from '@testing-library/react'
 
 // The hook reads TanStack Router's element-level scroll restoration entry.
@@ -13,8 +13,9 @@ vi.mock('@tanstack/react-router', () => ({
 import { useAutoScroll } from '../use-auto-scroll'
 
 // JSDOM stubs scrollTo — override it to actually update scrollTop and fire
-// scroll events. Use unique thread IDs per test so the module-level
-// "first-mount-per-thread" Set never collides.
+// scroll events. Use unique thread IDs per test so `placedForThreadRef`
+// inside the hook (per-instance, keyed by threadId) never collides between
+// test cases.
 function makeScrollContainer(
   scrollHeight = 1000,
   clientHeight = 300,
@@ -68,19 +69,28 @@ let resizeCallbacks: ResizeCallback[] = []
 beforeEach(() => {
   resizeCallbacks = []
   mockSavedScroll.value = undefined
-  // jsdom lacks ResizeObserver — supply a minimal spy.
-  globalThis.ResizeObserver = class {
-    cb: ResizeCallback
-    constructor(cb: ResizeCallback) {
-      this.cb = cb
-      resizeCallbacks.push(cb)
-    }
-    observe() {}
-    unobserve() {}
-    disconnect() {
-      resizeCallbacks = resizeCallbacks.filter((c) => c !== this.cb)
-    }
-  } as unknown as typeof ResizeObserver
+  // jsdom lacks ResizeObserver — stub via `vi.stubGlobal` so the original
+  // value (if any) is restored by `unstubAllGlobals` in afterEach, keeping
+  // the stub from leaking into other test files in the same worker.
+  vi.stubGlobal(
+    'ResizeObserver',
+    class {
+      cb: ResizeCallback
+      constructor(cb: ResizeCallback) {
+        this.cb = cb
+        resizeCallbacks.push(cb)
+      }
+      observe() {}
+      unobserve() {}
+      disconnect() {
+        resizeCallbacks = resizeCallbacks.filter((c) => c !== this.cb)
+      }
+    } as unknown as typeof ResizeObserver
+  )
+})
+
+afterEach(() => {
+  vi.unstubAllGlobals()
 })
 
 function attachContainer(
@@ -338,9 +348,11 @@ describe('useAutoScroll', () => {
       )
     })
 
-    it('treats scrollY=0 saved entry as "no saved position" (goes to bottom)', () => {
+    it('restores scrollY=0 (user was scrolled to the top) instead of forcing bottom', () => {
       mockSavedScroll.value = { scrollY: 0 }
-      const container = makeScrollContainer(1000, 300, 0)
+      // Pre-scroll the container so we can tell "placement explicitly set
+      // scrollTop to 0" apart from "no placement happened".
+      const container = makeScrollContainer(1000, 300, 500)
 
       const { result, rerender } = renderHook(
         ({ hasContent }: { hasContent: boolean }) =>
@@ -355,7 +367,7 @@ describe('useAutoScroll', () => {
       rerender({ hasContent: true })
 
       expect(container.scrollTo).toHaveBeenCalledWith(
-        expect.objectContaining({ top: 1000 })
+        expect.objectContaining({ top: 0, behavior: 'instant' })
       )
     })
 
