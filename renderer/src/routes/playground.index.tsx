@@ -1,72 +1,52 @@
-import { useEffect } from 'react'
-import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import log from 'electron-log/renderer'
 
-function PlaygroundIndexRedirect() {
-  const navigate = useNavigate()
+async function resolveInitialThreadId(): Promise<string | null> {
+  const [allThreads, activeId] = await Promise.all([
+    window.electronAPI.chat.getAllThreads(),
+    window.electronAPI.chat.getActiveThreadId(),
+  ])
 
-  useEffect(() => {
-    let cancelled = false
+  const sorted = [...allThreads].sort(
+    (a, b) => b.lastEditTimestamp - a.lastEditTimestamp
+  )
 
-    async function resolveThreadAndRedirect() {
-      try {
-        const [allThreads, activeId] = await Promise.all([
-          window.electronAPI.chat.getAllThreads(),
-          window.electronAPI.chat.getActiveThreadId(),
-        ])
+  const activeThread = activeId
+    ? sorted.find((t) => t.id === activeId)
+    : undefined
 
-        if (cancelled) return
+  const target = activeThread ?? sorted[0]
+  if (target) return target.id
 
-        const sorted = [...allThreads].sort(
-          (a, b) => b.lastEditTimestamp - a.lastEditTimestamp
-        )
+  const result = await window.electronAPI.chat.createChatThread()
+  if (result.success && result.threadId) return result.threadId
 
-        const activeThread = activeId
-          ? sorted.find((t) => t.id === activeId)
-          : undefined
-
-        const target = activeThread ?? sorted[0]
-
-        if (target) {
-          void navigate({
-            to: '/playground/chat/$threadId',
-            params: { threadId: target.id },
-            replace: true,
-          })
-          return
-        }
-
-        const result = await window.electronAPI.chat.createChatThread()
-        if (cancelled) return
-
-        if (result.success && result.threadId) {
-          void navigate({
-            to: '/playground/chat/$threadId',
-            params: { threadId: result.threadId },
-            replace: true,
-          })
-          return
-        }
-
-        log.error(
-          '[PlaygroundIndexRedirect] Failed to create initial thread:',
-          result.error
-        )
-      } catch (err) {
-        log.error('[PlaygroundIndexRedirect] Failed to resolve thread:', err)
-      }
-    }
-
-    void resolveThreadAndRedirect()
-
-    return () => {
-      cancelled = true
-    }
-  }, [navigate])
-
+  log.error(
+    '[PlaygroundIndexRedirect] Failed to create initial thread:',
+    result.error
+  )
   return null
 }
 
 export const Route = createFileRoute('/playground/')({
-  component: PlaygroundIndexRedirect,
+  // Resolve the target thread in the router itself so we never render a
+  // blank page during the mount-then-redirect bounce.
+  beforeLoad: async () => {
+    let threadId: string | null
+    try {
+      threadId = await resolveInitialThreadId()
+    } catch (err) {
+      log.error('[PlaygroundIndexRedirect] Failed to resolve thread:', err)
+      return
+    }
+
+    if (!threadId) return
+
+    throw redirect({
+      to: '/playground/chat/$threadId',
+      params: { threadId },
+      replace: true,
+    })
+  },
+  component: () => null,
 })

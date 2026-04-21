@@ -64,6 +64,14 @@ const makeDbThread = (overrides: Record<string, unknown> = {}) => ({
 
 function renderIndexRoute() {
   const IndexComponent = PlaygroundIndexRoute.options.component as () => null
+  // Redirect resolution now lives in `beforeLoad`; wire it into the test
+  // router so the redirect fires during navigation, not on mount. The real
+  // `beforeLoad` is typed against the generated route tree and cannot be
+  // statically assigned to this ad-hoc test route — the `as` cast is only
+  // about shape, the underlying function is unchanged.
+  const beforeLoad = PlaygroundIndexRoute.options.beforeLoad as unknown as (
+    ...args: unknown[]
+  ) => Promise<void> | void
 
   const rootRoute = createRootRoute({
     component: Outlet,
@@ -73,6 +81,7 @@ function renderIndexRoute() {
     getParentRoute: () => rootRoute,
     path: '/playground/',
     component: IndexComponent,
+    beforeLoad,
   })
 
   // Catch-all for the redirect target — renders the threadId for assertion
