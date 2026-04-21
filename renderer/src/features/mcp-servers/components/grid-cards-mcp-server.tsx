@@ -2,9 +2,12 @@ import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@
 import { CardMcpServer } from './card-mcp-server'
 import { useMemo, useState } from 'react'
 import { InputSearch } from '@/common/components/ui/input-search'
+import { ViewToggle } from '@/common/components/view-toggle'
+import { useViewPreference } from '@/common/hooks/use-view-preference'
 import { cn } from '@/common/lib/utils'
 import { EditServerDialogProvider } from '../contexts/edit-server-dialog-provider'
 import { useEditServerDialog } from '../hooks/use-edit-server-dialog'
+import { TableMcpServers } from './table-mcp-servers'
 import { WrapperDialogFormMcp } from './wrapper-dialog-mcp'
 
 function GridCardsMcpServersContent({
@@ -13,6 +16,7 @@ function GridCardsMcpServersContent({
   mcpServers: CoreWorkload[]
 }) {
   const { state, closeDialog } = useEditServerDialog()
+  const { view, setView } = useViewPreference('ui.viewMode.mcpServers')
   const [filters, setFilters] = useState({
     text: '',
     state: 'all',
@@ -45,35 +49,42 @@ function GridCardsMcpServersContent({
 
   return (
     <div className="space-y-6">
-      <InputSearch
-        onChange={(v) => setFilters((prev) => ({ ...prev, text: v }))}
-        value={filters.text}
-        placeholder="Search..."
-      />
-
-      <div
-        className={cn(
-          'grid gap-4',
-          visibleMcpServers.length <= 3
-            ? 'grid-cols-[repeat(auto-fill,minmax(max(200px,min(300px,100%)),1fr))]'
-            : 'grid-cols-[repeat(auto-fit,minmax(max(200px,min(300px,100%)),1fr))]'
-        )}
-      >
-        {visibleMcpServers.map((mcpServer) =>
-          mcpServer.name ? (
-            <CardMcpServer
-              key={mcpServer.name}
-              name={mcpServer.name}
-              status={mcpServer.status}
-              remote={mcpServer.remote}
-              statusContext={mcpServer.status_context}
-              url={mcpServer.url ?? ''}
-              transport={mcpServer.transport_type}
-              group={mcpServer.group}
-            />
-          ) : null
-        )}
+      <div className="flex items-center justify-between gap-3">
+        <InputSearch
+          onChange={(v) => setFilters((prev) => ({ ...prev, text: v }))}
+          value={filters.text}
+          placeholder="Search..."
+        />
+        <ViewToggle value={view} onChange={setView} />
       </div>
+
+      {view === 'table' ? (
+        <TableMcpServers mcpServers={visibleMcpServers} />
+      ) : (
+        <div
+          className={cn(
+            'grid gap-4',
+            visibleMcpServers.length <= 3
+              ? 'grid-cols-[repeat(auto-fill,minmax(max(200px,min(300px,100%)),1fr))]'
+              : 'grid-cols-[repeat(auto-fit,minmax(max(200px,min(300px,100%)),1fr))]'
+          )}
+        >
+          {visibleMcpServers.map((mcpServer) =>
+            mcpServer.name ? (
+              <CardMcpServer
+                key={mcpServer.name}
+                name={mcpServer.name}
+                status={mcpServer.status}
+                remote={mcpServer.remote}
+                statusContext={mcpServer.status_context}
+                url={mcpServer.url ?? ''}
+                transport={mcpServer.transport_type}
+                group={mcpServer.group}
+              />
+            ) : null
+          )}
+        </div>
+      )}
 
       {visibleMcpServers.length === 0 &&
         (filters.text || filters.state !== 'all') && (

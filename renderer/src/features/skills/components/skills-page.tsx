@@ -19,8 +19,11 @@ import {
 import { GridCardsSkills } from './grid-cards-skills'
 import { GridCardsBuilds } from './grid-cards-builds'
 import { GridCardsRegistrySkills } from './grid-cards-registry-skills'
+import { TableInstalledSkills } from './table-installed-skills'
 import { DialogBuildSkill } from './dialog-build-skill'
 import { HammerIcon } from 'lucide-react'
+import { ViewToggle } from '@/common/components/view-toggle'
+import { useViewPreference } from '@/common/hooks/use-view-preference'
 import type { GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill } from '@common/api/generated/types.gen'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 
@@ -81,6 +84,10 @@ export function SkillsPage() {
 
   const hasSkills = skills.length > 0
 
+  const { view: installedView, setView: setInstalledView } = useViewPreference(
+    'ui.viewMode.skillsInstalled'
+  )
+
   return (
     <>
       <Tabs
@@ -103,11 +110,14 @@ export function SkillsPage() {
               />
             )}
             {tab === 'installed' && hasSkills && (
-              <InputSearch
-                value={installedFilter}
-                onChange={setInstalledFilter}
-                placeholder="Search..."
-              />
+              <>
+                <InputSearch
+                  value={installedFilter}
+                  onChange={setInstalledFilter}
+                  placeholder="Search..."
+                />
+                <ViewToggle value={installedView} onChange={setInstalledView} />
+              </>
             )}
             {tab === 'builds' && (
               <>
@@ -149,6 +159,8 @@ export function SkillsPage() {
               ]}
               illustration={IllustrationPackage}
             />
+          ) : installedView === 'table' ? (
+            <TableInstalledSkills skills={filteredSkills} />
           ) : (
             <GridCardsSkills skills={filteredSkills} />
           )}

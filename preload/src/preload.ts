@@ -12,6 +12,7 @@ import { eventsApi, type EventsAPI } from './api/events'
 import { featureFlagsApi, type FeatureFlagsAPI } from './api/feature-flags'
 import { telemetryApi, type TelemetryAPI } from './api/telemetry'
 import { toolhiveApi, type ToolhiveAPI } from './api/toolhive'
+import { uiPreferencesApi, type UiPreferencesAPI } from './api/ui-preferences'
 import { utilsApi, type UtilsAPI } from './api/utils'
 import { windowApi, type WindowAPI } from './api/window'
 
@@ -25,6 +26,7 @@ export type ElectronAPI = AppAPI &
   FeatureFlagsAPI &
   ChatAPI &
   CliAPI &
+  UiPreferencesAPI &
   UtilsAPI &
   EventsAPI
 
@@ -39,6 +41,7 @@ const electronAPI = {
   ...featureFlagsApi,
   ...chatApi,
   ...cliApi,
+  ...uiPreferencesApi,
   ...utilsApi,
   ...eventsApi,
 } satisfies ElectronAPI

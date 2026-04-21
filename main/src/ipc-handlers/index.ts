@@ -7,6 +7,7 @@ import { register as registerDialogs } from './dialogs'
 import { register as registerFeatureFlags } from './feature-flags'
 import { register as registerTelemetry } from './telemetry'
 import { register as registerToolhive } from './toolhive'
+import { register as registerUiPreferences } from './ui-preferences'
 import { register as registerUtils } from './utils'
 import { register as registerWindow } from './window'
 
@@ -21,5 +22,6 @@ export function registerAllHandlers() {
   registerFeatureFlags()
   registerChat()
   registerCli()
+  registerUiPreferences()
   registerUtils()
 }

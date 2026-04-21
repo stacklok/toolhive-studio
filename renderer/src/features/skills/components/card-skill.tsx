@@ -10,14 +10,8 @@ import { FolderGit2Icon, Trash2Icon, UserIcon } from 'lucide-react'
 import type { GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill } from '@common/api/generated/types.gen'
 import { DialogUninstallSkill } from './dialog-uninstall-skill'
 import { CardSkillBase } from './card-skill-base'
-
-const statusVariantMap = {
-  installed: 'success',
-  pending: 'secondary',
-  failed: 'destructive',
-} as const
-
-const MAX_VISIBLE_CLIENTS = 3
+import { SkillClientsBadges } from './skill-clients-badges'
+import { skillStatusVariantMap } from './skill-status'
 
 export function CardSkill({ skill }: { skill: InstalledSkill }) {
   const [uninstallOpen, setUninstallOpen] = useState(false)
@@ -26,43 +20,10 @@ export function CardSkill({ skill }: { skill: InstalledSkill }) {
   const status = skill.status
   const scope = skill.scope
   const clients = skill.clients ?? []
-  const visibleClients = clients.slice(0, MAX_VISIBLE_CLIENTS)
-  const hiddenClients = clients.slice(MAX_VISIBLE_CLIENTS)
   const projectRoot = scope === 'project' ? skill.project_root : undefined
   const projectRootLabel = projectRoot
     ? `/${projectRoot.split(/[\\/]/).filter(Boolean).at(-1) ?? projectRoot}`
     : null
-
-  const clientBadges = (
-    <>
-      {visibleClients.map((client) => (
-        <Badge key={client} variant="outline">
-          {client}
-        </Badge>
-      ))}
-      {hiddenClients.length > 0 && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Badge asChild variant="outline">
-              <button
-                type="button"
-                aria-label={`${hiddenClients.length} more clients`}
-              >
-                +{hiddenClients.length}
-              </button>
-            </Badge>
-          </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
-            <ul className="flex flex-col gap-0.5 text-xs">
-              {hiddenClients.map((client) => (
-                <li key={client}>{client}</li>
-              ))}
-            </ul>
-          </TooltipContent>
-        </Tooltip>
-      )}
-    </>
-  )
 
   const isProjectScope = scope === 'project'
 
@@ -70,7 +31,7 @@ export function CardSkill({ skill }: { skill: InstalledSkill }) {
     <div className="flex flex-col gap-1.5">
       <div className="flex flex-wrap gap-1.5">
         {status && (
-          <Badge variant={statusVariantMap[status] ?? 'secondary'}>
+          <Badge variant={skillStatusVariantMap[status] ?? 'secondary'}>
             {status}
           </Badge>
         )}
@@ -96,10 +57,12 @@ export function CardSkill({ skill }: { skill: InstalledSkill }) {
             </TooltipContent>
           </Tooltip>
         )}
-        {!isProjectScope && clientBadges}
+        {!isProjectScope && <SkillClientsBadges clients={clients} />}
       </div>
       {isProjectScope && clients.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">{clientBadges}</div>
+        <div className="flex flex-wrap gap-1.5">
+          <SkillClientsBadges clients={clients} />
+        </div>
       )}
     </div>
   )

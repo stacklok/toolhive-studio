@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   registerFeatureFlags: vi.fn(),
   registerTelemetry: vi.fn(),
   registerToolhive: vi.fn(),
+  registerUiPreferences: vi.fn(),
   registerUtils: vi.fn(),
   registerWindow: vi.fn(),
 }))
@@ -23,6 +24,9 @@ vi.mock('../dialogs', () => ({ register: mocks.registerDialogs }))
 vi.mock('../feature-flags', () => ({ register: mocks.registerFeatureFlags }))
 vi.mock('../telemetry', () => ({ register: mocks.registerTelemetry }))
 vi.mock('../toolhive', () => ({ register: mocks.registerToolhive }))
+vi.mock('../ui-preferences', () => ({
+  register: mocks.registerUiPreferences,
+}))
 vi.mock('../utils', () => ({ register: mocks.registerUtils }))
 vi.mock('../window', () => ({ register: mocks.registerWindow }))
 
@@ -45,6 +49,7 @@ describe('registerAllHandlers', () => {
     expect(mocks.registerFeatureFlags).toHaveBeenCalledOnce()
     expect(mocks.registerTelemetry).toHaveBeenCalledOnce()
     expect(mocks.registerToolhive).toHaveBeenCalledOnce()
+    expect(mocks.registerUiPreferences).toHaveBeenCalledOnce()
     expect(mocks.registerUtils).toHaveBeenCalledOnce()
     expect(mocks.registerWindow).toHaveBeenCalledOnce()
   })
