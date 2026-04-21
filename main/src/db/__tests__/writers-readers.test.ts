@@ -67,6 +67,11 @@ import {
   clearShutdownServersFromDb,
 } from '../writers/shutdown-writer'
 import { readShutdownServers } from '../readers/shutdown-reader'
+import {
+  replaceAllMcpAppUiMetadata,
+  clearAllMcpAppUiMetadata,
+} from '../writers/mcp-app-ui-metadata-writer'
+import { readAllMcpAppUiMetadata } from '../readers/mcp-app-ui-metadata-reader'
 
 beforeEach(() => {
   testDb = createTestDb()
@@ -355,5 +360,83 @@ describe('shutdown writer/reader', () => {
     const result = readShutdownServers()
     expect(result).toHaveLength(2)
     expect(result[0]!.name).toBe('s2')
+  })
+})
+
+describe('mcp app ui metadata writer/reader', () => {
+  it('returns an empty object when the table is empty', () => {
+    expect(readAllMcpAppUiMetadata()).toEqual({})
+  })
+
+  it('round-trips a map of tool UI metadata entries', () => {
+    replaceAllMcpAppUiMetadata({
+      server1_toolA: {
+        serverName: 'server1',
+        resourceUri: 'ui://server1/toolA',
+      },
+      server2_toolB: {
+        serverName: 'server2',
+        resourceUri: 'ui://server2/toolB',
+      },
+    })
+    const result = readAllMcpAppUiMetadata()
+    expect(result).toEqual({
+      server1_toolA: {
+        serverName: 'server1',
+        resourceUri: 'ui://server1/toolA',
+      },
+      server2_toolB: {
+        serverName: 'server2',
+        resourceUri: 'ui://server2/toolB',
+      },
+    })
+  })
+
+  it('replaces existing entries on each write (no accumulation)', () => {
+    replaceAllMcpAppUiMetadata({
+      server1_toolA: {
+        serverName: 'server1',
+        resourceUri: 'ui://server1/toolA',
+      },
+      server1_toolB: {
+        serverName: 'server1',
+        resourceUri: 'ui://server1/toolB',
+      },
+    })
+    replaceAllMcpAppUiMetadata({
+      server1_toolA: {
+        serverName: 'server1',
+        resourceUri: 'ui://server1/toolA-v2',
+      },
+    })
+    const result = readAllMcpAppUiMetadata()
+    expect(Object.keys(result)).toEqual(['server1_toolA'])
+    expect(result['server1_toolA']!.resourceUri).toBe('ui://server1/toolA-v2')
+  })
+
+  it('clears the table when replace is called with an empty map', () => {
+    replaceAllMcpAppUiMetadata({
+      server1_toolA: {
+        serverName: 'server1',
+        resourceUri: 'ui://server1/toolA',
+      },
+    })
+    replaceAllMcpAppUiMetadata({})
+    expect(readAllMcpAppUiMetadata()).toEqual({})
+  })
+
+  it('clearAllMcpAppUiMetadata removes every entry', () => {
+    replaceAllMcpAppUiMetadata({
+      server1_toolA: {
+        serverName: 'server1',
+        resourceUri: 'ui://server1/toolA',
+      },
+      server2_toolB: {
+        serverName: 'server2',
+        resourceUri: 'ui://server2/toolB',
+      },
+    })
+    clearAllMcpAppUiMetadata()
+    expect(readAllMcpAppUiMetadata()).toEqual({})
   })
 })
