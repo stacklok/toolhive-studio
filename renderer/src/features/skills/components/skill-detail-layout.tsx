@@ -112,7 +112,7 @@ export function SkillDetailLayout({
         </div>
 
         {rightPanel && (
-          <div className="flex flex-1 flex-col gap-3">{rightPanel}</div>
+          <div className="flex min-w-0 flex-1 flex-col gap-3">{rightPanel}</div>
         )}
       </div>
     </div>
