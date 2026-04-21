@@ -8,6 +8,14 @@ import type { ChatUIMessage } from '../../types'
 // Module mocks
 // ---------------------------------------------------------------------------
 
+// `useAutoScroll` consumes TanStack Router's element-level scroll
+// restoration entry. We don't mount a Router in this component test, so
+// stub the hook to "no saved position" which makes the hook default to
+// scroll-to-bottom (the pre-refactor behaviour the suite was written for).
+vi.mock('@tanstack/react-router', () => ({
+  useElementScrollRestoration: () => undefined,
+}))
+
 vi.mock('../thread-title-bar', () => ({
   ThreadTitleBar: (props: Record<string, unknown>) => (
     <div
@@ -52,6 +60,7 @@ const mockScrollToBottom = vi.fn()
 const mockContainerRef = createRef<HTMLDivElement>()
 
 vi.mock('../../hooks/use-auto-scroll', () => ({
+  CHAT_SCROLL_RESTORATION_ID: 'chat-messages',
   useAutoScroll: () => ({
     containerRef: mockContainerRef,
     showScrollToBottom: mockShowScrollToBottom,
@@ -69,7 +78,6 @@ const mockStreamingReturn = {
   updateSettings: vi.fn(),
   sendMessage: vi.fn(),
   cancelRequest: vi.fn(),
-  isPersistentLoading: false,
   loadPersistedSettings: vi.fn(),
   clearMessages: vi.fn(),
   currentThreadId: null as string | null,
@@ -106,7 +114,6 @@ function resetMock() {
   mockStreamingReturn.status = 'idle'
   mockStreamingReturn.messages = []
   mockStreamingReturn.isLoading = false
-  mockStreamingReturn.isPersistentLoading = false
   mockStreamingReturn.error = null
   mockStreamingReturn.settings = { provider: '', model: '' }
   mockShowScrollToBottom = false
@@ -170,24 +177,12 @@ describe('ChatInterface', () => {
     })
   })
 
-  describe('loading state', () => {
-    it('shows "Loading chat history..." when isPersistentLoading is true', () => {
-      mockStreamingReturn.isPersistentLoading = true
-      renderInterface()
-      expect(screen.getByText('Loading chat history...')).toBeInTheDocument()
-    })
+  // Loading state is now owned by the TSR route loader via
+  // `pendingComponent` in `playground.chat.$threadId.tsx`, not by this
+  // component. There is no in-component "Loading chat history..." overlay
+  // any more; see the route tests for the pending-state behaviour.
 
-    it('hides messages while loading (loading overlay covers the scroll container)', () => {
-      mockStreamingReturn.isPersistentLoading = true
-      // Messages are only rendered inside the scroll container when hasMessages is true.
-      // While isPersistentLoading, messages haven't loaded yet so the array is empty.
-      renderInterface()
-      expect(screen.queryByTestId('message-msg-1')).not.toBeInTheDocument()
-      expect(screen.getByText('Loading chat history...')).toBeInTheDocument()
-    })
-  })
-
-  describe('empty state (no messages, not loading)', () => {
+  describe('empty state (no messages)', () => {
     it('shows "Configure your providers" button when no provider is configured', () => {
       mockStreamingReturn.settings = { provider: '', model: '' }
       renderInterface()

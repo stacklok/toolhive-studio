@@ -1,9 +1,11 @@
 import { useRef, useState, useCallback, useLayoutEffect } from 'react'
+import { useElementScrollRestoration } from '@tanstack/react-router'
+
+export const CHAT_SCROLL_RESTORATION_ID = 'chat-messages'
 
 interface UseAutoScrollOptions {
-  /** Thread ID — when this changes, save the outgoing position and restore the incoming one */
-  resetDep: string | null | undefined
-  /** Whether there is any scrollable content */
+  threadId: string | null | undefined
+  isStreaming: boolean
   hasContent: boolean
 }
 
@@ -13,116 +15,174 @@ interface UseAutoScrollReturn {
   scrollToBottom: () => void
 }
 
-/** Module-level map so positions persist across re-renders and thread switches for the session. */
-const scrollPositions = new Map<
-  string,
-  { scrollTop: number; atBottom: boolean }
->()
+const NEAR_BOTTOM_THRESHOLD_PX = 50
+
+// Safety cap for re-applying the placement target while MCP iframes / images
+// finish their async size handshake. Pathologically slow content falls out
+// of settling and the user can scroll manually.
+const PLACEMENT_SETTLING_MS = 5000
+
+type PlacementTarget = number | 'bottom' | null
+
+function isNearBottom(el: HTMLDivElement) {
+  return (
+    el.scrollHeight - el.scrollTop - el.clientHeight <= NEAR_BOTTOM_THRESHOLD_PX
+  )
+}
 
 export function useAutoScroll({
-  resetDep,
+  threadId,
+  isStreaming,
   hasContent,
 }: UseAutoScrollOptions): UseAutoScrollReturn {
   const containerRef = useRef<HTMLDivElement | null>(null)
-  const userScrolledRef = useRef(false)
   const isProgrammaticScrollRef = useRef(false)
-  const [showScrollToBottom, setShowScrollToBottom] = useState(false)
 
-  /** Tracks the outgoing thread ID so we can save its position on switch. */
-  const prevResetDepRef = useRef<string | null | undefined>(resetDep)
+  const userIsNearBottomRef = useRef(true)
+  const [userIsNearBottom, setUserIsNearBottom] = useState(true)
 
-  const scrollToBottom = useCallback((instant = false) => {
-    const el = containerRef.current
-    if (!el) return
-    userScrolledRef.current = false
+  const showScrollToBottom = !userIsNearBottom && hasContent
+
+  const savedScroll = useElementScrollRestoration({
+    id: CHAT_SCROLL_RESTORATION_ID,
+    getKey: (location) => location.pathname,
+  })
+
+  const placementTargetRef = useRef<PlacementTarget>(null)
+  const settlingDeadlineRef = useRef<number>(0)
+  // Timestamp of the last genuine user input — used to tell real scrolls
+  // apart from `overflow-anchor`-driven ones during the settling window.
+  const lastUserInputAtRef = useRef<number>(0)
+
+  const applyPlacementTarget = useCallback((el: HTMLDivElement) => {
+    const target = placementTargetRef.current
+    if (target === null) return
+
+    // If the saved scrollY doesn't fit yet (iframes still loading), pin to
+    // the current bottom and keep the target so the next resize re-tries.
+    // Once it fits, snap exactly and clear so later resizes don't yank us.
+    const maxScrollY = Math.max(0, el.scrollHeight - el.clientHeight)
+    const fits = target !== 'bottom' && target <= maxScrollY
+    const top = fits ? target : el.scrollHeight
+
     isProgrammaticScrollRef.current = true
-    el.scrollTo({
-      top: el.scrollHeight,
-      behavior: instant ? 'auto' : 'smooth',
-    })
+    el.scrollTo({ top, behavior: 'instant' })
+    isProgrammaticScrollRef.current = false
+
+    if (fits) placementTargetRef.current = null
   }, [])
 
-  // Effect 1: Thread switch — save outgoing position, restore or scroll-to-bottom for incoming.
-  // The scroll container is always in the DOM (never conditionally unmounted), so
-  // containerRef.current is valid and the restore can happen immediately with no deferred logic.
-  useLayoutEffect(() => {
+  const scrollToBottom = useCallback(() => {
     const el = containerRef.current
+    if (!el) return
+    userIsNearBottomRef.current = true
+    setUserIsNearBottom(true)
+    isProgrammaticScrollRef.current = true
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' })
+    // Unlocks in the scroll listener when we arrive near the bottom.
+  }, [])
 
-    // Save outgoing thread's scroll position
-    if (el && prevResetDepRef.current != null) {
-      const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight <= 50
-      scrollPositions.set(String(prevResetDepRef.current), {
-        scrollTop: el.scrollTop,
-        atBottom,
-      })
-    }
-    prevResetDepRef.current = resetDep
-
-    // Restore incoming thread or scroll to bottom
-    const saved =
-      resetDep != null ? scrollPositions.get(String(resetDep)) : undefined
-
-    if (saved && !saved.atBottom && el) {
-      userScrolledRef.current = true
-      el.scrollTo({ top: saved.scrollTop, behavior: 'auto' })
-      // Measuring the DOM to set state before paint is the intended use of useLayoutEffect.
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setShowScrollToBottom(true)
-    } else {
-      userScrolledRef.current = false
-      setShowScrollToBottom(false)
-      scrollToBottom(true)
-    }
-  }, [resetDep, scrollToBottom])
-
-  // Effect 2: Scroll listener + ResizeObserver.
-  // Re-registers when hasContent changes (scroll container may have new inner content node).
-  // onScroll drives the show/hide of the scroll-to-bottom button.
-  // ResizeObserver drives auto-scroll during streaming and after images/code blocks load.
+  // Registered before the placement effect so our programmatic scrolls hit
+  // this listener and don't get misread as user scrolls.
   useLayoutEffect(() => {
     const container = containerRef.current
     if (!container) return
 
-    const onScroll = () => {
-      const { scrollTop, scrollHeight, clientHeight } = container
-      const nearBottom = scrollHeight - scrollTop - clientHeight <= 50
+    const markUserInput = () => {
+      lastUserInputAtRef.current = performance.now()
+    }
 
-      if (nearBottom) {
-        // Smooth scroll animation settled at bottom — clear programmatic flag
-        isProgrammaticScrollRef.current = false
+    const onScroll = () => {
+      const nearBottom = isNearBottom(container)
+
+      if (isProgrammaticScrollRef.current) {
+        if (nearBottom) isProgrammaticScrollRef.current = false
+        return
       }
 
-      // Ignore scroll events from our own programmatic scrollTo calls to avoid
-      // falsely setting userScrolledRef=true mid-animation
-      if (isProgrammaticScrollRef.current) return
+      // Ignore `overflow-anchor`-driven scrolls during settling; otherwise
+      // the first iframe resize would cancel placement.
+      const now = performance.now()
+      const settlingActive =
+        placementTargetRef.current !== null &&
+        now <= settlingDeadlineRef.current
+      const recentUserInput = now - lastUserInputAtRef.current < 500
+      if (settlingActive && !recentUserInput) return
 
-      userScrolledRef.current = !nearBottom
-      setShowScrollToBottom(!nearBottom && hasContent)
+      settlingDeadlineRef.current = 0
+      placementTargetRef.current = null
+
+      userIsNearBottomRef.current = nearBottom
+      if (hasContent) setUserIsNearBottom(nearBottom)
     }
 
     container.addEventListener('scroll', onScroll, { passive: true })
-
-    // Re-scroll when content height grows (streaming tokens, images, code blocks).
-    const innerContent = container.firstElementChild
-    let resizeObserver: ResizeObserver | null = null
-    if (innerContent) {
-      resizeObserver = new ResizeObserver(() => {
-        if (!userScrolledRef.current) {
-          scrollToBottom()
-        }
-      })
-      resizeObserver.observe(innerContent)
-    }
-
+    container.addEventListener('wheel', markUserInput, { passive: true })
+    container.addEventListener('touchstart', markUserInput, { passive: true })
+    container.addEventListener('keydown', markUserInput)
+    container.addEventListener('pointerdown', markUserInput)
     return () => {
       container.removeEventListener('scroll', onScroll)
-      resizeObserver?.disconnect()
+      container.removeEventListener('wheel', markUserInput)
+      container.removeEventListener('touchstart', markUserInput)
+      container.removeEventListener('keydown', markUserInput)
+      container.removeEventListener('pointerdown', markUserInput)
     }
-  }, [hasContent, scrollToBottom])
+  }, [hasContent])
+
+  // Initial placement per thread. `useChat` briefly resets messages on
+  // thread switch, flipping `hasContent` false — clear the guard so the
+  // re-hydrated render re-runs placement.
+  const placedForThreadRef = useRef<string | null>(null)
+  useLayoutEffect(() => {
+    if (!threadId) return
+    if (!hasContent) {
+      if (placedForThreadRef.current === threadId) {
+        placedForThreadRef.current = null
+      }
+      return
+    }
+
+    const el = containerRef.current
+    if (!el) return
+    if (placedForThreadRef.current === threadId) return
+    placedForThreadRef.current = threadId
+
+    placementTargetRef.current =
+      savedScroll && savedScroll.scrollY > 0 ? savedScroll.scrollY : 'bottom'
+    settlingDeadlineRef.current = performance.now() + PLACEMENT_SETTLING_MS
+
+    applyPlacementTarget(el)
+    const nearBottom = isNearBottom(el)
+    userIsNearBottomRef.current = nearBottom
+    setUserIsNearBottom(nearBottom)
+  }, [threadId, hasContent, savedScroll, applyPlacementTarget])
+
+  // One ResizeObserver, two modes:
+  // - streaming: follow the bottom if user was already near it;
+  // - placement window: re-apply the target as MCP iframes grow the DOM.
+  useLayoutEffect(() => {
+    if (!threadId || !hasContent) return
+    const container = containerRef.current
+    if (!container) return
+    const inner = container.firstElementChild
+    if (!inner) return
+
+    const observer = new ResizeObserver(() => {
+      if (isStreaming) {
+        if (userIsNearBottomRef.current) scrollToBottom()
+        return
+      }
+      if (performance.now() > settlingDeadlineRef.current) return
+      applyPlacementTarget(container)
+    })
+    observer.observe(inner)
+    return () => observer.disconnect()
+  }, [threadId, hasContent, isStreaming, applyPlacementTarget, scrollToBottom])
 
   return {
     containerRef,
     showScrollToBottom,
-    scrollToBottom: () => scrollToBottom(false),
+    scrollToBottom,
   }
 }

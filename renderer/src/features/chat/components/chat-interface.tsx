@@ -10,7 +10,10 @@ import { ChatMessage } from './chat-message'
 import { DialogProviderSettings } from './dialog-provider-settings'
 import { ErrorAlert } from './error-alert'
 import { useChatStreaming } from '../hooks/use-chat-streaming'
-import { useAutoScroll } from '../hooks/use-auto-scroll'
+import {
+  useAutoScroll,
+  CHAT_SCROLL_RESTORATION_ID,
+} from '../hooks/use-auto-scroll'
 import { useMcpAppMetadata } from '../hooks/use-mcp-app-metadata'
 import { ChatInputPrompt } from './chat-input-prompt'
 import { Separator } from '@/common/components/ui/separator'
@@ -43,15 +46,17 @@ export function ChatInterface({
     updateSettings,
     sendMessage,
     cancelRequest,
-    isPersistentLoading,
     loadPersistedSettings,
   } = useChatStreaming(threadId)
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const toolUiMetadata = useMcpAppMetadata()
 
+  const isStreaming = status === 'streaming' || status === 'submitted'
+
   const { containerRef, showScrollToBottom, scrollToBottom } = useAutoScroll({
-    resetDep: threadId,
+    threadId,
+    isStreaming,
     hasContent: messages.length > 0,
   })
 
@@ -81,38 +86,15 @@ export function ChatInterface({
       <div className="bg-background flex min-h-0 flex-1 flex-col px-4">
         {/* Messages Area */}
         <div className="relative min-h-0 flex-1 overflow-hidden">
-          {/* Loading overlay — sits above scroll container so ref stays stable */}
-          {isPersistentLoading && (
-            <div
-              className="bg-background absolute inset-0 z-10 flex items-center
-                justify-center [view-transition-name:chat-loading-state]
-                motion-safe:transition-all motion-safe:duration-300"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="flex space-x-1">
-                  <div
-                    className="bg-muted-foreground h-2 w-2 animate-bounce
-                      rounded-full [animation-delay:-0.3s]"
-                  ></div>
-                  <div
-                    className="bg-muted-foreground h-2 w-2 animate-bounce
-                      rounded-full [animation-delay:-0.15s]"
-                  ></div>
-                  <div
-                    className="bg-muted-foreground h-2 w-2 animate-bounce
-                      rounded-full"
-                  ></div>
-                </div>
-                <span className="text-muted-foreground text-sm">
-                  Loading chat history...
-                </span>
-              </div>
-            </div>
-          )}
-
-          {/* Scroll container — always in DOM so containerRef is never null */}
+          {/* Scroll container — always in DOM so containerRef is never null.
+              `data-scroll-restoration-id` registers this nested scrollable
+              area with TanStack Router's scroll restoration. `overflowAnchor`
+              keeps async content (MCP iframes, images, code blocks) from
+              jolting the viewport when their height changes. */}
           <div
             ref={containerRef}
+            data-scroll-restoration-id={CHAT_SCROLL_RESTORATION_ID}
+            style={{ overflowAnchor: 'auto' }}
             className="h-full w-full overflow-y-auto scroll-smooth
               [view-transition-name:chat-messages-view]
               motion-safe:transition-all motion-safe:duration-300"
@@ -177,7 +159,7 @@ export function ChatInterface({
           </div>
 
           {/* Empty state overlay */}
-          {!isPersistentLoading && !hasMessages && (
+          {!hasMessages && (
             <div
               className="absolute inset-0 flex items-center justify-center px-6
                 [view-transition-name:chat-empty-state]
