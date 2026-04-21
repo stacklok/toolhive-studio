@@ -20,6 +20,7 @@ const ociSkill: RegistrySkill = {
   description: 'A helpful skill',
   version: 'v1.0.0',
   packages: [{ registryType: 'oci', identifier: 'ghcr.io/org/my-skill' }],
+  repository: { type: 'git', url: 'https://github.com/org/repo' },
 }
 
 const gitSkill: RegistrySkill = {
@@ -73,7 +74,7 @@ describe('TableRegistrySkills', () => {
       screen.getByRole('columnheader', { name: /skill/i })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('columnheader', { name: /author/i })
+      screen.getByRole('columnheader', { name: /registry/i })
     ).toBeInTheDocument()
     expect(
       screen.getByRole('columnheader', { name: /about/i })
@@ -179,6 +180,43 @@ describe('TableRegistrySkills', () => {
       name: /install my-skill/i,
     })
     await user.click(install)
+
+    expect(router.state.location.pathname).toBe('/skills')
+  })
+
+  it('renders a GitHub link for skills with a repository url', async () => {
+    const router = makeRouter([ociSkill, gitSkill])
+    renderRoute(router)
+
+    const links = await screen.findAllByRole('link', {
+      name: /open repository on github/i,
+    })
+    expect(links).toHaveLength(1)
+    expect(links[0]).toHaveAttribute('href', 'https://github.com/org/repo')
+    expect(links[0]).toHaveAttribute('target', '_blank')
+  })
+
+  it('does not render a GitHub link for skills without a repository', async () => {
+    const router = makeRouter([gitSkill])
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('git-skill')).toBeVisible()
+    })
+    expect(
+      screen.queryByRole('link', { name: /open repository on github/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not navigate to the detail page when the GitHub link is clicked', async () => {
+    const user = userEvent.setup()
+    const router = makeRouter([ociSkill])
+    renderRoute(router)
+
+    const link = await screen.findByRole('link', {
+      name: /open repository on github/i,
+    })
+    await user.click(link)
 
     expect(router.state.location.pathname).toBe('/skills')
   })

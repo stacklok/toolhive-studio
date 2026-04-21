@@ -105,6 +105,32 @@ describe('CardRegistrySkill', () => {
       renderRoute(router)
       expect(screen.getByRole('button', { name: /install/i })).toBeVisible()
     })
+
+    it('does not render a GitHub link when repository is absent', () => {
+      renderRoute(router)
+      expect(
+        screen.queryByRole('link', { name: /open repository on github/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it('renders a GitHub link when repository.url is set', async () => {
+      const skillRouter = createCardTestRouter({
+        ...baseSkill,
+        repository: {
+          type: 'git',
+          url: 'https://github.com/example/skills',
+        },
+      }) as unknown as ReturnType<typeof createTestRouter>
+      await skillRouter.navigate({ to: '/skills' })
+      renderRoute(skillRouter)
+
+      const link = screen.getByRole('link', {
+        name: /open repository on github/i,
+      })
+      expect(link).toBeVisible()
+      expect(link).toHaveAttribute('href', 'https://github.com/example/skills')
+      expect(link).toHaveAttribute('target', '_blank')
+    })
   })
 
   describe('navigation', () => {
@@ -128,6 +154,26 @@ describe('CardRegistrySkill', () => {
       await user.click(screen.getByRole('button', { name: /install/i }))
 
       expect(router.state.location.pathname).toBe('/skills')
+    })
+
+    it('does not navigate to the detail page when the GitHub link is clicked', async () => {
+      const user = userEvent.setup()
+      const skillRouter = createCardTestRouter({
+        ...baseSkill,
+        repository: {
+          type: 'git',
+          url: 'https://github.com/example/skills',
+        },
+      }) as unknown as ReturnType<typeof createTestRouter>
+      await skillRouter.navigate({ to: '/skills' })
+      renderRoute(skillRouter)
+
+      const link = screen.getByRole('link', {
+        name: /open repository on github/i,
+      })
+      await user.click(link)
+
+      expect(skillRouter.state.location.pathname).toBe('/skills')
     })
   })
 

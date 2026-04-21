@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/common/components/ui/button'
-import { TagIcon, GitForkIcon, ScaleIcon } from 'lucide-react'
+import { TagIcon, GitForkIcon, GithubIcon, ScaleIcon } from 'lucide-react'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { SkillDetailLayout } from './skill-detail-layout'
@@ -72,6 +72,18 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
             <Button variant="action" onClick={() => setInstallOpen(true)}>
               Install
             </Button>
+            {skill.repository?.url && (
+              <a
+                href={skill.repository.url}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Button variant="outline" className="rounded-full">
+                  <GithubIcon className="size-4" />
+                  GitHub
+                </Button>
+              </a>
+            )}
           </div>
         }
         rightPanel={
@@ -84,7 +96,7 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
                 dark:bg-transparent"
             >
               {ociRef ? (
-                <SkillMarkdown skillRef={ociRef} />
+                <SkillMarkdown skillRef={ociRef} stripFrontmatter />
               ) : (
                 <p className="text-muted-foreground text-sm">
                   No SKILL.md available for this skill.
