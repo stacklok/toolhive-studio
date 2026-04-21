@@ -1,30 +1,17 @@
 import { ipcMain } from 'electron'
-import { telemetryStore } from '../telemetry-store'
 import { writeSetting } from '../db/writers/settings-writer'
-import log from '../logger'
+import { getIsTelemetryEnabled } from '../telemetry-settings'
 
 export function register() {
-  ipcMain.handle('sentry.is-enabled', () => {
-    return telemetryStore.get('isTelemetryEnabled', true)
-  })
+  ipcMain.handle('sentry.is-enabled', () => getIsTelemetryEnabled())
 
   ipcMain.handle('sentry.opt-out', (): boolean => {
-    telemetryStore.set('isTelemetryEnabled', false)
-    try {
-      writeSetting('isTelemetryEnabled', 'false')
-    } catch (err) {
-      log.error('[DB] Failed to dual-write isTelemetryEnabled:', err)
-    }
-    return telemetryStore.get('isTelemetryEnabled', false)
+    writeSetting('isTelemetryEnabled', 'false')
+    return false
   })
 
   ipcMain.handle('sentry.opt-in', (): boolean => {
-    telemetryStore.set('isTelemetryEnabled', true)
-    try {
-      writeSetting('isTelemetryEnabled', 'true')
-    } catch (err) {
-      log.error('[DB] Failed to dual-write isTelemetryEnabled:', err)
-    }
+    writeSetting('isTelemetryEnabled', 'true')
     return true
   })
 }
