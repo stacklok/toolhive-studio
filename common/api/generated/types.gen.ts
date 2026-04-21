@@ -94,6 +94,16 @@ export type GithubComStacklokToolhivePkgAuditConfig = {
    */
   component?: string
   /**
+   * DetectApplicationErrors controls whether the audit middleware inspects
+   * JSON-RPC response bodies for application-level errors when the HTTP
+   * status code indicates success (2xx). When enabled, a small prefix of
+   * the response body is buffered to detect JSON-RPC error fields,
+   * independent of the IncludeResponseData setting.
+   * +kubebuilder:default=true
+   * +optional
+   */
+  detectApplicationErrors?: boolean
+  /**
    * Enabled controls whether audit logging is enabled.
    * When true, enables audit logging with the configured options.
    * +kubebuilder:default=false
@@ -390,6 +400,14 @@ export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
  */
 export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
   /**
+   * AdditionalAuthorizationParams are extra query parameters to include in
+   * authorization requests. Useful for provider-specific parameters like
+   * Google's access_type=offline.
+   */
+  additional_authorization_params?: {
+    [key: string]: string
+  }
+  /**
    * AuthorizationEndpoint is the URL for the OAuth authorization endpoint.
    */
   authorization_endpoint?: string
@@ -430,6 +448,14 @@ export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
  */
 export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
   /**
+   * AdditionalAuthorizationParams are extra query parameters to include in
+   * authorization requests. Useful for provider-specific parameters like
+   * Google's access_type=offline.
+   */
+  additional_authorization_params?: {
+    [key: string]: string
+  }
+  /**
    * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
    */
   client_id?: string
@@ -456,6 +482,9 @@ export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
   /**
    * Scopes are the OAuth scopes to request from the upstream IDP.
    * If not specified, defaults to ["openid", "offline_access"].
+   * When using AdditionalAuthorizationParams with provider-specific refresh
+   * token mechanisms (e.g., Google's access_type=offline), set explicit scopes
+   * to avoid sending both offline_access and the provider-specific parameter.
    */
   scopes?: Array<string>
   userinfo_override?: GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig
@@ -823,6 +852,7 @@ export type GithubComStacklokToolhivePkgContainerRuntimeWorkloadStatus =
   | 'removing'
   | 'unknown'
   | 'unauthenticated'
+  | 'policy_stopped'
   | 'running'
   | 'stopped'
   | 'error'
@@ -832,6 +862,7 @@ export type GithubComStacklokToolhivePkgContainerRuntimeWorkloadStatus =
   | 'removing'
   | 'unknown'
   | 'unauthenticated'
+  | 'policy_stopped'
   | 'running'
   | 'stopped'
   | 'error'
@@ -841,6 +872,7 @@ export type GithubComStacklokToolhivePkgContainerRuntimeWorkloadStatus =
   | 'removing'
   | 'unknown'
   | 'unauthenticated'
+  | 'policy_stopped'
 
 /**
  * RuntimeConfig allows overriding the default runtime configuration
@@ -857,7 +889,7 @@ export type GithubComStacklokToolhivePkgContainerTemplatesRuntimeConfig = {
   /**
    * BuilderImage is the full image reference for the builder stage.
    * An empty string signals "use the default for this transport type" during config merging.
-   * Examples: "golang:1.25-alpine", "node:22-alpine", "python:3.13-slim"
+   * Examples: "golang:1.26-alpine", "node:24-alpine", "python:3.14-slim"
    */
   builder_image?: string
 }
@@ -1986,11 +2018,22 @@ export type PkgApiV1CreateRequest = {
    * Port for the HTTP proxy to listen on
    */
   proxy_port?: number
+  /**
+   * Registry is the optional registry name to resolve the server from (e.g. "default").
+   */
+  registry?: string
   runtime_config?: GithubComStacklokToolhivePkgContainerTemplatesRuntimeConfig
   /**
    * Secret parameters to inject
    */
   secrets?: Array<GithubComStacklokToolhivePkgSecretsSecretParameter>
+  /**
+   * Server is the optional server name in the registry (e.g. "io.github.stacklok/fetch").
+   * When both Registry and Server are set, thv resolves the server metadata
+   * server-side, filling in image, transport, env vars, permissions, etc.
+   * User-provided fields always override registry defaults.
+   */
+  server?: string
   /**
    * Port to expose from the container
    */
@@ -4168,6 +4211,10 @@ export type PostApiV1BetaSkillsErrors = {
    * Internal Server Error
    */
   500: string
+  /**
+   * Bad Gateway
+   */
+  502: string
 }
 
 export type PostApiV1BetaSkillsError =
