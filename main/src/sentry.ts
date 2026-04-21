@@ -1,11 +1,9 @@
 import * as Sentry from '@sentry/electron/main'
-import { telemetryStore } from './telemetry-store'
 import { getInstanceId } from './util'
 import { getAutoLaunchStatus } from './auto-launch'
+import { getIsTelemetryEnabled } from './telemetry-settings'
 
 const isE2E = process.env.TOOLHIVE_E2E === 'true'
-
-const store = telemetryStore
 
 export function initSentry() {
   Sentry.init({
@@ -14,10 +12,9 @@ export function initSentry() {
     propagateTraceparent: true,
     tracePropagationTargets: ['localhost', /^https?:\/\/127\.0\.0\.1/],
     tracesSampleRate: 1.0,
-    beforeSend: (event) =>
-      store.get('isTelemetryEnabled', true) ? event : null,
+    beforeSend: (event) => (getIsTelemetryEnabled() ? event : null),
     beforeSendTransaction: async (transaction) => {
-      if (!store.get('isTelemetryEnabled', true)) {
+      if (!getIsTelemetryEnabled()) {
         return null
       }
       if (!transaction?.contexts?.trace) return null
