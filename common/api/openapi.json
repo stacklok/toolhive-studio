@@ -92,6 +92,10 @@
             "description": "Component is the component name to use in audit events.\n+optional",
             "type": "string"
           },
+          "detectApplicationErrors": {
+            "description": "DetectApplicationErrors controls whether the audit middleware inspects\nJSON-RPC response bodies for application-level errors when the HTTP\nstatus code indicates success (2xx). When enabled, a small prefix of\nthe response body is buffered to detect JSON-RPC error fields,\nindependent of the IncludeResponseData setting.\n+kubebuilder:default=true\n+optional",
+            "type": "boolean"
+          },
           "enabled": {
             "description": "Enabled controls whether audit logging is enabled.\nWhen true, enables audit logging with the configured options.\n+kubebuilder:default=false\n+optional",
             "type": "boolean"
@@ -399,6 +403,13 @@
       "github_com_stacklok_toolhive_pkg_authserver.OAuth2UpstreamRunConfig": {
         "description": "OAuth2Config contains OAuth 2.0-specific configuration.\nRequired when Type is \"oauth2\", must be nil when Type is \"oidc\".",
         "properties": {
+          "additional_authorization_params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "AdditionalAuthorizationParams are extra query parameters to include in\nauthorization requests. Useful for provider-specific parameters like\nGoogle's access_type=offline.",
+            "type": "object"
+          },
           "authorization_endpoint": {
             "description": "AuthorizationEndpoint is the URL for the OAuth authorization endpoint.",
             "type": "string"
@@ -443,6 +454,13 @@
       "github_com_stacklok_toolhive_pkg_authserver.OIDCUpstreamRunConfig": {
         "description": "OIDCConfig contains OIDC-specific configuration.\nRequired when Type is \"oidc\", must be nil when Type is \"oauth2\".",
         "properties": {
+          "additional_authorization_params": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "AdditionalAuthorizationParams are extra query parameters to include in\nauthorization requests. Useful for provider-specific parameters like\nGoogle's access_type=offline.",
+            "type": "object"
+          },
           "client_id": {
             "description": "ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.",
             "type": "string"
@@ -464,7 +482,7 @@
             "type": "string"
           },
           "scopes": {
-            "description": "Scopes are the OAuth scopes to request from the upstream IDP.\nIf not specified, defaults to [\"openid\", \"offline_access\"].",
+            "description": "Scopes are the OAuth scopes to request from the upstream IDP.\nIf not specified, defaults to [\"openid\", \"offline_access\"].\nWhen using AdditionalAuthorizationParams with provider-specific refresh\ntoken mechanisms (e.g., Google's access_type=offline), set explicit scopes\nto avoid sending both offline_access and the provider-specific parameter.",
             "items": {
               "type": "string"
             },
@@ -903,6 +921,7 @@
           "removing",
           "unknown",
           "unauthenticated",
+          "policy_stopped",
           "running",
           "stopped",
           "error",
@@ -912,6 +931,7 @@
           "removing",
           "unknown",
           "unauthenticated",
+          "policy_stopped",
           "running",
           "stopped",
           "error",
@@ -920,7 +940,8 @@
           "unhealthy",
           "removing",
           "unknown",
-          "unauthenticated"
+          "unauthenticated",
+          "policy_stopped"
         ],
         "type": "string",
         "x-enum-varnames": [
@@ -932,7 +953,8 @@
           "WorkloadStatusUnhealthy",
           "WorkloadStatusRemoving",
           "WorkloadStatusUnknown",
-          "WorkloadStatusUnauthenticated"
+          "WorkloadStatusUnauthenticated",
+          "WorkloadStatusPolicyStopped"
         ]
       },
       "github_com_stacklok_toolhive_pkg_container_templates.RuntimeConfig": {
@@ -947,7 +969,7 @@
             "uniqueItems": false
           },
           "builder_image": {
-            "description": "BuilderImage is the full image reference for the builder stage.\nAn empty string signals \"use the default for this transport type\" during config merging.\nExamples: \"golang:1.25-alpine\", \"node:22-alpine\", \"python:3.13-slim\"",
+            "description": "BuilderImage is the full image reference for the builder stage.\nAn empty string signals \"use the default for this transport type\" during config merging.\nExamples: \"golang:1.26-alpine\", \"node:24-alpine\", \"python:3.14-slim\"",
             "type": "string"
           }
         },
@@ -2443,6 +2465,10 @@
             "description": "Port for the HTTP proxy to listen on",
             "type": "integer"
           },
+          "registry": {
+            "description": "Registry is the optional registry name to resolve the server from (e.g. \"default\").",
+            "type": "string"
+          },
           "runtime_config": {
             "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_container_templates.RuntimeConfig"
           },
@@ -2453,6 +2479,10 @@
             },
             "type": "array",
             "uniqueItems": false
+          },
+          "server": {
+            "description": "Server is the optional server name in the registry (e.g. \"io.github.stacklok/fetch\").\nWhen both Registry and Server are set, thv resolves the server metadata\nserver-side, filling in image, transport, env vars, permissions, etc.\nUser-provided fields always override registry defaults.",
+            "type": "string"
           },
           "target_port": {
             "description": "Port to expose from the container",
@@ -5289,6 +5319,16 @@
               }
             },
             "description": "Internal Server Error"
+          },
+          "502": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Bad Gateway"
           }
         },
         "summary": "Install a skill",
