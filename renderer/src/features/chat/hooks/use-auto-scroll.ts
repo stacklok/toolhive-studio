@@ -148,8 +148,9 @@ export function useAutoScroll({
     if (placedForThreadRef.current === threadId) return
     placedForThreadRef.current = threadId
 
-    placementTargetRef.current =
-      savedScroll && savedScroll.scrollY > 0 ? savedScroll.scrollY : 'bottom'
+    // An entry with `scrollY: 0` is a legitimate restore (user was at the
+    // top); only the absence of an entry falls back to 'bottom'.
+    placementTargetRef.current = savedScroll ? savedScroll.scrollY : 'bottom'
     settlingDeadlineRef.current = performance.now() + PLACEMENT_SETTLING_MS
 
     applyPlacementTarget(el)
