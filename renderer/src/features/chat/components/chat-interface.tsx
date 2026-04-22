@@ -88,13 +88,13 @@ export function ChatInterface({
         <div className="relative min-h-0 flex-1 overflow-hidden">
           {/* Scroll container — always in DOM so containerRef is never null.
               `data-scroll-restoration-id` registers this nested scrollable
-              area with TanStack Router's scroll restoration. `overflowAnchor`
-              keeps async content (MCP iframes, images, code blocks) from
-              jolting the viewport when their height changes. */}
+              area with TanStack Router's scroll restoration. Native scroll
+              anchoring (`overflow-anchor: auto`, the CSS default) keeps
+              async content (MCP iframes, images, code blocks) from jolting
+              the viewport when their height changes. */}
           <div
             ref={containerRef}
             data-scroll-restoration-id={CHAT_SCROLL_RESTORATION_ID}
-            style={{ overflowAnchor: 'auto' }}
             className="h-full w-full overflow-y-auto scroll-smooth
               [view-transition-name:chat-messages-view]
               motion-safe:transition-all motion-safe:duration-300"

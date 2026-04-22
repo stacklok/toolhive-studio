@@ -405,15 +405,9 @@ export function McpAppView({
     <div
       className={
         prefersBorder
-          ? 'bg-background mt-2 overflow-hidden rounded-lg border'
-          : 'mt-2 overflow-hidden'
+          ? 'bg-background mt-2 w-full overflow-hidden rounded-lg border'
+          : 'mt-2 w-full overflow-hidden'
       }
-      // `overflowAnchor: auto` lets the browser keep the surrounding chat
-      // messages glued in place when the iframe asynchronously resizes
-      // itself (e.g. `bridge.onsizechange` grows `iframeHeight`). Without
-      // this, a growing iframe would push content downward and the
-      // viewport would effectively "fall" to the top of the iframe.
-      style={{ width: '100%', overflowAnchor: 'auto' }}
     >
       {toolbar}
       {iframeEl}
