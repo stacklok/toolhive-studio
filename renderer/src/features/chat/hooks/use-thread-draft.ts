@@ -76,6 +76,12 @@ export function useThreadDraft(
       setText(next)
       latestRef.current = next
       if (!threadId) return
+      // Flush clears synchronously so a sibling remount with the same
+      // threadId can't re-hydrate from a stale draft before the debounce.
+      if (next === '') {
+        flush()
+        return
+      }
       if (timerRef.current !== null) {
         clearTimeout(timerRef.current)
       }
