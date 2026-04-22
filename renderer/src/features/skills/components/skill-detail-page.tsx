@@ -73,16 +73,16 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
               Install
             </Button>
             {skill.repository?.url && (
-              <a
-                href={skill.repository.url}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Button variant="outline" className="rounded-full">
+              <Button asChild variant="outline" className="rounded-full">
+                <a
+                  href={skill.repository.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   <GithubIcon className="size-4" />
                   GitHub
-                </Button>
-              </a>
+                </a>
+              </Button>
             )}
           </div>
         }
