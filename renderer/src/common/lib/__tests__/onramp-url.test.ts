@@ -37,15 +37,15 @@ describe('buildOnrampDocsUrl', () => {
     expect(url).not.toContain('tdi=')
   })
 
-  it('url-encodes param values', () => {
+  it('url-encodes param values using application/x-www-form-urlencoded', () => {
     const url = buildOnrampDocsUrl('/enterprise', {
       campaign: 'enterprise upgrade',
       content: 'app/header',
       instanceId: 'id with space',
     })
 
-    expect(url).toContain('utm_campaign=enterprise%20upgrade')
+    expect(url).toContain('utm_campaign=enterprise+upgrade')
     expect(url).toContain('utm_content=app%2Fheader')
-    expect(url).toContain('tdi=id%20with%20space')
+    expect(url).toContain('tdi=id+with+space')
   })
 })

@@ -10,20 +10,16 @@ export function buildOnrampDocsUrl(
   path: string,
   { campaign, content, instanceId }: OnrampUrlOptions
 ): string {
-  const params: Array<[string, string]> = [
+  const params = new URLSearchParams([
     ['utm_source', APP_IDENTIFIER],
     ['utm_medium', 'app'],
     ['utm_campaign', campaign],
     ['utm_content', content],
-  ]
+  ])
 
   if (instanceId) {
-    params.push(['tdi', instanceId])
+    params.append('tdi', instanceId)
   }
 
-  const query = params
-    .map(([k, v]) => `${k}=${encodeURIComponent(v)}`)
-    .join('&')
-
-  return `${DOCS_BASE_URL}${path}?${query}`
+  return `${DOCS_BASE_URL}${path}?${params.toString()}`
 }
