@@ -37,6 +37,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/common/components/ui/select'
+import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { ChevronDown, FolderOpenIcon, TriangleAlertIcon } from 'lucide-react'
 import { useMutationInstallSkill } from '../hooks/use-mutation-install-skill'
 
@@ -180,7 +181,19 @@ export function DialogInstallSkill({
               name="scope"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Scope</FormLabel>
+                  <div className="flex items-center gap-1">
+                    <FormLabel>Scope</FormLabel>
+                    <TooltipInfoIcon className="max-w-72">
+                      <span className="block">
+                        <strong>User</strong>: installed globally in your home
+                        directory and available across all projects.
+                      </span>
+                      <span className="mt-1 block">
+                        <strong>Project</strong>: installed in the root of a
+                        specific project folder and scoped to that project only.
+                      </span>
+                    </TooltipInfoIcon>
+                  </div>
                   <Select
                     value={field.value}
                     onValueChange={(v) => {
