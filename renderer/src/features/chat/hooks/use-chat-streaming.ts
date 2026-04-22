@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useEffect, useState, useRef } from 'react'
 import { useChat } from '@ai-sdk/react'
-import { useQueryClient } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import type { ChatUIMessage } from '../types'
 import { ElectronIPCChatTransport } from '../transport/electron-ipc-chat-transport'
@@ -9,10 +9,10 @@ import { useThreadManagement } from './use-thread-management'
 import type { FileUIPart } from 'ai'
 import { trackEvent } from '@/common/lib/analytics'
 import { hasValidCredentials } from '../lib/utils'
+import { chatThreadQueryOptions } from '../lib/thread-query'
 
 export function useChatStreaming(externalThreadId?: string | null) {
   const queryClient = useQueryClient()
-  const [isPersistentLoading, setIsPersistentLoading] = useState(true)
   const [persistentError, setPersistentError] = useState<string | null>(null)
 
   const {
@@ -27,9 +27,31 @@ export function useChatStreaming(externalThreadId?: string | null) {
     currentThreadId,
     isLoading: isThreadLoading,
     error: threadError,
-    loadMessages: loadThreadMessages,
     clearMessages: clearThreadMessages,
   } = useThreadManagement(externalThreadId)
+
+  // Messages come from React Query. The `/playground/chat/$threadId` route
+  // loader primes the cache via `ensureQueryData`, so by the time this
+  // hook runs the data is already available — no loading flash on thread
+  // switch. `usePlaygroundThreads` invalidates this key on streaming
+  // completion to refresh titles/messages.
+  const {
+    data: threadData,
+    isPending: isThreadDataPending,
+    error: threadDataError,
+  } = useQuery(chatThreadQueryOptions(currentThreadId))
+
+  // Surface IPC/query failures via `persistentError` so they flow into
+  // `processedError` below (matches the pre-refactor try/catch behaviour).
+  useEffect(() => {
+    if (!threadDataError) return
+    const message =
+      threadDataError instanceof Error
+        ? threadDataError.message
+        : 'Failed to load chat history'
+    setPersistentError(message)
+    log.error('Failed to load persistent chat messages:', threadDataError)
+  }, [threadDataError])
 
   const ipcTransport = useMemo(
     () =>
@@ -54,28 +76,22 @@ export function useChatStreaming(externalThreadId?: string | null) {
     experimental_throttle: 200,
   })
 
+  // Hydrate the `useChat` instance from cached loader data whenever the
+  // thread identity changes. We guard with a ref so streaming-in-progress
+  // token updates inside `useChat` are never overwritten by a stale loader
+  // payload for the same thread — subsequent refetches (e.g. after
+  // `invalidateQueries` on streaming complete) are a no-op here because
+  // `useChat` already holds the canonical message list at that point.
+  const hydratedThreadRef = useRef<string | null>(null)
   useEffect(() => {
-    async function loadInitialMessages() {
-      if (!currentThreadId) return
+    if (!currentThreadId || !threadData) return
+    if (hydratedThreadRef.current === currentThreadId) return
+    hydratedThreadRef.current = currentThreadId
+    setPersistentError(null)
+    setMessages(threadData.messages)
+  }, [currentThreadId, threadData, setMessages])
 
-      try {
-        setIsPersistentLoading(true)
-        setPersistentError(null)
-
-        const persistedMessages = await loadThreadMessages()
-        setMessages(persistedMessages)
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to load chat history'
-        setPersistentError(errorMessage)
-        log.error('Failed to load persistent chat messages:', err)
-      } finally {
-        setIsPersistentLoading(false)
-      }
-    }
-
-    loadInitialMessages()
-  }, [currentThreadId, loadThreadMessages, setMessages])
+  const isPersistentLoading = !!currentThreadId && isThreadDataPending
 
   const isLoading =
     status === 'submitted' ||

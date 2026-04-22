@@ -211,6 +211,11 @@ export function usePlaygroundThreads(activeThreadId: string) {
           refreshThread(data.threadId).catch((err) =>
             log.error('[usePlaygroundThreads] refreshThread failed:', err)
           )
+          // Invalidate the loader-primed thread query so the next
+          // navigation (or preload) sees fresh messages/title.
+          queryClient.invalidateQueries({
+            queryKey: ['chat', 'thread', data.threadId],
+          })
         }
       }
     })

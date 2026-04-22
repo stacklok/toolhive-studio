@@ -405,10 +405,9 @@ export function McpAppView({
     <div
       className={
         prefersBorder
-          ? 'bg-background mt-2 overflow-hidden rounded-lg border'
-          : 'mt-2 overflow-hidden'
+          ? 'bg-background mt-2 w-full overflow-hidden rounded-lg border'
+          : 'mt-2 w-full overflow-hidden'
       }
-      style={{ width: '100%' }}
     >
       {toolbar}
       {iframeEl}

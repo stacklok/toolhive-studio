@@ -33,6 +33,11 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
     context: { queryClient },
     defaultViewTransition: true,
     history: hashHistory,
+    scrollRestoration: true,
+    scrollRestorationBehavior: 'instant',
+    // Key by pathname so /playground/chat/<id> always restores the same
+    // position regardless of how we arrived (back/forward vs. sidebar click).
+    getScrollRestorationKey: (location) => location.pathname,
   })
 
   router.subscribe('onLoad', (data) => {
