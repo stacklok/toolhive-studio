@@ -120,6 +120,34 @@ function TopNavLinks() {
   )
 }
 
+function EnterpriseUpgradeButton() {
+  const { instanceId } = useInstanceId()
+  const href = buildOnrampDocsUrl('/enterprise', {
+    campaign: 'enterprise-upgrade',
+    content: 'app-header',
+    instanceId,
+  })
+
+  return (
+    <Button
+      variant="success"
+      className="app-region-no-drag rounded-full font-normal"
+      size="sm"
+      asChild
+    >
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => trackEvent('Onramp: Upgrade to Enterprise clicked')}
+      >
+        <PackageOpen className="size-4" />
+        Upgrade to Enterprise
+      </a>
+    </Button>
+  )
+}
+
 interface TopNavProps extends HTMLProps<HTMLElement> {
   isEnterprise?: boolean
 }
@@ -129,14 +157,7 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
   const isProduction = import.meta.env.MODE === 'production'
   const isActive = useIsActive()
   const { canShow } = usePermissions()
-  const { instanceId } = useInstanceId()
   const showUpdateBadge = !!(appVersion?.isNewVersionAvailable && isProduction)
-
-  const enterpriseUpgradeUrl = buildOnrampDocsUrl('/enterprise', {
-    campaign: 'enterprise-upgrade',
-    content: 'app-header',
-    instanceId,
-  })
 
   useEffect(() => {
     const cleanup = window.electronAPI.onUpdateDownloaded(() => {
@@ -174,26 +195,7 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
       <div
         className="app-region-no-drag flex h-full items-center justify-self-end"
       >
-        {!isEnterprise && (
-          <Button
-            variant="success"
-            className="app-region-no-drag rounded-full font-normal"
-            size="sm"
-            asChild
-          >
-            <a
-              href={enterpriseUpgradeUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() =>
-                trackEvent('Onramp: Upgrade to Enterprise clicked')
-              }
-            >
-              <PackageOpen className="size-4" />
-              Upgrade to Enterprise
-            </a>
-          </Button>
-        )}
+        {!isEnterprise && <EnterpriseUpgradeButton />}
         <div className="flex h-full items-center gap-1 pl-2">
           {canShow(PERMISSION_KEYS.HELP_MENU) && (
             <HelpDropdown
