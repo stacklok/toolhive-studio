@@ -36,14 +36,14 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          # Get open Bug issues without auto-fix or auto-fix-skip labels
+          # Get open Bug issues without agent-fix or agent-fix-skip labels
           ISSUES=$(gh issue list \
             --label "Bug" \
             --state open \
             --limit 50 \
             --json number,title,body,labels,comments \
             --jq '[.[] | select(
-              (.labels | map(.name) | (contains(["auto-fix"]) or contains(["auto-fix-skip"])) | not)
+              (.labels | map(.name) | (contains(["agent-fix"]) or contains(["agent-fix-skip"])) | not)
               and (.comments == 0)
             )]')
 
@@ -144,7 +144,7 @@ jobs:
             --max-turns 20
             --allowedTools "Read,Grep,Glob,Write"
 
-      - name: Apply auto-fix label (max 3 per run)
+      - name: Apply agent-fix label (max 3 per run)
         if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -156,11 +156,11 @@ jobs:
 
           SUITABLE=$(jq -r '[.[] | select(.suitable == true)] | .[:3]' triage-results.json)
           COUNT=$(echo "$SUITABLE" | jq 'length')
-          echo "::notice::Labeling $COUNT issues as auto-fix"
+          echo "::notice::Labeling $COUNT issues as agent-fix"
 
           echo "$SUITABLE" | jq -c '.[]' | while IFS= read -r ROW; do
             NUM=$(echo "$ROW" | jq -r '.issue')
             REASON=$(echo "$ROW" | jq -r '.reason')
             echo "::notice::Issue #${NUM}: ${REASON}"
-            gh issue edit "$NUM" --add-label "auto-fix"
+            gh issue edit "$NUM" --add-label "agent-fix"
           done
