@@ -9,6 +9,7 @@ import {
 } from '@/common/components/ui/dialog'
 import type { GithubComStacklokToolhivePkgSkillsLocalBuild as LocalBuild } from '@common/api/generated/types.gen'
 import { useMutationDeleteBuild } from '../hooks/use-mutation-delete-build'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface DialogDeleteBuildProps {
   open: boolean
@@ -30,6 +31,7 @@ export function DialogDeleteBuild({
 
   async function handleConfirm() {
     if (!tag) return
+    trackEvent('Skills: delete build dialog confirmed', { tag })
     try {
       await deleteBuild({ path: { tag } })
       onOpenChange(false)
@@ -54,7 +56,10 @@ export function DialogDeleteBuild({
           <Button
             variant="secondary"
             className="rounded-full"
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              trackEvent('Skills: delete build dialog cancelled')
+              onOpenChange(false)
+            }}
             disabled={isPending}
           >
             Cancel

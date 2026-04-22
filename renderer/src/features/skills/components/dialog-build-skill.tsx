@@ -24,6 +24,7 @@ import { FolderOpenIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useMutationBuildSkill } from '../hooks/use-mutation-build-skill'
 import { DialogInstallSkill } from './dialog-install-skill'
+import { trackEvent } from '@/common/lib/analytics'
 
 const formSchema = z.object({
   path: z.string().min(1, 'Path is required'),
@@ -54,6 +55,7 @@ export function DialogBuildSkill({
   })
 
   function handleClose() {
+    trackEvent('Skills: build dialog cancelled')
     form.reset()
     onOpenChange(false)
   }
@@ -61,11 +63,15 @@ export function DialogBuildSkill({
   async function handleBrowse() {
     const selected = await window.electronAPI.selectFolder()
     if (selected) {
+      trackEvent('Skills: build path selected')
       form.setValue('path', selected, { shouldValidate: true })
     }
   }
 
   async function onSubmit(values: FormSchema) {
+    trackEvent('Skills: build dialog submitted', {
+      has_tag: values.tag ? 'true' : 'false',
+    })
     try {
       const result = await buildSkill({
         body: {
@@ -75,7 +81,8 @@ export function DialogBuildSkill({
       })
 
       const reference = result?.reference
-      handleClose()
+      form.reset()
+      onOpenChange(false)
 
       if (reference) {
         setBuiltReference(reference)
@@ -84,7 +91,10 @@ export function DialogBuildSkill({
           closeButton: true,
           action: {
             label: 'Install now',
-            onClick: () => setInstallOpen(true),
+            onClick: () => {
+              trackEvent('Skills: build install-now clicked')
+              setInstallOpen(true)
+            },
           },
         })
       } else {

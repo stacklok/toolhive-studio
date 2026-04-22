@@ -9,6 +9,7 @@ import {
 } from '@/common/components/ui/dialog'
 import type { GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill } from '@common/api/generated/types.gen'
 import { useMutationUninstallSkill } from '../hooks/use-mutation-uninstall-skill'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface DialogUninstallSkillProps {
   open: boolean
@@ -27,6 +28,9 @@ export function DialogUninstallSkill({
 
   async function handleConfirm() {
     if (!skillName) return
+    trackEvent('Skills: uninstall dialog confirmed', {
+      scope: skill?.scope ?? 'unknown',
+    })
     try {
       await uninstallSkill({
         path: { name: skillName },
@@ -56,7 +60,10 @@ export function DialogUninstallSkill({
           <Button
             variant="secondary"
             className="rounded-full"
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              trackEvent('Skills: uninstall dialog cancelled')
+              onOpenChange(false)
+            }}
             disabled={isPending}
           >
             Cancel
