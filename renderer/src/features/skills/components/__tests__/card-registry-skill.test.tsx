@@ -191,7 +191,7 @@ describe('CardRegistrySkill', () => {
       })
     })
 
-    it('prefills the install dialog with the OCI package reference', async () => {
+    it('prefills the install dialog with the OCI package identifier', async () => {
       const user = userEvent.setup()
       const skillRouter = createCardTestRouter({
         ...baseSkill,
@@ -205,7 +205,7 @@ describe('CardRegistrySkill', () => {
 
       await waitFor(() => {
         expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
-          'ghcr.io/org/my-skill:v1.2.3'
+          'ghcr.io/org/my-skill'
         )
       })
     })

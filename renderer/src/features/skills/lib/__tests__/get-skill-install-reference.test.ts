@@ -16,7 +16,24 @@ describe('getSkillInstallReference', () => {
     expect(getSkillInstallReference(skill)).toBe('ghcr.io/org/my-skill:v1.0.0')
   })
 
-  it('appends the registry version to an OCI identifier without a tag', () => {
+  it('returns the OCI identifier unchanged when it already includes a digest', () => {
+    const skill: RegistrySkill = {
+      name: 'my-skill',
+      namespace: 'io.github.user',
+      packages: [
+        {
+          registryType: 'oci',
+          identifier: 'ghcr.io/org/my-skill@sha256:deadbeef',
+        },
+      ],
+    }
+
+    expect(getSkillInstallReference(skill)).toBe(
+      'ghcr.io/org/my-skill@sha256:deadbeef'
+    )
+  })
+
+  it('returns a bare OCI identifier when no package ref is available', () => {
     const skill: RegistrySkill = {
       name: 'my-skill',
       namespace: 'io.github.user',
@@ -24,7 +41,42 @@ describe('getSkillInstallReference', () => {
       packages: [{ registryType: 'oci', identifier: 'ghcr.io/org/my-skill' }],
     }
 
-    expect(getSkillInstallReference(skill)).toBe('ghcr.io/org/my-skill:v1.0.0')
+    expect(getSkillInstallReference(skill)).toBe('ghcr.io/org/my-skill')
+  })
+
+  it('prefers the OCI package ref over skill.version when rebuilding a ref', () => {
+    const skill: RegistrySkill = {
+      name: 'my-skill',
+      namespace: 'io.github.user',
+      version: 'v1.0.0',
+      packages: [
+        {
+          registryType: 'oci',
+          identifier: 'ghcr.io/org/my-skill',
+          ref: 'v2.3.4',
+        },
+      ],
+    }
+
+    expect(getSkillInstallReference(skill)).toBe('ghcr.io/org/my-skill:v2.3.4')
+  })
+
+  it('uses OCI digest refs with @ when rebuilding a ref', () => {
+    const skill: RegistrySkill = {
+      name: 'my-skill',
+      namespace: 'io.github.user',
+      packages: [
+        {
+          registryType: 'oci',
+          identifier: 'ghcr.io/org/my-skill',
+          ref: 'sha256:deadbeef',
+        },
+      ],
+    }
+
+    expect(getSkillInstallReference(skill)).toBe(
+      'ghcr.io/org/my-skill@sha256:deadbeef'
+    )
   })
 
   it('falls back to namespace/name for non-OCI registry skills', () => {

@@ -137,7 +137,7 @@ describe('TableRegistrySkills', () => {
     expect(screen.queryByRole('button', { name: 'standalone' })).toBeNull()
   })
 
-  it('opens install dialog with OCI reference including version', async () => {
+  it('opens install dialog with OCI package identifier when no ref is available', async () => {
     const user = userEvent.setup()
     const router = makeRouter([ociSkill])
     renderRoute(router)
@@ -149,7 +149,7 @@ describe('TableRegistrySkills', () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
-        'ghcr.io/org/my-skill:v1.0.0'
+        'ghcr.io/org/my-skill'
       )
     })
   })

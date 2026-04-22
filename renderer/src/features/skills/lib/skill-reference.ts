@@ -1,11 +1,16 @@
 import type { RegistrySkill } from '@common/api/generated/types.gen'
+import type { RegistrySkillPackage } from '@common/api/generated/types.gen'
+
+function getOciPackage(skill: RegistrySkill): RegistrySkillPackage | undefined {
+  return skill.packages?.find(
+    (pkg) => pkg.registryType === 'oci' && pkg.identifier
+  )
+}
 
 export function getOciPackageReference(
   skill: RegistrySkill
 ): string | undefined {
-  return skill.packages?.find(
-    (pkg) => pkg.registryType === 'oci' && pkg.identifier
-  )?.identifier
+  return getOciPackage(skill)?.identifier
 }
 
 export function getNamespaceNameReference(
@@ -24,6 +29,10 @@ function hasOciTagOrDigest(identifier: string): boolean {
   return identifier.includes('@') || lastColonIndex > lastSlashIndex
 }
 
+function appendOciRef(identifier: string, ref: string): string {
+  return ref.includes(':') ? `${identifier}@${ref}` : `${identifier}:${ref}`
+}
+
 /**
  * Derives the ref to use for fetching SKILL.md content via the content API.
  * Prefers the identifier of the first OCI package. Falls back to
@@ -38,15 +47,19 @@ export function getSkillOciRef(skill: RegistrySkill): string | undefined {
 /**
  * Derives the reference to prefill in the install dialog.
  * Prefers the first OCI package identifier. If that OCI identifier is
- * untagged and the skill exposes a separate version, append `:version`
- * for install compatibility. Falls back to `namespace/name`, then name.
+ * untagged and the package exposes a separate `ref`, append it as a tag or
+ * digest. Otherwise, keep the bare OCI identifier. Falls back to
+ * `namespace/name`, then name.
  */
 export function getSkillInstallReference(skill: RegistrySkill): string {
-  const ociReference = getOciPackageReference(skill)
+  const ociPackage = getOciPackage(skill)
+  const ociReference = ociPackage?.identifier
 
   if (ociReference) {
-    if (skill.version && !hasOciTagOrDigest(ociReference)) {
-      return `${ociReference}:${skill.version}`
+    if (!hasOciTagOrDigest(ociReference)) {
+      if (ociPackage?.ref) {
+        return appendOciRef(ociReference, ociPackage.ref)
+      }
     }
 
     return ociReference
