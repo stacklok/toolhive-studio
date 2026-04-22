@@ -75,7 +75,7 @@ jobs:
 
       - name: Install Claude Code
         if: steps.guard.outputs.skip != 'true'
-        run: pnpm add -g --ignore-scripts=false @anthropic-ai/claude-code
+        run: npm install -g @anthropic-ai/claude-code
 
       - name: 'Bug Fix (up to 3 attempts)'
         id: tdd
