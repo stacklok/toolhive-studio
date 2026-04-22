@@ -84,6 +84,51 @@ describe('useThreadDraft', () => {
     expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBeNull()
   })
 
+  // Regression: ChatInterface swaps between the centered (empty-state) and
+  // bottom (with-messages) composer when `hasMessages` flips after the user
+  // submits. Both instances are keyed by the same `threadId`, so the new
+  // instance's `useState` lazy initializer re-reads `localStorage` before
+  // the unmounting instance's flush runs. If the clear write is debounced,
+  // the new composer re-hydrates with the just-sent draft.
+  it('clears storage synchronously when the draft is reset to empty', () => {
+    localStorage.setItem(`${STORAGE_PREFIX}t1`, 'hello')
+    const { result } = renderHook(() => useThreadDraft('t1'))
+
+    act(() => {
+      result.current[1]('')
+    })
+
+    // No timer advance — the write must have already happened so any
+    // component that remounts in the same commit reads empty.
+    expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBeNull()
+    expect(result.current[0]).toBe('')
+  })
+
+  it('a fresh mount after clearing reads empty, not the previous draft', () => {
+    const { result, unmount } = renderHook(() => useThreadDraft('t1'))
+
+    act(() => {
+      result.current[1]('hello')
+    })
+    act(() => {
+      vi.advanceTimersByTime(DEBOUNCE_MS)
+    })
+    expect(localStorage.getItem(`${STORAGE_PREFIX}t1`)).toBe('hello')
+
+    // Simulates the submit handler clearing the draft.
+    act(() => {
+      result.current[1]('')
+    })
+
+    // Mount a new instance with the same threadId before the previous one
+    // unmounts (mirrors render-before-commit ordering when the empty-state
+    // and with-messages composers swap).
+    const { result: r2 } = renderHook(() => useThreadDraft('t1'))
+    expect(r2.current[0]).toBe('')
+
+    unmount()
+  })
+
   it('flushes the pending write on unmount', () => {
     const { result, unmount } = renderHook(() => useThreadDraft('t1'))
 
