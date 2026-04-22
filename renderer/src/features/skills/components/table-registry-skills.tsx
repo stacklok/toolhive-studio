@@ -18,6 +18,7 @@ import {
 } from '@/common/components/ui/tooltip'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { getSkillInstallReference } from '../lib/skill-reference'
+import { trackEvent } from '@/common/lib/analytics'
 
 function activateOnKey(e: React.KeyboardEvent, onActivate: () => void) {
   if (e.key === 'Enter' || e.key === ' ') {
@@ -36,6 +37,11 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
 
   function goToDetail() {
     if (!canNavigate) return
+    trackEvent('Skills: registry card opened', {
+      name: title,
+      namespace: namespace ?? '',
+      source: 'registry_table',
+    })
     void navigate({
       to: '/skills/$namespace/$skillName',
       params: { namespace: namespace!, skillName: skill.name! },
@@ -104,7 +110,14 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
               href={skill.repository.url}
               target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => {
+                e.stopPropagation()
+                trackEvent('Skills: registry card github clicked', {
+                  name: title,
+                  namespace: namespace ?? '',
+                  source: 'registry_table',
+                })
+              }}
               className="text-muted-foreground hover:bg-accent inline-flex
                 size-8 items-center justify-center rounded-md"
               aria-label="Open repository on GitHub"
@@ -121,6 +134,11 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
             className="rounded-full"
             onClick={(e) => {
               e.stopPropagation()
+              trackEvent('Skills: install dialog opened', {
+                source: 'registry_table',
+                name: title,
+                namespace: namespace ?? '',
+              })
               setInstallOpen(true)
             }}
             aria-label={`Install ${title}`}

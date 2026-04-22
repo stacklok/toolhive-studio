@@ -7,6 +7,7 @@ import type { GithubComStacklokToolhivePkgSkillsLocalBuild as LocalBuild } from 
 import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogDeleteBuild } from './dialog-delete-build'
 import { CardSkillBase } from './card-skill-base'
+import { trackEvent } from '@/common/lib/analytics'
 
 export function CardBuild({ build }: { build: LocalBuild }) {
   const [installOpen, setInstallOpen] = useState(false)
@@ -48,11 +49,15 @@ export function CardBuild({ build }: { build: LocalBuild }) {
         badges={badges}
         onClick={
           tag
-            ? () =>
+            ? () => {
+                trackEvent('Skills: build card opened', {
+                  has_tag: 'true',
+                })
                 void navigate({
                   to: '/skills/builds/$tag',
                   params: { tag },
                 })
+              }
             : undefined
         }
         footer={
@@ -62,6 +67,9 @@ export function CardBuild({ build }: { build: LocalBuild }) {
               className="relative z-10 rounded-full"
               onClick={(e) => {
                 e.stopPropagation()
+                trackEvent('Skills: delete build dialog opened', {
+                  source: 'build_card',
+                })
                 setDeleteOpen(true)
               }}
               aria-label={`Remove ${title}`}
@@ -74,6 +82,9 @@ export function CardBuild({ build }: { build: LocalBuild }) {
               className="relative z-10 rounded-full"
               onClick={(e) => {
                 e.stopPropagation()
+                trackEvent('Skills: install dialog opened', {
+                  source: 'build_card',
+                })
                 setInstallOpen(true)
               }}
               aria-label={`Install ${title}`}

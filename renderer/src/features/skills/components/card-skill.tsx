@@ -12,6 +12,7 @@ import { DialogUninstallSkill } from './dialog-uninstall-skill'
 import { CardSkillBase } from './card-skill-base'
 import { SkillClientsBadges } from './skill-clients-badges'
 import { skillStatusVariantMap } from './skill-status'
+import { trackEvent } from '@/common/lib/analytics'
 
 export function CardSkill({ skill }: { skill: InstalledSkill }) {
   const [uninstallOpen, setUninstallOpen] = useState(false)
@@ -78,6 +79,10 @@ export function CardSkill({ skill }: { skill: InstalledSkill }) {
             className="relative z-10 rounded-full"
             onClick={(e) => {
               e.stopPropagation()
+              trackEvent('Skills: uninstall dialog opened', {
+                source: 'installed_card',
+                scope: scope ?? 'unknown',
+              })
               setUninstallOpen(true)
             }}
             aria-label={`Uninstall ${title}`}

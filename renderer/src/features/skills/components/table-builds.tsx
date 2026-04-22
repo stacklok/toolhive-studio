@@ -23,6 +23,7 @@ import {
 import { HammerIcon, Trash2Icon } from 'lucide-react'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogDeleteBuild } from './dialog-delete-build'
+import { trackEvent } from '@/common/lib/analytics'
 
 function getShortDigest(digest: string | undefined): string | undefined {
   if (!digest) return undefined
@@ -54,6 +55,7 @@ function BuildRow({ build }: { build: LocalBuild }) {
 
   function goToDetail() {
     if (!tag) return
+    trackEvent('Skills: build card opened', { has_tag: 'true' })
     void navigate({
       to: '/skills/builds/$tag',
       params: { tag },
@@ -148,6 +150,9 @@ function BuildRow({ build }: { build: LocalBuild }) {
               className="rounded-full"
               onClick={(e) => {
                 e.stopPropagation()
+                trackEvent('Skills: delete build dialog opened', {
+                  source: 'build_table',
+                })
                 setDeleteOpen(true)
               }}
               aria-label={`Remove ${title}`}
@@ -161,6 +166,9 @@ function BuildRow({ build }: { build: LocalBuild }) {
               className="rounded-full"
               onClick={(e) => {
                 e.stopPropagation()
+                trackEvent('Skills: install dialog opened', {
+                  source: 'build_table',
+                })
                 setInstallOpen(true)
               }}
               aria-label={`Install ${title}`}

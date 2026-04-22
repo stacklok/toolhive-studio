@@ -12,6 +12,7 @@ import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogDeleteBuild } from './dialog-delete-build'
 import { SkillDetailLayout } from './skill-detail-layout'
 import { SkillMarkdown } from './skill-markdown'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface BuildDetailPageProps {
   build: LocalBuild
@@ -87,11 +88,27 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
         description={description}
         actions={
           <div className="flex items-center gap-3">
-            <Button variant="secondary" onClick={() => setDeleteOpen(true)}>
+            <Button
+              variant="secondary"
+              onClick={() => {
+                trackEvent('Skills: delete build dialog opened', {
+                  source: 'build_detail',
+                })
+                setDeleteOpen(true)
+              }}
+            >
               <Trash2Icon className="size-4" />
               Remove
             </Button>
-            <Button variant="action" onClick={() => setInstallOpen(true)}>
+            <Button
+              variant="action"
+              onClick={() => {
+                trackEvent('Skills: install dialog opened', {
+                  source: 'build_detail',
+                })
+                setInstallOpen(true)
+              }}
+            >
               Install
             </Button>
           </div>
