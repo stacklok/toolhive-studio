@@ -1,11 +1,16 @@
 import { renderHook, waitFor } from '@testing-library/react'
-import { expect, it, vi, describe } from 'vitest'
+import { expect, it, vi, describe, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import { toast } from 'sonner'
 import { useMutationInstallSkill } from '../use-mutation-install-skill'
 import { recordRequests } from '@/common/mocks/node'
 import { mockedPostApiV1BetaSkills } from '@/common/mocks/fixtures/skills/post'
+import { trackEvent } from '@/common/lib/analytics'
+
+vi.mock('@/common/lib/analytics', () => ({
+  trackEvent: vi.fn(),
+}))
 
 const createQueryClientWrapper = () => {
   const queryClient = new QueryClient({
@@ -22,6 +27,10 @@ const createQueryClientWrapper = () => {
 }
 
 describe('useMutationInstallSkill', () => {
+  beforeEach(() => {
+    vi.mocked(trackEvent).mockClear()
+  })
+
   it('sends POST to /api/v1beta/skills with correct body', async () => {
     const rec = recordRequests()
     const { Wrapper } = createQueryClientWrapper()
@@ -130,5 +139,56 @@ describe('useMutationInstallSkill', () => {
         ]),
       })
     )
+  })
+
+  it('tracks install success event with skill metadata', async () => {
+    const { Wrapper } = createQueryClientWrapper()
+
+    const { result } = renderHook(() => useMutationInstallSkill(), {
+      wrapper: Wrapper,
+    })
+
+    result.current.mutateAsync({
+      body: {
+        name: 'skill-one',
+        scope: 'user',
+        version: 'v1.0.0',
+        clients: ['vscode', 'cursor'],
+      },
+    })
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    expect(trackEvent).toHaveBeenCalledWith('Skills: install succeeded', {
+      skill_name: 'skill-one',
+      scope: 'user',
+      has_version: 'true',
+      clients_count: 2,
+    })
+  })
+
+  it('tracks install failure event on error', async () => {
+    mockedPostApiV1BetaSkills.activateScenario('server-error')
+
+    const { Wrapper } = createQueryClientWrapper()
+
+    const { result } = renderHook(() => useMutationInstallSkill(), {
+      wrapper: Wrapper,
+    })
+
+    result.current
+      .mutateAsync({ body: { name: 'skill-one', scope: 'project' } })
+      .catch(() => {})
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+
+    expect(trackEvent).toHaveBeenCalledWith('Skills: install failed', {
+      skill_name: 'skill-one',
+      scope: 'project',
+    })
   })
 })
