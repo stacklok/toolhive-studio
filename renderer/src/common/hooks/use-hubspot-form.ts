@@ -1,14 +1,11 @@
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
 import { submitToHubSpot } from '../lib/hubspot'
+import { useInstanceId } from './use-instance-id'
 
 export function useHubSpotForm(formId: string, pageName: string) {
   const [consentToProcess, setConsentToProcess] = useState(false)
 
-  const { data: instanceId, isFetched } = useQuery({
-    queryKey: ['instance-id'],
-    queryFn: () => window.electronAPI.getInstanceId(),
-  })
+  const { instanceId, isFetched } = useInstanceId()
 
   const isReady = isFetched && !!instanceId
 

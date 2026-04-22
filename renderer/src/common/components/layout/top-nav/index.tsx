@@ -32,7 +32,8 @@ import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '@utils/feature-flags'
 import { usePermissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
-import { APP_IDENTIFIER, DOCS_BASE_URL } from '@common/app-info'
+import { buildOnrampDocsUrl } from '@/common/lib/onramp-url'
+import { useInstanceId } from '@/common/hooks/use-instance-id'
 
 interface NavButtonProps {
   to: string
@@ -119,6 +120,34 @@ function TopNavLinks() {
   )
 }
 
+function EnterpriseUpgradeButton() {
+  const { instanceId } = useInstanceId()
+  const href = buildOnrampDocsUrl('/enterprise', {
+    campaign: 'enterprise-upgrade',
+    content: 'app-header',
+    instanceId,
+  })
+
+  return (
+    <Button
+      variant="success"
+      className="app-region-no-drag rounded-full font-normal"
+      size="sm"
+      asChild
+    >
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        onClick={() => trackEvent('Onramp: Upgrade to Enterprise clicked')}
+      >
+        <PackageOpen className="size-4" />
+        Upgrade to Enterprise
+      </a>
+    </Button>
+  )
+}
+
 interface TopNavProps extends HTMLProps<HTMLElement> {
   isEnterprise?: boolean
 }
@@ -166,26 +195,7 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
       <div
         className="app-region-no-drag flex h-full items-center justify-self-end"
       >
-        {!isEnterprise && (
-          <Button
-            variant="success"
-            className="app-region-no-drag rounded-full font-normal"
-            size="sm"
-            asChild
-          >
-            <a
-              href={`${DOCS_BASE_URL}/enterprise?utm_source=${APP_IDENTIFIER}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() =>
-                trackEvent('Onramp: Upgrade to Enterprise clicked')
-              }
-            >
-              <PackageOpen className="size-4" />
-              Upgrade to Enterprise
-            </a>
-          </Button>
-        )}
+        {!isEnterprise && <EnterpriseUpgradeButton />}
         <div className="flex h-full items-center gap-1 pl-2">
           {canShow(PERMISSION_KEYS.HELP_MENU) && (
             <HelpDropdown

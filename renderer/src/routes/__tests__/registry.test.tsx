@@ -108,11 +108,13 @@ describe('Promo Card', () => {
       expect(screen.getByText('Build a custom registry')).toBeVisible()
     })
 
-    const link = screen.getByRole('link', { name: /learn how/i })
-    expect(link).toHaveAttribute(
-      'href',
-      `${DOCS_BASE_URL}/guides-registry/?utm_source=${APP_IDENTIFIER}`
-    )
+    await waitFor(() => {
+      const link = screen.getByRole('link', { name: /learn how/i })
+      expect(link).toHaveAttribute(
+        'href',
+        `${DOCS_BASE_URL}/guides-registry/?utm_source=${APP_IDENTIFIER}&utm_medium=app&utm_campaign=custom-registry&utm_content=registry-view-tile&tdi=test-instance-id`
+      )
+    })
   })
 
   it('tracks event when CTA is clicked', async () => {
