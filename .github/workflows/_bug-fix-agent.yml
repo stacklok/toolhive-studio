@@ -75,7 +75,7 @@ jobs:
 
       - name: Install Claude Code
         if: steps.guard.outputs.skip != 'true'
-        run: pnpm add -g @anthropic-ai/claude-code
+        run: npm install -g @anthropic-ai/claude-code
 
       - name: 'Bug Fix (up to 3 attempts)'
         id: tdd
@@ -270,7 +270,7 @@ jobs:
           && steps.guard.outputs.skip != 'true'
           && steps.tdd.outputs.result == 'failure'
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -f bug-analysis.md ]; then
             ANALYSIS=$(cat bug-analysis.md)
