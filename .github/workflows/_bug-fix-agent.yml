@@ -270,7 +270,7 @@ jobs:
           && steps.guard.outputs.skip != 'true'
           && steps.tdd.outputs.result == 'failure'
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ -f bug-analysis.md ]; then
             ANALYSIS=$(cat bug-analysis.md)
