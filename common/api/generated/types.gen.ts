@@ -39,39 +39,37 @@ export type GithubComStacklokToolhiveCoreRegistryTypesRegistry = {
  * PerUser token bucket configuration for this tool.
  * +optional
  */
-export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket =
-  {
-    /**
-     * MaxTokens is the maximum number of tokens (bucket capacity).
-     * This is also the burst size: the maximum number of requests that can be served
-     * instantaneously before the bucket is depleted.
-     * +kubebuilder:validation:Required
-     * +kubebuilder:validation:Minimum=1
-     */
-    maxTokens?: number
-    refillPeriod?: V1Duration
-  }
+export type GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket = {
+  /**
+   * MaxTokens is the maximum number of tokens (bucket capacity).
+   * This is also the burst size: the maximum number of requests that can be served
+   * instantaneously before the bucket is depleted.
+   * +kubebuilder:validation:Required
+   * +kubebuilder:validation:Minimum=1
+   */
+  maxTokens?: number
+  refillPeriod?: V1Duration
+}
 
 /**
  * RateLimitConfig contains the CRD rate limiting configuration.
  * When set, rate limiting middleware is added to the proxy middleware chain.
  */
-export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitConfig =
-  {
-    perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
-    shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
-    /**
-     * Tools defines per-tool rate limit overrides.
-     * Each entry applies additional rate limits to calls targeting a specific tool name.
-     * A request must pass both the server-level limit and the per-tool limit.
-     * +listType=map
-     * +listMapKey=name
-     * +optional
-     */
-    tools?: Array<GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1ToolRateLimitConfig>
-  }
+export type GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitConfig = {
+  perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket
+  shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket
+  /**
+   * Tools defines per-tool rate limit overrides.
+   * Each entry applies additional rate limits to calls targeting a specific tool name.
+   * A request must pass both the server-level limit and the per-tool limit.
+   * +listType=map
+   * +listMapKey=name
+   * +optional
+   */
+  tools?: Array<GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1ToolRateLimitConfig>
+}
 
-export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1ToolRateLimitConfig =
+export type GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1ToolRateLimitConfig =
   {
     /**
      * Name is the MCP tool name this limit applies to.
@@ -79,8 +77,8 @@ export type GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1ToolRateLimitConfi
      * +kubebuilder:validation:MinLength=1
      */
     name?: string
-    perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
-    shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitBucket
+    perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket
+    shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket
   }
 
 /**
@@ -1124,7 +1122,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Publish lists ports to publish to the host in format "hostPort:containerPort"
    */
   publish?: Array<string>
-  rate_limit_config?: GithubComStacklokToolhiveCmdThvOperatorApiV1Alpha1RateLimitConfig
+  rate_limit_config?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitConfig
   /**
    * RateLimitNamespace is the Kubernetes namespace for Redis key derivation.
    */
