@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
+import { Github } from 'lucide-react'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { Button } from '@/common/components/ui/button'
 import {
@@ -105,6 +106,22 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
           )}
         </TableCell>
 
+        <TableCell className="py-3">
+          {skill.repository?.url ? (
+            <a
+              href={skill.repository.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-muted-foreground hover:bg-accent inline-flex
+                size-8 items-center justify-center rounded-md"
+              aria-label="Open repository on GitHub"
+            >
+              <Github className="size-4" />
+            </a>
+          ) : null}
+        </TableCell>
+
         <TableCell className="py-3 pr-3 text-right">
           <Button
             variant="secondary"
@@ -150,7 +167,7 @@ export function TableRegistrySkills({ skills }: { skills: RegistrySkill[] }) {
             className="text-muted-foreground hidden w-[200px] font-medium
               lg:table-cell"
           >
-            Author
+            Registry
           </TableHead>
           <TableHead
             className="text-muted-foreground hidden w-full max-w-0 font-medium
@@ -158,6 +175,7 @@ export function TableRegistrySkills({ skills }: { skills: RegistrySkill[] }) {
           >
             About
           </TableHead>
+          <TableHead className="w-12" aria-label="Repository" />
           <TableHead className="w-[120px] pr-3" aria-label="Actions" />
         </TableRow>
       </TableHeader>
