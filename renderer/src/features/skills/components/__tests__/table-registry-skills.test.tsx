@@ -149,7 +149,7 @@ describe('TableRegistrySkills', () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
-        'io.github.user/my-skill:v1.0.0'
+        'ghcr.io/org/my-skill:v1.0.0'
       )
     })
   })

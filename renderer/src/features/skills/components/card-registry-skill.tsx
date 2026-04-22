@@ -5,6 +5,7 @@ import { useNavigate } from '@tanstack/react-router'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { CardSkillBase } from './card-skill-base'
+import { getSkillInstallReference } from '../lib/skill-reference'
 
 export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
   const [installOpen, setInstallOpen] = useState(false)
@@ -13,11 +14,7 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
   const name = skill.name ?? 'Unknown skill'
   const namespace = skill.namespace
   const description = skill.description
-  const isOci = skill.packages?.some((p) => p.registryType === 'oci')
-  const base =
-    namespace && name !== 'Unknown skill' ? `${namespace}/${name}` : name
-  const defaultReference =
-    isOci && skill.version ? `${base}:${skill.version}` : base
+  const defaultReference = getSkillInstallReference(skill)
 
   const canNavigate = !!(namespace && skill.name)
 
