@@ -29,7 +29,15 @@ function GridCardsMcpServersContent({
           const searchTerm = filters.text.toLowerCase()
           const name = mcpServer.name?.toLowerCase() || ''
           const image = mcpServer.package?.toLowerCase() || ''
-          if (!name.includes(searchTerm) && !image.includes(searchTerm)) {
+          const title =
+            (
+              mcpServer as CoreWorkload & { title?: string }
+            ).title?.toLowerCase() || ''
+          if (
+            !name.includes(searchTerm) &&
+            !image.includes(searchTerm) &&
+            !title.includes(searchTerm)
+          ) {
             return false
           }
         }

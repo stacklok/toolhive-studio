@@ -113,3 +113,47 @@ describe('GridCardsMcpServers view toggle', () => {
     })
   })
 })
+
+describe('Bug: search filter should match title', () => {
+  beforeEach(() => {
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [],
+      remote_servers: [],
+    }))
+
+    window.electronAPI.uiPreferences.getViewMode = vi
+      .fn()
+      .mockResolvedValue('card')
+    window.electronAPI.uiPreferences.setViewMode = vi
+      .fn()
+      .mockResolvedValue(undefined)
+  })
+
+  it('keeps a server visible when searching by its title (not just name/package)', async () => {
+    const serverWithTitle = {
+      name: 'pg-server',
+      status: 'running',
+      package: 'ghcr.io/example/mcp-pg:v1.0.0',
+      transport_type: 'stdio',
+      group: 'default',
+      url: 'http://localhost:8080',
+      remote: false,
+      title: 'Database Explorer',
+    } as CoreWorkload & { title: string }
+
+    const router = makeRouter([serverWithTitle])
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.getByText('pg-server')).toBeVisible()
+    })
+
+    const user = userEvent.setup()
+    const searchInput = screen.getByPlaceholderText('Search...')
+    await user.type(searchInput, 'Database Explorer')
+
+    await waitFor(() => {
+      expect(screen.getByText('pg-server')).toBeVisible()
+    })
+  })
+})
