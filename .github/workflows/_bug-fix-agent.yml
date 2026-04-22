@@ -73,153 +73,146 @@ jobs:
         if: steps.guard.outputs.skip != 'true'
         uses: ./.github/actions/setup
 
-      - name: Install Claude Code
-        if: steps.guard.outputs.skip != 'true'
-        run: pnpm add -g --ignore-scripts=false @anthropic-ai/claude-code
-
-      - name: 'Bug Fix (up to 3 attempts)'
-        id: tdd
+      - name: 'Phase 1 — Analyze & Write Failing Test (Opus)'
+        id: phase1
         if: steps.guard.outputs.skip != 'true'
         continue-on-error: true
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-          BUG_ISSUE_NUMBER: ${{ inputs.issue-number }}
+        uses: anthropics/claude-code-action@5d5c10a4f389689f992ea10bb14dcb6fcc83146d # v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read .claude/skills/bug-fix-tdd/SKILL.md and follow it.
+            Read issue-body.md for the bug report.
+
+            Your task (Phase 1 — Analysis & Test):
+            1. Analyze the bug report: understand description, steps to reproduce, expected vs actual behavior.
+            2. Search the codebase to find the relevant source code.
+            3. Write a unit test that reproduces the bug — it MUST FAIL when you run it.
+            4. Run the test with: pnpm run test:nonInteractive -- <test-file-path>
+            5. Verify the test fails FOR THE RIGHT REASON (not import errors or unrelated failures).
+            6. If the test passes (bug not reproduced), try a different approach (max 3 attempts).
+
+            Output:
+            - The test file in the correct __tests__/ directory.
+            - bug-analysis.md with your findings (follow the format in the skill).
+
+            Do NOT modify any source files. Only create/edit test files and bug-analysis.md.
+          claude_args: >-
+            --model opus
+            --max-turns 50
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(cat *),Bash(ls *)"
+
+      - name: 'Hard gate — Verify test fails'
+        id: gate
+        if: steps.guard.outputs.skip != 'true' && steps.phase1.outcome == 'success'
         run: |
-          MAX_ATTEMPTS=3
-          SUCCESS=false
+          if [ ! -f bug-analysis.md ]; then
+            echo "::warning::bug-analysis.md not found"
+            echo "test_fails=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
-          for ATTEMPT in $(seq 1 $MAX_ATTEMPTS); do
-            echo "::group::Attempt $ATTEMPT of $MAX_ATTEMPTS"
+          TEST_FILE=$(grep "^Test file:" bug-analysis.md | sed 's/^Test file: //' || true)
+          if [ -z "$TEST_FILE" ]; then
+            echo "::warning::No 'Test file:' line found in bug-analysis.md"
+            echo "test_fails=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
-            # Clean up previous attempt artifacts
-            rm -f bug-analysis.md pr-body.md fix-title.txt
-            git checkout -- . 2>/dev/null || true
-            git clean -fd 2>/dev/null || true
+          echo "test_file=$TEST_FILE" >> $GITHUB_OUTPUT
 
-            # --- Phase 1: Analyze & Write Failing Test (Opus) ---
-            echo "::notice::Phase 1 — Writing failing test (attempt $ATTEMPT)"
-            if ! claude -p --model opus \
-              --dangerously-skip-permissions \
-              --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(cat *),Bash(ls *)" \
-              --max-turns 50 \
-              "Read .claude/skills/bug-fix-tdd/SKILL.md and follow it.
-               Read issue-body.md for the bug report.
-
-               Your task (Phase 1 — Analysis & Test):
-               1. Analyze the bug report: understand description, steps to reproduce, expected vs actual behavior.
-               2. Search the codebase to find the relevant source code.
-               3. Write a unit test that reproduces the bug — it MUST FAIL when you run it.
-               4. Run the test with: pnpm run test:nonInteractive -- <test-file-path>
-               5. Verify the test fails FOR THE RIGHT REASON (not import errors or unrelated failures).
-               6. If the test passes (bug not reproduced), try a different approach (max 3 attempts).
-
-               Output:
-               - The test file in the correct __tests__/ directory.
-               - bug-analysis.md with your findings (follow the format in the skill).
-
-               Do NOT modify any source files. Only create/edit test files and bug-analysis.md."; then
-              echo "::warning::Phase 1 failed on attempt $ATTEMPT"
-              echo "::endgroup::"
-              continue
-            fi
-
-            # --- Hard gate: verify test fails ---
-            if [ ! -f bug-analysis.md ]; then
-              echo "::warning::bug-analysis.md not found — skipping attempt $ATTEMPT"
-              echo "::endgroup::"
-              continue
-            fi
-
-            TEST_FILE=$(grep "^Test file:" bug-analysis.md | sed 's/^Test file: //' || true)
-            if [ -z "$TEST_FILE" ]; then
-              echo "::warning::No 'Test file:' line found in bug-analysis.md — skipping attempt $ATTEMPT"
-              echo "::endgroup::"
-              continue
-            fi
-
-            if pnpm run test:nonInteractive -- "$TEST_FILE" 2>&1; then
-              echo "::warning::Test passed (bug not reproduced) — trying direct fix"
-
-              # --- Phase 2b: Direct fix without regression test ---
-              echo "::notice::Phase 2b — Direct fix without TDD (attempt $ATTEMPT)"
-              if ! claude -p --model sonnet \
-                --dangerously-skip-permissions \
-                --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *)" \
-                --max-turns 150 \
-                "Read .claude/skills/bug-fix-tdd/SKILL.md and bug-analysis.md.
-                 Read issue-body.md for the original bug report.
-
-                 The bug could NOT be reproduced in a unit test.
-                 bug-analysis.md contains the analysis of the bug from Phase 1.
-
-                 Your task (Phase 2b — Direct Fix):
-                 1. Read the analysis and understand the root cause.
-                 2. Apply the MINIMUM fix to resolve the bug.
-                 3. If you CAN write a regression test, do so — but it is not required.
-                 4. Run the full test suite: pnpm run test:nonInteractive
-                 5. Run pnpm run lint and pnpm run type-check.
-                 6. If any check fails, adjust the fix (max 5 attempts).
-                 7. Write pr-body.md (include 'Fixes #$BUG_ISSUE_NUMBER').
-                    Note in the PR body that no regression test was possible.
-                 8. Write fix-title.txt.
-
-                 Do NOT run git, gh, or modify .env files.
-                 Do NOT over-engineer — apply the smallest change that fixes the bug."; then
-                echo "::warning::Phase 2b failed on attempt $ATTEMPT"
-                echo "::endgroup::"
-                continue
-              fi
-            else
-              echo "::notice::Test fails as expected — proceeding to Phase 2 (TDD)"
-
-              # --- Phase 2: Implement Fix with TDD (Sonnet) ---
-              export BUG_TEST_FILE="$TEST_FILE"
-              echo "::notice::Phase 2 — Implementing fix (attempt $ATTEMPT)"
-              if ! claude -p --model sonnet \
-                --dangerously-skip-permissions \
-                --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *)" \
-                --max-turns 150 \
-                "Read .claude/skills/bug-fix-tdd/SKILL.md and bug-analysis.md.
-
-                 Your task (Phase 2 — Fix):
-                 1. Read the failing test and understand what it expects.
-                 2. Apply the MINIMUM fix to make the test pass.
-                 3. Run the test to verify it passes: pnpm run test:nonInteractive -- $BUG_TEST_FILE
-                 4. Run the full test suite: pnpm run test:nonInteractive
-                 5. Run pnpm run lint and pnpm run type-check.
-                 6. If any check fails, adjust the fix (max 5 attempts).
-                 7. Write pr-body.md (include 'Fixes #$BUG_ISSUE_NUMBER') and fix-title.txt.
-
-                 Do NOT run git, gh, or modify .env files.
-                 Do NOT over-engineer — apply the smallest change that fixes the bug."; then
-                echo "::warning::Phase 2 failed on attempt $ATTEMPT"
-                echo "::endgroup::"
-                continue
-              fi
-            fi
-
-            # --- Hard gate: verify all checks pass ---
-            if pnpm run test:nonInteractive && pnpm run lint && pnpm run type-check; then
-              echo "::notice::All checks pass on attempt $ATTEMPT"
-              SUCCESS=true
-              echo "::endgroup::"
-              break
-            else
-              echo "::warning::Verification failed on attempt $ATTEMPT"
-              echo "::endgroup::"
-              continue
-            fi
-          done
-
-          if [ "$SUCCESS" = "true" ]; then
-            echo "result=success" >> $GITHUB_OUTPUT
-            echo "test_file=$TEST_FILE" >> $GITHUB_OUTPUT
+          if pnpm run test:nonInteractive -- "$TEST_FILE" 2>&1; then
+            echo "::warning::Test passed (bug not reproduced)"
+            echo "test_fails=false" >> $GITHUB_OUTPUT
           else
+            echo "::notice::Test fails as expected"
+            echo "test_fails=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 'Phase 2 — TDD Fix (Sonnet)'
+        id: phase2
+        if: >-
+          steps.guard.outputs.skip != 'true'
+          && steps.gate.outputs.test_fails == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@5d5c10a4f389689f992ea10bb14dcb6fcc83146d # v1
+        env:
+          BUG_TEST_FILE: ${{ steps.gate.outputs.test_file }}
+          BUG_ISSUE_NUMBER: ${{ inputs.issue-number }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read .claude/skills/bug-fix-tdd/SKILL.md and bug-analysis.md.
+
+            Your task (Phase 2 — Fix):
+            1. Read the failing test and understand what it expects.
+            2. Apply the MINIMUM fix to make the test pass.
+            3. Run the test to verify it passes: pnpm run test:nonInteractive -- ${{ steps.gate.outputs.test_file }}
+            4. Run the full test suite: pnpm run test:nonInteractive
+            5. Run pnpm run lint and pnpm run type-check.
+            6. If any check fails, adjust the fix (max 5 attempts).
+            7. Write pr-body.md (include 'Fixes #${{ inputs.issue-number }}') and fix-title.txt.
+
+            Do NOT run git, gh, or modify .env files.
+            Do NOT over-engineer — apply the smallest change that fixes the bug.
+          claude_args: >-
+            --model sonnet
+            --max-turns 150
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *)"
+
+      - name: 'Phase 2b — Direct Fix without TDD (Sonnet)'
+        id: phase2b
+        if: >-
+          steps.guard.outputs.skip != 'true'
+          && steps.phase1.outcome == 'success'
+          && steps.gate.outputs.test_fails != 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@5d5c10a4f389689f992ea10bb14dcb6fcc83146d # v1
+        env:
+          BUG_ISSUE_NUMBER: ${{ inputs.issue-number }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read .claude/skills/bug-fix-tdd/SKILL.md and bug-analysis.md.
+            Read issue-body.md for the original bug report.
+
+            The bug could NOT be reproduced in a unit test.
+            bug-analysis.md contains the analysis of the bug from Phase 1.
+
+            Your task (Phase 2b — Direct Fix):
+            1. Read the analysis and understand the root cause.
+            2. Apply the MINIMUM fix to resolve the bug.
+            3. If you CAN write a regression test, do so — but it is not required.
+            4. Run the full test suite: pnpm run test:nonInteractive
+            5. Run pnpm run lint and pnpm run type-check.
+            6. If any check fails, adjust the fix (max 5 attempts).
+            7. Write pr-body.md (include 'Fixes #${{ inputs.issue-number }}').
+               Note in the PR body that no regression test was possible.
+            8. Write fix-title.txt.
+
+            Do NOT run git, gh, or modify .env files.
+            Do NOT over-engineer — apply the smallest change that fixes the bug.
+          claude_args: >-
+            --model sonnet
+            --max-turns 150
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *)"
+
+      - name: 'Hard gate — Verify all checks pass'
+        id: verify
+        if: >-
+          steps.guard.outputs.skip != 'true'
+          && (steps.phase2.outcome == 'success' || steps.phase2b.outcome == 'success')
+        run: |
+          if pnpm run test:nonInteractive && pnpm run lint && pnpm run type-check; then
+            echo "::notice::All checks pass"
+            echo "result=success" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::Verification failed"
             echo "result=failure" >> $GITHUB_OUTPUT
           fi
 
       - name: Create branch and commit
-        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success'
+        if: steps.guard.outputs.skip != 'true' && steps.verify.outputs.result == 'success'
         id: push
         run: |
           ISSUE_NUM="${{ inputs.issue-number }}"
@@ -244,7 +237,7 @@ jobs:
           fi
 
       - name: Create Pull Request
-        if: steps.guard.outputs.skip != 'true' && steps.tdd.outputs.result == 'success' && steps.push.outputs.has_changes == 'true'
+        if: steps.guard.outputs.skip != 'true' && steps.verify.outputs.result == 'success' && steps.push.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
@@ -268,7 +261,8 @@ jobs:
         if: >-
           always()
           && steps.guard.outputs.skip != 'true'
-          && steps.tdd.outputs.result == 'failure'
+          && steps.verify.outputs.result != 'success'
+          && steps.phase1.outcome != 'skipped'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -278,7 +272,7 @@ jobs:
             ANALYSIS="The agent could not analyze this bug. The issue may be too vague or involve behavior that cannot be captured in a unit test."
           fi
 
-          printf '## Bug Fix Agent — Automated Analysis\n\n%s\n\n---\n*Automated analysis by Claude Code Bug Fix Agent. All 3 attempts exhausted. A developer will review this issue manually.*\n' \
+          printf '## Bug Fix Agent — Automated Analysis\n\n%s\n\n---\n*Automated analysis by Claude Code Bug Fix Agent. A developer will review this issue manually.*\n' \
             "$ANALYSIS" > /tmp/comment-body.md
 
           gh issue comment "${{ inputs.issue-number }}" --body-file /tmp/comment-body.md

@@ -98,58 +98,51 @@ jobs:
             echo "skip=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Install Node.js
+      - name: Prepare issue summaries
         if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
-        uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e # v6
-        with:
-          node-version: 24.15.0
-
-      - name: Install Claude Code
-        if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
-        run: pnpm add -g --ignore-scripts=false @anthropic-ai/claude-code
+        run: |
+          jq -r '.[:10][] | "--- Issue #\(.number): \(.title)\n\(.body)\n"' filtered-issues.json > issues-for-triage.md
 
       - name: Evaluate issues with Claude (Sonnet)
         if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-        run: |
-          # Prepare issue summaries for Claude (limit to first 10 candidates)
-          jq -r '.[:10][] | "--- Issue #\(.number): \(.title)\n\(.body)\n"' filtered-issues.json > issues-for-triage.md
+        uses: anthropics/claude-code-action@5d5c10a4f389689f992ea10bb14dcb6fcc83146d # v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read issues-for-triage.md. These are open bug reports for a React + Electron desktop app.
 
-          claude -p --model sonnet \
-            --dangerously-skip-permissions \
-            --allowedTools "Read,Grep,Glob,Write" \
-            --max-turns 20 \
-            "Read issues-for-triage.md. These are open bug reports for a React + Electron desktop app.
+            Analyze each bug and decide if it is suitable for AUTOMATED fixing by an AI agent that:
+            - Can only write and run unit tests (Vitest + Testing Library + MSW)
+            - Cannot launch the Electron app or do visual testing
+            - Cannot test IPC, native modules, or platform-specific behavior
 
-             Analyze each bug and decide if it is suitable for AUTOMATED fixing by an AI agent that:
-             - Can only write and run unit tests (Vitest + Testing Library + MSW)
-             - Cannot launch the Electron app or do visual testing
-             - Cannot test IPC, native modules, or platform-specific behavior
+            A bug IS suitable if:
+            - Has a clear error message or stack trace
+            - Mentions a specific component, page, or feature by name
+            - Is a UI bug (wrong text, missing state, incorrect condition, wrong rendering)
+            - Has clear steps to reproduce
+            - Can be reproduced in a jsdom unit test
 
-             A bug IS suitable if:
-             - Has a clear error message or stack trace
-             - Mentions a specific component, page, or feature by name
-             - Is a UI bug (wrong text, missing state, incorrect condition, wrong rendering)
-             - Has clear steps to reproduce
-             - Can be reproduced in a jsdom unit test
+            A bug is NOT suitable if:
+            - Mentions IPC, Electron main process, or platform-specific behavior
+            - Involves timing, race conditions, or flaky behavior
+            - Is vague or lacks reproduction steps
+            - Requires manual testing or visual verification
+            - Involves packaging, code signing, or native modules
+            - Requires launching the app or E2E testing
+            - References a fix already merged or in progress in another repository (e.g., stacklok/toolhive). If the bug is caused by an upstream dependency and the fix lives outside this repo, it is NOT suitable.
+            - Mentions that the root cause is in a backend, CLI, or server component outside this React/Electron codebase
 
-             A bug is NOT suitable if:
-             - Mentions IPC, Electron main process, or platform-specific behavior
-             - Involves timing, race conditions, or flaky behavior
-             - Is vague or lacks reproduction steps
-             - Requires manual testing or visual verification
-             - Involves packaging, code signing, or native modules
-             - Requires launching the app or E2E testing
-             - References a fix already merged or in progress in another repository (e.g., stacklok/toolhive). If the bug is caused by an upstream dependency and the fix lives outside this repo, it is NOT suitable.
-             - Mentions that the root cause is in a backend, CLI, or server component outside this React/Electron codebase
+            Search the codebase with Grep/Glob to verify the mentioned components/features exist.
 
-             Search the codebase with Grep/Glob to verify the mentioned components/features exist.
+            Output ONLY a JSON array, one object per issue:
+            [{"issue": <number>, "suitable": true/false, "reason": "<one line>"}]
 
-             Output ONLY a JSON array, one object per issue:
-             [{\"issue\": <number>, \"suitable\": true/false, \"reason\": \"<one line>\"}]
-
-             Write this JSON array to a file called triage-results.json using the Write tool. Nothing else."
+            Write this JSON array to a file called triage-results.json using the Write tool. Nothing else.
+          claude_args: >-
+            --model sonnet
+            --max-turns 20
+            --allowedTools "Read,Grep,Glob,Write"
 
       - name: Apply auto-fix label (max 3 per run)
         if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
