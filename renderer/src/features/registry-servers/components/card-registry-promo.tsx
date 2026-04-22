@@ -7,11 +7,17 @@ import {
 } from '@/common/components/ui/card'
 import { Button } from '@/common/components/ui/button'
 import { trackEvent } from '@/common/lib/analytics'
-import { APP_IDENTIFIER, DOCS_BASE_URL } from '@common/app-info'
-
-const REGISTRY_DOCS_URL = `${DOCS_BASE_URL}/guides-registry/?utm_source=${APP_IDENTIFIER}`
+import { buildOnrampDocsUrl } from '@/common/lib/onramp-url'
+import { useInstanceId } from '@/common/hooks/use-instance-id'
 
 export function CardRegistryPromo() {
+  const { instanceId } = useInstanceId()
+  const registryDocsUrl = buildOnrampDocsUrl('/guides-registry/', {
+    campaign: 'custom-registry',
+    content: 'registry-view-tile',
+    instanceId,
+  })
+
   return (
     <Card className="bg-brand-green-mid gap-0 border-none p-4">
       <CardHeader className="px-0">
@@ -36,7 +42,7 @@ export function CardRegistryPromo() {
             hover:bg-brand-green-dark/90 rounded-full p-4 font-medium"
         >
           <a
-            href={REGISTRY_DOCS_URL}
+            href={registryDocsUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => trackEvent('Onramp: custom registry docs clicked')}
