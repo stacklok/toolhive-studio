@@ -32,7 +32,8 @@ import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '@utils/feature-flags'
 import { usePermissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
-import { APP_IDENTIFIER, DOCS_BASE_URL } from '@common/app-info'
+import { buildOnrampDocsUrl } from '@/common/lib/onramp-url'
+import { useInstanceId } from '@/common/hooks/use-instance-id'
 
 interface NavButtonProps {
   to: string
@@ -128,7 +129,14 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
   const isProduction = import.meta.env.MODE === 'production'
   const isActive = useIsActive()
   const { canShow } = usePermissions()
+  const { instanceId } = useInstanceId()
   const showUpdateBadge = !!(appVersion?.isNewVersionAvailable && isProduction)
+
+  const enterpriseUpgradeUrl = buildOnrampDocsUrl('/enterprise', {
+    campaign: 'enterprise-upgrade',
+    content: 'app-header',
+    instanceId,
+  })
 
   useEffect(() => {
     const cleanup = window.electronAPI.onUpdateDownloaded(() => {
@@ -174,7 +182,7 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
             asChild
           >
             <a
-              href={`${DOCS_BASE_URL}/enterprise?utm_source=${APP_IDENTIFIER}`}
+              href={enterpriseUpgradeUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() =>

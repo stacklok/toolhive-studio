@@ -108,7 +108,7 @@ describe('TopNav', () => {
         })
         expect(link).toHaveAttribute(
           'href',
-          `${DOCS_BASE_URL}/enterprise?utm_source=${APP_IDENTIFIER}`
+          `${DOCS_BASE_URL}/enterprise?utm_source=${APP_IDENTIFIER}&utm_medium=app&utm_campaign=enterprise-upgrade&utm_content=app-header&tdi=test-instance-id`
         )
       })
     })
