@@ -1,0 +1,22 @@
+{
+  "name": "ToolHive Studio",
+  "build": { "dockerfile": "Dockerfile" },
+  "postCreateCommand": "sudo chown node:node node_modules && npm install -g pnpm && pnpm install && sudo chown root:root node_modules/electron/dist/chrome-sandbox && sudo chmod 4755 node_modules/electron/dist/chrome-sandbox",
+  "postStartCommand": "sudo podman system service --time=0 unix:///run/podman.sock > /tmp/podman-service.log 2>&1 & for i in $(seq 1 50); do [ -S /run/podman.sock ] && break; sleep 0.1; done; sudo chmod 666 /run/podman.sock && sudo ln -sf /run/podman.sock /var/run/docker.sock",
+  "mounts": [
+    "source=toolhive-node-modules-${localWorkspaceFolderBasename},target=/workspaces/${localWorkspaceFolderBasename}/node_modules,type=volume"
+  ],
+  "runArgs": [
+    "--security-opt", "seccomp=unconfined",
+    "-v",
+    "${localEnv:XDG_RUNTIME_DIR}:/tmp/rt",
+    "--device",
+    "/dev/dri"
+  ],
+  "containerEnv": {
+    "XDG_RUNTIME_DIR": "/tmp/rt",
+    "ELECTRON_OZONE_PLATFORM_HINT": "wayland",
+    "DOCKER_HOST": "unix:///run/podman.sock",
+    "DOCKER_API_VERSION": "1.41"
+  }
+}

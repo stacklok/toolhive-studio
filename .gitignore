@@ -93,6 +93,9 @@ out/
 
 bin/
 
+# pnpm local store (created inside devcontainer)
+.pnpm-store/
+
 # Playwright
 /test-results/
 /playwright-report/
