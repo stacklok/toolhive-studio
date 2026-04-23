@@ -33,7 +33,7 @@
     "generate-icons": "tsx scripts/generate-icons.ts",
     "knip": "knip",
     "deeplink:registerTestLinuxProtocolHandler": "bash scripts/install-deep-link-handler.sh",
-    "linux:cagedDevServer": "bash scripts/linux-caged-dev.sh"
+    "devContainer:dev": "bash scripts/devcontainer-dev.sh"
   },
   "keywords": [],
   "license": "Apache-2.0",

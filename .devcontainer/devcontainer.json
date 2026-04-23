@@ -8,14 +8,9 @@
   ],
   "runArgs": [
     "--security-opt", "seccomp=unconfined",
-    "-v",
-    "${localEnv:XDG_RUNTIME_DIR}:/tmp/rt",
-    "--device",
-    "/dev/dri"
+    "-p", "6080:6080"
   ],
   "containerEnv": {
-    "XDG_RUNTIME_DIR": "/tmp/rt",
-    "ELECTRON_OZONE_PLATFORM_HINT": "wayland",
     "DOCKER_HOST": "unix:///run/podman.sock",
     "DOCKER_API_VERSION": "1.41"
   }
