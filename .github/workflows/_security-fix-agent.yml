@@ -80,7 +80,7 @@ jobs:
           claude_args: >-
             --model opus
             --max-turns 30
-            --allowedTools "Read,Bash(grype *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *),Edit"
+            --allowedTools "Read,Write,Bash(grype *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *)"
 
       - name: 'Phase 2: Implement Fixes (Sonnet)'
         id: phase2
@@ -104,7 +104,7 @@ jobs:
           claude_args: >-
             --model sonnet
             --max-turns 40
-            --allowedTools "Read,Edit,Bash(grype *),Bash(pnpm install *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *),Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check)"
+            --allowedTools "Read,Write,Edit,Bash(grype *),Bash(pnpm install *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *),Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check)"
 
       - name: Check for changes
         if: steps.existing.outputs.skip != 'true' && steps.phase2.outcome == 'success'
