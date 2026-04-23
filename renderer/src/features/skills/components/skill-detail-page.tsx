@@ -9,6 +9,7 @@ import {
   getSkillOciRef,
 } from '../lib/skill-reference'
 import { SkillMarkdown } from './skill-markdown'
+import { trackEvent } from '@/common/lib/analytics'
 
 interface SkillDetailPageProps {
   skill: RegistrySkill
@@ -69,11 +70,31 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
         description={description}
         actions={
           <div className="flex items-center gap-3">
-            <Button variant="action" onClick={() => setInstallOpen(true)}>
+            <Button
+              variant="action"
+              onClick={() => {
+                trackEvent('Skills: install dialog opened', {
+                  source: 'registry_detail',
+                  name,
+                  namespace: namespace ?? '',
+                })
+                setInstallOpen(true)
+              }}
+            >
               Install
             </Button>
             {skill.repository?.url && (
-              <Button asChild variant="outline" className="rounded-full">
+              <Button
+                asChild
+                variant="outline"
+                className="rounded-full"
+                onClick={() =>
+                  trackEvent('Skills: detail github clicked', {
+                    name,
+                    namespace: namespace ?? '',
+                  })
+                }
+              >
                 <a
                   href={skill.repository.url}
                   target="_blank"

@@ -28,6 +28,7 @@ import { ViewToggle } from '@/common/components/view-toggle'
 import { useViewPreference } from '@/common/hooks/use-view-preference'
 import type { GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill } from '@common/api/generated/types.gen'
 import { useNavigate, useSearch } from '@tanstack/react-router'
+import { trackEvent } from '@/common/lib/analytics'
 
 type Tab = 'registry' | 'installed' | 'builds'
 
@@ -37,16 +38,20 @@ export function SkillsPage() {
   const navigate = useNavigate({ from: '/skills' })
 
   function setTab(value: Tab) {
+    trackEvent('Skills: tab changed', { tab: value })
     void navigate({ search: { tab: value }, replace: true })
   }
 
   // Registry tab search (server-side, debounced)
   const [registrySearch, setRegistrySearch] = useState('')
   const [debouncedRegistrySearch, setDebouncedRegistrySearch] = useState('')
-  const debouncedSetRegistrySearch = useDebouncedCallback(
-    setDebouncedRegistrySearch,
-    300
-  )
+  const debouncedSetRegistrySearch = useDebouncedCallback((value: string) => {
+    setDebouncedRegistrySearch(value)
+    trackEvent('Skills: registry search', {
+      query_length: value.length,
+      has_query: value.length > 0 ? 'true' : 'false',
+    })
+  }, 300)
 
   function handleRegistrySearchChange(value: string) {
     setRegistrySearch(value)
@@ -117,7 +122,16 @@ export function SkillsPage() {
                   onChange={handleRegistrySearchChange}
                   placeholder="Search..."
                 />
-                <ViewToggle value={registryView} onChange={setRegistryView} />
+                <ViewToggle
+                  value={registryView}
+                  onChange={(view) => {
+                    trackEvent('Skills: view toggled', {
+                      tab: 'registry',
+                      view,
+                    })
+                    setRegistryView(view)
+                  }}
+                />
               </>
             )}
             {tab === 'installed' && hasSkills && (
@@ -127,7 +141,16 @@ export function SkillsPage() {
                   onChange={setInstalledFilter}
                   placeholder="Search..."
                 />
-                <ViewToggle value={installedView} onChange={setInstalledView} />
+                <ViewToggle
+                  value={installedView}
+                  onChange={(view) => {
+                    trackEvent('Skills: view toggled', {
+                      tab: 'installed',
+                      view,
+                    })
+                    setInstalledView(view)
+                  }}
+                />
               </>
             )}
             {tab === 'builds' && (
@@ -137,10 +160,24 @@ export function SkillsPage() {
                   onChange={setBuildsFilter}
                   placeholder="Search..."
                 />
-                <ViewToggle value={buildsView} onChange={setBuildsView} />
+                <ViewToggle
+                  value={buildsView}
+                  onChange={(view) => {
+                    trackEvent('Skills: view toggled', {
+                      tab: 'builds',
+                      view,
+                    })
+                    setBuildsView(view)
+                  }}
+                />
                 <Button
                   variant="action"
-                  onClick={() => setBuildOpen(true)}
+                  onClick={() => {
+                    trackEvent('Skills: build dialog opened', {
+                      source: 'builds_tab',
+                    })
+                    setBuildOpen(true)
+                  }}
                   className="shrink-0"
                 >
                   <HammerIcon className="size-4" />
@@ -186,12 +223,22 @@ export function SkillsPage() {
           {buildsView === 'table' ? (
             <TableBuilds
               filter={buildsFilter}
-              onBuild={() => setBuildOpen(true)}
+              onBuild={() => {
+                trackEvent('Skills: build dialog opened', {
+                  source: 'builds_empty_state',
+                })
+                setBuildOpen(true)
+              }}
             />
           ) : (
             <GridCardsBuilds
               filter={buildsFilter}
-              onBuild={() => setBuildOpen(true)}
+              onBuild={() => {
+                trackEvent('Skills: build dialog opened', {
+                  source: 'builds_empty_state',
+                })
+                setBuildOpen(true)
+              }}
             />
           )}
         </TabsContent>

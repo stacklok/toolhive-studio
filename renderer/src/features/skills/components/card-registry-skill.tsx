@@ -6,6 +6,7 @@ import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { CardSkillBase } from './card-skill-base'
 import { getSkillInstallReference } from '../lib/skill-reference'
+import { trackEvent } from '@/common/lib/analytics'
 
 export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
   const [installOpen, setInstallOpen] = useState(false)
@@ -20,6 +21,11 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
 
   function handleCardClick() {
     if (!canNavigate) return
+    trackEvent('Skills: registry card opened', {
+      source: 'registry_card',
+      name,
+      namespace: namespace ?? '',
+    })
     void navigate({
       to: '/skills/$namespace/$skillName',
       params: { namespace: namespace!, skillName: skill.name! },
@@ -39,7 +45,14 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
               <Button
                 variant="ghost"
                 asChild
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  trackEvent('Skills: registry card github clicked', {
+                    source: 'registry_card',
+                    name,
+                    namespace: namespace ?? '',
+                  })
+                }}
                 className="relative z-10"
               >
                 <a
@@ -57,6 +70,11 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
               className="rounded-full"
               onClick={(e) => {
                 e.stopPropagation()
+                trackEvent('Skills: install dialog opened', {
+                  source: 'registry_card',
+                  name,
+                  namespace: namespace ?? '',
+                })
                 setInstallOpen(true)
               }}
             >

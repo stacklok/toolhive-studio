@@ -40,6 +40,7 @@ import {
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { ChevronDown, FolderOpenIcon, TriangleAlertIcon } from 'lucide-react'
 import { useMutationInstallSkill } from '../hooks/use-mutation-install-skill'
+import { trackEvent } from '@/common/lib/analytics'
 
 const formSchema = z
   .object({
@@ -100,6 +101,7 @@ export function DialogInstallSkill({
   const scope = useWatch({ control: form.control, name: 'scope' })
 
   function handleClose() {
+    trackEvent('Skills: install dialog cancelled')
     form.reset()
     setSubmitError(null)
     onOpenChange(false)
@@ -108,12 +110,18 @@ export function DialogInstallSkill({
   async function handleBrowseProjectRoot() {
     const selected = await window.electronAPI.selectFolder()
     if (selected) {
+      trackEvent('Skills: install project root selected')
       form.setValue('project_root', selected, { shouldValidate: true })
     }
   }
 
   async function onSubmit(values: FormSchema) {
     setSubmitError(null)
+    trackEvent('Skills: install dialog submitted', {
+      scope: values.scope,
+      has_version: values.version ? 'true' : 'false',
+      clients_count: values.clients?.length ?? 0,
+    })
     try {
       await installSkill({
         body: {
@@ -125,7 +133,9 @@ export function DialogInstallSkill({
           version: values.version || undefined,
         },
       })
-      handleClose()
+      form.reset()
+      setSubmitError(null)
+      onOpenChange(false)
     } catch (err) {
       const message =
         err instanceof Error
@@ -197,6 +207,7 @@ export function DialogInstallSkill({
                   <Select
                     value={field.value}
                     onValueChange={(v) => {
+                      trackEvent('Skills: install scope changed', { scope: v })
                       field.onChange(v)
                       if (v === 'user') {
                         form.setValue('project_root', '')
@@ -290,11 +301,13 @@ export function DialogInstallSkill({
                               }
                               onCheckedChange={(isChecked) => {
                                 const current = field.value ?? []
-                                field.onChange(
-                                  isChecked
-                                    ? [...current, clientType]
-                                    : current.filter((v) => v !== clientType)
-                                )
+                                const next = isChecked
+                                  ? [...current, clientType]
+                                  : current.filter((v) => v !== clientType)
+                                trackEvent('Skills: install clients changed', {
+                                  clients_count: next.length,
+                                })
+                                field.onChange(next)
                               }}
                               onSelect={(e) => e.preventDefault()}
                             >
