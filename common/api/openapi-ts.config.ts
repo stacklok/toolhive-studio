@@ -5,8 +5,7 @@ export default defineConfig({
   output: {
     case: undefined,
     path: './generated',
-    format: 'prettier',
-    lint: 'eslint',
+    postProcess: ['prettier'],
   },
   plugins: [
     ...defaultPlugins,
