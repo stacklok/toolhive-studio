@@ -67,7 +67,7 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
             ) : null}
             <Button
               variant="secondary"
-              className="rounded-full"
+              className="relative z-10 rounded-full"
               onClick={(e) => {
                 e.stopPropagation()
                 trackEvent('Skills: install dialog opened', {
