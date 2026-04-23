@@ -23,3 +23,26 @@ exclude:
   - '**/test-videos/**'
   - '**/.vite/**'
   - '**/.cache/**'
+
+ignore:
+  # Scoped to version 5.5.8 so the ignore stops applying automatically as soon
+  # as the pin in pnpm.overrides is bumped to a non-regressing upstream release.
+  - vulnerability: GHSA-gh4j-gqv2-49f6
+    package:
+      name: fast-xml-parser
+      version: 5.5.8
+      type: npm
+    reason: >-
+      Pinned to 5.5.8 because 5.7.0/5.7.1 break @aws-sdk/xml-builder
+      (see https://github.com/NaturalIntelligence/fast-xml-parser/issues/823),
+      which in turn breaks @electron-forge/publisher-s3 during release.
+      The advisory only affects XMLBuilder.buildComment / buildCdata with
+      unescaped user input; this repo does not use those APIs. Revisit once
+      upstream ships a non-regressing patch (>=5.7.2).
+  - vulnerability: CVE-2026-41650
+    package:
+      name: fast-xml-parser
+      version: 5.5.8
+      type: npm
+    reason: >-
+      Same advisory as GHSA-gh4j-gqv2-49f6. See note above.
