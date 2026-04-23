@@ -106,7 +106,11 @@ async function waitForOptimizerCleanup(baseUrl: string): Promise<void> {
             customGroup?.registered_clients?.includes(TEST_CLIENT) ?? false,
         }
       },
-      { timeout: 60_000, intervals: [500, 1000, 2000] }
+      // App-side readiness wait can itself take up to TOOLHIVE_READY_MAX_WAIT_MS
+      // (60s). Give the poll a budget that exceeds that plus cleanup time so
+      // slow CI runners don't flake even though in practice this completes
+      // well under a second.
+      { timeout: 120_000, intervals: [500, 1000, 2000] }
     )
     .toEqual({ optimizerGone: true, customHasClient: true })
 }

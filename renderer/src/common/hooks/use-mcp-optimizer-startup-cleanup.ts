@@ -19,11 +19,12 @@ const TOOLHIVE_READY_MAX_WAIT_MS = 60_000
 export function useMcpOptimizerStartupCleanup() {
   const { cleanupMetaOptimizer } = useCleanupMetaOptimizer()
   const hasRunCleanup = useRef(false)
+  const inFlight = useRef(false)
 
   useEffect(() => {
     const runCleanup = async () => {
-      if (hasRunCleanup.current) return
-      hasRunCleanup.current = true
+      if (hasRunCleanup.current || inFlight.current) return
+      inFlight.current = true
 
       try {
         const ready = await waitForToolhiveReady()
@@ -34,10 +35,13 @@ export function useMcpOptimizerStartupCleanup() {
           return
         }
 
+        hasRunCleanup.current = true
         await cleanupMetaOptimizer()
         log.info('MCP Optimizer startup cleanup completed')
       } catch (error) {
         log.error('Error during MCP Optimizer startup cleanup:', error)
+      } finally {
+        inFlight.current = false
       }
     }
 

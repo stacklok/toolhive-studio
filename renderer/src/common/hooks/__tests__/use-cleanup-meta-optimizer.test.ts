@@ -170,4 +170,55 @@ describe('useCleanupMetaOptimizer', () => {
     )
     expect(deleteGroupCalls.length).toBe(1)
   })
+
+  it('skips client restoration when ALLOWED_GROUPS points to a missing group', async () => {
+    const rec = recordRequests()
+
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['client1'],
+        },
+      ],
+    }))
+
+    mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+      ...data,
+      name: META_MCP_SERVER_NAME,
+      env_vars: {
+        ALLOWED_GROUPS: 'nonexistent-group',
+      },
+    }))
+
+    mockedDeleteApiV1BetaGroupsByName.override(() => '')
+
+    const { result } = renderHook(() => useCleanupMetaOptimizer(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      await result.current.cleanupMetaOptimizer()
+    })
+
+    const registerCalls = rec.recordedRequests.filter(
+      (r) =>
+        r.method === 'POST' &&
+        r.pathname.includes('/api/v1beta/clients/register')
+    )
+    expect(registerCalls.length).toBe(0)
+
+    const unregisterCalls = rec.recordedRequests.filter(
+      (r) => r.method === 'DELETE' && r.pathname.includes('/api/v1beta/clients')
+    )
+    expect(unregisterCalls.length).toBe(1)
+
+    const deleteGroupCalls = rec.recordedRequests.filter(
+      (r) =>
+        r.method === 'DELETE' &&
+        r.pathname.includes(`/api/v1beta/groups/${MCP_OPTIMIZER_GROUP_NAME}`)
+    )
+    expect(deleteGroupCalls.length).toBe(1)
+  })
 })

@@ -114,7 +114,18 @@ export function useCleanupMetaOptimizer() {
           path: { name: META_MCP_SERVER_NAME },
         })
       )
-      allowedGroup = workloadDetail?.env_vars?.ALLOWED_GROUPS
+      // ALLOWED_GROUPS is a single group name in the UI, but parse defensively:
+      // trim whitespace, pick the first non-empty entry if comma-separated, and
+      // only treat it as a valid restoration target when the group still exists.
+      const parsedAllowedGroup =
+        workloadDetail?.env_vars?.ALLOWED_GROUPS?.split(',')
+          .map((g) => g.trim())
+          .find(Boolean)
+      const allowedGroupExists = parsedAllowedGroup
+        ? (groupsData?.groups?.some((g) => g.name === parsedAllowedGroup) ??
+          false)
+        : false
+      allowedGroup = allowedGroupExists ? parsedAllowedGroup : undefined
     } catch {
       // meta-mcp workload may no longer exist (404); that's fine - we just
       // skip the restoration step and proceed with unregistering + delete.
