@@ -5,15 +5,14 @@ export default defineConfig({
   output: {
     case: undefined,
     path: './generated',
-    format: 'prettier',
-    lint: 'eslint',
+    postProcess: ['prettier'],
   },
   plugins: [
-    ...defaultPlugins,
-    '@tanstack/react-query',
+    ...defaultPlugins.filter((p) => p !== '@hey-api/typescript'),
     {
       name: '@hey-api/typescript',
       enums: false,
     },
+    '@tanstack/react-query',
   ],
 })
