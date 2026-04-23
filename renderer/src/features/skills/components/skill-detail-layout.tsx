@@ -1,9 +1,16 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type MouseEvent,
+  type ReactNode,
+} from 'react'
 import { ChevronLeft } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { RegistryDetailHeader } from '@/features/registry-servers/components/registry-detail-header'
 import { cn } from '@/common/lib/utils'
+import { useCanGoBack, useRouter } from '@tanstack/react-router'
 
 interface SkillDetailLayoutProps {
   title: string
@@ -26,6 +33,24 @@ export function SkillDetailLayout({
 }: SkillDetailLayoutProps) {
   const headerRef = useRef<HTMLDivElement>(null)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
+  const router = useRouter()
+  const canGoBack = useCanGoBack()
+
+  const handleBackClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!canGoBack) return
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return
+    }
+    event.preventDefault()
+    router.history.back()
+  }
 
   useEffect(() => {
     const target = headerRef.current
@@ -50,6 +75,7 @@ export function SkillDetailLayout({
           backTo={backTo}
           backSearch={backSearch}
           badges={badges}
+          historyBack
         />
       </div>
 
@@ -69,7 +95,11 @@ export function SkillDetailLayout({
             <div className="overflow-hidden">
               <div className="flex flex-col gap-3 pb-1">
                 <div>
-                  <LinkViewTransition to={backTo} search={backSearch}>
+                  <LinkViewTransition
+                    to={backTo}
+                    search={backSearch}
+                    onClick={handleBackClick}
+                  >
                     <Button
                       variant="outline"
                       aria-label="Back"

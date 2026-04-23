@@ -1,7 +1,8 @@
 import { Button } from '@/common/components/ui/button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { ChevronLeft } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { MouseEvent, ReactNode } from 'react'
+import { useCanGoBack, useRouter } from '@tanstack/react-router'
 
 type RegistryDetailHeaderProps = {
   title: string
@@ -9,6 +10,13 @@ type RegistryDetailHeaderProps = {
   backSearch?: Record<string, unknown>
   badges?: ReactNode
   description?: string | null
+  /**
+   * When true, clicking the back button navigates using browser history
+   * (`router.history.back()`) so the previous search params (e.g. pagination)
+   * are restored. Falls back to navigating to `backTo` when there is no
+   * in-app history to go back to (direct deep-links).
+   */
+  historyBack?: boolean
 }
 
 export function RegistryDetailHeader({
@@ -17,11 +25,36 @@ export function RegistryDetailHeader({
   backSearch,
   badges,
   description,
+  historyBack = false,
 }: RegistryDetailHeaderProps) {
+  const router = useRouter()
+  const canGoBack = useCanGoBack()
+
+  const handleBackClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!historyBack || !canGoBack) return
+    // Let the browser handle modifier-clicks (open in new tab, etc.)
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return
+    }
+    event.preventDefault()
+    router.history.back()
+  }
+
   return (
     <div className="w-full">
       <div className="mb-5">
-        <LinkViewTransition to={backTo} search={backSearch}>
+        <LinkViewTransition
+          to={backTo}
+          search={backSearch}
+          onClick={handleBackClick}
+        >
           <Button variant="outline" aria-label="Back" className="rounded-full">
             <ChevronLeft className="size-4" />
             Back
