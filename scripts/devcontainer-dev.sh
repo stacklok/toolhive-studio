@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
+# If we're already inside a container (Codespaces, VS Code Dev Containers, etc.),
+# skip the build/exec dance and run the display stack directly. Port 6080 is
+# forwarded via devcontainer.json, and Codespaces auto-opens the preview pane.
+if [ -f /.dockerenv ]; then
+  exec bash scripts/devcontainer-entrypoint.sh
+fi
+
 DEVCONTAINER="npx --yes @devcontainers/cli"
 WORKDIR="$(pwd)"
 URL="http://localhost:6080/vnc.html?autoconnect=1&resize=remote"
