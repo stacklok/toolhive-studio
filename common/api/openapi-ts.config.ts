@@ -8,11 +8,11 @@ export default defineConfig({
     postProcess: ['prettier'],
   },
   plugins: [
-    ...defaultPlugins,
-    '@tanstack/react-query',
+    ...defaultPlugins.filter((p) => p !== '@hey-api/typescript'),
     {
       name: '@hey-api/typescript',
       enums: false,
     },
+    '@tanstack/react-query',
   ],
 })
