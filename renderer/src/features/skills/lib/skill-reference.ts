@@ -7,15 +7,11 @@ function getOciPackage(skill: RegistrySkill): RegistrySkillPackage | undefined {
   )
 }
 
-export function getOciPackageReference(
-  skill: RegistrySkill
-): string | undefined {
+function getOciPackageReference(skill: RegistrySkill): string | undefined {
   return getOciPackage(skill)?.identifier
 }
 
-export function getNamespaceNameReference(
-  skill: RegistrySkill
-): string | undefined {
+function getNamespaceNameReference(skill: RegistrySkill): string | undefined {
   if (skill.namespace && skill.name) {
     return `${skill.namespace}/${skill.name}`
   }
