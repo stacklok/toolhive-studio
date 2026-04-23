@@ -30,6 +30,15 @@ export interface LaunchedApp {
   app: ElectronApplication
   window: Page
   baseUrl: string
+  /**
+   * Terminate the app without waiting on the renderer's before-quit teardown.
+   *
+   * On Linux CI the regular `ElectronApplication.close()` has been observed to
+   * hang indefinitely when a session has seeded a running workload via the thv
+   * API (the graceful shutdown path waits on a remote workload that never
+   * drains). We bypass that path via `app.exit(0)` and fall back to SIGKILL.
+   */
+  close: () => Promise<void>
 }
 
 /**
@@ -56,7 +65,8 @@ export async function launchApp(userDataDir: string): Promise<LaunchedApp> {
     throw new Error(`Sentry request blocked: ${route.request().url()}`)
   })
 
-  // Disable quit confirmation so app.close() returns quickly.
+  // Disable quit confirmation dialog as a safety net; our close() helper also
+  // force-exits, so this mostly keeps manual tear-downs clean.
   await window.evaluate(async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     await (globalThis as any).electronAPI.setSkipQuitConfirmation(true)
@@ -77,7 +87,33 @@ export async function launchApp(userDataDir: string): Promise<LaunchedApp> {
 
   await waitForThvReady(baseUrl)
 
-  return { app, window, baseUrl }
+  const close = async () => {
+    // Force an immediate exit via Electron's app.exit(), bypassing before-quit
+    // handlers, the confirmation dialog, and any pending graceful-shutdown
+    // work (e.g. waiting on seeded workloads to drain).
+    try {
+      await app.evaluate(({ app: electronApp }) => electronApp.exit(0))
+    } catch {
+      // Renderer/main may already be gone; ignore.
+    }
+
+    // Give the process a short window to exit cleanly, then hard-kill.
+    const proc = app.process()
+    await Promise.race([
+      app.close().catch(() => {}),
+      new Promise<void>((resolve) => setTimeout(resolve, 5_000)),
+    ])
+
+    if (proc.exitCode === null && !proc.killed) {
+      try {
+        proc.kill('SIGKILL')
+      } catch {
+        // Process may have exited between the check and the kill.
+      }
+    }
+  }
+
+  return { app, window, baseUrl, close }
 }
 
 /**

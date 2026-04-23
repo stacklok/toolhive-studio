@@ -156,7 +156,7 @@ test.describe('MCP Optimizer startup cleanup', () => {
       expect(seededOptimizer?.registered_clients).toContain(TEST_CLIENT)
       expect(seeded?.groups?.some((g) => g.name === CUSTOM_GROUP)).toBe(true)
     } finally {
-      await firstLaunch.app.close()
+      await firstLaunch.close()
     }
 
     // Session 2: relaunching with the same userDataDir should trigger the
@@ -180,7 +180,7 @@ test.describe('MCP Optimizer startup cleanup', () => {
         true
       )
     } finally {
-      await secondLaunch.app.close()
+      await secondLaunch.close()
     }
   })
 })
