@@ -31,9 +31,4 @@ RUN apt-get update && apt-get install -y \
     fluxbox \
     novnc \
     websockify \
-    podman \
-    fuse-overlayfs \
-    uidmap \
-    && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /etc/containers \
-    && printf '[storage]\ndriver = "vfs"\nrunroot = "/run/containers/storage"\ngraphroot = "/var/lib/containers/storage"\n' > /etc/containers/storage.conf
+    && rm -rf /var/lib/apt/lists/*

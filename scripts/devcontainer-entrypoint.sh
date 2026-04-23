@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
-# Clean up lingering services from a previous run (the container persists between invocations)
+# Clean up lingering services and stale lock files from a previous run
 pkill -f 'Xvfb :99' 2>/dev/null || true
 pkill -f 'fluxbox' 2>/dev/null || true
 pkill -f 'x11vnc.*:99' 2>/dev/null || true
 pkill -f 'websockify.*6080' 2>/dev/null || true
 sleep 0.3
+rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
 
 # Tear down on exit so Ctrl+C doesn't orphan the display stack
 trap 'jobs -p | xargs -r kill 2>/dev/null' EXIT INT TERM

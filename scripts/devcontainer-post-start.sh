@@ -1,11 +1,6 @@
 #!/usr/bin/env bash
-set -e
-
-# Start rootful Podman + Docker-compatible socket for ToolHive's bundled thv CLI
-sudo podman system service --time=0 unix:///run/podman.sock > /tmp/podman-service.log 2>&1 &
-for i in $(seq 1 50); do [ -S /run/podman.sock ] && break; sleep 0.1; done
-sudo chmod 666 /run/podman.sock
-sudo ln -sf /run/podman.sock /var/run/docker.sock
+# Docker daemon is provided by the docker-in-docker devcontainer feature; no
+# manual container runtime setup needed here.
 
 # In Codespaces, auto-start the display stack + dev server so the noVNC preview
 # pane opens without the user typing anything. Locally, users run

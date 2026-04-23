@@ -1,6 +1,9 @@
 {
   "name": "ToolHive Studio",
   "build": { "dockerfile": "Dockerfile" },
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
   "postCreateCommand": "sudo chown node:node node_modules && npm install -g pnpm && pnpm install && sudo chown root:root node_modules/electron/dist/chrome-sandbox && sudo chmod 4755 node_modules/electron/dist/chrome-sandbox",
   "postStartCommand": "bash scripts/devcontainer-post-start.sh",
   "mounts": [
@@ -11,10 +14,6 @@
     "--shm-size=2g",
     "-p", "6080:6080"
   ],
-  "containerEnv": {
-    "DOCKER_HOST": "unix:///run/podman.sock",
-    "DOCKER_API_VERSION": "1.41"
-  },
   "forwardPorts": [6080],
   "portsAttributes": {
     "6080": {
