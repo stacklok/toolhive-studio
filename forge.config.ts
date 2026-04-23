@@ -81,9 +81,19 @@ const config: ForgeConfig = {
     },
 
     // MacOS Code Signing Configuration
-    osxSign: process.env.MAC_DEVELOPER_IDENTITY
-      ? { identity: process.env.MAC_DEVELOPER_IDENTITY }
-      : {}, // Auto-detect certificates
+    // Only enable signing when credentials are actually available. Without
+    // this guard, `osxSign: {}` asks electron-osx-sign to auto-detect a
+    // codesign identity, which fails on runners that don't have one
+    // imported (e.g. PR validation builds and local dev).
+    osxSign: (() => {
+      if (process.env.MAC_DEVELOPER_IDENTITY) {
+        return { identity: process.env.MAC_DEVELOPER_IDENTITY }
+      }
+      if (process.env.APPLE_API_KEY || process.env.APPLE_ID) {
+        return {} // Auto-detect certificates
+      }
+      return undefined
+    })(),
 
     // Windows Code Signing Configuration
     // Azure Trusted Signing (preferred) with DigiCert KeyLocker fallback.
