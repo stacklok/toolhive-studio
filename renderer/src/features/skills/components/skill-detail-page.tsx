@@ -4,7 +4,10 @@ import { TagIcon, GitForkIcon, GithubIcon, ScaleIcon } from 'lucide-react'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { SkillDetailLayout } from './skill-detail-layout'
-import { getSkillOciRef } from '../lib/get-skill-oci-ref'
+import {
+  getSkillInstallReference,
+  getSkillOciRef,
+} from '../lib/skill-reference'
 import { SkillMarkdown } from './skill-markdown'
 
 interface SkillDetailPageProps {
@@ -19,10 +22,7 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
   const description = skill.description
   const version = skill.version
   const license = skill.license
-  const isOci = skill.packages?.some((p) => p.registryType === 'oci')
-  const base =
-    namespace && name !== 'Unknown skill' ? `${namespace}/${name}` : name
-  const defaultReference = isOci && version ? `${base}:${version}` : base
+  const defaultReference = getSkillInstallReference(skill)
   const ociRef = getSkillOciRef(skill)
 
   const hasBadges = !!(version || namespace || license)

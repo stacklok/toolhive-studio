@@ -17,15 +17,7 @@ import {
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
 import { DialogInstallSkill } from './dialog-install-skill'
-
-function getDefaultReference(skill: RegistrySkill): string {
-  const name = skill.name ?? 'Unknown skill'
-  const namespace = skill.namespace
-  const base =
-    namespace && name !== 'Unknown skill' ? `${namespace}/${name}` : name
-  const isOci = skill.packages?.some((p) => p.registryType === 'oci')
-  return isOci && skill.version ? `${base}:${skill.version}` : base
-}
+import { getSkillInstallReference } from '../lib/skill-reference'
 
 function activateOnKey(e: React.KeyboardEvent, onActivate: () => void) {
   if (e.key === 'Enter' || e.key === ' ') {
@@ -141,7 +133,7 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
       <DialogInstallSkill
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={getDefaultReference(skill)}
+        defaultReference={getSkillInstallReference(skill)}
       />
     </>
   )

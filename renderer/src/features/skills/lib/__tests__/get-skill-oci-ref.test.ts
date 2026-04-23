@@ -1,6 +1,6 @@
 import { expect, it, describe } from 'vitest'
-import { getSkillOciRef } from '../get-skill-oci-ref'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
+import { getSkillOciRef } from '../skill-reference'
 
 describe('getSkillOciRef', () => {
   it('returns undefined when skill has no packages, namespace, or name', () => {

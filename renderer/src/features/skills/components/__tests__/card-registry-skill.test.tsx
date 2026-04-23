@@ -191,7 +191,26 @@ describe('CardRegistrySkill', () => {
       })
     })
 
-    it('prefills the reference as namespace/name in the install dialog', async () => {
+    it('prefills the install dialog with the OCI package identifier', async () => {
+      const user = userEvent.setup()
+      const skillRouter = createCardTestRouter({
+        ...baseSkill,
+        version: 'v1.2.3',
+        packages: [{ registryType: 'oci', identifier: 'ghcr.io/org/my-skill' }],
+      }) as unknown as ReturnType<typeof createTestRouter>
+      await skillRouter.navigate({ to: '/skills' })
+      renderRoute(skillRouter)
+
+      await user.click(screen.getByRole('button', { name: /install/i }))
+
+      await waitFor(() => {
+        expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
+          'ghcr.io/org/my-skill'
+        )
+      })
+    })
+
+    it('prefills the install dialog with namespace/name for non-OCI skills', async () => {
       const user = userEvent.setup()
       renderRoute(router)
 
