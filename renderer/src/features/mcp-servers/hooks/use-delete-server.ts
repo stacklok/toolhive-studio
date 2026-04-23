@@ -12,7 +12,7 @@ import { pollServerDelete } from '@/common/lib/polling'
 import { fetchPollingQuery } from '@/common/lib/polling-query'
 import { useQueryClient } from '@tanstack/react-query'
 
-export function useDeleteServer({ name }: { name: string; group?: string }) {
+export function useDeleteServer({ name }: { name: string }) {
   const queryClient = useQueryClient()
   const queryKey = getApiV1BetaWorkloadsQueryKey({ query: { all: true } })
 

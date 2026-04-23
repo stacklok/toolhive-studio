@@ -145,7 +145,14 @@ export function useCleanupMetaOptimizer() {
             `Restored clients ${registeredClients.join(', ')} to ${allowedGroup} group`
           )
         } catch (error) {
-          log.error(`Error restoring clients to group ${allowedGroup}:`, error)
+          // Abort before touching the optimizer group. The startup hook will
+          // retry on the next launch, so clients are never orphaned between
+          // "removed from optimizer" and "restored to target".
+          log.error(
+            `Failed to restore clients to group "${allowedGroup}"; aborting cleanup to retry on next launch`,
+            error
+          )
+          return
         }
       }
 
@@ -154,10 +161,20 @@ export function useCleanupMetaOptimizer() {
       }
     }
 
-    await deleteGroup({
-      path: { name: MCP_OPTIMIZER_GROUP_NAME },
-      query: { 'with-workloads': true },
-    })
+    try {
+      await deleteGroup({
+        path: { name: MCP_OPTIMIZER_GROUP_NAME },
+        query: { 'with-workloads': true },
+      })
+    } catch (error) {
+      // The group may have been removed between our initial fetch and here
+      // (e.g. concurrent CLI teardown). Treat 404 as success so the migration
+      // doesn't appear to fail when the end state is already what we wanted.
+      const status =
+        (error as { status?: number })?.status ??
+        (error as { response?: { status?: number } })?.response?.status
+      if (status !== 404) throw error
+    }
   }, [deleteGroup, registerClients, unregisterClients])
 
   return { cleanupMetaOptimizer }

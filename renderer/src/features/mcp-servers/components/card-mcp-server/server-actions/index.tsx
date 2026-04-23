@@ -88,7 +88,7 @@ export function ServerActionsDropdown({
         )}
         <LogsMenuItem serverName={name} remote={remote} group={group} />
         <CustomizeToolsMenuItem serverName={name} status={status} />
-        <RemoveServerMenuItem serverName={name} group={group} />
+        <RemoveServerMenuItem serverName={name} />
         <DropdownMenuSeparator />
         <AddServerToGroupMenuItem serverName={name} />
       </DropdownMenuContent>

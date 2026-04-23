@@ -13,6 +13,7 @@ import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workl
 import { mockedPostApiV1BetaClientsRegister } from '@/common/mocks/fixtures/clients_register/post'
 import { mockedDeleteApiV1BetaGroupsByName } from '@/common/mocks/fixtures/groups_name/delete'
 import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
+import { HttpResponse } from 'msw'
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -169,6 +170,56 @@ describe('useCleanupMetaOptimizer', () => {
         r.pathname.includes(`/api/v1beta/groups/${MCP_OPTIMIZER_GROUP_NAME}`)
     )
     expect(deleteGroupCalls.length).toBe(1)
+  })
+
+  it('aborts cleanup when client restoration fails, leaving state intact for retry', async () => {
+    const rec = recordRequests()
+
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [
+        {
+          name: MCP_OPTIMIZER_GROUP_NAME,
+          registered_clients: ['client1'],
+        },
+        {
+          name: 'production',
+          registered_clients: [],
+        },
+      ],
+    }))
+
+    mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+      ...data,
+      name: META_MCP_SERVER_NAME,
+      env_vars: {
+        ALLOWED_GROUPS: 'production',
+      },
+    }))
+
+    mockedPostApiV1BetaClientsRegister.overrideHandler(() =>
+      HttpResponse.json({ detail: 'boom' }, { status: 500 })
+    )
+
+    const { result } = renderHook(() => useCleanupMetaOptimizer(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      await result.current.cleanupMetaOptimizer()
+    })
+
+    const unregisterCalls = rec.recordedRequests.filter(
+      (r) => r.method === 'DELETE' && r.pathname.includes('/api/v1beta/clients')
+    )
+    expect(unregisterCalls.length).toBe(0)
+
+    const deleteGroupCalls = rec.recordedRequests.filter(
+      (r) =>
+        r.method === 'DELETE' &&
+        r.pathname.includes(`/api/v1beta/groups/${MCP_OPTIMIZER_GROUP_NAME}`)
+    )
+    expect(deleteGroupCalls.length).toBe(0)
   })
 
   it('skips client restoration when ALLOWED_GROUPS points to a missing group', async () => {

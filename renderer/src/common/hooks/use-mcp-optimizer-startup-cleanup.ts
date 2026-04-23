@@ -26,6 +26,7 @@ export function useMcpOptimizerStartupCleanup() {
       if (hasRunCleanup.current || inFlight.current) return
       inFlight.current = true
 
+      const startTime = Date.now()
       try {
         const ready = await waitForToolhiveReady()
         if (!ready) {
@@ -37,7 +38,9 @@ export function useMcpOptimizerStartupCleanup() {
 
         hasRunCleanup.current = true
         await cleanupMetaOptimizer()
-        log.info('MCP Optimizer startup cleanup completed')
+        log.info(
+          `MCP Optimizer startup cleanup completed in ${Date.now() - startTime}ms`
+        )
       } catch (error) {
         log.error('Error during MCP Optimizer startup cleanup:', error)
       } finally {
