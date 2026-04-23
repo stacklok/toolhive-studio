@@ -49,14 +49,11 @@ export const GITHUB_PAGES_MANIFEST_URL =
 export const DOCS_BASE_URL = 'https://docs.stacklok.com/toolhive'
 export const DISCORD_URL = 'https://discord.gg/stacklok'
 export const DEMO_URL = 'https://stacklok.com/demo/'
-export const MCP_OPTIMIZER_SUNSET_BLOG_URL =
-  'https://stacklok.com/blog/mcp-optimizer-is-now-built-into-the-stacklok-platform/'
 
 // ── Registry ─────────────────────────────────────────────────────────────────
 
 export const DEFAULT_REGISTRY_JSON_URL =
   'https://raw.githubusercontent.com/stacklok/toolhive/refs/heads/main/pkg/registry/data/registry.json'
-export const MCP_OPTIMIZER_IMAGE = 'ghcr.io/stackloklabs/mcp-optimizer'
 
 // ── Privacy / legal ──────────────────────────────────────────────────────────
 

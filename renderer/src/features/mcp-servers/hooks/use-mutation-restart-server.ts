@@ -11,7 +11,6 @@ import { useToastMutation } from '@/common/hooks/use-toast-mutation'
 import { pollServerStatus } from '@/common/lib/polling'
 import { fetchPollingQuery } from '@/common/lib/polling-query'
 import { useQueryClient } from '@tanstack/react-query'
-import { useNotificationOptimizer } from './use-notification-optimizer'
 
 const getMutationData = (name: string) => ({
   ...postApiV1BetaWorkloadsByNameRestartMutation(),
@@ -31,7 +30,6 @@ export function useMutationRestartServer({
   const queryKey = getApiV1BetaWorkloadsQueryKey({
     query: { all: true, group: group ?? 'default' },
   })
-  const notifyChangeWithOptimizer = useNotificationOptimizer()
 
   return useToastMutation({
     ...getMutationData(name),
@@ -71,7 +69,6 @@ export function useMutationRestartServer({
           'running'
         )
       )
-      notifyChangeWithOptimizer(group ?? 'default')
       queryClient.invalidateQueries({ queryKey })
     },
     onError: (_error, _variables, context) => {

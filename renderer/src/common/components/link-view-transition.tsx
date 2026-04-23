@@ -7,7 +7,6 @@ const ORDERED_ROUTES: Route[] = [
   '/skills',
   '/group/default' as Route,
   '/group/$groupName',
-  '/mcp-optimizer',
   '/logs/$groupName/$serverName',
   '/registry',
 ]

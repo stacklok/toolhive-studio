@@ -14,7 +14,6 @@ import { trackEvent } from '@/common/lib/analytics'
 import { restartClientNotification } from '@/features/mcp-servers/lib/restart-client-notification'
 import type { FormSchemaRegistryMcp } from '../lib/form-schema-registry-mcp'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
-import { useNotificationOptimizer } from '@/features/mcp-servers/hooks/use-notification-optimizer'
 
 export function useRunFromRegistry({
   onSecretSuccess,
@@ -33,7 +32,6 @@ export function useRunFromRegistry({
     onSecretSuccess,
     onSecretError,
   })
-  const notifyChangeWithOptimizer = useNotificationOptimizer()
 
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
@@ -44,7 +42,6 @@ export function useRunFromRegistry({
       })
       const body: V1CreateRequest = variables.body
       const groupName = body.group || 'default'
-      notifyChangeWithOptimizer(groupName, quietly)
       trackEvent(`Workload ${data.name} started`, {
         workload: data.name,
         is_default_group: String(groupName === 'default'),

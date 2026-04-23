@@ -11,7 +11,6 @@ import type {
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
 import { getProxyModeOrDefault } from '@/common/lib/proxy-mode'
 import type { FormSchemaLocalMcp } from './form-schema-local-mcp'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 
 /**
  * Transforms the type specific (e.g. docker vs package manager) data from the
@@ -262,10 +261,6 @@ export function prepareUpdateLocalWorkloadData(
       ? data.image
       : `${data.protocol}://${data.package_name}`
 
-  const permissionProfile =
-    data.group === MCP_OPTIMIZER_GROUP_NAME
-      ? data.permission_profile
-      : undefined
   const sendProxyMode = data.transport === 'stdio'
 
   return {
@@ -291,7 +286,7 @@ export function prepareUpdateLocalWorkloadData(
             } as PermissionsOutboundNetworkPermissions,
           },
         }
-      : permissionProfile,
+      : undefined,
     volumes: getVolumes(data.volumes ?? []),
     tools: data.tools || undefined,
     tools_override: data.tools_override || undefined,

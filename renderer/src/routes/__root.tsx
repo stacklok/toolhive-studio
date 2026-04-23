@@ -20,7 +20,6 @@ import '@fontsource-variable/inter/wght.css'
 import '@fontsource-variable/merriweather/wght.css'
 import log from 'electron-log/renderer'
 import { CustomPortBanner } from '@/common/components/custom-port-banner'
-import { McpOptimizerSunsetBanner } from '@/common/components/mcp-optimizer-sunset-banner'
 import { NewsletterModal } from '@/common/components/newsletter-modal'
 import { NewsletterModalProvider } from '@/common/contexts/newsletter-modal-provider'
 import { ExpertConsultationBanner } from '@/common/components/expert-consultation-banner'
@@ -47,7 +46,6 @@ function RootComponent() {
     <NewsletterModalProvider>
       {!hideNav && <TopNav />}
       {!hideNav && import.meta.env.DEV && <CustomPortBanner />}
-      {!hideNav && <McpOptimizerSunsetBanner />}
       <Main>
         <Outlet />
         <Toaster
