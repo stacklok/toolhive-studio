@@ -8,6 +8,7 @@
   ],
   "runArgs": [
     "--security-opt", "seccomp=unconfined",
+    "--shm-size=2g",
     "-p", "6080:6080"
   ],
   "containerEnv": {

@@ -20,8 +20,15 @@ RUN apt-get update && apt-get install -y \
     libxss1 \
     libxtst6 \
     libatspi2.0-0 \
+    libgl1-mesa-dri \
+    libegl-mesa0 \
+    libegl1 \
     xvfb \
     x11vnc \
+    x11-utils \
+    x11-apps \
+    imagemagick \
+    fluxbox \
     novnc \
     websockify \
     podman \
