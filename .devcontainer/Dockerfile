@@ -31,4 +31,9 @@ RUN apt-get update && apt-get install -y \
     fluxbox \
     novnc \
     websockify \
+    dbus \
+    dbus-x11 \
+    gnome-keyring \
+    libsecret-1-0 \
+    libsecret-1-dev \
     && rm -rf /var/lib/apt/lists/*
