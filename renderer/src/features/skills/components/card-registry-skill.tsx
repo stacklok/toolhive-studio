@@ -22,6 +22,7 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
   function handleCardClick() {
     if (!canNavigate) return
     trackEvent('Skills: registry card opened', {
+      source: 'registry_card',
       name,
       namespace: namespace ?? '',
     })
@@ -47,6 +48,7 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
                 onClick={(e) => {
                   e.stopPropagation()
                   trackEvent('Skills: registry card github clicked', {
+                    source: 'registry_card',
                     name,
                     namespace: namespace ?? '',
                   })
