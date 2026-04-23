@@ -1,4 +1,4 @@
-import { renderHook, waitFor, act } from '@testing-library/react'
+import { renderHook, act } from '@testing-library/react'
 import { vi, describe, it, expect, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { type ReactNode } from 'react'
@@ -13,14 +13,6 @@ import { mockedGetApiV1BetaWorkloadsByName } from '@/common/mocks/fixtures/workl
 import { mockedPostApiV1BetaClientsRegister } from '@/common/mocks/fixtures/clients_register/post'
 import { mockedDeleteApiV1BetaGroupsByName } from '@/common/mocks/fixtures/groups_name/delete'
 import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
-
-// Mock dependencies
-vi.mock('../use-feature-flag')
-vi.mock('@/features/mcp-servers/hooks/use-mutation-delete-group')
-
-const { useFeatureFlag } = await import('../use-feature-flag')
-const { useMutationDeleteGroup } =
-  await import('@/features/mcp-servers/hooks/use-mutation-delete-group')
 
 function createWrapper() {
   const queryClient = new QueryClient({
@@ -40,19 +32,11 @@ function createWrapper() {
 }
 
 describe('useCleanupMetaOptimizer', () => {
-  const mockDeleteGroup = vi.fn()
-  const mockUnregisterClient = vi.fn()
-
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useMutationDeleteGroup).mockReturnValue({
-      mutateAsync: mockDeleteGroup,
-    } as unknown as ReturnType<typeof useMutationDeleteGroup>)
   })
 
   it('returns cleanupMetaOptimizer function', () => {
-    vi.mocked(useFeatureFlag).mockReturnValue(false)
-
     const { result } = renderHook(() => useCleanupMetaOptimizer(), {
       wrapper: createWrapper(),
     })
@@ -61,43 +45,58 @@ describe('useCleanupMetaOptimizer', () => {
     expect(typeof result.current.cleanupMetaOptimizer).toBe('function')
   })
 
-  it('does not cleanup when feature flags are disabled', async () => {
-    vi.mocked(useFeatureFlag).mockReturnValue(false)
-
-    const { result } = renderHook(() => useCleanupMetaOptimizer(), {
-      wrapper: createWrapper(),
-    })
-
-    await result.current.cleanupMetaOptimizer()
-
-    expect(mockDeleteGroup).not.toHaveBeenCalled()
-    expect(mockUnregisterClient).not.toHaveBeenCalled()
-  })
-
-  it('does not cleanup when group has no registered clients', async () => {
-    vi.mocked(useFeatureFlag).mockReturnValue(true)
+  it('does not cleanup when optimizer group does not exist', async () => {
+    const rec = recordRequests()
 
     mockedGetApiV1BetaGroups.override((data) => ({
       ...data,
-      groups: [{ name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] }],
+      groups: [{ name: 'default', registered_clients: [] }],
     }))
 
     const { result } = renderHook(() => useCleanupMetaOptimizer(), {
       wrapper: createWrapper(),
     })
 
-    await waitFor(() => {
-      expect(result.current.cleanupMetaOptimizer).toBeDefined()
+    await act(async () => {
+      await result.current.cleanupMetaOptimizer()
     })
 
-    await result.current.cleanupMetaOptimizer()
+    const deleteGroupCalls = rec.recordedRequests.filter(
+      (r) =>
+        r.method === 'DELETE' &&
+        r.pathname.includes(`/api/v1beta/groups/${MCP_OPTIMIZER_GROUP_NAME}`)
+    )
+    expect(deleteGroupCalls.length).toBe(0)
+  })
 
-    expect(mockDeleteGroup).not.toHaveBeenCalled()
+  it('deletes the group even when it has no registered clients', async () => {
+    const rec = recordRequests()
+
+    mockedGetApiV1BetaGroups.override((data) => ({
+      ...data,
+      groups: [{ name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] }],
+    }))
+
+    mockedDeleteApiV1BetaGroupsByName.override(() => '')
+
+    const { result } = renderHook(() => useCleanupMetaOptimizer(), {
+      wrapper: createWrapper(),
+    })
+
+    await act(async () => {
+      await result.current.cleanupMetaOptimizer()
+    })
+
+    const deleteGroupCalls = rec.recordedRequests.filter(
+      (r) =>
+        r.method === 'DELETE' &&
+        r.pathname.includes(`/api/v1beta/groups/${MCP_OPTIMIZER_GROUP_NAME}`)
+    )
+    expect(deleteGroupCalls.length).toBe(1)
   })
 
   it('removes all clients and deletes group when cleanup is called', async () => {
     const rec = recordRequests()
-    vi.mocked(useFeatureFlag).mockReturnValue(true)
 
     mockedGetApiV1BetaGroups.override((data) => ({
       ...data,
@@ -130,24 +129,14 @@ describe('useCleanupMetaOptimizer', () => {
       wrapper: createWrapper(),
     })
 
-    await waitFor(() => {
-      const groupsCalls = rec.recordedRequests.filter(
-        (r) => r.method === 'GET' && r.pathname.includes('/api/v1beta/groups')
-      )
-      expect(groupsCalls.length).toBeGreaterThan(0)
-    })
-
     await act(async () => {
       await result.current.cleanupMetaOptimizer()
     })
 
-    await waitFor(() => {
-      const deleteCalls = rec.recordedRequests.filter(
-        (r) =>
-          r.method === 'DELETE' && r.pathname.includes('/api/v1beta/clients')
-      )
-      expect(deleteCalls.length).toBe(2)
-    })
+    const deleteCalls = rec.recordedRequests.filter(
+      (r) => r.method === 'DELETE' && r.pathname.includes('/api/v1beta/clients')
+    )
+    expect(deleteCalls.length).toBe(2)
 
     // Verify clients were registered to allowed group first
     const registerCalls = rec.recordedRequests.filter(
