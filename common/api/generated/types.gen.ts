@@ -361,8 +361,8 @@ export type GithubComStacklokToolhivePkgAuthTokenexchangeConfig = {
   scopes?: Array<string>
   /**
    * SubjectTokenType specifies the type of the subject token being exchanged.
-   * Common values: tokenTypeAccessToken (default), tokenTypeIDToken, tokenTypeJWT.
-   * If empty, defaults to tokenTypeAccessToken.
+   * Common values: oauth.TokenTypeAccessToken (default), oauth.TokenTypeIDToken, oauth.TokenTypeJWT.
+   * If empty, defaults to oauth.TokenTypeAccessToken.
    */
   subject_token_type?: string
   /**
@@ -1094,6 +1094,13 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Only applicable when using Kubernetes runtime
    */
   k8s_pod_template_patch?: string
+  /**
+   * MCPServerGeneration is the K8s .metadata.generation of the MCPServer CR that rendered
+   * this RunConfig. The Kubernetes runtime uses it as a monotonic version to prevent stale
+   * rolling-update pods from overwriting a newer RunConfig's StatefulSet apply. Zero value
+   * means unversioned (backward-compat with older operators, or non-operator callers).
+   */
+  mcpserver_generation?: number
   /**
    * MiddlewareConfigs contains the list of middleware to apply to the transport
    * and the configuration for each middleware.
@@ -4202,17 +4209,33 @@ export type PostApiV1BetaSkillsErrors = {
    */
   400: string
   /**
+   * Unauthorized (registry refused credentials)
+   */
+  401: string
+  /**
+   * Not Found (artifact not present in registry)
+   */
+  404: string
+  /**
    * Conflict
    */
   409: string
+  /**
+   * Too Many Requests (registry rate limit)
+   */
+  429: string
   /**
    * Internal Server Error
    */
   500: string
   /**
-   * Bad Gateway
+   * Bad Gateway (upstream registry failure)
    */
   502: string
+  /**
+   * Gateway Timeout (upstream pull timed out)
+   */
+  504: string
 }
 
 export type PostApiV1BetaSkillsError =
@@ -4347,13 +4370,29 @@ export type GetApiV1BetaSkillsContentErrors = {
    */
   400: string
   /**
+   * Unauthorized (registry refused credentials)
+   */
+  401: string
+  /**
+   * Not Found (artifact not present in registry)
+   */
+  404: string
+  /**
+   * Too Many Requests (registry rate limit)
+   */
+  429: string
+  /**
    * Internal Server Error
    */
   500: string
   /**
-   * Bad Gateway
+   * Bad Gateway (upstream registry or git resolver failure)
    */
   502: string
+  /**
+   * Gateway Timeout (upstream pull timed out)
+   */
+  504: string
 }
 
 export type GetApiV1BetaSkillsContentError =
