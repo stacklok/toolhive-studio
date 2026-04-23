@@ -42,11 +42,14 @@ export function Pagination({
     return null
   }
 
+  // Guard against non-positive pageSize so downstream math (ceil / multiply)
+  // can't produce Infinity or negative ranges.
+  const safePageSize = Math.max(1, Math.floor(pageSize))
   const safePage = Math.max(1, page)
-  const totalPages = Math.max(1, Math.ceil(total / pageSize))
+  const totalPages = Math.max(1, Math.ceil(total / safePageSize))
   const currentPage = Math.min(safePage, totalPages)
-  const firstItem = total === 0 ? 0 : (currentPage - 1) * pageSize + 1
-  const lastItem = Math.min(currentPage * pageSize, total)
+  const firstItem = total === 0 ? 0 : (currentPage - 1) * safePageSize + 1
+  const lastItem = Math.min(currentPage * safePageSize, total)
   const isFirstPage = currentPage <= 1
   const isLastPage = currentPage >= totalPages
 
