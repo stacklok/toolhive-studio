@@ -31,10 +31,7 @@ import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useGroups } from '@/features/mcp-servers/hooks/use-groups'
 import { AlertErrorFetchingEditingData } from '@/common/components/workloads/alert-error-fetching-editing-data'
-import {
-  META_MCP_SERVER_NAME,
-  UI_POST_SUBMIT_DELAY_MS,
-} from '@/common/lib/constants'
+import { UI_POST_SUBMIT_DELAY_MS } from '@/common/lib/constants'
 import { delay } from '@utils/delay'
 
 type Tab = 'configuration' | 'network-isolation'
@@ -365,10 +362,7 @@ export function DialogFormLocalMcp({
     serverToEdit,
   ])
 
-  const title =
-    serverToEdit === META_MCP_SERVER_NAME
-      ? 'MCP Optimizer server'
-      : `${serverToEdit} MCP server`
+  const title = serverToEdit ? `${serverToEdit} MCP server` : 'MCP server'
 
   return (
     <DialogWorkloadFormWrapper

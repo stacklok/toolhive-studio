@@ -1,11 +1,7 @@
 import type { ReactNode } from 'react'
 import { twMerge } from 'tailwind-merge'
-import { useMcpOptimizerBannerVisible } from '@/common/hooks/use-mcp-optimizer-banner-visible'
-import { MCP_OPTIMIZER_BANNER_HEIGHT_REM } from '@/common/lib/constants'
 
 export function Main(props: { children: ReactNode; className?: string }) {
-  const isBannerVisible = useMcpOptimizerBannerVisible()
-
   return (
     <main
       {...props}
@@ -18,9 +14,6 @@ export function Main(props: { children: ReactNode; className?: string }) {
       )}
       style={{
         scrollbarGutter: 'stable both-edges',
-        height: isBannerVisible
-          ? `calc(100dvh - 4rem - ${MCP_OPTIMIZER_BANNER_HEIGHT_REM})`
-          : undefined,
       }}
     />
   )

@@ -13,7 +13,6 @@ import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
 import { useMutationUpdateWorkload } from './use-mutation-update-workload'
 import { useLocation } from '@tanstack/react-router'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
-import { useNotificationOptimizer } from './use-notification-optimizer'
 import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 type UseUpdateServerOptions<TIsRemote extends boolean = false> = {
@@ -42,7 +41,6 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
     onSecretSuccess: options?.onSecretSuccess || (() => {}),
     onSecretError: options?.onSecretError || (() => {}),
   })
-  const notifyChangeWithOptimizer = useNotificationOptimizer()
   const updateWorkload = useMutationUpdateWorkload()
 
   const { mutateAsync: updateServerMutation } = useMutation({
@@ -121,7 +119,6 @@ export function useUpdateServer<TIsRemote extends boolean = false>(
       await restartClientNotification({
         queryClient,
       })
-      notifyChangeWithOptimizer(data.group)
     },
     onSuccess: async (_, variables) => {
       trackEvent(

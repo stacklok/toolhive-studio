@@ -71,14 +71,14 @@ describe('Feature Flags', () => {
     it('should return value from SQLite when available', () => {
       vi.mocked(readFeatureFlag).mockReturnValueOnce(true)
 
-      const result = getFeatureFlag(featureFlagKeys.META_OPTIMIZER)
+      const result = getFeatureFlag(featureFlagKeys.SKILLS)
       expect(result).toBe(true)
     })
 
     it('should return false (default) when SQLite returns undefined', () => {
       vi.mocked(readFeatureFlag).mockReturnValueOnce(undefined)
 
-      const result = getFeatureFlag(featureFlagKeys.META_OPTIMIZER)
+      const result = getFeatureFlag(featureFlagKeys.SKILLS)
       expect(result).toBe(false)
     })
 
@@ -86,6 +86,13 @@ describe('Feature Flags', () => {
       vi.mocked(readFeatureFlag).mockImplementationOnce(() => {
         throw new Error('DB error')
       })
+
+      const result = getFeatureFlag(featureFlagKeys.SKILLS)
+      expect(result).toBe(false)
+    })
+
+    it('should always return false for disabled flags regardless of SQLite', () => {
+      vi.mocked(readFeatureFlag).mockReturnValueOnce(true)
 
       const result = getFeatureFlag(featureFlagKeys.META_OPTIMIZER)
       expect(result).toBe(false)
@@ -128,17 +135,24 @@ describe('Feature Flags', () => {
   })
 
   describe('enableFeatureFlag', () => {
-    it.each(Object.entries(featureFlagKeys))(
-      'should write true to SQLite for %s when enabled',
-      (_name, key) => {
-        enableFeatureFlag(key)
+    it('should write true to SQLite for enabled flags', () => {
+      enableFeatureFlag(featureFlagKeys.SKILLS)
 
-        expect(writeFeatureFlag).toHaveBeenCalledWith(
-          `feature_flag_${key}`,
-          true
-        )
-      }
-    )
+      expect(writeFeatureFlag).toHaveBeenCalledWith(
+        `feature_flag_${featureFlagKeys.SKILLS}`,
+        true
+      )
+    })
+
+    it('should not write to SQLite for disabled flags', () => {
+      // META_OPTIMIZER is disabled (isDisabled: true)
+      enableFeatureFlag(featureFlagKeys.META_OPTIMIZER)
+
+      expect(writeFeatureFlag).not.toHaveBeenCalledWith(
+        `feature_flag_${featureFlagKeys.META_OPTIMIZER}`,
+        true
+      )
+    })
   })
 
   describe('disableFeatureFlag', () => {

@@ -13,18 +13,11 @@ import {
   getApiV1BetaClients,
   deleteApiV1BetaClientsByNameGroupsByGroup,
 } from '@common/api/generated/sdk.gen'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
-import { useIsOptimizedGroupName } from './use-is-optimized-group-name'
 
 export function useManageClients(groupName: string) {
   const { data: groupsData } = useQuery({
     ...getApiV1BetaGroupsOptions(),
   })
-  const optimizerClients =
-    groupsData?.groups?.find((g) => g.name === MCP_OPTIMIZER_GROUP_NAME)
-      ?.registered_clients ?? []
-
-  const isOptimizedGroupName = useIsOptimizedGroupName(groupName)
   const { data: clientsData } = useQuery({
     ...getApiV1BetaDiscoveryClientsOptions(),
     staleTime: 0,
@@ -140,10 +133,7 @@ export function useManageClients(groupName: string) {
   const defaultValues: Record<string, boolean> = installedClients.reduce(
     (acc, client) => {
       const fieldName = getClientFieldName(client.client_type!)
-      const clientsToCheck = isOptimizedGroupName
-        ? optimizerClients
-        : registeredClientsInGroup
-      acc[fieldName] = clientsToCheck.includes(client.client_type!)
+      acc[fieldName] = registeredClientsInGroup.includes(client.client_type!)
       return acc
     },
     {} as Record<string, boolean>

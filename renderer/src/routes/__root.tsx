@@ -11,6 +11,7 @@ import {
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { Toaster } from '@/common/components/ui/sonner'
 import { useRestartShutdownServers } from '@/common/hooks/use-restart-shutdown-servers'
+import { useMcpOptimizerStartupCleanup } from '@/common/hooks/use-mcp-optimizer-startup-cleanup'
 import '@fontsource/space-mono/400.css'
 import '@fontsource/atkinson-hyperlegible/400.css'
 import '@fontsource/atkinson-hyperlegible/700.css'
@@ -20,7 +21,6 @@ import '@fontsource-variable/inter/wght.css'
 import '@fontsource-variable/merriweather/wght.css'
 import log from 'electron-log/renderer'
 import { CustomPortBanner } from '@/common/components/custom-port-banner'
-import { McpOptimizerSunsetBanner } from '@/common/components/mcp-optimizer-sunset-banner'
 import { NewsletterModal } from '@/common/components/newsletter-modal'
 import { NewsletterModalProvider } from '@/common/contexts/newsletter-modal-provider'
 import { ExpertConsultationBanner } from '@/common/components/expert-consultation-banner'
@@ -41,13 +41,13 @@ function RootComponent() {
   const hideNav = isShutdownRoute || isCliIssueRoute
 
   useRestartShutdownServers()
+  useMcpOptimizerStartupCleanup()
   useRegistryErrorToast()
 
   return (
     <NewsletterModalProvider>
       {!hideNav && <TopNav />}
       {!hideNav && import.meta.env.DEV && <CustomPortBanner />}
-      {!hideNav && <McpOptimizerSunsetBanner />}
       <Main>
         <Outlet />
         <Toaster

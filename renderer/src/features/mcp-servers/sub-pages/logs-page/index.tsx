@@ -11,7 +11,6 @@ import { RefreshButton } from '@/common/components/refresh-button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { highlight } from './search'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { Skeleton } from '@/common/components/ui/skeleton'
 
 // Generate skeleton counts once to avoid calling Math.random during render
@@ -73,16 +72,10 @@ export function LogsPage() {
       )
     : logLines
 
-  // Special handling for MCP optimizer group - navigate back to optimizer page
-  const backLink =
-    groupName === MCP_OPTIMIZER_GROUP_NAME
-      ? { to: '/mcp-optimizer' as const }
-      : { to: '/group/$groupName' as const, params: { groupName } }
-
   return (
     <div className="flex h-full w-full flex-col">
       <div className="mb-2">
-        <LinkViewTransition {...backLink}>
+        <LinkViewTransition to="/group/$groupName" params={{ groupName }}>
           <Button variant="outline" aria-label="Back" className="rounded-full">
             <ChevronLeft className="size-4" />
             Back
@@ -90,11 +83,7 @@ export function LogsPage() {
         </LinkViewTransition>
       </div>
       <div className="flex flex-col gap-5">
-        <h1 className="text-page-title m-0 p-0">
-          {groupName === MCP_OPTIMIZER_GROUP_NAME
-            ? 'MCP Optimizer'
-            : serverName}
-        </h1>
+        <h1 className="text-page-title m-0 p-0">{serverName}</h1>
 
         <div className="mb-4 flex justify-between">
           <InputSearch

@@ -11,18 +11,10 @@ import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/disc
 import { mockedPostApiV1BetaClientsRegister } from '@/common/mocks/fixtures/clients_register/post'
 import { mockedGetApiV1BetaClients } from '@/common/mocks/fixtures/clients/get'
 
-vi.mock('@/common/hooks/use-feature-flag')
-vi.mock('@/features/meta-mcp/hooks/use-mcp-optimizer-clients')
-
-const { useFeatureFlag } = await import('@/common/hooks/use-feature-flag')
-const { useMcpOptimizerClients } =
-  await import('@/features/meta-mcp/hooks/use-mcp-optimizer-clients')
-
 // Use the shared request recorder from mocks/node.ts for consistency
 
 describe('ManageClientsButton – BDD flows', () => {
   let queryClient: QueryClient
-  const saveGroupClientsMock = vi.fn()
 
   beforeEach(() => {
     queryClient = new QueryClient({
@@ -31,26 +23,15 @@ describe('ManageClientsButton – BDD flows', () => {
         mutations: { retry: false },
       },
     })
-    vi.mocked(useFeatureFlag).mockReturnValue(true)
-    vi.mocked(useMcpOptimizerClients).mockReturnValue({
-      saveGroupClients: saveGroupClientsMock,
-      restoreClientsToGroup: vi.fn(),
-    } as unknown as ReturnType<typeof useMcpOptimizerClients>)
     vi.clearAllMocks()
   })
 
-  const renderWithProviders = (props: {
-    groupName: string
-    isOptimizedGroupName?: boolean
-  }) =>
+  const renderWithProviders = (props: { groupName: string }) =>
     render(
       <QueryClientProvider client={queryClient}>
         <PromptProvider>
           <Suspense fallback={null}>
-            <ManageClientsButton
-              isOptimizedGroupName={props.isOptimizedGroupName ?? false}
-              {...props}
-            />
+            <ManageClientsButton {...props} />
           </Suspense>
         </PromptProvider>
       </QueryClientProvider>
@@ -59,10 +40,7 @@ describe('ManageClientsButton – BDD flows', () => {
   it('enables multiple clients for a group', async () => {
     mockedGetApiV1BetaGroups.override((data) => ({
       ...data,
-      groups: [
-        { name: 'default', registered_clients: [] },
-        { name: '__mcp-optimizer__', registered_clients: [] },
-      ],
+      groups: [{ name: 'default', registered_clients: [] }],
     }))
 
     mockedGetApiV1BetaDiscoveryClients.override((data) => ({
@@ -135,10 +113,7 @@ describe('ManageClientsButton – BDD flows', () => {
     // Given: no clients are registered in the group
     mockedGetApiV1BetaGroups.override((data) => ({
       ...data,
-      groups: [
-        { name: 'default', registered_clients: [] },
-        { name: '__mcp-optimizer__', registered_clients: [] },
-      ],
+      groups: [{ name: 'default', registered_clients: [] }],
     }))
 
     mockedGetApiV1BetaDiscoveryClients.override((data) => ({
@@ -209,10 +184,6 @@ describe('ManageClientsButton – BDD flows', () => {
           name: 'default',
           registered_clients: ['vscode', 'cursor', 'claude-code'],
         },
-        {
-          name: '__mcp-optimizer__',
-          registered_clients: [],
-        },
       ],
     }))
 
@@ -266,10 +237,7 @@ describe('ManageClientsButton – BDD flows', () => {
   it('handles mixed enable and disable changes', async () => {
     mockedGetApiV1BetaGroups.override((data) => ({
       ...data,
-      groups: [
-        { name: 'default', registered_clients: ['vscode', 'cursor'] },
-        { name: '__mcp-optimizer__', registered_clients: [] },
-      ],
+      groups: [{ name: 'default', registered_clients: ['vscode', 'cursor'] }],
     }))
 
     mockedGetApiV1BetaDiscoveryClients.override((data) => ({
@@ -337,13 +305,7 @@ describe('ManageClientsButton – BDD flows', () => {
   it('makes no calls when nothing changes', async () => {
     mockedGetApiV1BetaGroups.override((data) => ({
       ...data,
-      groups: [
-        { name: 'default', registered_clients: ['vscode', 'cursor'] },
-        {
-          name: '__mcp-optimizer__',
-          registered_clients: ['vscode', 'cursor'],
-        },
-      ],
+      groups: [{ name: 'default', registered_clients: ['vscode', 'cursor'] }],
     }))
 
     mockedGetApiV1BetaDiscoveryClients.override((data) => ({
@@ -411,46 +373,5 @@ describe('ManageClientsButton – BDD flows', () => {
       )
     ).toEqual([])
     // no-op
-  })
-
-  it("doesn't sync client when mcp optimizer is disabled", async () => {
-    vi.mocked(useFeatureFlag).mockReturnValue(false)
-
-    mockedGetApiV1BetaGroups.override((data) => ({
-      ...data,
-      groups: [
-        { name: 'default', registered_clients: ['vscode', 'cursor'] },
-        { name: '__mcp-optimizer__', registered_clients: [] },
-      ],
-    }))
-
-    mockedGetApiV1BetaDiscoveryClients.override((data) => ({
-      ...data,
-      clients: [
-        { client_type: 'vscode', installed: true },
-        { client_type: 'cursor', installed: true },
-        { client_type: 'claude-code', installed: true },
-      ],
-    }))
-
-    mockedPostApiV1BetaClientsRegister.activateScenario('empty')
-
-    mockedGetApiV1BetaClients.override(() => [
-      { name: 'vscode', groups: ['default'] },
-      { name: 'cursor', groups: ['default'] },
-      { name: 'claude-code', groups: [] },
-    ])
-
-    renderWithProviders({ groupName: 'default' })
-    const user = userEvent.setup()
-    await user.click(
-      await screen.findByRole('button', { name: /manage clients/i })
-    )
-    await screen.findByRole('heading', { name: /manage clients/i })
-    await user.click(await screen.findByRole('switch', { name: 'vscode' }))
-    await user.click(await screen.findByRole('switch', { name: 'claude-code' }))
-    await user.click(await screen.findByRole('button', { name: /save/i }))
-
-    expect(saveGroupClientsMock).not.toHaveBeenCalled()
   })
 })

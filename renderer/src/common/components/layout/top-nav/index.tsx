@@ -90,7 +90,7 @@ function TopNavLinks() {
           <NavButton
             to="/group/default"
             icon={Server}
-            isActive={isActive(['/group/', '/mcp-optimizer'])}
+            isActive={isActive(['/group/'])}
           >
             MCP Servers
           </NavButton>

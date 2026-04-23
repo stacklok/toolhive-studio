@@ -9,7 +9,9 @@ const FLAG_STORE_PREFIX = 'feature_flag_'
 
 const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
   [featureFlagKeys.META_OPTIMIZER]: {
-    isDisabled: false,
+    // MCP Optimizer has been sunset. The flag is kept for one release to allow
+    // the startup cleanup to detect if the user had it enabled before.
+    isDisabled: true,
     defaultValue: false,
     isExperimental: true,
   },

@@ -11,7 +11,6 @@ import {
   Router,
 } from '@tanstack/react-router'
 import { mockedGetApiV1BetaGroups } from '@/common/mocks/fixtures/groups/get'
-import { MCP_OPTIMIZER_GROUP_NAME } from '@/common/lib/constants'
 import { setFeatureFlags } from '@mocks/electronAPI'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 import { Route as GroupGroupNameRouteImport } from '@/routes/group.$groupName'
@@ -106,14 +105,12 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     expect(screen.queryByText('archive')).not.toBeInTheDocument()
   })
 
-  it('hides the mcp-optimizer group when META_OPTIMIZER flag is enabled', async () => {
-    setFeatureFlags({ meta_optimizer: true })
-
+  it('renders all groups including custom ones', async () => {
     mockedGetApiV1BetaGroups.override((data) => ({
       ...data,
       groups: [
         { name: 'default', registered_clients: [] },
-        { name: MCP_OPTIMIZER_GROUP_NAME, registered_clients: [] },
+        { name: '__custom-group__', registered_clients: [] },
         { name: 'production', registered_clients: [] },
       ],
     }))
@@ -123,9 +120,8 @@ describe('Groups Manager in Index route (feature flagged)', () => {
     await waitFor(() => {
       expect(screen.getByText('default')).toBeVisible()
       expect(screen.getByText('production')).toBeVisible()
+      expect(screen.getByText('__custom-group__')).toBeVisible()
     })
-
-    expect(screen.queryByText(MCP_OPTIMIZER_GROUP_NAME)).not.toBeInTheDocument()
   })
 })
 

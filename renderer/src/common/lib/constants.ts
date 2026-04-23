@@ -1,20 +1,6 @@
+// Kept for startup cleanup migration - removes any residual __mcp-optimizer__ group
 export const MCP_OPTIMIZER_GROUP_NAME = '__mcp-optimizer__'
+// Kept for startup cleanup migration - queries the optimizer workload for ALLOWED_GROUPS
 export const META_MCP_SERVER_NAME = 'toolhive-mcp-optimizer'
-export const ALLOWED_GROUPS_ENV_VAR = 'ALLOWED_GROUPS'
-export const MCP_OPTIMIZER_REGISTRY_SERVER_NAME = 'mcp-optimizer'
-export const DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME = 'meta-mcp'
+
 export const UI_POST_SUBMIT_DELAY_MS = 1000
-
-/**
- * Reference version for the MCP Optimizer Docker image.
- * This is managed by Renovate and updated automatically when new versions are released.
- * renovate: datasource=docker depName=ghcr.io/stackloklabs/mcp-optimizer versioning=docker
- */
-export const MCP_OPTIMIZER_IMAGE_VERSION = '0.3.0'
-export { MCP_OPTIMIZER_IMAGE as MCP_OPTIMIZER_BASE_IMAGE } from '@common/app-info'
-
-export const MCP_OPTIMIZER_BANNER_ROUTES = [
-  '/group/$groupName',
-  '/mcp-optimizer',
-]
-export const MCP_OPTIMIZER_BANNER_HEIGHT_REM = '3rem'

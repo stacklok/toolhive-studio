@@ -10,7 +10,6 @@ import {
 import { restartClientNotification } from '../lib/restart-client-notification'
 import { trackEvent } from '@/common/lib/analytics'
 import { useMCPSecrets } from '@/common/hooks/use-mcp-secrets'
-import { useNotificationOptimizer } from './use-notification-optimizer'
 import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 
 interface UseRunRemoteServerProps {
@@ -51,7 +50,6 @@ export function useRunRemoteServer({
     onSecretSuccess,
     onSecretError,
   })
-  const notifyChangeWithOptimizer = useNotificationOptimizer()
 
   const { mutateAsync: createWorkload } = useMutation({
     ...postApiV1BetaWorkloadsMutation(),
@@ -84,7 +82,6 @@ export function useRunRemoteServer({
         queryClient,
         quietly,
       })
-      notifyChangeWithOptimizer(data.group, quietly)
       trackEvent(`Workload remote ${data.name} started`, {
         remote: 'true',
         auth_type: data.auth_type,

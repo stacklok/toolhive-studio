@@ -19,24 +19,12 @@ import { InputSearch } from '@/common/components/ui/input-search'
 import { ViewToggle } from '@/common/components/view-toggle'
 import { useFilterSort } from '@/common/hooks/use-filter-sort'
 import { useViewPreference } from '@/common/hooks/use-view-preference'
-import {
-  DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
-  MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
-} from '@/common/lib/constants'
-import { META_MCP_SERVER_NAME } from '@/common/lib/constants'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '@utils/feature-flags'
 import type { RegistryItem } from '@/features/registry-servers/types'
 import { DOCS_BASE_URL } from '@common/app-info'
 
-const SKIP_META_MCP = [
-  DEPRECATED_MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
-  MCP_OPTIMIZER_REGISTRY_SERVER_NAME,
-]
 const DEFAULT_REGISTRY_NAME = 'default'
 
 export default function RegistryRouteComponent() {
-  const isMetaOptimizerEnabled = useFeatureFlag(featureFlagKeys.META_OPTIMIZER)
   const { data: serversData } = useSuspenseQuery(
     getApiV1BetaRegistryByNameServersOptions({
       path: { name: DEFAULT_REGISTRY_NAME },
@@ -55,24 +43,17 @@ export default function RegistryRouteComponent() {
   const groups =
     (registryData as V1GetRegistryResponse | undefined)?.registry?.groups || []
 
-  const servers = [...serversList, ...remoteServersList].filter(
-    (server) => !SKIP_META_MCP.includes(server.name ?? '')
-  )
+  const servers = [...serversList, ...remoteServersList]
 
   const isDefaultRegistry =
     !registryData?.type || registryData.type === 'default'
-
-  const filteredServers =
-    isMetaOptimizerEnabled && isDefaultRegistry
-      ? servers.filter((server) => server.name !== META_MCP_SERVER_NAME)
-      : servers
 
   const items: RegistryItem[] = [
     ...groups.map((group: RegistryGroup) => ({
       ...group,
       type: 'group' as const,
     })),
-    ...filteredServers.map((server) => ({
+    ...servers.map((server) => ({
       ...server,
       type: 'server' as const,
     })),

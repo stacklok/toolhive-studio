@@ -8,10 +8,6 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRunCustomServer } from '../../../hooks/use-run-custom-server'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
 import { useUpdateServer } from '../../../hooks/use-update-server'
-import {
-  MCP_OPTIMIZER_GROUP_NAME,
-  META_MCP_SERVER_NAME,
-} from '@/common/lib/constants'
 import { mockedGetApiV1BetaSecretsDefaultKeys } from '@mocks/fixtures/secrets_default_keys/get'
 import { mockedGetApiV1BetaWorkloads } from '@mocks/fixtures/workloads/get'
 import { mockedGetApiV1BetaGroups } from '@mocks/fixtures/groups/get'
@@ -229,93 +225,6 @@ describe('DialogFormLocalMcp', () => {
     const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
     expect(groupCombobox).toBeVisible()
     expect(groupCombobox).toHaveTextContent('research')
-  })
-
-  it('hides group field when editing the meta-mcp server in the meta-mcp group', async () => {
-    mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
-      ({ path }) => path.name === META_MCP_SERVER_NAME,
-      (data) => ({
-        ...data,
-        name: META_MCP_SERVER_NAME,
-        image: 'ghcr.io/toolhive/meta-mcp',
-        group: MCP_OPTIMIZER_GROUP_NAME,
-      })
-    )
-    mockedGetApiV1BetaGroups.override(() => ({
-      groups: [
-        { name: 'default' },
-        { name: 'research' },
-        { name: MCP_OPTIMIZER_GROUP_NAME },
-      ],
-    }))
-
-    renderWithProviders(
-      <Wrapper>
-        <DialogFormLocalMcp
-          isOpen
-          closeDialog={vi.fn()}
-          serverToEdit={META_MCP_SERVER_NAME}
-          groupName={MCP_OPTIMIZER_GROUP_NAME}
-        />
-      </Wrapper>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: /name/i })).toHaveValue(
-        META_MCP_SERVER_NAME
-      )
-    })
-
-    const groupCombobox = screen.queryByRole('combobox', { name: 'Group' })
-    expect(groupCombobox).not.toBeInTheDocument()
-  })
-
-  it('shows group field when editing a different server in the meta-mcp group', async () => {
-    mockedGetApiV1BetaWorkloadsByName.conditionalOverride(
-      ({ path }) => path.name === 'other-server',
-      (data) => ({
-        ...data,
-        name: 'other-server',
-        image: 'ghcr.io/other/server',
-        group: MCP_OPTIMIZER_GROUP_NAME,
-      })
-    )
-    mockedGetApiV1BetaGroups.override(() => ({
-      groups: [
-        { name: 'default' },
-        { name: 'research' },
-        { name: MCP_OPTIMIZER_GROUP_NAME },
-      ],
-    }))
-
-    renderWithProviders(
-      <Wrapper>
-        <DialogFormLocalMcp
-          isOpen
-          closeDialog={vi.fn()}
-          serverToEdit="other-server"
-          groupName={MCP_OPTIMIZER_GROUP_NAME}
-        />
-      </Wrapper>
-    )
-
-    await waitFor(() => {
-      expect(screen.getByRole('dialog')).toBeVisible()
-    })
-
-    await waitFor(() => {
-      expect(screen.getByRole('textbox', { name: /name/i })).toHaveValue(
-        'other-server'
-      )
-    })
-
-    const groupCombobox = await screen.findByRole('combobox', { name: 'Group' })
-    expect(groupCombobox).toBeVisible()
-    expect(groupCombobox).toBeInTheDocument()
   })
 
   it('submits the selected group in form data', async () => {
