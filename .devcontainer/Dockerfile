@@ -28,6 +28,7 @@ RUN apt-get update && apt-get install -y \
     x11-utils \
     x11-apps \
     imagemagick \
+    xdotool \
     fluxbox \
     novnc \
     websockify \

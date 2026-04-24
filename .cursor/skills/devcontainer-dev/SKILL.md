@@ -137,6 +137,59 @@ docker exec "$CONTAINER" bash -c '
 
 ---
 
+## Driving the app as an agent
+
+The container has enough tools for an AI agent to both **see** and **interact with** the running Electron window without going through the browser / noVNC. Useful for headless testing, reproducing user-reported UI bugs, or validating a feature end-to-end.
+
+All commands run via `docker exec` against the container with `DISPLAY=:99` set (matches Xvfb's display).
+
+### See the screen (screenshots)
+
+```bash
+# Take a PNG of the whole virtual framebuffer
+docker exec "$CONTAINER" bash -c 'DISPLAY=:99 import -window root /tmp/shot.png'
+# Copy it to the host for viewing / feeding to a vision model
+docker cp "$CONTAINER:/tmp/shot.png" /tmp/shot.png
+```
+
+`import` is from ImageMagick. For a specific window only, use `xwininfo` to get the WID then `import -window <WID>`.
+
+### See the window tree (what's there, where, which is focused)
+
+```bash
+docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xwininfo -root -tree'
+docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool getactivewindow getwindowname'
+docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool search --name ToolHive'
+```
+
+The main app window has `WM_CLASS=ToolHive` (see gotcha below). Its geometry is usually `1920x1200+0+0` once fluxbox has auto-fullscreened it.
+
+### Interact with the UI (mouse, keyboard)
+
+```bash
+# Move the mouse and click
+docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool mousemove 400 300 click 1'
+
+# Type into whatever has focus
+docker exec "$CONTAINER" bash -c "DISPLAY=:99 xdotool type --delay 20 'hello world'"
+
+# Send a keystroke
+docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool key ctrl+shift+i'   # DevTools
+
+# Focus the main window by name
+docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool search --name ToolHive windowactivate'
+```
+
+### Typical agent loop
+
+Screenshot → feed to vision model → decide next action → `xdotool` → screenshot again. The usual caveats apply: pixel-coordinate automation is fragile, and CSS changes or modal dialogs can throw it off. For robust long-term automation, prefer a DOM-level approach (e.g. Chrome DevTools Protocol against Electron's remote debugging port — not currently wired in, see [Future: CDP access](#future-cdp-access)).
+
+### Future: CDP access
+
+For DOM-level agent automation (querying, clicking specific elements by selector, scraping state), the cleanest path is Chromium's DevTools Protocol. Opt-in: pass `--remote-debugging-port=9223` to Electron in the entrypoint, add `-p 9223:9223` to the container's runArgs, and the agent connects via `ws://localhost:9223/devtools/page/<id>`. Not currently enabled by default; add it when you need it.
+
+---
+
 ## Gotchas
 
 ### Docker daemon won't start (Linux, non-stock kernels)
