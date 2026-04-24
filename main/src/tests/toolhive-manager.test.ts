@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events'
 import { vol } from 'memfs'
 import { spawn } from 'node:child_process'
 import net from 'node:net'
+import { platform } from 'node:os'
 import { app } from 'electron'
 import {
   startToolhive,
@@ -29,6 +30,18 @@ vi.mock('node:child_process', async (importOriginal) => {
     default: {
       ...actual,
       spawn: mockSpawnFn,
+    },
+  }
+})
+vi.mock('node:os', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:os')>()
+  const platformMock = vi.fn(actual.platform)
+  return {
+    ...actual,
+    platform: platformMock,
+    default: {
+      ...actual,
+      platform: platformMock,
     },
   }
 })
@@ -452,6 +465,32 @@ describe('toolhive-manager', () => {
 
       const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
       expect(spawnArgs.some((a) => a.startsWith('--sentry-'))).toBe(false)
+    })
+
+    it('spawns with an enhanced PATH that includes common container-tooling dirs', async () => {
+      vi.mocked(platform).mockReturnValue('darwin')
+      vi.stubEnv('PATH', '/usr/bin:/bin')
+
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      const spawnOptions = mockSpawn.mock.calls[0]![2] as {
+        env: Record<string, string>
+      }
+      const spawnedPath = spawnOptions.env.PATH
+      expect(spawnedPath).toBeDefined()
+      const entries = spawnedPath!.split(':')
+
+      expect(entries).toContain(
+        '/Applications/Docker.app/Contents/Resources/bin'
+      )
+      expect(entries).toContain('/opt/homebrew/bin')
+      expect(entries).toContain('/usr/local/bin')
+      expect(entries).toContain('/usr/bin')
+      expect(entries).toContain('/bin')
+
+      expect(spawnOptions.env.TOOLHIVE_SKIP_DESKTOP_CHECK).toBe('true')
     })
 
     it('omits sentry flags when telemetry is disabled', async () => {
