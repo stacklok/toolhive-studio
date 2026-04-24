@@ -59,4 +59,14 @@ echo "devcontainer-passphrase" | gnome-keyring-daemon \
 
 sleep 1
 
-pnpm start -- --no-sandbox --disable-dev-shm-usage --enable-logging=stderr
+# Electron (via electron-forge in dev mode) exits with ELIFECYCLE 123 shortly
+# after launch if stdin/stdout aren't TTYs — which happens when this script
+# runs under CI, an automation harness, or a non-interactive `devcontainer
+# exec`. Wrap `pnpm start` in `script` to provide a PTY transparently in that
+# case. Interactive runs skip the wrapper to keep stdout formatting pristine.
+CMD='pnpm start -- --no-sandbox --disable-dev-shm-usage --enable-logging=stderr'
+if [ -t 0 ] && [ -t 1 ]; then
+  eval "$CMD"
+else
+  exec script -qfc "$CMD" /dev/null
+fi
