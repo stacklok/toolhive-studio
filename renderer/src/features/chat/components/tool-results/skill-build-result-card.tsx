@@ -72,17 +72,24 @@ export function SkillBuildResultCard({ result }: { result: SkillBuildResult }) {
   const navigate = useNavigate()
   const [installOpen, setInstallOpen] = useState(false)
 
-  const { reference, build } = result
+  const { reference, apiReference, build } = result
   const tag = build.tag
   const title = build.name ?? tag ?? reference
   const description = build.description
   const version = build.version
   const digest = build.digest
   const shortDigest = shortenDigest(digest)
-  const canViewDetails = !!tag
-  const installName = build.name ?? tag ?? reference
-  const installVersion = version ?? tag
-  const copyValue = installName
+  // Navigation target must exactly match a LocalBuild.tag; prefer apiReference
+  // (the canonical tag returned by the build API), fall back to build.tag only
+  // if it looks registry-prefixed (contains "/" or ":"). A bare version like
+  // "v0.0.4" is NOT a valid route param for /skills/builds/$tag.
+  const isRegistryRef = (v: string | undefined) =>
+    !!v && (v.includes('/') || v.includes(':'))
+  const navTag = apiReference ?? (isRegistryRef(tag) ? tag : undefined)
+  const canViewDetails = !!navTag
+  const installName = build.name ?? reference
+  const installVersion = version
+  const copyValue = build.name ?? reference
 
   const handleCopyReference = async () => {
     try {
@@ -179,7 +186,7 @@ export function SkillBuildResultCard({ result }: { result: SkillBuildResult }) {
                     })
                     void navigate({
                       to: '/skills/builds/$tag',
-                      params: { tag: tag! },
+                      params: { tag: navTag! },
                     })
                   }}
                   data-testid="chat-build-view-details"
@@ -215,7 +222,7 @@ export function SkillBuildResultCard({ result }: { result: SkillBuildResult }) {
         open={installOpen}
         onOpenChange={setInstallOpen}
         defaultReference={installName}
-        defaultVersion={installVersion}
+        defaultVersion={installVersion ?? ''}
       />
     </>
   )
