@@ -1,5 +1,6 @@
 import {
   ChevronFirstIcon,
+  ChevronLastIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from 'lucide-react'
@@ -98,6 +99,15 @@ export function Pagination({
           onClick={() => onPageChange(currentPage + 1)}
         >
           <ChevronRightIcon />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          aria-label="Go to last page"
+          disabled={isLastPage}
+          onClick={() => onPageChange(totalPages)}
+        >
+          <ChevronLastIcon />
         </Button>
       </div>
       <div className="flex items-center gap-2">

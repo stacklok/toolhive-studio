@@ -6,6 +6,7 @@ import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { CardSkillBase } from './card-skill-base'
 import { getSkillInstallReference } from '../lib/skill-reference'
+import { getDisplayRepoLabel } from '../lib/get-display-repo-label'
 import { trackEvent } from '@/common/lib/analytics'
 
 export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
@@ -15,6 +16,7 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
   const name = skill.name ?? 'Unknown skill'
   const namespace = skill.namespace
   const description = skill.description
+  const repoLabel = getDisplayRepoLabel(skill.repository?.url)
   const defaultReference = getSkillInstallReference(skill)
 
   const canNavigate = !!(namespace && skill.name)
@@ -36,7 +38,7 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
     <>
       <CardSkillBase
         title={name}
-        subtitle={namespace}
+        subtitle={repoLabel ?? undefined}
         description={description}
         onClick={canNavigate ? handleCardClick : undefined}
         footer={
