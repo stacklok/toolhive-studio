@@ -16,7 +16,7 @@ type SkillsTab = (typeof VALID_TABS)[number]
 export type SkillsSearch = {
   tab: SkillsTab
   page: number
-  limit: number
+  limit: number | undefined
 }
 
 export const Route = createFileRoute('/skills')({
@@ -34,7 +34,7 @@ export const Route = createFileRoute('/skills')({
       limitNum
     )
       ? limitNum
-      : DEFAULT_REGISTRY_PAGE_SIZE
+      : undefined
 
     return { tab, page, limit }
   },
@@ -46,7 +46,7 @@ export const Route = createFileRoute('/skills')({
       queryClient.ensureQueryData(
         getRegistryByRegistryNameV01xDevToolhiveSkillsOptions({
           path: { registryName: 'default' },
-          query: { page, limit },
+          query: { page, limit: limit ?? DEFAULT_REGISTRY_PAGE_SIZE },
         })
       ),
     ]),

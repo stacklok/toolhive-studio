@@ -27,11 +27,15 @@ import { DialogBuildSkill } from './dialog-build-skill'
 import { HammerIcon } from 'lucide-react'
 import { ViewToggle } from '@/common/components/view-toggle'
 import { useViewPreference } from '@/common/hooks/use-view-preference'
+import { usePageSizePreference } from '@/common/hooks/use-page-size-preference'
 import type { GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill } from '@common/api/generated/types.gen'
 import { useNavigate, useSearch } from '@tanstack/react-router'
 import type { SkillsSearch } from '@/routes/skills'
 import { trackEvent } from '@/common/lib/analytics'
-import { REGISTRY_PAGE_SIZE_OPTIONS } from '../lib/registry-pagination'
+import {
+  DEFAULT_REGISTRY_PAGE_SIZE,
+  REGISTRY_PAGE_SIZE_OPTIONS,
+} from '../lib/registry-pagination'
 
 type Tab = 'registry' | 'installed' | 'builds'
 
@@ -40,9 +44,20 @@ export function SkillsPage() {
   const {
     tab,
     page: registryPage,
-    limit: registryLimit,
+    limit: urlRegistryLimit,
   } = useSearch({ from: '/skills' })
   const navigate = useNavigate({ from: '/skills' })
+
+  const {
+    pageSize: persistedRegistryLimit,
+    setPageSize: persistRegistryLimit,
+  } = usePageSizePreference('ui.pageSize.skillsRegistry')
+
+  // URL wins over persisted preference so a bookmarked `?limit=24` is honored.
+  // When neither is present we fall back to the hardcoded default; the
+  // persisted value (if any) will apply once the IPC read resolves.
+  const registryLimit =
+    urlRegistryLimit ?? persistedRegistryLimit ?? DEFAULT_REGISTRY_PAGE_SIZE
 
   function setTab(value: Tab) {
     trackEvent('Skills: tab changed', { tab: value })
@@ -60,6 +75,7 @@ export function SkillsPage() {
   }
 
   function setRegistryLimit(limit: number) {
+    persistRegistryLimit(limit)
     void navigate({
       search: (prev: SkillsSearch) => ({ ...prev, limit, page: 1 }),
       replace: true,
@@ -140,7 +156,7 @@ export function SkillsPage() {
       <Tabs
         value={tab}
         onValueChange={(v) => setTab(v as Tab)}
-        className="gap-4"
+        className="min-h-0 flex-1 gap-4"
       >
         <div className="flex items-center justify-between gap-4">
           <TabsList variant="pill">
@@ -229,6 +245,7 @@ export function SkillsPage() {
             <GridCardsRegistrySkills skills={registrySkills} />
           )}
           <Pagination
+            className="mt-auto"
             page={registryMetadata?.page ?? registryPage}
             pageSize={registryMetadata?.limit ?? registryLimit}
             total={registryMetadata?.total ?? 0}
