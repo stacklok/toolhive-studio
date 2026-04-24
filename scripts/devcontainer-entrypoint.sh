@@ -14,10 +14,9 @@ rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
 # Tear down on exit so Ctrl+C doesn't orphan the display stack
 trap 'jobs -p | xargs -r kill 2>/dev/null' EXIT INT TERM
 
-# Virtual framebuffer — CPU-only, no GPU needed. The initial size doubles as
-# the upper bound for noVNC's dynamic resize (RANDR only shrinks), so start
-# generous.
-Xvfb :99 -screen 0 2560x1600x24 -ac > /tmp/xvfb.log 2>&1 &
+# Virtual framebuffer — CPU-only, no GPU needed. Fixed size; noVNC scales
+# the canvas in the browser (see resize=scale in the URL below).
+Xvfb :99 -screen 0 1920x1200x24 -ac > /tmp/xvfb.log 2>&1 &
 sleep 0.5
 
 export DISPLAY=:99
@@ -27,7 +26,7 @@ export DISPLAY=:99
 # the rule stays in sync with this script.
 mkdir -p "$HOME/.fluxbox"
 cat > "$HOME/.fluxbox/apps" <<'EOF'
-[app] (class=Electron)
+[app] (class=ToolHive)
   [Fullscreen] {yes}
 [end]
 EOF
@@ -38,9 +37,7 @@ fluxbox > /tmp/fluxbox.log 2>&1 &
 sleep 0.5
 
 # Expose the framebuffer as VNC on port 5900 (container-local).
-# -xrandr resize: honour noVNC's SetDesktopSize requests so the framebuffer
-# follows the browser window size (combined with ?resize=remote in the URL).
-x11vnc -display :99 -forever -nopw -shared -rfbport 5900 -xrandr resize -quiet > /tmp/x11vnc.log 2>&1 &
+x11vnc -display :99 -forever -nopw -shared -rfbport 5900 -quiet > /tmp/x11vnc.log 2>&1 &
 
 # Wrap VNC in WebSocket + serve the noVNC HTML client on port 6080
 websockify --web=/usr/share/novnc 6080 localhost:5900 > /tmp/websockify.log 2>&1 &

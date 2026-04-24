@@ -10,7 +10,7 @@ fi
 
 DEVCONTAINER="npx --yes @devcontainers/cli"
 WORKDIR="$(pwd)"
-URL="http://localhost:6080/vnc.html?autoconnect=1&resize=remote"
+URL="http://localhost:6080/vnc.html?autoconnect=1&resize=scale"
 
 # Build and start the devcontainer
 $DEVCONTAINER up --workspace-folder "$WORKDIR"
