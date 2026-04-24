@@ -20,6 +20,12 @@ interface SkillDetailLayoutProps {
   description?: string | null
   actions: ReactNode
   rightPanel?: ReactNode
+  /**
+   * When true (default), the back button uses browser history when available
+   * so search params / scroll position are restored. Set to `false` to always
+   * navigate to `backTo` regardless of history.
+   */
+  historyBack?: boolean
 }
 
 export function SkillDetailLayout({
@@ -30,6 +36,7 @@ export function SkillDetailLayout({
   description,
   actions,
   rightPanel,
+  historyBack = true,
 }: SkillDetailLayoutProps) {
   const headerRef = useRef<HTMLDivElement>(null)
   const [isHeaderVisible, setIsHeaderVisible] = useState(true)
@@ -37,7 +44,7 @@ export function SkillDetailLayout({
   const canGoBack = useCanGoBack()
 
   const handleBackClick = (event: MouseEvent<HTMLAnchorElement>) => {
-    if (!canGoBack) return
+    if (!historyBack || !canGoBack) return
     if (
       event.defaultPrevented ||
       event.button !== 0 ||
@@ -75,7 +82,7 @@ export function SkillDetailLayout({
           backTo={backTo}
           backSearch={backSearch}
           badges={badges}
-          historyBack
+          historyBack={historyBack}
         />
       </div>
 
