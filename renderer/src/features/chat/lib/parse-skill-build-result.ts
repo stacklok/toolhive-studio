@@ -2,6 +2,7 @@ import type { GithubComStacklokToolhivePkgSkillsLocalBuild as LocalBuild } from 
 
 export interface SkillBuildResult {
   reference: string
+  apiReference?: string
   build: LocalBuild
 }
 
@@ -23,19 +24,19 @@ export function parseSkillBuildResult(
       ? (obj.build as Record<string, unknown>)
       : null
 
-  const topLevelTag =
-    typeof obj.tag === 'string' && obj.tag.length > 0 ? obj.tag : null
-
   const pickString = (v: unknown) =>
     typeof v === 'string' && v.length > 0 ? v : undefined
+
+  const apiReference = pickString(obj.apiReference)
+  const topLevelTag = pickString(obj.tag)
 
   const build: LocalBuild = {
     name: pickString(rawBuild?.name),
     description: pickString(rawBuild?.description),
-    tag: pickString(rawBuild?.tag) ?? topLevelTag ?? reference,
+    tag: pickString(rawBuild?.tag) ?? apiReference ?? topLevelTag,
     version: pickString(rawBuild?.version),
     digest: pickString(rawBuild?.digest),
   }
 
-  return { reference, build }
+  return { reference, apiReference, build }
 }

@@ -207,7 +207,7 @@ export function createSkillsAgentTools(): SkillsAgentToolsHandle {
           }
 
           const effectiveBuild: LocalBuild = build ?? {
-            tag: tag ?? apiReference,
+            tag: apiReference,
             ...(tag ? { version: tag } : {}),
           }
 
