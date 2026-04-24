@@ -1,12 +1,32 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { PlaygroundSidebar } from '../playground-sidebar'
 import type { PlaygroundThread } from '../../hooks/use-playground-threads'
 
 const mockConfirm = vi.fn()
 vi.mock('@/common/hooks/use-confirm', () => ({
   useConfirm: () => mockConfirm,
+}))
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    children,
+    to,
+    className,
+    ...rest
+  }: {
+    children: ReactNode
+    to: string
+    className?: string
+    [key: string]: unknown
+  }) => (
+    <a href={to} className={className} {...rest}>
+      {children}
+    </a>
+  ),
+  useRouterState: () => '/playground/chat/thread-1',
 }))
 
 const NOW = new Date('2024-01-15T12:00:00Z').getTime()
