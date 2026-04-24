@@ -147,7 +147,8 @@ export function McpServerSelector() {
           <Button
             variant="ghost"
             size="sm"
-            className="flex h-10 items-center justify-between gap-2"
+            className="flex h-8 items-center justify-between gap-1.5 px-2
+              has-[>svg]:px-2"
           >
             <ServerIcon className="size-4" /> {enabledMcpServers.length} Servers
             / {getTotalToolsCount()} Tools
