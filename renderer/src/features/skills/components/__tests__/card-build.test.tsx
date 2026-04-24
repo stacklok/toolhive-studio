@@ -107,7 +107,7 @@ describe('CardBuild', () => {
     })
   })
 
-  it('prefills install dialog with the build tag as reference', async () => {
+  it('prefills install dialog with build name in the name field and version in the version field', async () => {
     const user = userEvent.setup()
     renderRoute(router)
 
@@ -115,8 +115,9 @@ describe('CardBuild', () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
-        'localhost/my-skill:v1.0.0'
+        'my-skill'
       )
+      expect(screen.getByLabelText(/^version/i)).toHaveValue('v1.0.0')
     })
   })
 
