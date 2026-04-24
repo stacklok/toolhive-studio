@@ -180,7 +180,7 @@ export function AgentFormPage({ mode, agent }: AgentFormPageProps) {
               <FormItem>
                 <FormLabel>Name</FormLabel>
                 <FormControl>
-                  <Input placeholder="e.g. Release Planner" {...field} />
+                  <Input placeholder="e.g. Release Assistant" {...field} />
                 </FormControl>
                 <FormMessage />
               </FormItem>
@@ -327,13 +327,10 @@ function BuiltinToolsBundlePicker({
   value: BuiltinToolsKey | null
   onChange: (next: BuiltinToolsKey | null) => void
 }) {
-  const bundles = BUILTIN_TOOL_BUNDLES.filter(
-    (bundle) => bundle.hasTools || bundle.key === value
-  )
-  if (bundles.length === 0) return null
+  if (BUILTIN_TOOL_BUNDLES.length === 0) return null
   return (
     <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-      {bundles.map(({ key, label, description }) => {
+      {BUILTIN_TOOL_BUNDLES.map(({ key, label, description }) => {
         const active = value === key
         return (
           <button
