@@ -15,9 +15,12 @@ export _TOOLHIVE_GREETED=1
 
 url="https://${CODESPACE_NAME}-6080.${GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN:-app.github.dev}/vnc.html?autoconnect=1&resize=scale"
 
+# The [x] bracket-class wrapping is the standard trick to stop `pgrep -f` from
+# self-matching: the regex class matches the character literally, but the
+# pattern string in the invoking shell's argv does not match the regex.
 if ss -tln 2>/dev/null | grep -q ':6080 ' \
-   && pgrep -f 'electron/dist/electron' >/dev/null 2>&1 \
-   && pgrep -f 'thv serve' >/dev/null 2>&1; then
+   && pgrep -f '[e]lectron/dist/electron' >/dev/null 2>&1 \
+   && pgrep -f '[t]hv serve' >/dev/null 2>&1; then
   printf '\n\033[1;37m────────────────────────────────────────────────────────\033[0m\n'
   printf '  \033[1;37mToolHive Studio dev\033[0m  \033[1;32m✓ Ready\033[0m\n'
   printf '  \033[36m%s\033[0m\n' "$url"

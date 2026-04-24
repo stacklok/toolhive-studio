@@ -176,9 +176,13 @@ If you're modifying the startup flags, keep these.
 
 The Electron main window's `WM_CLASS` is `ToolHive`, **not** `Electron`. The `~/.fluxbox/apps` file the entrypoint generates targets `(class=ToolHive)` for that reason. The `Electron`-classed windows that show up in `xwininfo` are tiny 16×16 internal helper windows — ignore them.
 
-### Readiness false-positive
+### Readiness false-positive (transient processes)
 
 `pgrep -x thv` would match the short-lived `thv version` / `thv --version` invocation that Electron runs during startup to verify the binary is present. The long-running backend is always `thv serve --openapi --experimental-mcp ... --port=N`, so use `pgrep -f "thv serve"` to gate on that specifically.
+
+### Readiness false-positive (pgrep self-match)
+
+When using `pgrep -f PATTERN` from a shell command (e.g. `bash -c 'pgrep -f "thv serve"'`), the pattern string appears verbatim in the **invoking shell's argv** — and `pgrep -f` matches against the full argv of every process. So pgrep matches its own parent shell and always returns true, *even when nothing is actually running the target process*. Use the standard bracket-class trick: `pgrep -f '[t]hv serve'`. The regex character class `[t]` matches `t` literally, so it still matches `thv serve`, but the literal string `[t]hv serve` in the invoking shell's argv doesn't match the regex. See `scripts/devcontainer-dev.sh` and `.devcontainer/greeting.sh` for the pattern in use.
 
 ### Secret provider returns 500
 

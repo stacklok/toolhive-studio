@@ -80,9 +80,13 @@ sleep 1
 # app rather than a blank/connecting noVNC page.
 (
   for _ in $(seq 1 180); do
+    # The [x] bracket-class wrapping is the standard trick to stop `pgrep -f`
+    # from self-matching: the regex class `[e]` matches "e" literally, but the
+    # pattern string "[e]lectron" in the invoking bash's argv does not match
+    # the regex, so pgrep skips its own parent shell.
     if curl -sf -o /dev/null "http://localhost:${HOST_PORT:-6080}/vnc.html" 2>/dev/null \
        && docker exec "$CONTAINER_ID" bash -c \
-            'pgrep -f "electron/dist/electron" >/dev/null && pgrep -f "thv serve" >/dev/null' \
+            'pgrep -f "[e]lectron/dist/electron" >/dev/null && pgrep -f "[t]hv serve" >/dev/null' \
             2>/dev/null; then
       printf '\n\033[30;42;1m  ✓ ToolHive ready — %s  \033[0m\n\n' "$URL"
       printf '\033]0;✓ ToolHive: %s\a' "$URL"
