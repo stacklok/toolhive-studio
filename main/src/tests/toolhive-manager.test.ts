@@ -454,6 +454,49 @@ describe('toolhive-manager', () => {
       expect(spawnArgs.some((a) => a.startsWith('--sentry-'))).toBe(false)
     })
 
+    it('spawns with an enhanced PATH that includes common container-tooling dirs', async () => {
+      const originalPath = process.env.PATH
+      const originalPlatform = process.platform
+      Object.defineProperty(process, 'platform', {
+        value: 'darwin',
+        configurable: true,
+      })
+      vi.stubEnv('PATH', '/usr/bin:/bin')
+
+      try {
+        const startPromise = startToolhive()
+        await vi.advanceTimersByTimeAsync(50)
+        await startPromise
+
+        const spawnOptions = mockSpawn.mock.calls[0]![2] as {
+          env: Record<string, string>
+        }
+        const spawnedPath = spawnOptions.env.PATH
+        expect(spawnedPath).toBeDefined()
+        const entries = spawnedPath!.split(':')
+
+        expect(entries).toContain(
+          '/Applications/Docker.app/Contents/Resources/bin'
+        )
+        expect(entries).toContain('/opt/homebrew/bin')
+        expect(entries).toContain('/usr/local/bin')
+        expect(entries).toContain('/usr/bin')
+        expect(entries).toContain('/bin')
+
+        expect(spawnOptions.env.TOOLHIVE_SKIP_DESKTOP_CHECK).toBe('true')
+      } finally {
+        Object.defineProperty(process, 'platform', {
+          value: originalPlatform,
+          configurable: true,
+        })
+        if (originalPath === undefined) {
+          delete process.env.PATH
+        } else {
+          process.env.PATH = originalPath
+        }
+      }
+    })
+
     it('omits sentry flags when telemetry is disabled', async () => {
       vi.stubEnv('VITE_SENTRY_THV_DSN', 'https://test@sentry.io/123')
       vi.mocked(readSetting).mockReturnValue('false')

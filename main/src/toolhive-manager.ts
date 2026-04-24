@@ -8,6 +8,7 @@ import log from './logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
 import { readSetting } from './db/readers/settings-reader'
+import { createEnhancedPath } from './utils/enhanced-path'
 import {
   ALREADY_RUNNING,
   REGISTRY_AUTH_REQUIRED,
@@ -182,6 +183,7 @@ export async function startToolhive(): Promise<void> {
       windowsHide: true,
       env: {
         ...process.env,
+        PATH: createEnhancedPath(),
         TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
       },
     })
