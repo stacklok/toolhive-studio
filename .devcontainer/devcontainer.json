@@ -1,0 +1,47 @@
+{
+  "name": "ToolHive Studio",
+  "build": { "dockerfile": "Dockerfile" },
+
+  // Docker-in-Docker hosts the containers ToolHive's bundled `thv` CLI spawns.
+  // On most hosts this "just works", but on Linux hosts running non-standard
+  // kernels (zen, hardened, XanMod, and some minimal configurations) the
+  // iptables kernel modules are not autoloaded, and DinD's inner daemon fails
+  // to start with this exact error in its logs:
+  //
+  //   failed to create NAT chain DOCKER: iptables failed:
+  //   can't initialize iptables table `nat': Table does not exist (do you need to insmod?)
+  //
+  // Symptom you'll see: the devcontainer boots, but the terminal keeps
+  // printing "(*) Failed to start docker, retrying..." and `thv` can't find a
+  // container runtime.
+  //
+  // Fix (one-time per boot, on the host):
+  //   sudo modprobe iptable_nat iptable_filter ip_tables
+  //
+  // Fix (persist across reboots):
+  //   echo -e "iptable_nat\niptable_filter\nip_tables" | sudo tee /etc/modules-load.d/docker.conf
+  //
+  // Not affected: Mac (Docker Desktop / OrbStack), Windows (WSL2), GitHub
+  // Codespaces, stock Ubuntu / Debian / Fedora hosts.
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  "postCreateCommand": "sudo chown node:node node_modules && npm install -g pnpm && pnpm install && sudo chown root:root node_modules/electron/dist/chrome-sandbox && sudo chmod 4755 node_modules/electron/dist/chrome-sandbox",
+  "postStartCommand": "bash scripts/devcontainer-post-start.sh",
+  "mounts": [
+    "source=toolhive-node-modules-${localWorkspaceFolderBasename},target=/workspaces/${localWorkspaceFolderBasename}/node_modules,type=volume"
+  ],
+  "runArgs": [
+    "--security-opt", "seccomp=unconfined",
+    "--shm-size=2g",
+    "-p", "${localEnv:NOVNC_HOST_PORT}:6080"
+  ],
+  "forwardPorts": [6080],
+  "portsAttributes": {
+    "6080": {
+      "label": "ToolHive (noVNC)",
+      "onAutoForward": "openPreview"
+    }
+  }
+}
