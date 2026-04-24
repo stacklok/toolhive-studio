@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/common/components/ui/button'
-import { TagIcon, GitForkIcon, GithubIcon, ScaleIcon } from 'lucide-react'
+import { TagIcon, GithubIcon, ScaleIcon } from 'lucide-react'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { SkillDetailLayout } from './skill-detail-layout'
@@ -8,6 +8,7 @@ import {
   getSkillInstallReference,
   getSkillOciRef,
 } from '../lib/skill-reference'
+import { getDisplayRepoLabel } from '../lib/get-display-repo-label'
 import { SkillMarkdown } from './skill-markdown'
 import { trackEvent } from '@/common/lib/analytics'
 
@@ -23,10 +24,11 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
   const description = skill.description
   const version = skill.version
   const license = skill.license
+  const repoLabel = getDisplayRepoLabel(skill.repository?.url)
   const defaultReference = getSkillInstallReference(skill)
   const ociRef = getSkillOciRef(skill)
 
-  const hasBadges = !!(version || namespace || license)
+  const hasBadges = !!(version || repoLabel || license)
 
   return (
     <>
@@ -46,13 +48,13 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
                   {version}
                 </span>
               )}
-              {namespace && (
+              {repoLabel && (
                 <span
                   className="text-muted-foreground flex items-center gap-1
                     text-sm"
                 >
-                  <GitForkIcon className="size-4" />
-                  {namespace}
+                  <GithubIcon className="size-4" />
+                  {repoLabel}
                 </span>
               )}
               {license && (

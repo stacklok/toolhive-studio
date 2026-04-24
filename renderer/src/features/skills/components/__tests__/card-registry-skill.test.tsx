@@ -61,9 +61,23 @@ describe('CardRegistrySkill', () => {
       expect(screen.getByText('my-skill')).toBeVisible()
     })
 
-    it('renders the namespace', () => {
+    it('does not render the namespace as a subtitle', () => {
       renderRoute(router)
-      expect(screen.getByText('io.github.user')).toBeVisible()
+      expect(screen.queryByText('io.github.user')).not.toBeInTheDocument()
+    })
+
+    it('renders the normalized repo label when repository.url is set', async () => {
+      const skillRouter = createCardTestRouter({
+        ...baseSkill,
+        repository: {
+          type: 'git',
+          url: 'https://github.com/example/skills.git',
+        },
+      }) as unknown as ReturnType<typeof createTestRouter>
+      await skillRouter.navigate({ to: '/skills' })
+      renderRoute(skillRouter)
+      expect(screen.getByText('example/skills')).toBeVisible()
+      expect(screen.queryByText('io.github.user')).not.toBeInTheDocument()
     })
 
     it('renders the description', () => {
@@ -78,15 +92,6 @@ describe('CardRegistrySkill', () => {
       await skillRouter.navigate({ to: '/skills' })
       renderRoute(skillRouter)
       expect(screen.getByText('Unknown skill')).toBeVisible()
-    })
-
-    it('does not render namespace row when namespace is absent', async () => {
-      const skillRouter = createCardTestRouter({
-        name: 'my-skill',
-      }) as unknown as ReturnType<typeof createTestRouter>
-      await skillRouter.navigate({ to: '/skills' })
-      renderRoute(skillRouter)
-      expect(screen.queryByText('io.github.user')).not.toBeInTheDocument()
     })
 
     it('does not render description when absent', async () => {
