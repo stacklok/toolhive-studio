@@ -37,3 +37,9 @@ RUN apt-get update && apt-get install -y \
     libsecret-1-0 \
     libsecret-1-dev \
     && rm -rf /var/lib/apt/lists/*
+
+# Codespaces-aware MOTD-style greeting: prints dev-server status + the forwarded
+# noVNC URL whenever a user opens a new terminal in a Codespace. No-op locally.
+COPY greeting.sh /usr/local/share/toolhive-greeting.sh
+RUN chmod +x /usr/local/share/toolhive-greeting.sh \
+ && echo '[ -f /usr/local/share/toolhive-greeting.sh ] && . /usr/local/share/toolhive-greeting.sh' >> /etc/bash.bashrc
