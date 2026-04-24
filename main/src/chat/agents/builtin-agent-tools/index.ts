@@ -2,7 +2,7 @@ import type { ToolSet } from 'ai'
 import type { BuiltinToolsKey } from '../types'
 import { createSkillsAgentTools, type SkillsAgentToolsHandle } from './skills'
 
-export interface BuiltinToolsHandle {
+interface BuiltinToolsHandle {
   tools: ToolSet
   cleanup: () => Promise<void>
 }
