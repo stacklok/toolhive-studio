@@ -5,7 +5,7 @@ import type {
   UpdateAgentInput,
 } from '../../../../../main/src/chat/agents/types'
 
-export const AGENT_QUERY_KEYS = {
+const AGENT_QUERY_KEYS = {
   list: ['agents'] as const,
   detail: (id: string) => ['agents', id] as const,
   threadAgent: (threadId: string) => ['agents', 'thread', threadId] as const,

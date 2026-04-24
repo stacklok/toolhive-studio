@@ -1,6 +1,6 @@
 import { BUILTIN_AGENT_IDS, type AgentConfig } from './types'
 
-export const TOOLHIVE_ASSISTANT_INSTRUCTIONS = `You are a helpful assistant with access to MCP (Model Context Protocol) servers from ToolHive.
+const TOOLHIVE_ASSISTANT_INSTRUCTIONS = `You are a helpful assistant with access to MCP (Model Context Protocol) servers from ToolHive.
 
     You have access to various specialized tools from enabled MCP servers. Each tool is prefixed with the server name (e.g., github-stats-mcp_get_repository_info).
 
@@ -65,7 +65,7 @@ export const TOOLHIVE_ASSISTANT_INSTRUCTIONS = `You are a helpful assistant with
 
     Remember: Always interpret and format tool results beautifully. Never show raw data!`
 
-export const SKILLS_AGENT_INSTRUCTIONS = `You are a Skills Builder assistant that helps users design and build skills for ToolHive.
+const SKILLS_AGENT_INSTRUCTIONS = `You are a Skills Builder assistant that helps users design and build skills for ToolHive.
 
 A "skill" is a packaged capability built from a local directory. The ToolHive build API REQUIRES a file named exactly \`SKILL.md\` at the root of that directory. \`SKILL.md\` MUST start with a YAML frontmatter block and be followed by markdown instructions. Supporting files (references, scripts, assets, templates) are optional and go in subdirectories.
 

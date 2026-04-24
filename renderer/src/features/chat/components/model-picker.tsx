@@ -27,7 +27,7 @@ export interface ModelSelection {
   model: string
 }
 
-export interface ModelPickerProps {
+interface ModelPickerProps {
   value: ModelSelection | null
   onChange: (next: ModelSelection) => void
   onOpenSettings?: () => void
