@@ -11,7 +11,11 @@ import {
   writeThreadAgentId,
 } from '../../db/writers/agents-writer'
 import type { AgentConfig, CreateAgentInput, UpdateAgentInput } from './types'
-import { BUILTIN_AGENT_IDS, DEFAULT_AGENT_ID } from './types'
+import {
+  BUILTIN_AGENT_IDS,
+  DEFAULT_AGENT_ID,
+  LEGACY_BUILTIN_AGENT_IDS,
+} from './types'
 import { getBuiltinAgentSeeds } from './builtin-prompts'
 
 /**
@@ -29,6 +33,13 @@ export function seedBuiltinAgents(): void {
   try {
     const now = Date.now()
     const existingById = new Map(readAllAgents().map((a) => [a.id, a]))
+    for (const legacyId of LEGACY_BUILTIN_AGENT_IDS) {
+      if (existingById.has(legacyId)) {
+        deleteAgentFromDb(legacyId)
+        existingById.delete(legacyId)
+        log.info(`[AGENTS] Removed legacy built-in agent: ${legacyId}`)
+      }
+    }
     for (const seed of getBuiltinAgentSeeds(now)) {
       const existing = existingById.get(seed.id)
       if (!existing) {

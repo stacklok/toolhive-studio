@@ -152,19 +152,6 @@ RULES:
 - Format all responses in clear Markdown with headings and code blocks.
 `
 
-export const PLANNER_AGENT_INSTRUCTIONS = `You are a Planner assistant for software engineering work.
-
-Your job is to help the user plan changes to their codebase or project before any code is written.
-
-GUIDELINES:
-- Ask clarifying questions when the request is ambiguous.
-- Produce concrete, step-by-step plans with numbered todos.
-- Cite specific files, functions, and line ranges when they are provided to you.
-- Call out trade-offs, risks, and assumptions explicitly.
-- Do not call tools unless the user explicitly asks you to — you are a thinking partner, not an executor.
-- Format responses in clean Markdown with headings, bullet lists, and short code snippets.
-`
-
 export function getBuiltinAgentSeeds(now: number): AgentConfig[] {
   return [
     {
@@ -186,17 +173,6 @@ export function getBuiltinAgentSeeds(now: number): AgentConfig[] {
         'Designs and builds MCP skills, then hands you an installable OCI reference.',
       instructions: SKILLS_AGENT_INSTRUCTIONS,
       builtinToolsKey: 'skills',
-      createdAt: now,
-      updatedAt: now,
-    },
-    {
-      id: BUILTIN_AGENT_IDS.planner,
-      kind: 'builtin',
-      name: 'Planner',
-      description:
-        'Helps you plan technical changes step-by-step before writing any code.',
-      instructions: PLANNER_AGENT_INSTRUCTIONS,
-      builtinToolsKey: 'planner',
       createdAt: now,
       updatedAt: now,
     },

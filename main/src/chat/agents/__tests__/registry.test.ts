@@ -49,16 +49,12 @@ afterEach(() => {
 })
 
 describe('agent registry — seedBuiltinAgents', () => {
-  it('seeds the three built-in agents on first run', () => {
+  it('seeds the built-in agents on first run', () => {
     seedBuiltinAgents()
     const all = listAgents()
     const ids = all.map((a) => a.id).sort()
     expect(ids).toEqual(
-      [
-        BUILTIN_AGENT_IDS.toolhiveAssistant,
-        BUILTIN_AGENT_IDS.skills,
-        BUILTIN_AGENT_IDS.planner,
-      ].sort()
+      [BUILTIN_AGENT_IDS.toolhiveAssistant, BUILTIN_AGENT_IDS.skills].sort()
     )
     for (const agent of all) {
       expect(agent.kind).toBe('builtin')

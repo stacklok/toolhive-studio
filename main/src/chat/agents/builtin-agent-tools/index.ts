@@ -22,9 +22,6 @@ export function createBuiltinAgentTools(
       const handle: SkillsAgentToolsHandle = createSkillsAgentTools()
       return handle
     }
-    case 'planner':
-      // Planner is instructions-only for now; reserved for future extension.
-      return EMPTY_HANDLE
     default:
       return EMPTY_HANDLE
   }

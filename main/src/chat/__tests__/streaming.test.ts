@@ -112,7 +112,7 @@ function makeRequest(overrides: Partial<ChatRequest> = {}): ChatRequest {
 function fakeAgent(
   id: string,
   instructions: string,
-  builtinToolsKey: 'skills' | 'planner' | null = null
+  builtinToolsKey: 'skills' | null = null
 ) {
   return {
     id,
