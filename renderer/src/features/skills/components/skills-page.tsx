@@ -50,14 +50,33 @@ export function SkillsPage() {
 
   const {
     pageSize: persistedRegistryLimit,
+    isLoading: isRegistryLimitPreferenceLoading,
     setPageSize: persistRegistryLimit,
   } = usePageSizePreference('ui.pageSize.skillsRegistry')
 
+  // Ignore persisted values that fall outside the current set of options (e.g.
+  // left over from an older app version or a manual DB edit) so the selector
+  // never renders with an unmatched value.
+  const validatedPersistedRegistryLimit =
+    persistedRegistryLimit !== undefined &&
+    (REGISTRY_PAGE_SIZE_OPTIONS as readonly number[]).includes(
+      persistedRegistryLimit
+    )
+      ? persistedRegistryLimit
+      : undefined
+
   // URL wins over persisted preference so a bookmarked `?limit=24` is honored.
-  // When neither is present we fall back to the hardcoded default; the
-  // persisted value (if any) will apply once the IPC read resolves.
+  // When neither is present we fall back to the hardcoded default.
   const registryLimit =
-    urlRegistryLimit ?? persistedRegistryLimit ?? DEFAULT_REGISTRY_PAGE_SIZE
+    urlRegistryLimit ??
+    validatedPersistedRegistryLimit ??
+    DEFAULT_REGISTRY_PAGE_SIZE
+
+  // Avoid an initial fetch at the default size followed by a refetch at the
+  // persisted size: when no URL limit is present, wait for the IPC read to
+  // settle before enabling the registry query.
+  const isRegistryQueryEnabled =
+    urlRegistryLimit !== undefined || !isRegistryLimitPreferenceLoading
 
   function setTab(value: Tab) {
     trackEvent('Skills: tab changed', { tab: value })
@@ -113,6 +132,7 @@ export function SkillsPage() {
         ...(debouncedRegistrySearch ? { q: debouncedRegistrySearch } : {}),
       },
     }),
+    enabled: isRegistryQueryEnabled,
     placeholderData: (prev) => prev,
   })
   const registrySkills = registryData?.skills ?? []
