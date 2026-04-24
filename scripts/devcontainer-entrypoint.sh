@@ -59,14 +59,19 @@ echo "devcontainer-passphrase" | gnome-keyring-daemon \
 
 sleep 1
 
-# Electron (via electron-forge in dev mode) exits with ELIFECYCLE 123 shortly
-# after launch if stdin/stdout aren't TTYs — which happens when this script
-# runs under CI, an automation harness, or a non-interactive `devcontainer
-# exec`. Wrap `pnpm start` in `script` to provide a PTY transparently in that
-# case. Interactive runs skip the wrapper to keep stdout formatting pristine.
+# Electron (via electron-forge in dev mode) misbehaves when stdin/stdout
+# aren't TTYs — which happens when this script runs under CI, an automation
+# harness, or a non-interactive `devcontainer exec`. Two separate symptoms:
+#   1. No TTY on stdout → ELIFECYCLE 123 shortly after launch.
+#   2. Stdin EOFs immediately (e.g. nohup pipes /dev/null) → electron-forge
+#      sees EOF after Vite's build and quietly exits without launching
+#      Electron.
+# Fix both by running `script(1)` (for the PTY) with its stdin backed by
+# a never-EOF `sleep infinity`. Interactive runs skip the wrapper so output
+# formatting / colors stay native.
 CMD='pnpm start -- --no-sandbox --disable-dev-shm-usage --enable-logging=stderr'
 if [ -t 0 ] && [ -t 1 ]; then
   eval "$CMD"
 else
-  exec script -qfc "$CMD" /dev/null
+  script -qfc "$CMD" /dev/null < <(sleep infinity)
 fi
