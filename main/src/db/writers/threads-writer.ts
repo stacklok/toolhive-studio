@@ -14,16 +14,29 @@ export function writeThread(thread: ChatSettingsThread): void {
     () => {
       const db = getDb()
       db.transaction(() => {
+        // Preserve the existing agent_id when the caller didn't provide one
+        // (e.g. message-only updates). If the thread is brand new, previous
+        // will be null.
+        const previous = db
+          .prepare('SELECT agent_id FROM threads WHERE id = ?')
+          .get(thread.id) as { agent_id: string | null } | undefined
+
+        const nextAgentId =
+          thread.agentId !== undefined
+            ? thread.agentId
+            : (previous?.agent_id ?? null)
+
         db.prepare(
-          `INSERT OR REPLACE INTO threads (id, title, created_at, last_edit_timestamp, title_edited_by_user, starred)
-         VALUES (?, ?, ?, ?, ?, ?)`
+          `INSERT OR REPLACE INTO threads (id, title, created_at, last_edit_timestamp, title_edited_by_user, starred, agent_id)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`
         ).run(
           thread.id,
           thread.title ?? null,
           thread.createdAt,
           thread.lastEditTimestamp,
           thread.titleEditedByUser ? 1 : 0,
-          thread.starred ? 1 : 0
+          thread.starred ? 1 : 0,
+          nextAgentId
         )
 
         db.prepare('DELETE FROM thread_messages WHERE thread_id = ?').run(
