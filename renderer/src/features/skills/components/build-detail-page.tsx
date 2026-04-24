@@ -136,11 +136,11 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
       />
 
       <DialogInstallSkill
-        key={`${build.name ?? tag ?? title}-${version ?? tag ?? ''}`}
+        key={`${build.name ?? tag ?? title}-${version ?? ''}`}
         open={installOpen}
         onOpenChange={setInstallOpen}
         defaultReference={build.name ?? tag}
-        defaultVersion={version ?? tag}
+        defaultVersion={version ?? ''}
       />
       <DialogDeleteBuild
         open={deleteOpen}
