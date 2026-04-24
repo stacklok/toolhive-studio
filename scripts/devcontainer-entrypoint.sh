@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 set -e
 
-# Clean up lingering services and stale lock files from a previous run
+# Clean up lingering services and stale lock files from a previous run.
+# The Electron + thv cleanup matters because pnpm/electron-forge don't reliably
+# propagate SIGTERM to their children on Ctrl+C — without this, the host-side
+# readiness poller would see leftover processes and fire the "ready" banner
+# before the new run has even started.
+pkill -f 'electron/dist/electron' 2>/dev/null || true
+pkill -f 'thv serve' 2>/dev/null || true
 pkill -f 'Xvfb :99' 2>/dev/null || true
 pkill -f 'fluxbox' 2>/dev/null || true
 pkill -f 'x11vnc.*:99' 2>/dev/null || true
 pkill -f 'websockify.*6080' 2>/dev/null || true
 pkill -f 'gnome-keyring-daemon' 2>/dev/null || true
 pkill -f 'dbus-daemon.*--session' 2>/dev/null || true
-sleep 0.3
+sleep 0.5
 rm -f /tmp/.X99-lock /tmp/.X11-unix/X99
 
 # Tear down on exit so Ctrl+C doesn't orphan the display stack
