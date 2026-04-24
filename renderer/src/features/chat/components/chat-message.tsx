@@ -18,6 +18,8 @@ import { TokenUsage } from './token-usage'
 import { NoContentMessage } from './no-content-message'
 import { AttachmentPreview } from './attachment-preview'
 import { McpAppView } from './mcp-app-view'
+import { SkillBuildResultCard } from './tool-results/skill-build-result-card'
+import { parseSkillBuildResult } from '../lib/parse-skill-build-result'
 import { Fragment, useState } from 'react'
 import type { ChatUIMessage } from '../types'
 import { getProviderIconByModel } from './provider-icons'
@@ -620,9 +622,19 @@ export function ChatMessage({
                 if (part.type.startsWith('tool-')) {
                   const staticToolName = part.type.replace('tool-', '')
                   const staticUi = uiMetadata[staticToolName]
+                  const skillBuildResult =
+                    staticToolName === 'build_skill' &&
+                    'state' in part &&
+                    part.state === 'output-available' &&
+                    'output' in part
+                      ? parseSkillBuildResult(part.output)
+                      : null
                   return (
                     <Fragment key={`tool-${index}`}>
                       <ToolCallComponent part={part} status={status} />
+                      {skillBuildResult && (
+                        <SkillBuildResultCard result={skillBuildResult} />
+                      )}
                       {staticUi &&
                         'state' in part &&
                         part.state === 'output-available' && (

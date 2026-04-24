@@ -21,6 +21,9 @@ vi.mock('electron-store', () => ({
 vi.mock('../../db/database')
 vi.mock('../../db/migrator')
 vi.mock('../../db/reconcile-from-store')
+vi.mock('../../chat/agents/registry', () => ({
+  seedBuiltinAgents: vi.fn(),
+}))
 vi.mock('../../auto-update')
 vi.mock('../../cli')
 vi.mock('../../app-state')

@@ -25,6 +25,7 @@ import {
 } from '@/common/components/ui/tooltip'
 import { ModelSelector } from './model-selector'
 import { McpServerSelector } from './mcp-server-selector'
+import { AgentSelector } from './agent-selector'
 import type { ChatSettings } from '../types'
 import { toast } from 'sonner'
 import { toastVariants } from '@/common/lib/toast'
@@ -75,6 +76,7 @@ function InputWithAttachments({
   handleProviderChange,
   hasProviderAndModel,
   hasMessages,
+  threadId,
 }: Omit<ChatInputProps, 'onSendMessage'> & {
   text: string
   setText: (text: string) => void
@@ -137,7 +139,7 @@ function InputWithAttachments({
         />
       </PromptInputBody>
       <PromptInputToolbar>
-        <PromptInputTools>
+        <PromptInputTools className="gap-1">
           <PromptInputActionMenu>
             <PromptInputActionMenuTrigger
               className="bg-secondary text-secondary-foreground rounded-full"
@@ -148,6 +150,7 @@ function InputWithAttachments({
           </PromptInputActionMenu>
           {hasProviderAndModel && (
             <>
+              <AgentSelector threadId={threadId} />
               <ModelSelector
                 settings={settings}
                 onSettingsChange={updateSettings}
@@ -243,6 +246,7 @@ export function ChatInputPrompt({
         handleProviderChange={handleProviderChange}
         hasProviderAndModel={hasProviderAndModel}
         hasMessages={hasMessages}
+        threadId={threadId}
         text={text}
         setText={setText}
       />

@@ -21,6 +21,11 @@ type BaseChatRequest = {
   messages: ChatUIMessage[]
   model: string
   enabledTools?: string[]
+  /**
+   * The id of the agent selected for this request. If omitted or unknown,
+   * the main process falls back to the default built-in agent.
+   */
+  agentId?: string
 }
 
 // Chat request interface - discriminated union for different provider types

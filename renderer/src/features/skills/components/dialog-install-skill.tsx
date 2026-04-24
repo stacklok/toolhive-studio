@@ -67,12 +67,14 @@ interface DialogInstallSkillProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   defaultReference?: string
+  defaultVersion?: string
 }
 
 export function DialogInstallSkill({
   open,
   onOpenChange,
   defaultReference,
+  defaultVersion,
 }: DialogInstallSkillProps) {
   const { mutateAsync: installSkill, isPending } = useMutationInstallSkill()
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -94,7 +96,7 @@ export function DialogInstallSkill({
       scope: 'user',
       project_root: '',
       clients: [],
-      version: '',
+      version: defaultVersion ?? '',
     },
   })
 
