@@ -2,6 +2,7 @@ import { app, nativeTheme, session } from 'electron'
 import { getDb } from '../db/database'
 import { runMigrations } from '../db/migrator'
 import { reconcileFromStore } from '../db/reconcile-from-store'
+import { seedBuiltinAgents } from '../chat/agents/registry'
 import { resetUpdateState, initAutoUpdate } from '../auto-update'
 import { validateCliAlignment, handleValidationResult } from '../cli'
 import { setCliValidationResult, getTray } from '../app-state'
@@ -25,6 +26,7 @@ export function register() {
       getDb()
       runMigrations()
       reconcileFromStore()
+      seedBuiltinAgents()
     } catch (err) {
       log.error('[DB] Database initialization failed:', err)
     }

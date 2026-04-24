@@ -1,5 +1,5 @@
 import {
-  streamText,
+  ToolLoopAgent,
   stepCountIs,
   type UIMessage,
   convertToModelMessages,
@@ -14,6 +14,8 @@ import { streamUIMessagesOverIPC } from './stream-utils'
 import type { ChatRequest } from './types'
 import { updateThreadMessages } from './threads-storage'
 import { createModelFromRequest } from './utils'
+import { getAgent, resolveAgentForThread } from './agents/registry'
+import { createBuiltinAgentTools } from './agents/builtin-agent-tools'
 
 /**
  * Handle chat streaming request using real-time IPC events
@@ -33,6 +35,7 @@ export async function handleChatStreamRealtime(
         stream_id: streamId,
         provider: request.provider,
         model: request.model,
+        agent_id: request.agentId ?? '',
         start_timestamp: new Date().toISOString(),
       },
     },
@@ -47,6 +50,12 @@ export async function handleChatStreamRealtime(
         // Create AI model using type guards for discriminated union
         const model = createModelFromRequest(provider, request)
 
+        // Resolve the agent for this request. Prefer the id on the request
+        // (selected in the UI), then the thread's stored agent, then default.
+        const agentConfig = request.agentId
+          ? (getAgent(request.agentId) ?? resolveAgentForThread(request.chatId))
+          : resolveAgentForThread(request.chatId)
+
         // Get MCP tools if enabled
         const {
           tools: mcpTools,
@@ -54,80 +63,32 @@ export async function handleChatStreamRealtime(
           enabledTools,
         } = await createMcpTools()
 
+        // Agent-specific built-in tools (e.g. Skills Builder)
+        const builtinToolsHandle = createBuiltinAgentTools(
+          agentConfig.builtinToolsKey ?? null
+        )
+        const builtinTools = builtinToolsHandle.tools
+
         // Emit UI metadata so the renderer can identify MCP App tools
         sender.send('chat:stream:tool-ui-metadata', getCachedUiMetadata())
 
+        const combinedTools = {
+          ...mcpTools,
+          ...builtinTools,
+        }
+        const hasTools = Object.keys(combinedTools).length > 0
+
         try {
-          const result = streamText({
+          const agent = new ToolLoopAgent({
             model,
+            instructions: agentConfig.instructions,
+            tools: hasTools ? combinedTools : undefined,
+            toolChoice: hasTools ? 'auto' : undefined,
+            stopWhen: stepCountIs(50),
+          })
+
+          const result = await agent.stream({
             messages: await convertToModelMessages(request.messages),
-            tools: Object.keys(mcpTools).length > 0 ? mcpTools : undefined,
-            toolChoice: Object.keys(mcpTools).length > 0 ? 'auto' : undefined,
-            stopWhen: stepCountIs(50), // Increase step limit for complex tool chains
-            system: `You are a helpful assistant with access to MCP (Model Context Protocol) servers from ToolHive.
-
-    You have access to various specialized tools from enabled MCP servers. Each tool is prefixed with the server name (e.g., github-stats-mcp_get_repository_info).
-
-    🚨 CRITICAL INSTRUCTION: After calling ANY tool, you MUST immediately follow up with a text response that processes and interprets the tool results. NEVER just call a tool and stop talking.
-
-    MANDATORY WORKFLOW:
-    1. Call the appropriate tool(s) to get data
-    2. IMMEDIATELY after the tool returns data, write a comprehensive text response
-    3. Parse and analyze the tool results in your text response
-    4. Extract key information and insights
-    5. Format everything in beautiful markdown
-    6. Provide a complete answer to the user's question
-
-    ⚠️ IMPORTANT: You must ALWAYS provide a text response after tool calls. Tool calls alone are not sufficient - users need you to interpret and explain the results.
-
-    🔄 CONTINUATION RULE: Even if you've called tools, you MUST continue the conversation with a detailed analysis. Do not end your response after tool execution - always provide interpretation, insights, and a complete answer.
-
-    FORMATTING REQUIREMENTS:
-    - Always use **Markdown syntax** for all responses
-    - Use proper headings (# ## ###), lists (- or 1.), tables, code blocks, etc.
-    - Present tool results in well-structured, readable format
-    - Extract meaningful insights from data
-    - NEVER show raw JSON or unformatted technical data
-    - NEVER just say "here's the result" - always interpret and format it
-
-    🖼️ IMAGE HANDLING:
-    - When a tool returns an image, the image will automatically display in the tool output section
-    - NEVER include base64 image data in your text response
-    - NEVER use <image> tags or data URIs in your text
-    - DO NOT copy or paste image data from tool outputs into your response
-    - Simply provide context and analysis about what the image shows
-    - The tool output section will automatically render any images returned by tools
-    - Focus your text response on interpreting and explaining the results
-    - Example: "I've generated a bar chart showing the sales data. The chart displays the relationship between products and their sales figures, with smartphones having the highest sales."
-
-    MARKDOWN FORMATTING EXAMPLES:
-
-    For GitHub repository data:
-    \`\`\`markdown
-    # 📦 Repository: owner/repo-name
-
-    ## 🚀 Latest Release: v1.2.3
-    - **Published:** March 15, 2024
-    - **Author:** @username
-    - **Downloads:** 1,234 total
-
-    ## 📊 Repository Stats
-    | Metric | Value |
-    |--------|--------|
-    | ⭐ Stars | 1,234 |
-    | 🍴 Forks | 89 |
-    | 📝 Issues | 23 open |
-
-    ## 💾 Download Options
-    - [Windows Setup](url) - 45 downloads
-    - [macOS DMG](url) - 234 downloads
-    - [Linux AppImage](url) - 123 downloads
-
-    ## 📈 Recent Activity
-    The repository shows active development with regular commits and community engagement.
-    \`\`\`
-
-    Remember: Always interpret and format tool results beautifully. Never show raw data!`,
           })
 
           // Create UI message stream with metadata and persistence
@@ -138,6 +99,8 @@ export async function handleChatStreamRealtime(
               op: 'streaming.event',
               attributes: {
                 'streaming.start_timestamp': new Date(startTime).toISOString(),
+                'streaming.agent_id': agentConfig.id,
+                'streaming.agent_kind': agentConfig.kind,
                 ...Object.entries(enabledTools).reduce<
                   Record<string, string | undefined>
                 >((prev, curr) => {
@@ -301,6 +264,15 @@ export async function handleChatStreamRealtime(
                   log.error('[CHAT] Error closing MCP client:', error)
                 }
               }
+              // Clean up any agent-owned temp resources (e.g. Skills workdirs)
+              try {
+                await builtinToolsHandle.cleanup()
+              } catch (error) {
+                log.error(
+                  '[CHAT] Error cleaning up builtin agent tools:',
+                  error
+                )
+              }
             }
           )
         } catch (error) {
@@ -315,6 +287,14 @@ export async function handleChatStreamRealtime(
                 cleanupError
               )
             }
+          }
+          try {
+            await builtinToolsHandle.cleanup()
+          } catch (cleanupError) {
+            log.error(
+              '[CHAT] Error cleaning up builtin agent tools during error cleanup:',
+              cleanupError
+            )
           }
 
           // Improve error messages for common API issues
