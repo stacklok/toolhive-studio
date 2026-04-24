@@ -18,4 +18,9 @@ jobs:
     needs: security
     if: ${{ always() && needs.security.result == 'failure' }}
     uses: ./.github/workflows/_security-fix-agent.yml
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
     secrets: inherit
