@@ -8,13 +8,14 @@ import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogDeleteBuild } from './dialog-delete-build'
 import { CardSkillBase } from './card-skill-base'
 import { trackEvent } from '@/common/lib/analytics'
+import { getBuildTitle } from '../lib/build-reference'
 
 export function CardBuild({ build }: { build: LocalBuild }) {
   const [installOpen, setInstallOpen] = useState(false)
   const [deleteOpen, setDeleteOpen] = useState(false)
   const navigate = useNavigate()
 
-  const title = build.name ?? build.tag ?? 'Unnamed build'
+  const title = getBuildTitle(build)
   const description = build.description
   const version = build.version
   const tag = build.tag
@@ -96,10 +97,11 @@ export function CardBuild({ build }: { build: LocalBuild }) {
       />
 
       <DialogInstallSkill
-        key={tag ?? title}
+        key={`${build.name ?? tag ?? title}-${version ?? tag ?? ''}`}
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={tag ?? build.name}
+        defaultReference={build.name ?? tag}
+        defaultVersion={version ?? tag}
       />
       <DialogDeleteBuild
         open={deleteOpen}
