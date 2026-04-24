@@ -65,8 +65,13 @@ function isValidPageSizeKey(key: string): key is UiPageSizeKey {
   return (UI_PAGE_SIZE_PREFERENCE_KEYS as readonly string[]).includes(key)
 }
 
-function isValidPageSize(value: number): boolean {
-  return Number.isInteger(value) && value > 0 && value <= 1000
+export function isValidPageSize(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value > 0 &&
+    value <= 1000
+  )
 }
 
 /**

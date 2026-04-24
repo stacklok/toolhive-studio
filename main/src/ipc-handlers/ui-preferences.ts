@@ -2,6 +2,7 @@ import { ipcMain } from 'electron'
 import {
   getPageSizePreference,
   getViewModePreference,
+  isValidPageSize,
   setPageSizePreference,
   setViewModePreference,
   UI_PAGE_SIZE_PREFERENCE_KEYS,
@@ -31,10 +32,6 @@ function isViewMode(value: unknown): value is ViewMode {
   return value === 'card' || value === 'table'
 }
 
-function isPageSize(value: unknown): value is number {
-  return typeof value === 'number' && Number.isInteger(value) && value > 0
-}
-
 export function register() {
   ipcMain.handle(
     'ui-preferences:get-view-mode',
@@ -59,7 +56,7 @@ export function register() {
   ipcMain.handle(
     'ui-preferences:set-page-size',
     (_event, key: unknown, value: unknown): void => {
-      if (!isUiPageSizeKey(key) || !isPageSize(value)) return
+      if (!isUiPageSizeKey(key) || !isValidPageSize(value)) return
       setPageSizePreference(key, value)
     }
   )
