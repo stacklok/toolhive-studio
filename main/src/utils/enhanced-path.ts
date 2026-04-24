@@ -23,10 +23,11 @@ const getCommonPaths = (): string[] => {
   }
 }
 
-const expandPath = (path: string): string =>
-  path.startsWith('~')
-    ? path.replace('~', process.env.HOME || process.env.USERPROFILE || '')
-    : path
+const expandPath = (path: string): string => {
+  if (!path.startsWith('~')) return path
+  const homeDir = process.env.HOME || process.env.USERPROFILE
+  return homeDir ? path.replace('~', homeDir) : path
+}
 
 export const createEnhancedPath = (): string => {
   const commonPaths = getCommonPaths().map(expandPath)

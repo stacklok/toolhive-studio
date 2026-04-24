@@ -3,6 +3,7 @@ import { EventEmitter } from 'node:events'
 import { vol } from 'memfs'
 import { spawn } from 'node:child_process'
 import net from 'node:net'
+import { platform } from 'node:os'
 import { app } from 'electron'
 import {
   startToolhive,
@@ -29,6 +30,18 @@ vi.mock('node:child_process', async (importOriginal) => {
     default: {
       ...actual,
       spawn: mockSpawnFn,
+    },
+  }
+})
+vi.mock('node:os', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:os')>()
+  const platformMock = vi.fn(actual.platform)
+  return {
+    ...actual,
+    platform: platformMock,
+    default: {
+      ...actual,
+      platform: platformMock,
     },
   }
 })
@@ -455,46 +468,29 @@ describe('toolhive-manager', () => {
     })
 
     it('spawns with an enhanced PATH that includes common container-tooling dirs', async () => {
-      const originalPath = process.env.PATH
-      const originalPlatform = process.platform
-      Object.defineProperty(process, 'platform', {
-        value: 'darwin',
-        configurable: true,
-      })
+      vi.mocked(platform).mockReturnValue('darwin')
       vi.stubEnv('PATH', '/usr/bin:/bin')
 
-      try {
-        const startPromise = startToolhive()
-        await vi.advanceTimersByTimeAsync(50)
-        await startPromise
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
 
-        const spawnOptions = mockSpawn.mock.calls[0]![2] as {
-          env: Record<string, string>
-        }
-        const spawnedPath = spawnOptions.env.PATH
-        expect(spawnedPath).toBeDefined()
-        const entries = spawnedPath!.split(':')
-
-        expect(entries).toContain(
-          '/Applications/Docker.app/Contents/Resources/bin'
-        )
-        expect(entries).toContain('/opt/homebrew/bin')
-        expect(entries).toContain('/usr/local/bin')
-        expect(entries).toContain('/usr/bin')
-        expect(entries).toContain('/bin')
-
-        expect(spawnOptions.env.TOOLHIVE_SKIP_DESKTOP_CHECK).toBe('true')
-      } finally {
-        Object.defineProperty(process, 'platform', {
-          value: originalPlatform,
-          configurable: true,
-        })
-        if (originalPath === undefined) {
-          delete process.env.PATH
-        } else {
-          process.env.PATH = originalPath
-        }
+      const spawnOptions = mockSpawn.mock.calls[0]![2] as {
+        env: Record<string, string>
       }
+      const spawnedPath = spawnOptions.env.PATH
+      expect(spawnedPath).toBeDefined()
+      const entries = spawnedPath!.split(':')
+
+      expect(entries).toContain(
+        '/Applications/Docker.app/Contents/Resources/bin'
+      )
+      expect(entries).toContain('/opt/homebrew/bin')
+      expect(entries).toContain('/usr/local/bin')
+      expect(entries).toContain('/usr/bin')
+      expect(entries).toContain('/bin')
+
+      expect(spawnOptions.env.TOOLHIVE_SKIP_DESKTOP_CHECK).toBe('true')
     })
 
     it('omits sentry flags when telemetry is disabled', async () => {

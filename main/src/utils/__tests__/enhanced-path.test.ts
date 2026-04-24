@@ -56,6 +56,19 @@ describe('createEnhancedPath', () => {
     expect(result).not.toContain('~')
   })
 
+  it('keeps ~ verbatim when HOME and USERPROFILE are both unset', () => {
+    mockPlatform.mockReturnValue('darwin')
+    vi.stubEnv('PATH', '')
+    vi.stubEnv('HOME', '')
+    vi.stubEnv('USERPROFILE', '')
+
+    const result = createEnhancedPath()
+    const entries = result.split(':')
+
+    expect(entries).toContain('~/.rd/bin')
+    expect(entries).not.toContain('/.rd/bin')
+  })
+
   it('uses semicolon as separator on win32', () => {
     mockPlatform.mockReturnValue('win32')
     vi.stubEnv('PATH', 'C:\\Windows\\System32;C:\\Windows')
