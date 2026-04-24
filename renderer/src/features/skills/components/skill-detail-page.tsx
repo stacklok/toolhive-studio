@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Button } from '@/common/components/ui/button'
-import { TagIcon, GithubIcon, ScaleIcon } from 'lucide-react'
+import { TagIcon, GitForkIcon, GithubIcon, ScaleIcon } from 'lucide-react'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { SkillDetailLayout } from './skill-detail-layout'
@@ -53,7 +53,7 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
                   className="text-muted-foreground flex items-center gap-1
                     text-sm"
                 >
-                  <GithubIcon className="size-4" />
+                  <GitForkIcon className="size-4" />
                   {repoLabel}
                 </span>
               )}
