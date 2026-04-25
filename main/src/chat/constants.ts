@@ -110,7 +110,6 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       'gemini-3.1-flash-lite-preview',
 
       // Gemini 3
-      'gemini-3-pro-preview',
       'gemini-3-pro-image-preview',
       'gemini-3-flash-preview',
 
@@ -121,9 +120,9 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
       'gemini-2.5-flash-lite',
       'gemini-2.5-computer-use-preview-10-2025',
 
-      // Gemini 2.0
-      'gemini-2.0-flash',
-      'gemini-2.0-flash-lite',
+      // Gemma 4
+      'gemma-4-31b-it',
+      'gemma-4-26b-a4b-it',
     ],
   },
   {
