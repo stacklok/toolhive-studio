@@ -30,6 +30,8 @@ import type { ChatSettings } from '../types'
 import { toast } from 'sonner'
 import { toastVariants } from '@/common/lib/toast'
 import { useThreadDraft } from '../hooks/use-thread-draft'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '@utils/feature-flags'
 
 const errorToastConfig = {
   max_files: {
@@ -83,6 +85,7 @@ function InputWithAttachments({
 }) {
   const attachments = usePromptInputAttachments()
   const prevTextRef = useRef(text)
+  const isAgentsEnabled = useFeatureFlag(featureFlagKeys.AGENTS)
 
   // Clear attachments when text is cleared and message is ready
   useEffect(() => {
@@ -150,7 +153,7 @@ function InputWithAttachments({
           </PromptInputActionMenu>
           {hasProviderAndModel && (
             <>
-              <AgentSelector threadId={threadId} />
+              {isAgentsEnabled && <AgentSelector threadId={threadId} />}
               <ModelSelector
                 settings={settings}
                 onSettingsChange={updateSettings}
