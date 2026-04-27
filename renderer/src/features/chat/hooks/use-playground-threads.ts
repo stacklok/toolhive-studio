@@ -49,11 +49,11 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
     loadThreads()
   }, [])
 
-  // Persist the URL-driven active thread to IPC whenever it changes
+  // Persist the URL-driven active thread to IPC whenever it changes.
+  // When the URL has no thread (e.g. user navigated to /playground/agents),
+  // explicitly clear the main-process pointer so it doesn't keep a stale id.
   useEffect(() => {
-    if (activeThreadId) {
-      window.electronAPI.chat.setActiveThreadId(activeThreadId)
-    }
+    window.electronAPI.chat.setActiveThreadId(activeThreadId ?? undefined)
   }, [activeThreadId])
 
   /** Creates a new thread and returns its ID for navigation, or null on failure. */
