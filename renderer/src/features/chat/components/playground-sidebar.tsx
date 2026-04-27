@@ -294,33 +294,33 @@ export function PlaygroundSidebar({
     >
       <div className="flex flex-col gap-0.5 px-2 pt-2 pb-1">
         {isAgentsEnabled && (
-          <Link
-            to="/playground/agents"
-            aria-label="Agents"
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
             className={cn(
-              'flex w-full items-center gap-2 rounded-md px-2 py-1 text-sm',
-              'transition-colors',
+              'w-full justify-start gap-2 px-2',
               isAgentsActive
                 ? 'bg-accent text-accent-foreground'
-                : `text-muted-foreground hover:text-foreground
-                  hover:bg-accent/60`
+                : 'text-muted-foreground'
             )}
           >
-            <Bot className="h-4 w-4 shrink-0" />
-            Agents
-          </Link>
+            <Link to="/playground/agents" aria-label="Agents">
+              <Bot className="h-4 w-4 shrink-0" />
+              Agents
+            </Link>
+          </Button>
         )}
-        <button
-          type="button"
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={onCreateThread}
           aria-label="New chat"
-          className="text-muted-foreground hover:text-foreground
-            hover:bg-accent/60 flex w-full items-center gap-2 rounded-md px-2
-            py-1 text-left text-sm transition-colors"
+          className="text-muted-foreground w-full justify-start gap-2 px-2"
         >
           <SquarePen className="h-4 w-4 shrink-0" />
           New chat
-        </button>
+        </Button>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-2 pb-3">
