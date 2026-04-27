@@ -28,7 +28,16 @@ import { DialogInstallSkill } from './dialog-install-skill'
 import { trackEvent } from '@/common/lib/analytics'
 
 const formSchema = z.object({
-  path: z.string().min(1, 'Path is required'),
+  path: z
+    .string()
+    .min(1, 'Path is required')
+    .refine(
+      async (value) => {
+        if (!value) return true
+        return window.electronAPI.isDirectory(value)
+      },
+      { message: 'Folder does not exist' }
+    ),
   tag: z.string().optional(),
 })
 
@@ -50,6 +59,7 @@ export function DialogBuildSkill({
 
   const form = useForm<FormSchema>({
     resolver: zodV4Resolver(formSchema),
+    mode: 'onBlur',
     defaultValues: {
       path: '',
       tag: '',
@@ -149,9 +159,9 @@ export function DialogBuildSkill({
                       <FormControl>
                         <Input
                           {...field}
-                          placeholder="Select a directory..."
-                          readOnly
-                          className="cursor-default"
+                          placeholder="Paste or type a folder path..."
+                          autoComplete="off"
+                          spellCheck={false}
                         />
                       </FormControl>
                       <Button

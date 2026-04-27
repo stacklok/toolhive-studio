@@ -50,9 +50,9 @@ describe('DialogBuildSkill', () => {
     await user.click(screen.getByRole('button', { name: /browse for folder/i }))
 
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
-        '/home/user/my-skill'
-      )
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
     })
   })
 
@@ -67,9 +67,9 @@ describe('DialogBuildSkill', () => {
 
     await user.click(screen.getByRole('button', { name: /browse for folder/i }))
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
-        '/home/user/my-skill'
-      )
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
     })
 
     await user.type(screen.getByPlaceholderText(/e\.g\. v1\.0\.0/i), 'v1.0.0')
@@ -100,9 +100,9 @@ describe('DialogBuildSkill', () => {
 
     await user.click(screen.getByRole('button', { name: /browse for folder/i }))
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
-        '/home/user/my-skill'
-      )
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
     })
     await user.click(screen.getByRole('button', { name: /^build$/i }))
 
@@ -125,9 +125,9 @@ describe('DialogBuildSkill', () => {
 
     await user.click(screen.getByRole('button', { name: /browse for folder/i }))
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
-        '/home/user/my-skill'
-      )
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
     })
     await user.click(screen.getByRole('button', { name: /^build$/i }))
 
@@ -147,9 +147,9 @@ describe('DialogBuildSkill', () => {
 
     await user.click(screen.getByRole('button', { name: /browse for folder/i }))
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
-        '/home/user/my-skill'
-      )
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
     })
     await user.click(screen.getByRole('button', { name: /^build$/i }))
 
@@ -169,9 +169,9 @@ describe('DialogBuildSkill', () => {
 
     await user.click(screen.getByRole('button', { name: /browse for folder/i }))
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
-        '/home/user/my-skill'
-      )
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
     })
     await user.click(screen.getByRole('button', { name: /^build$/i }))
 
@@ -191,9 +191,9 @@ describe('DialogBuildSkill', () => {
 
     await user.click(screen.getByRole('button', { name: /browse for folder/i }))
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
-        '/home/user/my-skill'
-      )
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
     })
     await user.click(screen.getByRole('button', { name: /^build$/i }))
 
@@ -213,9 +213,9 @@ describe('DialogBuildSkill', () => {
 
     await user.click(screen.getByRole('button', { name: /browse for folder/i }))
     await waitFor(() => {
-      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
-        '/home/user/my-skill'
-      )
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
     })
     await user.click(screen.getByRole('button', { name: /^build$/i }))
 
@@ -228,5 +228,51 @@ describe('DialogBuildSkill', () => {
     await waitFor(() => {
       expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     })
+  })
+
+  it('accepts a manually typed path and submits when isDirectory returns true', async () => {
+    const user = userEvent.setup()
+    const rec = recordRequests()
+
+    renderWithProviders(<DialogBuildSkill open onOpenChange={vi.fn()} />)
+
+    const pathInput = screen.getByPlaceholderText(/paste or type a folder/i)
+    await user.type(pathInput, '/home/user/.agents/my-skill')
+    await user.click(screen.getByRole('button', { name: /^build$/i }))
+
+    await waitFor(() => {
+      const postCall = rec.recordedRequests.find(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/skills/build'
+      )
+      expect(postCall).toBeDefined()
+      expect(postCall?.payload).toMatchObject({
+        path: '/home/user/.agents/my-skill',
+      })
+    })
+
+    expect(window.electronAPI.isDirectory).toHaveBeenCalledWith(
+      '/home/user/.agents/my-skill'
+    )
+  })
+
+  it('blocks submit and shows validation error when typed path is not a directory', async () => {
+    const user = userEvent.setup()
+    const rec = recordRequests()
+    vi.mocked(window.electronAPI.isDirectory).mockResolvedValue(false)
+
+    renderWithProviders(<DialogBuildSkill open onOpenChange={vi.fn()} />)
+
+    const pathInput = screen.getByPlaceholderText(/paste or type a folder/i)
+    await user.type(pathInput, '/does/not/exist')
+    await user.click(screen.getByRole('button', { name: /^build$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByText(/folder does not exist/i)).toBeInTheDocument()
+    })
+
+    const postCall = rec.recordedRequests.find(
+      (r) => r.method === 'POST' && r.pathname === '/api/v1beta/skills/build'
+    )
+    expect(postCall).toBeUndefined()
   })
 })
