@@ -74,16 +74,15 @@ describe('TableRegistrySkills', () => {
       screen.getByRole('columnheader', { name: /skill/i })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('columnheader', { name: /registry/i })
-    ).toBeInTheDocument()
-    expect(
       screen.getByRole('columnheader', { name: /about/i })
     ).toBeInTheDocument()
     expect(
       screen.getByRole('columnheader', { name: /original repo/i })
     ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('columnheader', { name: /registry/i })
+    ).not.toBeInTheDocument()
 
-    expect(screen.getByText('io.github.user')).toBeVisible()
     expect(screen.getByText('git-skill')).toBeVisible()
     expect(screen.getByText('A helpful skill')).toBeVisible()
     expect(screen.getByText('org/repo')).toBeVisible()

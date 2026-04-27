@@ -71,21 +71,6 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
           </Tooltip>
         </TableCell>
 
-        <TableCell className="text-muted-foreground hidden py-3 lg:table-cell">
-          {namespace ? (
-            <Tooltip onlyWhenTruncated>
-              <TooltipTrigger asChild>
-                <span className="block max-w-[200px] truncate text-sm">
-                  {namespace}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">{namespace}</TooltipContent>
-            </Tooltip>
-          ) : (
-            <span className="text-muted-foreground/60 text-sm">—</span>
-          )}
-        </TableCell>
-
         <TableCell
           className="text-muted-foreground hidden w-full max-w-0 py-3
             md:table-cell"
@@ -188,12 +173,6 @@ export function TableRegistrySkills({ skills }: { skills: RegistrySkill[] }) {
         <TableRow className="bg-muted/40 hover:bg-muted/40">
           <TableHead className="text-muted-foreground font-medium">
             Skill
-          </TableHead>
-          <TableHead
-            className="text-muted-foreground hidden w-[200px] font-medium
-              lg:table-cell"
-          >
-            Registry
           </TableHead>
           <TableHead
             className="text-muted-foreground hidden w-full max-w-0 font-medium
