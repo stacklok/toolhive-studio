@@ -5,20 +5,16 @@ name: Bug Fix Agent (Experimental — Visual)
 # (xdotool, screenshots) when a unit-test reproduction is impractical. PR flow
 # is identical to the production agent — base = main, head = fix/auto-<issue#>.
 #
-# Trigger: push a commit to this branch.
-#   git commit --allow-empty -m "trigger experiment" && git push
-# To push without firing a run, prefix the commit message with [skip ci].
-#
-# The branch filter pins this workflow to its dedicated experiment branch, so
-# it cannot fire from main or any other branch even if the file ends up there.
+# This workflow is `workflow_call`-only (mirrors the production agent's shape,
+# so the underlying `claude-code-action` only ever sees an event type it
+# accepts). It is invoked from `experiment-bug-fix-trigger.yml`, which fires
+# on `pull_request: labeled` against the experiment PR.
 #
 # This workflow operates on a single fixed issue (set in env.ISSUE_NUMBER
 # below). To target a different issue, edit the env var and push.
 
 on:
-  push:
-    branches:
-      - experiment/bug-fix-visual
+  workflow_call:
 
 concurrency:
   group: bug-fix-experimental-663
@@ -35,8 +31,8 @@ jobs:
       issues: write
       id-token: write
     env:
-      # Issue this experiment is targeting. Hardcoded so the workflow can
-      # be a `push:`-triggered file with no inputs. Change + push to retarget.
+      # Issue this experiment is targeting. Hardcoded for this POC; change +
+      # push + re-label to retarget another issue.
       ISSUE_NUMBER: '663'
       # Required by .devcontainer/devcontainer.json runArgs port mapping.
       # In CI we don't need the host-side noVNC tunnel; just pick a free port
@@ -296,20 +292,6 @@ jobs:
             --base main \
             --head "$BRANCH" \
             --label "auto-fix-experimental"
-
-      - name: Comment on issue (failure path)
-        if: always() && steps.verify.outputs.result != 'success' && steps.phase1.outcome != 'skipped'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          if [ -f bug-analysis.md ]; then
-            ANALYSIS=$(cat bug-analysis.md)
-          else
-            ANALYSIS="The experimental agent could not analyze this bug."
-          fi
-          printf '## Bug Fix Agent (Experimental — Visual) — Analysis\n\n%s\n\n---\n_This is from the experimental visual flow. The production fixer may behave differently._\n' \
-            "$ANALYSIS" > /tmp/comment-body.md
-          gh issue comment "$ISSUE_NUMBER" --body-file /tmp/comment-body.md
 
       - name: Diagnostics on failure
         if: failure() || steps.verify.outputs.result != 'success'
