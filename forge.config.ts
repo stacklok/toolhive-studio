@@ -193,7 +193,6 @@ const config: ForgeConfig = {
         productName: APP_NAME,
         genericName: APP_NAME,
         icon: './icons/icon.png',
-        requires: ['docker >= 20.10'],
         license: 'Apache-2.0',
         bin: EXECUTABLE_NAME,
         mimeType: [`x-scheme-handler/${DEEP_LINK_PROTOCOL}`],
