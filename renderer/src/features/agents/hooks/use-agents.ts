@@ -101,7 +101,9 @@ export function useSetThreadAgent() {
       queryClient.invalidateQueries({
         queryKey: AGENT_QUERY_KEYS.threadAgent(variables.threadId),
       })
-      queryClient.invalidateQueries({ queryKey: ['chat-thread'] })
+      queryClient.invalidateQueries({
+        queryKey: ['chat', 'thread', variables.threadId],
+      })
     },
   })
 }
