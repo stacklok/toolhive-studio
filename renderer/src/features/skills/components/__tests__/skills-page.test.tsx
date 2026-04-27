@@ -40,7 +40,7 @@ function setupRegistryMock(total: number) {
     (_data, info) => {
       const url = new URL(info.request.url)
       const page = Number(url.searchParams.get('page') ?? 1)
-      const limit = Number(url.searchParams.get('limit') ?? 12)
+      const limit = Number(url.searchParams.get('limit') ?? 24)
       const search = url.searchParams.get('q') ?? ''
       const effectiveTotal = search ? Math.min(total, 25) : total
       return HttpResponse.json({
@@ -63,19 +63,19 @@ beforeEach(() => {
 })
 
 describe('SkillsPage registry pagination', () => {
-  it('renders the first page with default limit of 12', async () => {
+  it('renders the first page with default limit of 24', async () => {
     setupRegistryMock(100)
 
     renderSkillsPage()
 
     await waitFor(() => {
       expect(screen.getByText('skill-1')).toBeVisible()
-      expect(screen.getByText('skill-12')).toBeVisible()
+      expect(screen.getByText('skill-24')).toBeVisible()
     })
 
-    expect(screen.queryByText('skill-13')).not.toBeInTheDocument()
+    expect(screen.queryByText('skill-25')).not.toBeInTheDocument()
     expect(screen.getByText('Page 1')).toBeVisible()
-    expect(screen.getByText('Showing 1-12 of 100 skills')).toBeVisible()
+    expect(screen.getByText('Showing 1-24 of 100 skills')).toBeVisible()
   })
 
   it('advances to the next page when Next is clicked', async () => {
@@ -91,8 +91,8 @@ describe('SkillsPage registry pagination', () => {
     await user.click(screen.getByRole('button', { name: /go to next page/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('skill-13')).toBeVisible()
-      expect(screen.getByText('skill-24')).toBeVisible()
+      expect(screen.getByText('skill-25')).toBeVisible()
+      expect(screen.getByText('skill-48')).toBeVisible()
     })
     expect(screen.getByText('Page 2')).toBeVisible()
     expect(screen.queryByText('skill-1')).not.toBeInTheDocument()
@@ -143,7 +143,7 @@ describe('SkillsPage registry pagination', () => {
     await user.type(search, 'foo')
 
     await waitFor(() => {
-      expect(screen.getByText('Showing 1-12 of 25 skills')).toBeVisible()
+      expect(screen.getByText('Showing 1-24 of 25 skills')).toBeVisible()
     })
     expect(screen.getByText('Page 1')).toBeVisible()
   })
@@ -164,18 +164,18 @@ describe('SkillsPage registry pagination', () => {
 
   it('disables Next when on the last page of a larger result set', async () => {
     const user = userEvent.setup()
-    setupRegistryMock(20)
+    setupRegistryMock(30)
 
     renderSkillsPage()
 
     await waitFor(() => {
-      expect(screen.getByText('Showing 1-12 of 20 skills')).toBeVisible()
+      expect(screen.getByText('Showing 1-24 of 30 skills')).toBeVisible()
     })
 
     await user.click(screen.getByRole('button', { name: /go to next page/i }))
 
     await waitFor(() => {
-      expect(screen.getByText('Showing 13-20 of 20 skills')).toBeVisible()
+      expect(screen.getByText('Showing 25-30 of 30 skills')).toBeVisible()
     })
     expect(screen.getByText('Page 2')).toBeVisible()
     expect(
