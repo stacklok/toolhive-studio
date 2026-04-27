@@ -79,10 +79,14 @@ describe('TableRegistrySkills', () => {
     expect(
       screen.getByRole('columnheader', { name: /about/i })
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole('columnheader', { name: /original repo/i })
+    ).toBeInTheDocument()
 
     expect(screen.getByText('io.github.user')).toBeVisible()
     expect(screen.getByText('git-skill')).toBeVisible()
     expect(screen.getByText('A helpful skill')).toBeVisible()
+    expect(screen.getByText('org/repo')).toBeVisible()
   })
 
   it('shows an empty state when skills is empty', async () => {

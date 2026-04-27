@@ -18,6 +18,7 @@ import {
 } from '@/common/components/ui/tooltip'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { getSkillInstallReference } from '../lib/skill-reference'
+import { getDisplayRepoLabel } from '../lib/get-display-repo-label'
 import { trackEvent } from '@/common/lib/analytics'
 
 function activateOnKey(e: React.KeyboardEvent, onActivate: () => void) {
@@ -34,6 +35,7 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
   const title = skill.name ?? 'Unknown skill'
   const namespace = skill.namespace
   const canNavigate = !!(namespace && skill.name)
+  const repoLabel = getDisplayRepoLabel(skill.repository?.url)
 
   function goToDetail() {
     if (!canNavigate) return
@@ -104,7 +106,7 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
           )}
         </TableCell>
 
-        <TableCell className="py-3">
+        <TableCell className="text-muted-foreground py-3">
           {skill.repository?.url ? (
             <a
               href={skill.repository.url}
@@ -119,12 +121,26 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
                 })
               }}
               className="text-muted-foreground hover:bg-accent inline-flex
-                size-8 items-center justify-center rounded-md"
+                items-center gap-2 rounded-md px-2 py-1 text-sm"
               aria-label="Open repository on GitHub"
             >
-              <Github className="size-4" />
+              <Github className="size-4 shrink-0" />
+              {repoLabel ? (
+                <Tooltip onlyWhenTruncated>
+                  <TooltipTrigger asChild>
+                    <span className="block max-w-[200px] truncate">
+                      {repoLabel}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    {repoLabel}
+                  </TooltipContent>
+                </Tooltip>
+              ) : null}
             </a>
-          ) : null}
+          ) : (
+            <span className="text-muted-foreground/60 text-sm">—</span>
+          )}
         </TableCell>
 
         <TableCell className="py-3 pr-3 text-right">
@@ -185,7 +201,9 @@ export function TableRegistrySkills({ skills }: { skills: RegistrySkill[] }) {
           >
             About
           </TableHead>
-          <TableHead className="w-12" aria-label="Repository" />
+          <TableHead className="text-muted-foreground w-[240px] font-medium">
+            Original Repo
+          </TableHead>
           <TableHead className="w-[120px] pr-3" aria-label="Actions" />
         </TableRow>
       </TableHeader>
