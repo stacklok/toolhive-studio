@@ -27,11 +27,11 @@ runs `scripts/devcontainer-dev.sh` on the host. The script is "smart":
 
 ## The three scripts
 
-| Script                                     | Runs on      | Purpose                                                                                                                            |
-| ------------------------------------------ | ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `scripts/devcontainer-dev.sh`              | host         | Picks a host port, kills stale processes, starts readiness poller, opens browser when ready, `devcontainer exec`s the entrypoint. |
-| `scripts/devcontainer-entrypoint.sh`       | in container | Cleans stale X/VNC state, starts Xvfb, fluxbox, x11vnc, websockify/noVNC, dbus, gnome-keyring, then runs `pnpm start`.             |
-| `scripts/devcontainer-post-start.sh`       | in container | `postStartCommand` in `devcontainer.json`. In Codespaces (detected via `$CODESPACES`) it `nohup`-launches the entrypoint in the background so the noVNC preview pane opens without user action. |
+| Script                               | Runs on      | Purpose                                                                                                                                                                                         |
+| ------------------------------------ | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `scripts/devcontainer-dev.sh`        | host         | Picks a host port, kills stale processes, starts readiness poller, opens browser when ready, `devcontainer exec`s the entrypoint.                                                               |
+| `scripts/devcontainer-entrypoint.sh` | in container | Cleans stale X/VNC state, starts Xvfb, fluxbox, x11vnc, websockify/noVNC, dbus, gnome-keyring, then runs `pnpm start`.                                                                          |
+| `scripts/devcontainer-post-start.sh` | in container | `postStartCommand` in `devcontainer.json`. In Codespaces (detected via `$CODESPACES`) it `nohup`-launches the entrypoint in the background so the noVNC preview pane opens without user action. |
 
 ---
 
@@ -65,9 +65,10 @@ grep -E 'ToolHive ready|vnc\.html' /tmp/dev.log
 ```
 
 The readiness banner is what you care about. It gates on **three** signals simultaneously:
+
 - noVNC's HTTP endpoint answers (the browser tab will actually load)
 - The Electron binary is running (matched via `pgrep -f 'electron/dist/electron'`)
-- `thv serve` is running (matched via `pgrep -f 'thv serve'` — *not* `pgrep -x thv`, because the short-lived version-check invocation also matches on bare name)
+- `thv serve` is running (matched via `pgrep -f 'thv serve'` — _not_ `pgrep -x thv`, because the short-lived version-check invocation also matches on bare name)
 
 Only once all three are true does the banner fire and the host's browser auto-open.
 
@@ -114,14 +115,14 @@ docker exec "$CONTAINER" docker ps
 
 ### Log files (written by the entrypoint)
 
-| Path                    | Contents                                          |
-| ----------------------- | ------------------------------------------------- |
-| `/tmp/xvfb.log`         | Xvfb startup and runtime errors                   |
-| `/tmp/fluxbox.log`      | Window manager                                    |
-| `/tmp/x11vnc.log`       | VNC server — includes client connection events    |
-| `/tmp/websockify.log`   | noVNC WebSocket proxy                             |
-| `/tmp/keyring.log`      | gnome-keyring-daemon unlock output                |
-| `/tmp/entrypoint.log`   | Output of the Codespaces auto-launch entrypoint (only exists in Codespaces) |
+| Path                  | Contents                                                                    |
+| --------------------- | --------------------------------------------------------------------------- |
+| `/tmp/xvfb.log`       | Xvfb startup and runtime errors                                             |
+| `/tmp/fluxbox.log`    | Window manager                                                              |
+| `/tmp/x11vnc.log`     | VNC server — includes client connection events                              |
+| `/tmp/websockify.log` | noVNC WebSocket proxy                                                       |
+| `/tmp/keyring.log`    | gnome-keyring-daemon unlock output                                          |
+| `/tmp/entrypoint.log` | Output of the Codespaces auto-launch entrypoint (only exists in Codespaces) |
 
 ### Killing stale state
 
@@ -220,6 +221,7 @@ A complete explanation is in a comment block in `.devcontainer/devcontainer.json
 Root cause: Docker's default `/dev/shm` is 64 MB, too small for Chromium's compositor buffers; it fails silently and paints nothing.
 
 This is already fixed in the setup:
+
 - `runArgs` has `--shm-size=2g` to grow the shared memory
 - The entrypoint launches Electron with `--disable-dev-shm-usage` so Chromium falls back to `/tmp` anyway
 
@@ -235,7 +237,7 @@ The Electron main window's `WM_CLASS` is `ToolHive`, **not** `Electron`. The `~/
 
 ### Readiness false-positive (pgrep self-match)
 
-When using `pgrep -f PATTERN` from a shell command (e.g. `bash -c 'pgrep -f "thv serve"'`), the pattern string appears verbatim in the **invoking shell's argv** — and `pgrep -f` matches against the full argv of every process. So pgrep matches its own parent shell and always returns true, *even when nothing is actually running the target process*. Use the standard bracket-class trick: `pgrep -f '[t]hv serve'`. The regex character class `[t]` matches `t` literally, so it still matches `thv serve`, but the literal string `[t]hv serve` in the invoking shell's argv doesn't match the regex. See `scripts/devcontainer-dev.sh` and `.devcontainer/greeting.sh` for the pattern in use.
+When using `pgrep -f PATTERN` from a shell command (e.g. `bash -c 'pgrep -f "thv serve"'`), the pattern string appears verbatim in the **invoking shell's argv** — and `pgrep -f` matches against the full argv of every process. So pgrep matches its own parent shell and always returns true, _even when nothing is actually running the target process_. Use the standard bracket-class trick: `pgrep -f '[t]hv serve'`. The regex character class `[t]` matches `t` literally, so it still matches `thv serve`, but the literal string `[t]hv serve` in the invoking shell's argv doesn't match the regex. See `scripts/devcontainer-dev.sh` and `.devcontainer/greeting.sh` for the pattern in use.
 
 ### Secret provider returns 500
 
