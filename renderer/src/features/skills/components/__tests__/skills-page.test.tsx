@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { StrictMode } from 'react'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider } from '@tanstack/react-router'
 import { renderRoute } from '@/common/test/render-route'
@@ -273,6 +273,66 @@ describe('SkillsPage registry pagination', () => {
 
     const { search } = router.state.location
     expect(search).toMatchObject({ tab: 'registry', page: 3 })
+  })
+
+  it('persists the selected page size via the uiPreferences IPC', async () => {
+    const user = userEvent.setup()
+    const setPageSize = vi.fn().mockResolvedValue(undefined)
+    window.electronAPI.uiPreferences.setPageSize = setPageSize
+    setupRegistryMock(200)
+
+    renderSkillsPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('skill-1')).toBeVisible()
+    })
+
+    await user.click(screen.getByRole('combobox', { name: /items per page/i }))
+    await user.click(screen.getByRole('option', { name: '50' }))
+
+    await waitFor(() => {
+      expect(setPageSize).toHaveBeenCalledWith('ui.pageSize.skillsRegistry', 50)
+    })
+  })
+
+  it('hydrates the initial page size from the persisted preference', async () => {
+    window.electronAPI.uiPreferences.getPageSize = vi.fn().mockResolvedValue(50)
+    setupRegistryMock(200)
+
+    renderSkillsPage()
+
+    await waitFor(() => {
+      expect(screen.getByText('Showing 1-50 of 200 skills')).toBeVisible()
+    })
+    expect(screen.getByText('skill-50')).toBeVisible()
+  })
+
+  it('prefers the URL limit over the persisted preference', async () => {
+    window.electronAPI.uiPreferences.getPageSize = vi.fn().mockResolvedValue(50)
+    setupRegistryMock(200)
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    })
+    const router = createFileRouteTestRouter(
+      SkillsRouteImport,
+      '/skills',
+      '/skills?tab=registry&limit=24',
+      queryClient
+    )
+
+    render(
+      <PermissionsProvider>
+        <PromptProvider>
+          <QueryClientProvider client={queryClient}>
+            <RouterProvider router={router} />
+          </QueryClientProvider>
+        </PromptProvider>
+      </PermissionsProvider>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByText('Showing 1-24 of 200 skills')).toBeVisible()
+    })
   })
 
   it('returns to the first page via the First button', async () => {

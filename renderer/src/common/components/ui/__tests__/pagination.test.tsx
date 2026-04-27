@@ -34,6 +34,9 @@ describe('Pagination', () => {
     expect(
       screen.getByRole('button', { name: /go to next page/i })
     ).toBeVisible()
+    expect(
+      screen.getByRole('button', { name: /go to last page/i })
+    ).toBeVisible()
   })
 
   it('uses a custom item label', () => {
@@ -53,13 +56,19 @@ describe('Pagination', () => {
     expect(
       screen.getByRole('button', { name: /go to next page/i })
     ).toBeEnabled()
+    expect(
+      screen.getByRole('button', { name: /go to last page/i })
+    ).toBeEnabled()
   })
 
-  it('disables next on the last page', () => {
+  it('disables next and last on the last page', () => {
     setup({ page: 9, pageSize: 12, total: 100 })
 
     expect(
       screen.getByRole('button', { name: /go to next page/i })
+    ).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: /go to last page/i })
     ).toBeDisabled()
     expect(
       screen.getByRole('button', { name: /go to previous page/i })
@@ -80,6 +89,9 @@ describe('Pagination', () => {
 
     await user.click(screen.getByRole('button', { name: /go to first page/i }))
     expect(onPageChange).toHaveBeenCalledWith(1)
+
+    await user.click(screen.getByRole('button', { name: /go to last page/i }))
+    expect(onPageChange).toHaveBeenCalledWith(9)
   })
 
   it('invokes onPageSizeChange when a new size is selected', async () => {

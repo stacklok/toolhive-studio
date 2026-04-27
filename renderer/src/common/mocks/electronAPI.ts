@@ -43,6 +43,8 @@ function createElectronStub(): Partial<ElectronAPI> {
     uiPreferences: {
       getViewMode: vi.fn().mockResolvedValue('card'),
       setViewMode: vi.fn().mockResolvedValue(undefined),
+      getPageSize: vi.fn().mockResolvedValue(undefined),
+      setPageSize: vi.fn().mockResolvedValue(undefined),
     } as ElectronAPI['uiPreferences'],
     chat: {
       stream: vi.fn(),
