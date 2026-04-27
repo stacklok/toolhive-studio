@@ -5,20 +5,23 @@ name: Bug Fix Agent (Experimental — Visual)
 # (xdotool, screenshots) when a unit-test reproduction is impractical. PR flow
 # is identical to the production agent — base = main, head = fix/auto-<issue#>.
 #
-# Trigger:
-#   gh workflow run _bug-fix-agent-experimental.yml \
-#     -r experiment/bug-fix-visual -f issue-number=663
+# Trigger: push a commit to this branch.
+#   git commit --allow-empty -m "trigger experiment" && git push
+# To push without firing a run, prefix the commit message with [skip ci].
+#
+# The branch filter pins this workflow to its dedicated experiment branch, so
+# it cannot fire from main or any other branch even if the file ends up there.
+#
+# This workflow operates on a single fixed issue (set in env.ISSUE_NUMBER
+# below). To target a different issue, edit the env var and push.
 
 on:
-  workflow_dispatch:
-    inputs:
-      issue-number:
-        description: 'Issue number to fix'
-        required: true
-        type: number
+  push:
+    branches:
+      - experiment/bug-fix-visual
 
 concurrency:
-  group: bug-fix-experimental-${{ inputs.issue-number }}
+  group: bug-fix-experimental-663
   cancel-in-progress: true
 
 jobs:
@@ -32,6 +35,9 @@ jobs:
       issues: write
       id-token: write
     env:
+      # Issue this experiment is targeting. Hardcoded so the workflow can
+      # be a `push:`-triggered file with no inputs. Change + push to retarget.
+      ISSUE_NUMBER: '663'
       # Required by .devcontainer/devcontainer.json runArgs port mapping.
       # In CI we don't need the host-side noVNC tunnel; just pick a free port
       # so the mapping resolves to something valid.
@@ -55,7 +61,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          gh issue view ${{ inputs.issue-number }} --json title,body,labels \
+          gh issue view "$ISSUE_NUMBER" --json title,body,labels \
             --template '# {{.title}}{{"\n\n"}}{{.body}}' > issue-body.md
 
       - name: Build & start devcontainer (cached via gha)
@@ -220,7 +226,7 @@ jobs:
             4. Run the full suite: pnpm run test:nonInteractive
             5. Run pnpm run lint and pnpm run type-check.
             6. If any check fails, adjust (max 5 attempts).
-            7. Write pr-body.md (include 'Fixes #${{ inputs.issue-number }}')
+            7. Write pr-body.md (include 'Fixes #${{ env.ISSUE_NUMBER }}')
                and fix-title.txt.
 
             Do NOT run git, gh, or modify .env files.
@@ -246,9 +252,8 @@ jobs:
         if: steps.verify.outputs.result == 'success'
         id: push
         run: |
-          ISSUE_NUM="${{ inputs.issue-number }}"
-          BRANCH="fix/auto-${ISSUE_NUM}-experimental"
-          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${ISSUE_NUM}")
+          BRANCH="fix/auto-${ISSUE_NUMBER}-experimental"
+          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${ISSUE_NUMBER}")
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -271,10 +276,10 @@ jobs:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           BRANCH="${{ steps.push.outputs.branch }}"
-          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${{ inputs.issue-number }}")
+          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${ISSUE_NUMBER}")
 
           if [ ! -f pr-body.md ]; then
-            echo "Automated fix for #${{ inputs.issue-number }} (experimental visual flow)." > pr-body.md
+            echo "Automated fix for #${ISSUE_NUMBER} (experimental visual flow)." > pr-body.md
           fi
 
           # Append a marker so reviewers can tell this came from the experiment
@@ -304,7 +309,7 @@ jobs:
           fi
           printf '## Bug Fix Agent (Experimental — Visual) — Analysis\n\n%s\n\n---\n_This is from the experimental visual flow. The production fixer may behave differently._\n' \
             "$ANALYSIS" > /tmp/comment-body.md
-          gh issue comment "${{ inputs.issue-number }}" --body-file /tmp/comment-body.md
+          gh issue comment "$ISSUE_NUMBER" --body-file /tmp/comment-body.md
 
       - name: Diagnostics on failure
         if: failure() || steps.verify.outputs.result != 'success'
