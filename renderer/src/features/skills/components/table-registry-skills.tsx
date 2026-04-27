@@ -35,7 +35,10 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
   const title = skill.name ?? 'Unknown skill'
   const namespace = skill.namespace
   const canNavigate = !!(namespace && skill.name)
-  const repoLabel = getDisplayRepoLabel(skill.repository?.url)
+  const repositoryUrl = skill.repository?.url
+  const displayRepoLabel = repositoryUrl
+    ? (getDisplayRepoLabel(repositoryUrl) ?? repositoryUrl)
+    : null
 
   function goToDetail() {
     if (!canNavigate) return
@@ -92,9 +95,9 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
         </TableCell>
 
         <TableCell className="text-muted-foreground py-3">
-          {skill.repository?.url ? (
+          {repositoryUrl && displayRepoLabel ? (
             <a
-              href={skill.repository.url}
+              href={repositoryUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => {
@@ -107,21 +110,18 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
               }}
               className="text-muted-foreground hover:bg-accent inline-flex
                 items-center gap-2 rounded-md px-2 py-1 text-sm"
-              aria-label="Open repository on GitHub"
             >
-              <Github className="size-4 shrink-0" />
-              {repoLabel ? (
-                <Tooltip onlyWhenTruncated>
-                  <TooltipTrigger asChild>
-                    <span className="block max-w-[200px] truncate">
-                      {repoLabel}
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
-                    {repoLabel}
-                  </TooltipContent>
-                </Tooltip>
-              ) : null}
+              <Github aria-hidden className="size-4 shrink-0" />
+              <Tooltip onlyWhenTruncated>
+                <TooltipTrigger asChild>
+                  <span className="block max-w-[200px] truncate">
+                    {displayRepoLabel}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  {displayRepoLabel}
+                </TooltipContent>
+              </Tooltip>
             </a>
           ) : (
             <span className="text-muted-foreground/60 text-sm">—</span>
