@@ -61,7 +61,7 @@ export function getSkillOciRef(skill: RegistrySkill): string | undefined {
   return getOciPackageReference(skill) ?? getNamespaceNameReference(skill)
 }
 
-export interface SkillInstallDefaults {
+interface SkillInstallDefaults {
   /**
    * The bare reference to prefill in the install dialog's name field,
    * with any version/tag/digest suffix stripped.
