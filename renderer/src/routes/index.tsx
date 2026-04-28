@@ -2,10 +2,6 @@ import { createFileRoute, redirect } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/')({
   beforeLoad: () => {
-    throw redirect({
-      to: '/group/$groupName',
-      params: { groupName: 'default' },
-      replace: true,
-    })
+    throw redirect({ to: '/skills', replace: true })
   },
 })
