@@ -361,8 +361,8 @@ export type GithubComStacklokToolhivePkgAuthTokenexchangeConfig = {
   scopes?: Array<string>
   /**
    * SubjectTokenType specifies the type of the subject token being exchanged.
-   * Common values: oauth.TokenTypeAccessToken (default), oauth.TokenTypeIDToken, oauth.TokenTypeJWT.
-   * If empty, defaults to oauth.TokenTypeAccessToken.
+   * Common values: oauthproto.TokenTypeAccessToken (default), oauthproto.TokenTypeIDToken, oauthproto.TokenTypeJWT.
+   * If empty, defaults to oauthproto.TokenTypeAccessToken.
    */
   subject_token_type?: string
   /**
@@ -815,6 +815,7 @@ export type GithubComStacklokToolhivePkgClientClientApp =
   | 'codex'
   | 'kimi-cli'
   | 'factory'
+  | 'xcode'
 
 export type GithubComStacklokToolhivePkgClientClientAppStatus = {
   client_type?: GithubComStacklokToolhivePkgClientClientApp
