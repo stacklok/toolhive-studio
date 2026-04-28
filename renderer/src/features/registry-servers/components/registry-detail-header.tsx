@@ -1,5 +1,6 @@
 import { Button } from '@/common/components/ui/button'
 import { LinkViewTransition } from '@/common/components/link-view-transition'
+import { cn } from '@/common/lib/utils'
 import { ChevronLeft } from 'lucide-react'
 import type { MouseEvent, ReactNode } from 'react'
 import { useCanGoBack, useRouter } from '@tanstack/react-router'
@@ -9,6 +10,7 @@ type RegistryDetailHeaderProps = {
   backTo?: string
   backSearch?: Record<string, unknown>
   badges?: ReactNode
+  badgesClassName?: string
   description?: string | null
   /**
    * When true, clicking the back button navigates using browser history
@@ -24,6 +26,7 @@ export function RegistryDetailHeader({
   backTo = '/registry',
   backSearch,
   badges,
+  badgesClassName,
   description,
   historyBack = false,
 }: RegistryDetailHeaderProps) {
@@ -63,7 +66,11 @@ export function RegistryDetailHeader({
       </div>
       <div className="flex flex-col gap-2">
         <h1 className="text-page-title m-0 p-0">{title}</h1>
-        {badges && <div className="flex items-center gap-2">{badges}</div>}
+        {badges && (
+          <div className={cn('flex items-center gap-2', badgesClassName)}>
+            {badges}
+          </div>
+        )}
         {description ? (
           <div className="text-muted-foreground mt-5 flex-2 select-none">
             {description}
