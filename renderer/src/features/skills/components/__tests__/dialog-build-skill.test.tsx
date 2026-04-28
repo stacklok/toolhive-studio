@@ -267,7 +267,9 @@ describe('DialogBuildSkill', () => {
     await user.click(screen.getByRole('button', { name: /^build$/i }))
 
     await waitFor(() => {
-      expect(screen.getByText(/folder does not exist/i)).toBeInTheDocument()
+      expect(
+        screen.getByText(/path is not a valid folder/i)
+      ).toBeInTheDocument()
     })
 
     const postCall = rec.recordedRequests.find(

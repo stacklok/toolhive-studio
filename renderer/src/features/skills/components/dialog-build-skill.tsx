@@ -36,7 +36,7 @@ const formSchema = z.object({
         if (!value) return true
         return window.electronAPI.isDirectory(value)
       },
-      { message: 'Folder does not exist' }
+      { message: 'Path is not a valid folder' }
     ),
   tag: z.string().optional(),
 })
@@ -60,6 +60,7 @@ export function DialogBuildSkill({
   const form = useForm<FormSchema>({
     resolver: zodV4Resolver(formSchema),
     mode: 'onBlur',
+    reValidateMode: 'onBlur',
     defaultValues: {
       path: '',
       tag: '',
