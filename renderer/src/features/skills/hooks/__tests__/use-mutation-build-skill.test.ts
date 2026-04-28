@@ -73,7 +73,7 @@ describe('useMutationBuildSkill', () => {
     expect(result.current.data?.reference).toBe('ghcr.io/org/skill-one:v1')
   })
 
-  it('shows error toast on failure', async () => {
+  it('does not show an error toast on failure (dialog renders inline alert)', async () => {
     mockedPostApiV1BetaSkillsBuild.activateScenario('server-error')
 
     const { Wrapper } = createQueryClientWrapper()
@@ -90,7 +90,7 @@ describe('useMutationBuildSkill', () => {
       expect(result.current.isError).toBe(true)
     })
 
-    expect(toast.error).toHaveBeenCalledWith('Failed to build skill')
+    expect(toast.error).not.toHaveBeenCalled()
   })
 
   it('invalidates builds list query on success', async () => {

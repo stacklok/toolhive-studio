@@ -157,4 +157,76 @@ describe('DialogBuildSkill', () => {
       expect(onOpenChange).toHaveBeenCalledWith(false)
     })
   })
+
+  it('shows error alert inside the dialog when build fails', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkillsBuild.activateScenario('server-error')
+    vi.mocked(window.electronAPI.selectFolder).mockResolvedValue(
+      '/home/user/my-skill'
+    )
+
+    renderWithProviders(<DialogBuildSkill open onOpenChange={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: /browse for folder/i }))
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
+        '/home/user/my-skill'
+      )
+    })
+    await user.click(screen.getByRole('button', { name: /^build$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+  })
+
+  it('surfaces the backend message verbatim for 400 packager errors', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkillsBuild.activateScenario('user-error')
+    vi.mocked(window.electronAPI.selectFolder).mockResolvedValue(
+      '/home/user/my-skill'
+    )
+
+    renderWithProviders(<DialogBuildSkill open onOpenChange={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: /browse for folder/i }))
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
+        '/home/user/my-skill'
+      )
+    })
+    await user.click(screen.getByRole('button', { name: /^build$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('SKILL.md missing')
+    })
+  })
+
+  it('clears the error alert when the dialog is closed', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkillsBuild.activateScenario('server-error')
+    vi.mocked(window.electronAPI.selectFolder).mockResolvedValue(
+      '/home/user/my-skill'
+    )
+
+    renderWithProviders(<DialogBuildSkill open onOpenChange={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: /browse for folder/i }))
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/select a directory/i)).toHaveValue(
+        '/home/user/my-skill'
+      )
+    })
+    await user.click(screen.getByRole('button', { name: /^build$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /cancel/i }))
+
+    await waitFor(() => {
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    })
+  })
 })

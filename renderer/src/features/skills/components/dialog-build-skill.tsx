@@ -20,7 +20,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/common/components/ui/form'
-import { FolderOpenIcon } from 'lucide-react'
+import { Alert, AlertDescription } from '@/common/components/ui/alert'
+import { FolderOpenIcon, TriangleAlertIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useMutationBuildSkill } from '../hooks/use-mutation-build-skill'
 import { DialogInstallSkill } from './dialog-install-skill'
@@ -45,6 +46,7 @@ export function DialogBuildSkill({
   const { mutateAsync: buildSkill, isPending } = useMutationBuildSkill()
   const [installOpen, setInstallOpen] = useState(false)
   const [builtReference, setBuiltReference] = useState<string | undefined>()
+  const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<FormSchema>({
     resolver: zodV4Resolver(formSchema),
@@ -57,6 +59,7 @@ export function DialogBuildSkill({
   function handleClose() {
     trackEvent('Skills: build dialog cancelled')
     form.reset()
+    setSubmitError(null)
     onOpenChange(false)
   }
 
@@ -69,6 +72,7 @@ export function DialogBuildSkill({
   }
 
   async function onSubmit(values: FormSchema) {
+    setSubmitError(null)
     trackEvent('Skills: build dialog submitted', {
       has_tag: values.tag ? 'true' : 'false',
     })
@@ -82,6 +86,7 @@ export function DialogBuildSkill({
 
       const reference = result?.reference
       form.reset()
+      setSubmitError(null)
       onOpenChange(false)
 
       if (reference) {
@@ -100,9 +105,16 @@ export function DialogBuildSkill({
       } else {
         toast.success('Skill built successfully')
       }
-    } catch {
-      // Error toast is handled by useMutationBuildSkill onError
-      // Keep the dialog open on failure
+    } catch (err) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === 'object' && err !== null && 'error' in err
+            ? String((err as { error: unknown }).error)
+            : typeof err === 'string'
+              ? err
+              : 'Failed to build skill'
+      setSubmitError(message)
     }
   }
 
@@ -116,6 +128,12 @@ export function DialogBuildSkill({
               Build a skill from a local directory on your computer.
             </DialogDescription>
           </DialogHeader>
+          {submitError && (
+            <Alert variant="destructive">
+              <TriangleAlertIcon className="size-4" />
+              <AlertDescription>{submitError}</AlertDescription>
+            </Alert>
+          )}
           <Form {...form}>
             <form
               onSubmit={form.handleSubmit(onSubmit)}
