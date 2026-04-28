@@ -1,0 +1,28 @@
+name: Visual Bug Fix (On Label)
+
+# Trigger for the Visual Bug Fix Agent. Mirrors `bug-fix-on-label.yml` but
+# fires on a different label (`auto-fix-visual`) so it runs in parallel
+# with — and never instead of — the production agent. An issue can carry
+# both labels to compare outcomes side by side; in practice you'd usually
+# pick one.
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  bug-fix:
+    name: Visual Bug Fix Agent
+    if: >-
+      github.event.label.name == 'auto-fix-visual'
+      && contains(github.event.issue.labels.*.name, 'Bug')
+    uses: ./.github/workflows/_visual-bug-fix-agent.yml
+    with:
+      issue-number: ${{ github.event.issue.number }}
+    secrets: inherit
