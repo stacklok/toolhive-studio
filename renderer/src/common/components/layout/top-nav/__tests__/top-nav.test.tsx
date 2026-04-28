@@ -33,6 +33,13 @@ describe('TopNav', () => {
     return renderRoute(router, { permissions })
   }
 
+  it('renders Skills navigation link', async () => {
+    renderTopNav()
+    await waitFor(() => {
+      expect(screen.getByText('Skills')).toBeInTheDocument()
+    })
+  })
+
   it('renders MCP Servers navigation link', async () => {
     renderTopNav()
     await waitFor(() => {

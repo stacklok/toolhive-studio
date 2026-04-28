@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { useCallback } from 'react'
-import { featureFlagKeys } from '../../../../utils/feature-flags'
 import { trackEvent } from '../lib/analytics'
 
 interface FeatureFlag {
@@ -12,10 +11,6 @@ interface FeatureFlag {
 }
 
 function formatFeatureFlagName(key: string): string {
-  if (key === featureFlagKeys.SKILLS) {
-    return 'Skills'
-  }
-
   return key
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
@@ -23,10 +18,6 @@ function formatFeatureFlagName(key: string): string {
 }
 
 function formatFeatureFlagDescription(key: string): React.ReactNode {
-  if (key === featureFlagKeys.SKILLS) {
-    return 'Browse and manage AI agent skills installed via ToolHive.'
-  }
-
   return `Enable ${formatFeatureFlagName(key)} feature`
 }
 

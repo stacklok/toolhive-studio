@@ -28,8 +28,6 @@ import { getOsDesignVariant } from '@/common/lib/os-design'
 import { trackEvent } from '@/common/lib/analytics'
 import { NavSeparator } from './nav-separator'
 import { NavIconButton } from './nav-icon-button'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '@utils/feature-flags'
 import { usePermissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
 import { buildOnrampDocsUrl } from '@/common/lib/onramp-url'
@@ -69,23 +67,20 @@ function useIsActive() {
 
 function TopNavLinks() {
   const isActive = useIsActive()
-  const isSkillsEnabled = useFeatureFlag(featureFlagKeys.SKILLS)
   const { canShow } = usePermissions()
 
   return (
     <NavigationMenu>
       <NavigationMenuList className="gap-2">
-        {isSkillsEnabled && (
-          <NavigationMenuItem>
-            <NavButton
-              to="/skills"
-              icon={BookOpen}
-              isActive={isActive(['/skills'])}
-            >
-              Skills
-            </NavButton>
-          </NavigationMenuItem>
-        )}
+        <NavigationMenuItem>
+          <NavButton
+            to="/skills"
+            icon={BookOpen}
+            isActive={isActive(['/skills'])}
+          >
+            Skills
+          </NavButton>
+        </NavigationMenuItem>
         <NavigationMenuItem>
           <NavButton
             to="/group/default"
