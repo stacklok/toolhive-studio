@@ -57,6 +57,13 @@ const skillNoNamespace: RegistrySkill = {
   name: 'standalone',
 }
 
+const skillUnparseableRepo: RegistrySkill = {
+  name: 'weird-repo-skill',
+  namespace: 'io.github.weird',
+  description: 'Skill with an unparseable repository URL',
+  repository: { type: 'git', url: 'not-a-valid-url' },
+}
+
 function makeRouter(skills: RegistrySkill[]) {
   const rootRoute = createRootRoute({
     component: Outlet,
@@ -96,15 +103,18 @@ describe('TableRegistrySkills', () => {
       screen.getByRole('columnheader', { name: /skill/i })
     ).toBeInTheDocument()
     expect(
-      screen.getByRole('columnheader', { name: /registry/i })
-    ).toBeInTheDocument()
-    expect(
       screen.getByRole('columnheader', { name: /about/i })
     ).toBeInTheDocument()
+    expect(
+      screen.getByRole('columnheader', { name: /original repo/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.queryByRole('columnheader', { name: /registry/i })
+    ).not.toBeInTheDocument()
 
-    expect(screen.getByText('io.github.user')).toBeVisible()
     expect(screen.getByText('git-skill')).toBeVisible()
     expect(screen.getByText('A helpful skill')).toBeVisible()
+    expect(screen.getByText('org/repo')).toBeVisible()
   })
 
   it('shows an empty state when skills is empty', async () => {
@@ -247,38 +257,42 @@ describe('TableRegistrySkills', () => {
     expect(router.state.location.pathname).toBe('/skills')
   })
 
-  it('renders a GitHub link for skills with a repository url', async () => {
+  it('renders a repository link with the normalized repo label for skills with a repository url', async () => {
     const router = makeRouter([ociSkill, gitSkill])
     renderRoute(router)
 
-    const links = await screen.findAllByRole('link', {
-      name: /open repository on github/i,
-    })
+    const links = await screen.findAllByRole('link', { name: /org\/repo/i })
     expect(links).toHaveLength(1)
     expect(links[0]).toHaveAttribute('href', 'https://github.com/org/repo')
     expect(links[0]).toHaveAttribute('target', '_blank')
+    expect(links[0]).toHaveAttribute('rel', expect.stringContaining('noopener'))
   })
 
-  it('does not render a GitHub link for skills without a repository', async () => {
+  it('falls back to the raw URL when the repository URL cannot be normalized', async () => {
+    const router = makeRouter([skillUnparseableRepo])
+    renderRoute(router)
+
+    const link = await screen.findByRole('link', { name: /not-a-valid-url/i })
+    expect(link).toHaveAttribute('href', 'not-a-valid-url')
+    expect(screen.getByText('not-a-valid-url')).toBeVisible()
+  })
+
+  it('does not render a repository link for skills without a repository', async () => {
     const router = makeRouter([gitSkill])
     renderRoute(router)
 
     await waitFor(() => {
       expect(screen.getByText('git-skill')).toBeVisible()
     })
-    expect(
-      screen.queryByRole('link', { name: /open repository on github/i })
-    ).not.toBeInTheDocument()
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
   })
 
-  it('does not navigate to the detail page when the GitHub link is clicked', async () => {
+  it('does not navigate to the detail page when the repository link is clicked', async () => {
     const user = userEvent.setup()
     const router = makeRouter([ociSkill])
     renderRoute(router)
 
-    const link = await screen.findByRole('link', {
-      name: /open repository on github/i,
-    })
+    const link = await screen.findByRole('link', { name: /org\/repo/i })
     await user.click(link)
 
     expect(router.state.location.pathname).toBe('/skills')
