@@ -233,9 +233,7 @@ export function TableBuilds({ filter, onBuild }: TableBuildsProps) {
         illustration={IllustrationNoSearchResults}
         title="No builds found"
         body="Try adjusting your search to find what you're looking for."
-      >
-        <></>
-      </EmptyState>
+      />
     )
   }
 

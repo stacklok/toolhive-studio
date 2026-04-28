@@ -48,9 +48,7 @@ export function GridCardsBuilds({ filter, onBuild }: GridCardsBuildsProps) {
         illustration={IllustrationNoSearchResults}
         title="No builds found"
         body="Try adjusting your search to find what you're looking for."
-      >
-        <></>
-      </EmptyState>
+      />
     )
   }
 

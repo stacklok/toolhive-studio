@@ -166,9 +166,7 @@ export function TableRegistrySkills({ skills }: { skills: RegistrySkill[] }) {
         illustration={IllustrationNoSearchResults}
         title="No skills found"
         body="Try adjusting your search to find what you're looking for."
-      >
-        <></>
-      </EmptyState>
+      />
     )
   }
 
