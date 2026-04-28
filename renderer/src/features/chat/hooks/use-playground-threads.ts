@@ -14,7 +14,7 @@ export interface PlaygroundThread {
 const sortByRecent = (a: PlaygroundThread, b: PlaygroundThread) =>
   b.lastEditTimestamp - a.lastEditTimestamp
 
-export function usePlaygroundThreads(activeThreadId: string) {
+export function usePlaygroundThreads(activeThreadId: string | null) {
   const queryClient = useQueryClient()
   const [threads, setThreads] = useState<PlaygroundThread[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -49,9 +49,11 @@ export function usePlaygroundThreads(activeThreadId: string) {
     loadThreads()
   }, [])
 
-  // Persist the URL-driven active thread to IPC whenever it changes
+  // Persist the URL-driven active thread to IPC whenever it changes.
+  // When the URL has no thread (e.g. user navigated to /playground/agents),
+  // explicitly clear the main-process pointer so it doesn't keep a stale id.
   useEffect(() => {
-    window.electronAPI.chat.setActiveThreadId(activeThreadId)
+    window.electronAPI.chat.setActiveThreadId(activeThreadId ?? undefined)
   }, [activeThreadId])
 
   /** Creates a new thread and returns its ID for navigation, or null on failure. */

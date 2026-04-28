@@ -20,6 +20,11 @@ const featureFlagOptions: Record<FeatureFlagKey, FeatureFlagOptions> = {
     defaultValue: false,
     isExperimental: false,
   },
+  [featureFlagKeys.AGENTS]: {
+    isDisabled: false,
+    defaultValue: false,
+    isExperimental: false,
+  },
 }
 
 // Kept for one-time reconciliation migration; remove after migration grace period

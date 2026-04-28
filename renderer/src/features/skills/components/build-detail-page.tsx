@@ -13,6 +13,7 @@ import { DialogDeleteBuild } from './dialog-delete-build'
 import { SkillDetailLayout } from './skill-detail-layout'
 import { SkillMarkdown } from './skill-markdown'
 import { trackEvent } from '@/common/lib/analytics'
+import { getBuildTitle } from '../lib/build-reference'
 
 interface BuildDetailPageProps {
   build: LocalBuild
@@ -23,7 +24,7 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
   const [deleteOpen, setDeleteOpen] = useState(false)
   const navigate = useNavigate()
 
-  const title = build.name ?? build.tag ?? 'Unnamed build'
+  const title = getBuildTitle(build)
   const version = build.version
   const tag = build.tag
   const digest = build.digest
@@ -135,10 +136,11 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
       />
 
       <DialogInstallSkill
-        key={tag ?? title}
+        key={`${build.name ?? tag ?? title}-${version ?? ''}`}
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={tag ?? build.name}
+        defaultReference={build.name ?? tag}
+        defaultVersion={version ?? ''}
       />
       <DialogDeleteBuild
         open={deleteOpen}

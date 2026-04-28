@@ -25,6 +25,11 @@ export interface ChatSettingsThread {
   messages: ChatUIMessage[]
   lastEditTimestamp: number
   createdAt: number
+  /**
+   * Id of the agent that should run for this thread. When absent, the
+   * main process falls back to the default built-in agent.
+   */
+  agentId?: string | null
 }
 
 interface ChatSettingsThreads {

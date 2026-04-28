@@ -16,15 +16,19 @@ import { Route as PlaygroundRouteImport } from "./routes/playground"
 import { Route as CliIssueRouteImport } from "./routes/cli-issue"
 import { Route as IndexRouteImport } from "./routes/index"
 import { Route as PlaygroundIndexRouteImport } from "./routes/playground.index"
+import { Route as PlaygroundAgentsRouteImport } from "./routes/playground.agents"
 import { Route as GroupGroupNameRouteImport } from "./routes/group.$groupName"
 import { Route as CustomizeToolsServerNameRouteImport } from "./routes/customize-tools.$serverName"
 import { Route as registryRegistryRouteImport } from "./routes/(registry)/registry"
 import { Route as SkillsBuildsTagRouteImport } from "./routes/skills_.builds.$tag"
 import { Route as SkillsNamespaceSkillNameRouteImport } from "./routes/skills_.$namespace.$skillName"
 import { Route as PlaygroundChatThreadIdRouteImport } from "./routes/playground.chat.$threadId"
+import { Route as PlaygroundAgentsNewRouteImport } from "./routes/playground.agents_.new"
+import { Route as PlaygroundAgentsAgentIdRouteImport } from "./routes/playground.agents_.$agentId"
 import { Route as LogsGroupNameServerNameRouteImport } from "./routes/logs.$groupName.$serverName"
 import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/registry_.$name"
 import { Route as registryRegistryGroupNameRouteImport } from "./routes/(registry)/registry-group_.$name"
+import { Route as PlaygroundAgentsAgentIdEditRouteImport } from "./routes/playground.agents_.$agentId_.edit"
 
 const SkillsRoute = SkillsRouteImport.update({
   id: "/skills",
@@ -61,6 +65,11 @@ const PlaygroundIndexRoute = PlaygroundIndexRouteImport.update({
   path: "/",
   getParentRoute: () => PlaygroundRoute,
 } as any)
+const PlaygroundAgentsRoute = PlaygroundAgentsRouteImport.update({
+  id: "/agents",
+  path: "/agents",
+  getParentRoute: () => PlaygroundRoute,
+} as any)
 const GroupGroupNameRoute = GroupGroupNameRouteImport.update({
   id: "/group/$groupName",
   path: "/group/$groupName",
@@ -93,6 +102,16 @@ const PlaygroundChatThreadIdRoute = PlaygroundChatThreadIdRouteImport.update({
   path: "/chat/$threadId",
   getParentRoute: () => PlaygroundRoute,
 } as any)
+const PlaygroundAgentsNewRoute = PlaygroundAgentsNewRouteImport.update({
+  id: "/agents_/new",
+  path: "/agents/new",
+  getParentRoute: () => PlaygroundRoute,
+} as any)
+const PlaygroundAgentsAgentIdRoute = PlaygroundAgentsAgentIdRouteImport.update({
+  id: "/agents_/$agentId",
+  path: "/agents/$agentId",
+  getParentRoute: () => PlaygroundRoute,
+} as any)
 const LogsGroupNameServerNameRoute = LogsGroupNameServerNameRouteImport.update({
   id: "/logs/$groupName/$serverName",
   path: "/logs/$groupName/$serverName",
@@ -109,6 +128,12 @@ const registryRegistryGroupNameRoute =
     path: "/registry-group/$name",
     getParentRoute: () => rootRouteImport,
   } as any)
+const PlaygroundAgentsAgentIdEditRoute =
+  PlaygroundAgentsAgentIdEditRouteImport.update({
+    id: "/agents_/$agentId_/edit",
+    path: "/agents/$agentId/edit",
+    getParentRoute: () => PlaygroundRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   "/": typeof IndexRoute
@@ -120,13 +145,17 @@ export interface FileRoutesByFullPath {
   "/registry": typeof registryRegistryRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
+  "/playground/agents": typeof PlaygroundAgentsRoute
   "/playground/": typeof PlaygroundIndexRoute
   "/registry-group/$name": typeof registryRegistryGroupNameRoute
   "/registry/$name": typeof registryRegistryNameRoute
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
+  "/playground/agents/$agentId": typeof PlaygroundAgentsAgentIdRoute
+  "/playground/agents/new": typeof PlaygroundAgentsNewRoute
   "/playground/chat/$threadId": typeof PlaygroundChatThreadIdRoute
   "/skills/$namespace/$skillName": typeof SkillsNamespaceSkillNameRoute
   "/skills/builds/$tag": typeof SkillsBuildsTagRoute
+  "/playground/agents/$agentId/edit": typeof PlaygroundAgentsAgentIdEditRoute
 }
 export interface FileRoutesByTo {
   "/": typeof IndexRoute
@@ -137,13 +166,17 @@ export interface FileRoutesByTo {
   "/registry": typeof registryRegistryRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
+  "/playground/agents": typeof PlaygroundAgentsRoute
   "/playground": typeof PlaygroundIndexRoute
   "/registry-group/$name": typeof registryRegistryGroupNameRoute
   "/registry/$name": typeof registryRegistryNameRoute
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
+  "/playground/agents/$agentId": typeof PlaygroundAgentsAgentIdRoute
+  "/playground/agents/new": typeof PlaygroundAgentsNewRoute
   "/playground/chat/$threadId": typeof PlaygroundChatThreadIdRoute
   "/skills/$namespace/$skillName": typeof SkillsNamespaceSkillNameRoute
   "/skills/builds/$tag": typeof SkillsBuildsTagRoute
+  "/playground/agents/$agentId/edit": typeof PlaygroundAgentsAgentIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -156,13 +189,17 @@ export interface FileRoutesById {
   "/(registry)/registry": typeof registryRegistryRoute
   "/customize-tools/$serverName": typeof CustomizeToolsServerNameRoute
   "/group/$groupName": typeof GroupGroupNameRoute
+  "/playground/agents": typeof PlaygroundAgentsRoute
   "/playground/": typeof PlaygroundIndexRoute
   "/(registry)/registry-group_/$name": typeof registryRegistryGroupNameRoute
   "/(registry)/registry_/$name": typeof registryRegistryNameRoute
   "/logs/$groupName/$serverName": typeof LogsGroupNameServerNameRoute
+  "/playground/agents_/$agentId": typeof PlaygroundAgentsAgentIdRoute
+  "/playground/agents_/new": typeof PlaygroundAgentsNewRoute
   "/playground/chat/$threadId": typeof PlaygroundChatThreadIdRoute
   "/skills_/$namespace/$skillName": typeof SkillsNamespaceSkillNameRoute
   "/skills_/builds/$tag": typeof SkillsBuildsTagRoute
+  "/playground/agents_/$agentId_/edit": typeof PlaygroundAgentsAgentIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -176,13 +213,17 @@ export interface FileRouteTypes {
     | "/registry"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
+    | "/playground/agents"
     | "/playground/"
     | "/registry-group/$name"
     | "/registry/$name"
     | "/logs/$groupName/$serverName"
+    | "/playground/agents/$agentId"
+    | "/playground/agents/new"
     | "/playground/chat/$threadId"
     | "/skills/$namespace/$skillName"
     | "/skills/builds/$tag"
+    | "/playground/agents/$agentId/edit"
   fileRoutesByTo: FileRoutesByTo
   to:
     | "/"
@@ -193,13 +234,17 @@ export interface FileRouteTypes {
     | "/registry"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
+    | "/playground/agents"
     | "/playground"
     | "/registry-group/$name"
     | "/registry/$name"
     | "/logs/$groupName/$serverName"
+    | "/playground/agents/$agentId"
+    | "/playground/agents/new"
     | "/playground/chat/$threadId"
     | "/skills/$namespace/$skillName"
     | "/skills/builds/$tag"
+    | "/playground/agents/$agentId/edit"
   id:
     | "__root__"
     | "/"
@@ -211,13 +256,17 @@ export interface FileRouteTypes {
     | "/(registry)/registry"
     | "/customize-tools/$serverName"
     | "/group/$groupName"
+    | "/playground/agents"
     | "/playground/"
     | "/(registry)/registry-group_/$name"
     | "/(registry)/registry_/$name"
     | "/logs/$groupName/$serverName"
+    | "/playground/agents_/$agentId"
+    | "/playground/agents_/new"
     | "/playground/chat/$threadId"
     | "/skills_/$namespace/$skillName"
     | "/skills_/builds/$tag"
+    | "/playground/agents_/$agentId_/edit"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -288,6 +337,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof PlaygroundIndexRouteImport
       parentRoute: typeof PlaygroundRoute
     }
+    "/playground/agents": {
+      id: "/playground/agents"
+      path: "/agents"
+      fullPath: "/playground/agents"
+      preLoaderRoute: typeof PlaygroundAgentsRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
     "/group/$groupName": {
       id: "/group/$groupName"
       path: "/group/$groupName"
@@ -330,6 +386,20 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof PlaygroundChatThreadIdRouteImport
       parentRoute: typeof PlaygroundRoute
     }
+    "/playground/agents_/new": {
+      id: "/playground/agents_/new"
+      path: "/agents/new"
+      fullPath: "/playground/agents/new"
+      preLoaderRoute: typeof PlaygroundAgentsNewRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
+    "/playground/agents_/$agentId": {
+      id: "/playground/agents_/$agentId"
+      path: "/agents/$agentId"
+      fullPath: "/playground/agents/$agentId"
+      preLoaderRoute: typeof PlaygroundAgentsAgentIdRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
     "/logs/$groupName/$serverName": {
       id: "/logs/$groupName/$serverName"
       path: "/logs/$groupName/$serverName"
@@ -351,17 +421,32 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof registryRegistryGroupNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/playground/agents_/$agentId_/edit": {
+      id: "/playground/agents_/$agentId_/edit"
+      path: "/agents/$agentId/edit"
+      fullPath: "/playground/agents/$agentId/edit"
+      preLoaderRoute: typeof PlaygroundAgentsAgentIdEditRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
   }
 }
 
 interface PlaygroundRouteChildren {
+  PlaygroundAgentsRoute: typeof PlaygroundAgentsRoute
   PlaygroundIndexRoute: typeof PlaygroundIndexRoute
+  PlaygroundAgentsAgentIdRoute: typeof PlaygroundAgentsAgentIdRoute
+  PlaygroundAgentsNewRoute: typeof PlaygroundAgentsNewRoute
   PlaygroundChatThreadIdRoute: typeof PlaygroundChatThreadIdRoute
+  PlaygroundAgentsAgentIdEditRoute: typeof PlaygroundAgentsAgentIdEditRoute
 }
 
 const PlaygroundRouteChildren: PlaygroundRouteChildren = {
+  PlaygroundAgentsRoute: PlaygroundAgentsRoute,
   PlaygroundIndexRoute: PlaygroundIndexRoute,
+  PlaygroundAgentsAgentIdRoute: PlaygroundAgentsAgentIdRoute,
+  PlaygroundAgentsNewRoute: PlaygroundAgentsNewRoute,
   PlaygroundChatThreadIdRoute: PlaygroundChatThreadIdRoute,
+  PlaygroundAgentsAgentIdEditRoute: PlaygroundAgentsAgentIdEditRoute,
 }
 
 const PlaygroundRouteWithChildren = PlaygroundRoute._addFileChildren(

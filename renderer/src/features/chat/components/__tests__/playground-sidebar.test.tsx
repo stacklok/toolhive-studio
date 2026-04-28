@@ -1,12 +1,37 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import type { ReactNode } from 'react'
 import { PlaygroundSidebar } from '../playground-sidebar'
 import type { PlaygroundThread } from '../../hooks/use-playground-threads'
 
 const mockConfirm = vi.fn()
 vi.mock('@/common/hooks/use-confirm', () => ({
   useConfirm: () => mockConfirm,
+}))
+
+const mockUseFeatureFlag = vi.fn()
+vi.mock('@/common/hooks/use-feature-flag', () => ({
+  useFeatureFlag: (key: string) => mockUseFeatureFlag(key),
+}))
+
+vi.mock('@tanstack/react-router', () => ({
+  Link: ({
+    children,
+    to,
+    className,
+    ...rest
+  }: {
+    children: ReactNode
+    to: string
+    className?: string
+    [key: string]: unknown
+  }) => (
+    <a href={to} className={className} {...rest}>
+      {children}
+    </a>
+  ),
+  useRouterState: () => '/playground/chat/thread-1',
 }))
 
 const NOW = new Date('2024-01-15T12:00:00Z').getTime()
@@ -39,6 +64,8 @@ function renderSidebar(props: Partial<typeof defaultProps> = {}) {
 describe('PlaygroundSidebar', () => {
   beforeEach(() => {
     mockConfirm.mockResolvedValue(true)
+    mockUseFeatureFlag.mockReset()
+    mockUseFeatureFlag.mockReturnValue(false)
     // Reset all callback mocks
     Object.assign(defaultProps, {
       onSelectThread: vi.fn(),
@@ -46,6 +73,28 @@ describe('PlaygroundSidebar', () => {
       onDeleteThread: vi.fn(),
       onRenameThread: vi.fn(),
       onToggleStar: vi.fn(),
+    })
+  })
+
+  describe('agents feature flag', () => {
+    it('hides the Agents link when the agents feature flag is off', () => {
+      mockUseFeatureFlag.mockImplementation((key: string) =>
+        key === 'agents' ? false : false
+      )
+      renderSidebar()
+      expect(
+        screen.queryByRole('link', { name: /agents/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it('shows the Agents link when the agents feature flag is on', () => {
+      mockUseFeatureFlag.mockImplementation((key: string) =>
+        key === 'agents' ? true : false
+      )
+      renderSidebar()
+      const link = screen.getByRole('link', { name: /agents/i })
+      expect(link).toBeInTheDocument()
+      expect(link).toHaveAttribute('href', '/playground/agents')
     })
   })
 

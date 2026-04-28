@@ -112,6 +112,26 @@ describe('usePlaygroundThreads', () => {
       )
     })
 
+    it('clears the active thread id when activeThreadId becomes null', async () => {
+      mockChatAPI.getAllThreads.mockResolvedValue([])
+      let activeId: string | null = 'thread-a'
+      const { rerender } = renderHook(() => usePlaygroundThreads(activeId), {
+        wrapper: createWrapper(),
+      })
+      await waitFor(() =>
+        expect(mockChatAPI.setActiveThreadId).toHaveBeenCalledWith('thread-a')
+      )
+
+      activeId = null
+      rerender()
+
+      await waitFor(() =>
+        expect(mockChatAPI.setActiveThreadId).toHaveBeenLastCalledWith(
+          undefined
+        )
+      )
+    })
+
     it('maps starred field from DB thread', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ starred: true }),
