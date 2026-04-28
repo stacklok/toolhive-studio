@@ -86,7 +86,18 @@ export function useChatStreaming(externalThreadId?: string | null) {
     hydratedThreadRef.current = currentThreadId
     setPersistentError(null)
     setMessages(threadData.messages)
-    void resumeStream()
+    // Drop late subscriptions if the thread changed mid-flight, so we
+    // don't stay attached to a stream we're no longer displaying.
+    const threadIdAtResume = currentThreadId
+    void Promise.resolve(resumeStream()).finally(() => {
+      if (hydratedThreadRef.current !== threadIdAtResume) {
+        try {
+          void window.electronAPI.chat.unsubscribeStream(threadIdAtResume)
+        } catch {
+          // best effort
+        }
+      }
+    })
   }, [currentThreadId, threadData, setMessages, resumeStream])
 
   // Detach on unmount / thread switch. The LLM call keeps running in

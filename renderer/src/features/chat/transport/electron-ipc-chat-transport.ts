@@ -139,9 +139,15 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
           }
         }
 
-        const matchesStream = (data: { streamId?: string; chatId?: string }) =>
-          (data.streamId && data.streamId === streamId) ||
-          (data.chatId && data.chatId === chatId)
+        // Prefer streamId equality; chatId is only a fallback so a
+        // follow-up turn on the same chat can't bleed into an old reader.
+        const matchesStream = (data: {
+          streamId?: string
+          chatId?: string
+        }) => {
+          if (data.streamId) return data.streamId === streamId
+          return !!data.chatId && data.chatId === chatId
+        }
 
         const handleChunk = (...args: unknown[]) => {
           const data = args[0] as {
@@ -186,6 +192,10 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
           }
         }
 
+        // Captured so cleanup() can detach it on normal completion —
+        // otherwise the AbortSignal pins the controller closure.
+        let abortHandler: (() => void) | null = null
+
         cleanup = () => {
           if (!isClosed) {
             isClosed = true
@@ -198,12 +208,16 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
               'chat:stream:error',
               handleError
             )
+            if (abortSignal && abortHandler) {
+              abortSignal.removeEventListener('abort', abortHandler)
+              abortHandler = null
+            }
             onClose?.()
           }
         }
 
         if (abortSignal) {
-          const handleAbort = () => {
+          abortHandler = () => {
             if (!isClosed) {
               try {
                 controller.error(new Error('Request aborted'))
@@ -215,11 +229,11 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
           }
 
           if (abortSignal.aborted) {
-            handleAbort()
+            abortHandler()
             return
           }
 
-          abortSignal.addEventListener('abort', handleAbort)
+          abortSignal.addEventListener('abort', abortHandler)
         }
 
         window.electronAPI.on?.('chat:stream:chunk', handleChunk)
