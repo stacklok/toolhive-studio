@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import {
+  getApiV1BetaSkillsBuildsOptions,
   getApiV1BetaSkillsOptions,
   getRegistryByRegistryNameV01xDevToolhiveSkillsOptions,
 } from '@common/api/generated/@tanstack/react-query.gen'
@@ -158,6 +159,10 @@ export function SkillsPage() {
 
   // Builds tab
   const [buildsFilter, setBuildsFilter] = useState('')
+  const { data: buildsData } = useSuspenseQuery(
+    getApiV1BetaSkillsBuildsOptions()
+  )
+  const hasBuilds = (buildsData?.builds?.length ?? 0) > 0
 
   const hasSkills = skills.length > 0
 
@@ -223,7 +228,7 @@ export function SkillsPage() {
                 />
               </>
             )}
-            {tab === 'builds' && (
+            {tab === 'builds' && hasBuilds && (
               <>
                 <InputSearch
                   value={buildsFilter}
