@@ -46,6 +46,9 @@ async function createGroupViaUi(
   groupName: string
 ): Promise<void> {
   const { window } = launched
+  // The app now lands on /skills by default — navigate to the MCP Servers
+  // groups page where the "Add a group" affordance lives.
+  await window.getByRole('link', { name: /mcp servers/i }).click()
   await window.getByRole('button', { name: /add a group/i }).click()
   await window.getByRole('dialog').waitFor()
   await window.getByLabel(/name/i).fill(groupName)

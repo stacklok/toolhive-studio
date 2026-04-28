@@ -77,6 +77,9 @@ export function deleteTestSecretViaCli(): void {
 }
 
 async function createAndActivateTestGroup(window: Page): Promise<void> {
+  // The app now lands on /skills by default — navigate to the MCP Servers
+  // groups page where the "Add a group" affordance lives.
+  await window.getByRole('link', { name: /mcp servers/i }).click()
   await window.getByRole('button', { name: /add a group/i }).click()
   await window.getByRole('dialog').waitFor()
   await window.getByLabel(/name/i).fill(TEST_GROUP_NAME)
