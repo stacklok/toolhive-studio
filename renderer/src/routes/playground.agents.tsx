@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { AgentsPage } from '@/features/agents/components/agents-page'
 import { PlaygroundSidebar } from '@/features/chat/components/playground-sidebar'
 import { usePlaygroundThreads } from '@/features/chat/hooks/use-playground-threads'
+import { useStreamingThreads } from '@/features/chat/hooks/use-streaming-threads'
 import { clearThreadDraft } from '@/features/chat/hooks/use-thread-draft'
 
 export const Route = createFileRoute('/playground/agents')({
@@ -19,6 +20,7 @@ function PlaygroundAgents() {
     renameThread,
     toggleStarThread,
   } = usePlaygroundThreads(null)
+  const streamingThreadIds = useStreamingThreads()
 
   const handleSelectThread = (id: string) => {
     void navigate({
@@ -55,6 +57,7 @@ function PlaygroundAgents() {
         <PlaygroundSidebar
           threads={threads}
           activeThreadId={null}
+          streamingThreadIds={streamingThreadIds}
           onSelectThread={handleSelectThread}
           onCreateThread={() => void handleCreateThread()}
           onDeleteThread={(id) => void handleDeleteThread(id)}

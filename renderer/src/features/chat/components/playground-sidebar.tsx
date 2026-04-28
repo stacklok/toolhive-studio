@@ -7,6 +7,7 @@ import {
 } from 'react'
 import {
   Bot,
+  Loader2,
   MoreHorizontal,
   Pencil,
   SquarePen,
@@ -32,6 +33,9 @@ import type { PlaygroundThread } from '../hooks/use-playground-threads'
 interface PlaygroundSidebarProps {
   threads: PlaygroundThread[]
   activeThreadId: string | null
+  /** Set of thread IDs that currently have an in-flight LLM stream
+   * running in the main process. Used to render a live indicator. */
+  streamingThreadIds?: ReadonlySet<string>
   onSelectThread: (threadId: string) => void
   onCreateThread: () => void
   onDeleteThread: (threadId: string) => void
@@ -59,6 +63,7 @@ function formatRelativeTime(timestamp: number): string {
 function ThreadItem({
   thread,
   isActive,
+  isStreaming,
   onSelect,
   onDelete,
   onRename,
@@ -66,6 +71,7 @@ function ThreadItem({
 }: {
   thread: PlaygroundThread
   isActive: boolean
+  isStreaming: boolean
   onSelect: () => void
   onDelete: () => void
   onRename: (title: string) => void
@@ -153,30 +159,37 @@ function ThreadItem({
           type="button"
           onClick={onSelect}
           onDoubleClick={(e) => startRenaming(e)}
-          className="min-w-0 flex-1 truncate px-2 py-1 text-left"
+          className="flex min-w-0 flex-1 items-center gap-1.5 truncate px-2 py-1
+            text-left group-hover:pr-8"
           title="Double-click to rename"
         >
           <span className="truncate">{label}</span>
+          {isStreaming && (
+            <Loader2
+              className="text-muted-foreground h-3 w-3 shrink-0 animate-spin"
+              aria-label="Streaming"
+              data-testid="thread-streaming-indicator"
+            />
+          )}
         </button>
 
-        {/* Timestamp — hidden on hover/active, replaced by menu */}
+        {/* Timestamp — sits at the right edge, hidden on hover so the
+         * three-dot menu can take its place. Always visible otherwise,
+         * even on the currently active thread. */}
         <span
-          className={cn(
-            'text-muted-foreground shrink-0 pr-2 text-xs',
-            'group-hover:hidden',
-            isActive && 'hidden'
-          )}
+          className="text-muted-foreground shrink-0 pr-2 text-xs
+            group-hover:hidden"
         >
           {formatRelativeTime(thread.lastEditTimestamp)}
         </span>
 
-        {/* Three-dot menu — visible on hover or when active */}
+        {/* Three-dot menu — overlays the timestamp on hover only.
+         * Absolutely positioned so it doesn't reserve layout space
+         * when hidden, keeping the date flush to the right edge. */}
         <div
-          className={cn(
-            'pointer-events-none flex shrink-0 pr-1 opacity-0',
-            'group-hover:pointer-events-auto group-hover:opacity-100',
-            isActive && 'pointer-events-auto opacity-100'
-          )}
+          className="pointer-events-none absolute top-1/2 right-1
+            -translate-y-1/2 opacity-0 group-hover:pointer-events-auto
+            group-hover:opacity-100"
         >
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -261,6 +274,7 @@ function SectionHeader({ label }: { label: string }): ReactElement {
 export function PlaygroundSidebar({
   threads,
   activeThreadId,
+  streamingThreadIds,
   onSelectThread,
   onCreateThread,
   onDeleteThread,
@@ -280,6 +294,7 @@ export function PlaygroundSidebar({
       key={thread.id}
       thread={thread}
       isActive={thread.id === activeThreadId}
+      isStreaming={streamingThreadIds?.has(thread.id) ?? false}
       onSelect={() => onSelectThread(thread.id)}
       onDelete={() => onDeleteThread(thread.id)}
       onRename={(title) => onRenameThread(thread.id, title)}
