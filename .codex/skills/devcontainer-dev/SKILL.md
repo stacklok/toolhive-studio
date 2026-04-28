@@ -72,6 +72,22 @@ The readiness banner is what you care about. It gates on **three** signals simul
 
 Only once all three are true does the banner fire and the host's browser auto-open.
 
+> **Process running ≠ UI rendered.** The three gates above tell you the
+> backing processes are alive, not that Electron has actually painted.
+> A devcontainer-in-CI proof captured a blank screen because all three
+> gates passed while the window was still mid-first-paint. For
+> agent-grade readiness (e.g. before driving the app via `xdotool` or
+> taking a screenshot to feed to a vision model), add this gate:
+>
+> ```bash
+> docker exec -u node "$CONTAINER" bash -c \
+>   'DISPLAY=:99 xdotool search --class ToolHive >/dev/null 2>&1'
+> ```
+>
+> `xdotool search --class` only succeeds once the main window is mapped
+> on Xvfb. A short settling sleep (~2s) after that first match is cheap
+> insurance against catching a partially rendered frame.
+
 ---
 
 ## Per-worktree isolation
@@ -146,12 +162,32 @@ All commands run via `docker exec` against the container with `DISPLAY=:99` set 
 
 ### See the screen (screenshots)
 
+Use the project's helper script — it auto-finds the container, captures the
+root window, and streams the PNG out to the host. Prints the absolute host
+path on stdout so it composes:
+
 ```bash
-# Take a PNG of the whole virtual framebuffer
+SHOT=$(scripts/devcontainer-screenshot.sh)
+# or with an explicit path:
+scripts/devcontainer-screenshot.sh /tmp/shot.png
+```
+
+**Why a helper script and not just `docker cp`?** `/tmp` (and possibly
+other paths) inside the devcontainer is mounted as `tmpfs`. Docker's
+`docker cp` cannot read from tmpfs mounts — it only traverses the
+container's overlay layers — so the obvious one-liner
+
+```bash
+# DON'T — silently broken: import succeeds, ls confirms the file,
+# but docker cp says "Could not find the file in container".
 docker exec "$CONTAINER" bash -c 'DISPLAY=:99 import -window root /tmp/shot.png'
-# Copy it to the host for viewing / feeding to a vision model
 docker cp "$CONTAINER:/tmp/shot.png" /tmp/shot.png
 ```
+
+**fails everywhere** (CI and local). The helper bypasses `docker cp` by
+streaming the file via `docker exec cat` (see `scripts/devcontainer-steal.sh`
+for the generic version — use that one to extract any tmpfs file, e.g. logs
+or generated artifacts, not just screenshots).
 
 `import` is from ImageMagick. For a specific window only, use `xwininfo` to get the WID then `import -window <WID>`.
 

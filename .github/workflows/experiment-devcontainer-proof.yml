@@ -46,6 +46,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
 
+      - name: Set up Docker Buildx
+        # Required so BuildKit's `gha` cache backend is available below.
+        # Without this, `cacheFrom: type=gha` fails with
+        # "unknown cache importer: gha" and the build goes fully cold.
+        uses: docker/setup-buildx-action@v3
+
       - name: Build & start devcontainer (cached via gha)
         uses: devcontainers/ci@v0.3
         with:
@@ -95,12 +101,23 @@ jobs:
           C=${{ steps.container.outputs.id }}
           T_START=$(date +%s)
           for i in $(seq 1 120); do
-            # See devcontainer-dev skill — bracket trick avoids pgrep self-match.
-            if docker exec "$C" bash -c '
+            # Process gates AND a window-mapped check via xdotool. The previous
+            # version only checked process presence, which is not the same as
+            # "UI has rendered" — the first proof run captured a blank screen
+            # because Electron was alive but had not painted yet. The
+            # `xdotool search --class ToolHive` call only succeeds once the
+            # app's main window is mapped on Xvfb. Bracket trick on pgrep
+            # avoids self-match (see devcontainer-dev skill).
+            if docker exec -u node "$C" bash -c '
                 curl -fsS http://localhost:6080/ >/dev/null 2>&1 \
                 && pgrep -f "[e]lectron/dist/electron" >/dev/null \
-                && pgrep -f "[t]hv serve" >/dev/null
+                && pgrep -f "[t]hv serve" >/dev/null \
+                && DISPLAY=:99 xdotool search --class ToolHive >/dev/null 2>&1
               '; then
+              # Settling pause — the window may be mid-first-paint when
+              # xdotool first finds it. Cheap insurance against a partially
+              # rendered screenshot.
+              sleep 2
               NOW=$(date +%s)
               ELAPSED=$(( NOW - T_START ))
               SINCE_T1=$(( NOW - ${{ steps.t1.outputs.epoch }} ))
