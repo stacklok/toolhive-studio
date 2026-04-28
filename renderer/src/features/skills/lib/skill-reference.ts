@@ -19,14 +19,35 @@ function getNamespaceNameReference(skill: RegistrySkill): string | undefined {
   return undefined
 }
 
-function hasOciTagOrDigest(identifier: string): boolean {
-  const lastSlashIndex = identifier.lastIndexOf('/')
-  const lastColonIndex = identifier.lastIndexOf(':')
-  return identifier.includes('@') || lastColonIndex > lastSlashIndex
+interface OciIdentifierParts {
+  identifier: string
+  version?: string
 }
 
-function appendOciRef(identifier: string, ref: string): string {
-  return ref.includes(':') ? `${identifier}@${ref}` : `${identifier}:${ref}`
+/**
+ * Splits an OCI identifier into the bare identifier and an optional
+ * version (tag or digest). Returns the original input when no version
+ * suffix is present.
+ */
+function splitOciIdentifier(identifier: string): OciIdentifierParts {
+  const digestIndex = identifier.indexOf('@')
+  if (digestIndex !== -1) {
+    return {
+      identifier: identifier.slice(0, digestIndex),
+      version: identifier.slice(digestIndex + 1),
+    }
+  }
+
+  const lastSlashIndex = identifier.lastIndexOf('/')
+  const lastColonIndex = identifier.lastIndexOf(':')
+  if (lastColonIndex > lastSlashIndex) {
+    return {
+      identifier: identifier.slice(0, lastColonIndex),
+      version: identifier.slice(lastColonIndex + 1),
+    }
+  }
+
+  return { identifier }
 }
 
 /**
@@ -40,26 +61,43 @@ export function getSkillOciRef(skill: RegistrySkill): string | undefined {
   return getOciPackageReference(skill) ?? getNamespaceNameReference(skill)
 }
 
+interface SkillInstallDefaults {
+  /**
+   * The bare reference to prefill in the install dialog's name field,
+   * with any version/tag/digest suffix stripped.
+   */
+  reference: string
+  /**
+   * The version to prefill in the install dialog's version field,
+   * derived from the OCI tag/digest or the package `ref` field.
+   * Undefined when no version information is available.
+   */
+  version?: string
+}
+
 /**
- * Derives the reference to prefill in the install dialog.
- * Prefers the first OCI package identifier. If that OCI identifier is
- * untagged and the package exposes a separate `ref`, append it as a tag or
- * digest. Otherwise, keep the bare OCI identifier. Falls back to
- * `namespace/name`, then name.
+ * Derives the values to prefill in the install dialog. The OCI identifier
+ * is split so the version (tag or digest) lives in its own field rather
+ * than being baked into the reference. Falls back to `namespace/name`,
+ * then `name`, when no OCI package is available.
  */
-export function getSkillInstallReference(skill: RegistrySkill): string {
+export function getSkillInstallDefaults(
+  skill: RegistrySkill
+): SkillInstallDefaults {
   const ociPackage = getOciPackage(skill)
-  const ociReference = ociPackage?.identifier
+  const ociIdentifier = ociPackage?.identifier
 
-  if (ociReference) {
-    if (!hasOciTagOrDigest(ociReference)) {
-      if (ociPackage?.ref) {
-        return appendOciRef(ociReference, ociPackage.ref)
-      }
+  if (ociIdentifier) {
+    const { identifier, version } = splitOciIdentifier(ociIdentifier)
+
+    return {
+      reference: identifier,
+      version: version ?? ociPackage?.ref ?? undefined,
     }
-
-    return ociReference
   }
 
-  return getNamespaceNameReference(skill) ?? skill.name ?? 'Unknown skill'
+  return {
+    reference:
+      getNamespaceNameReference(skill) ?? skill.name ?? 'Unknown skill',
+  }
 }
