@@ -93,7 +93,7 @@ describe('TableBuilds', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/no builds found matching the current filter/i)
+        screen.getByRole('heading', { name: /no builds found/i })
       ).toBeVisible()
     })
   })
