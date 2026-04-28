@@ -16,6 +16,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
+import { EmptyState } from '@/common/components/empty-state'
+import { IllustrationNoSearchResults } from '@/common/components/illustrations/illustration-no-search-results'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { getSkillInstallReference } from '../lib/skill-reference'
 import { trackEvent } from '@/common/lib/analytics'
@@ -160,9 +162,13 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
 export function TableRegistrySkills({ skills }: { skills: RegistrySkill[] }) {
   if (skills.length === 0) {
     return (
-      <div className="text-muted-foreground py-12 text-center">
-        <p className="text-sm">No skills found matching the current filter</p>
-      </div>
+      <EmptyState
+        illustration={IllustrationNoSearchResults}
+        title="No skills found"
+        body="Try adjusting your search to find what you're looking for."
+      >
+        <></>
+      </EmptyState>
     )
   }
 

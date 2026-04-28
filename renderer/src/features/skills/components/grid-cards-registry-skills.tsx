@@ -1,5 +1,7 @@
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { CardRegistrySkill } from './card-registry-skill'
+import { EmptyState } from '@/common/components/empty-state'
+import { IllustrationNoSearchResults } from '@/common/components/illustrations/illustration-no-search-results'
 import { cn } from '@/common/lib/utils'
 
 export function GridCardsRegistrySkills({
@@ -9,9 +11,13 @@ export function GridCardsRegistrySkills({
 }) {
   if (skills.length === 0) {
     return (
-      <div className="text-muted-foreground py-12 text-center">
-        <p className="text-sm">No skills found matching the current filter</p>
-      </div>
+      <EmptyState
+        illustration={IllustrationNoSearchResults}
+        title="No skills found"
+        body="Try adjusting your search to find what you're looking for."
+      >
+        <></>
+      </EmptyState>
     )
   }
 
