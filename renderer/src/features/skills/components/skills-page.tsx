@@ -159,9 +159,12 @@ export function SkillsPage() {
 
   // Builds tab
   const [buildsFilter, setBuildsFilter] = useState('')
-  const { data: buildsData } = useSuspenseQuery(
-    getApiV1BetaSkillsBuildsOptions()
-  )
+  // Non-suspense on purpose: this only drives the builds toolbar visibility.
+  // Using useSuspenseQuery here would block the whole Skills page (including
+  // the Registry/Installed tabs) on the builds endpoint. The actual builds
+  // table/grid still suspend via their own useSuspenseQuery when the Builds
+  // tab is active, and the data is shared via react-query's cache.
+  const { data: buildsData } = useQuery(getApiV1BetaSkillsBuildsOptions())
   const hasBuilds = (buildsData?.builds?.length ?? 0) > 0
 
   const hasSkills = skills.length > 0
