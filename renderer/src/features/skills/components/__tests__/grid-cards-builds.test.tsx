@@ -106,7 +106,7 @@ describe('GridCardsBuilds', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText('No builds found matching the current filter')
+        screen.getByRole('heading', { name: /no builds found/i })
       ).toBeInTheDocument()
     })
   })

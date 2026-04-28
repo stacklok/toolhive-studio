@@ -7,6 +7,7 @@ import { Button } from '@/common/components/ui/button'
 import { Badge } from '@/common/components/ui/badge'
 import { EmptyState } from '@/common/components/empty-state'
 import { IllustrationPackage } from '@/common/components/illustrations/illustration-package'
+import { IllustrationNoSearchResults } from '@/common/components/illustrations/illustration-no-search-results'
 import {
   Table,
   TableBody,
@@ -228,9 +229,11 @@ export function TableBuilds({ filter, onBuild }: TableBuildsProps) {
 
   if (filteredData.length === 0) {
     return (
-      <div className="text-muted-foreground py-12 text-center">
-        <p className="text-sm">No builds found matching the current filter</p>
-      </div>
+      <EmptyState
+        illustration={IllustrationNoSearchResults}
+        title="No builds found"
+        body="Try adjusting your search to find what you're looking for."
+      />
     )
   }
 

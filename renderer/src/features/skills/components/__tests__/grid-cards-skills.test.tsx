@@ -51,7 +51,7 @@ describe('GridCardsSkills', () => {
     renderWithProviders(<GridCardsSkills skills={[]} />)
 
     expect(
-      screen.getByText('No skills found matching the current filter')
+      screen.getByRole('heading', { name: /no skills found/i })
     ).toBeInTheDocument()
   })
 })
