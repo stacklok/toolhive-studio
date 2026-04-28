@@ -6,7 +6,13 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
-import { TagIcon, CodeIcon, FingerprintIcon, Trash2Icon } from 'lucide-react'
+import {
+  TagIcon,
+  CodeIcon,
+  FingerprintIcon,
+  PlusIcon,
+  Trash2Icon,
+} from 'lucide-react'
 import type { GithubComStacklokToolhivePkgSkillsLocalBuild as LocalBuild } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogDeleteBuild } from './dialog-delete-build'
@@ -89,7 +95,20 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
         actions={
           <div className="flex items-center gap-3">
             <Button
+              variant="action"
+              onClick={() => {
+                trackEvent('Skills: install dialog opened', {
+                  source: 'build_detail',
+                })
+                setInstallOpen(true)
+              }}
+            >
+              <PlusIcon className="size-4" />
+              Install
+            </Button>
+            <Button
               variant="secondary"
+              className="rounded-full"
               onClick={() => {
                 trackEvent('Skills: delete build dialog opened', {
                   source: 'build_detail',
@@ -99,17 +118,6 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
             >
               <Trash2Icon className="size-4" />
               Remove
-            </Button>
-            <Button
-              variant="action"
-              onClick={() => {
-                trackEvent('Skills: install dialog opened', {
-                  source: 'build_detail',
-                })
-                setInstallOpen(true)
-              }}
-            >
-              Install
             </Button>
           </div>
         }
