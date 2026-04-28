@@ -243,6 +243,8 @@ export async function runManagedStream(
 
   try {
     for await (const chunk of chunkBranch as unknown as AsyncIterable<ChatUIMessageChunk>) {
+      // Buffer is bounded by stream lifetime — released in `finally`
+      // below. Swap to snapshot + tail-buffer if streams ever go huge.
       stream.bufferedChunks.push(chunk)
       broadcast(stream, 'chat:stream:chunk', { streamId, chatId, chunk })
       schedulePersist(stream, isPersistenceBoundary(chunk))
