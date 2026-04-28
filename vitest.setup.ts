@@ -78,6 +78,11 @@ beforeAll(() => {
       } as ElectronAPI['featureFlags'],
       chat: {
         stream: vi.fn(),
+        resumeStream: vi.fn().mockResolvedValue(null),
+        unsubscribeStream: vi.fn().mockResolvedValue(undefined),
+        cancelStream: vi.fn().mockResolvedValue(false),
+        getActiveStreamId: vi.fn().mockResolvedValue(null),
+        getStreamingThreadIds: vi.fn().mockResolvedValue([]),
       } as unknown as ElectronAPI['chat'],
       on: vi.fn(),
       removeListener: vi.fn(),

@@ -69,10 +69,11 @@ export function useChatStreaming(externalThreadId?: string | null) {
     clearError,
     stop,
     setMessages,
+    resumeStream,
   } = useChat<ChatUIMessage>({
     id: currentThreadId || 'loading-thread',
     transport: ipcTransport,
-    resume: false,
+    resume: true,
     experimental_throttle: 200,
   })
 
@@ -82,6 +83,12 @@ export function useChatStreaming(externalThreadId?: string | null) {
   // payload for the same thread — subsequent refetches (e.g. after
   // `invalidateQueries` on streaming complete) are a no-op here because
   // `useChat` already holds the canonical message list at that point.
+  //
+  // After hydrating from the DB, we ask the transport to reattach to any
+  // active main-process stream for the same thread. If one exists, the
+  // buffered chunks replay through useChat's reducer and live tokens
+  // continue to arrive. If none exists, `reconnectToStream` returns null
+  // and the cached snapshot remains the source of truth.
   const hydratedThreadRef = useRef<string | null>(null)
   useEffect(() => {
     if (!currentThreadId || !threadData) return
@@ -89,7 +96,22 @@ export function useChatStreaming(externalThreadId?: string | null) {
     hydratedThreadRef.current = currentThreadId
     setPersistentError(null)
     setMessages(threadData.messages)
-  }, [currentThreadId, threadData, setMessages])
+    void resumeStream()
+  }, [currentThreadId, threadData, setMessages, resumeStream])
+
+  // Detach from the main-process stream subscription on unmount or
+  // before switching threads — the LLM call keeps running, but we stop
+  // receiving chunks for a thread we're no longer displaying.
+  useEffect(() => {
+    if (!currentThreadId) return
+    return () => {
+      try {
+        void window.electronAPI.chat.unsubscribeStream(currentThreadId)
+      } catch {
+        // best effort
+      }
+    }
+  }, [currentThreadId])
 
   const isPersistentLoading = !!currentThreadId && isThreadDataPending
 
@@ -277,6 +299,13 @@ export function useChatStreaming(externalThreadId?: string | null) {
       sendMessage: validatedSendMessage,
       clearMessages,
       cancelRequest: async () => {
+        if (currentThreadId) {
+          try {
+            await window.electronAPI.chat.cancelStream(currentThreadId)
+          } catch {
+            // best effort: still tear down the renderer-side state below
+          }
+        }
         await stop()
         clearError()
       },

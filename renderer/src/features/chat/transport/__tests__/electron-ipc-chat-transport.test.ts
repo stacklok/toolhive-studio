@@ -418,9 +418,87 @@ describe('Electron IPC Chat Transport', () => {
   })
 
   describe('reconnectToStream', () => {
-    it('returns null (not implemented)', async () => {
-      const result = await transport.reconnectToStream()
+    it('returns null when no chatId is provided', async () => {
+      const result = await transport.reconnectToStream({ chatId: '' })
       expect(result).toBeNull()
+    })
+
+    it('returns null when the main process has no active stream', async () => {
+      const resumeStreamMock = vi.fn().mockResolvedValue(null)
+      ;(window as unknown as { electronAPI: unknown }).electronAPI = {
+        chat: { resumeStream: resumeStreamMock },
+        on: vi.fn(),
+        removeListener: vi.fn(),
+      }
+
+      const result = await transport.reconnectToStream({ chatId: 'thread-1' })
+      expect(resumeStreamMock).toHaveBeenCalledWith('thread-1')
+      expect(result).toBeNull()
+    })
+
+    it('replays buffered chunks then attaches live IPC listeners', async () => {
+      const bufferedChunks = [
+        { type: 'start', messageId: 'msg-x' },
+        { type: 'text-start', id: 't1' },
+        { type: 'text-delta', id: 't1', delta: 'Hel' },
+      ]
+      const resumeStreamMock = vi.fn().mockResolvedValue({
+        streamId: 'stream-resumed',
+        bufferedChunks,
+        toolUiMetadata: null,
+      })
+      const unsubscribeStreamMock = vi.fn().mockResolvedValue(undefined)
+
+      let chunkHandler: ((...args: unknown[]) => void) | null = null
+      let endHandler: ((...args: unknown[]) => void) | null = null
+      const onMock = vi.fn(
+        (channel: string, listener: (...args: unknown[]) => void) => {
+          if (channel === 'chat:stream:chunk') chunkHandler = listener
+          if (channel === 'chat:stream:end') endHandler = listener
+        }
+      )
+
+      ;(window as unknown as { electronAPI: unknown }).electronAPI = {
+        chat: {
+          resumeStream: resumeStreamMock,
+          unsubscribeStream: unsubscribeStreamMock,
+        },
+        on: onMock,
+        removeListener: vi.fn(),
+      }
+
+      const stream = await transport.reconnectToStream({ chatId: 'thread-1' })
+      expect(stream).not.toBeNull()
+      const reader = stream!.getReader()
+
+      // First three reads come from the replay buffer.
+      for (const expected of bufferedChunks) {
+        const { value } = await reader.read()
+        expect(value).toEqual(expected)
+      }
+
+      // Subsequent live chunk arrives via IPC and reaches the consumer.
+      expect(chunkHandler).not.toBeNull()
+      chunkHandler!({
+        streamId: 'stream-resumed',
+        chatId: 'thread-1',
+        chunk: { type: 'text-delta', id: 't1', delta: 'lo' },
+      })
+      const live = await reader.read()
+      expect(live.value).toEqual({
+        type: 'text-delta',
+        id: 't1',
+        delta: 'lo',
+      })
+
+      // End event closes the stream and unsubscribes from main.
+      expect(endHandler).not.toBeNull()
+      endHandler!({ streamId: 'stream-resumed', chatId: 'thread-1' })
+      const done = await reader.read()
+      expect(done.done).toBe(true)
+      expect(unsubscribeStreamMock).toHaveBeenCalledWith('thread-1')
+
+      reader.releaseLock()
     })
   })
 })
