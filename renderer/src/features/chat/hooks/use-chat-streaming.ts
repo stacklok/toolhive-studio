@@ -30,19 +30,16 @@ export function useChatStreaming(externalThreadId?: string | null) {
     clearMessages: clearThreadMessages,
   } = useThreadManagement(externalThreadId)
 
-  // Messages come from React Query. The `/playground/chat/$threadId` route
-  // loader primes the cache via `ensureQueryData`, so by the time this
-  // hook runs the data is already available — no loading flash on thread
-  // switch. `usePlaygroundThreads` invalidates this key on streaming
-  // completion to refresh titles/messages.
+  // Primed by the route loader via `ensureQueryData`, so available
+  // synchronously on thread switch. Invalidated on streaming completion
+  // by `usePlaygroundThreads`.
   const {
     data: threadData,
     isPending: isThreadDataPending,
     error: threadDataError,
   } = useQuery(chatThreadQueryOptions(currentThreadId))
 
-  // Surface IPC/query failures via `persistentError` so they flow into
-  // `processedError` below (matches the pre-refactor try/catch behaviour).
+  // Surface query failures via `persistentError` so they reach `processedError` below.
   useEffect(() => {
     if (!threadDataError) return
     const message =
@@ -73,22 +70,15 @@ export function useChatStreaming(externalThreadId?: string | null) {
   } = useChat<ChatUIMessage>({
     id: currentThreadId || 'loading-thread',
     transport: ipcTransport,
-    resume: true,
+    // No `resume: true` on purpose — its on-mount auto-resume races our
+    // hydration-driven resume on full route remounts and clobbers the
+    // active response. We resume manually from the hydration effect below.
     experimental_throttle: 200,
   })
 
-  // Hydrate the `useChat` instance from cached loader data whenever the
-  // thread identity changes. We guard with a ref so streaming-in-progress
-  // token updates inside `useChat` are never overwritten by a stale loader
-  // payload for the same thread — subsequent refetches (e.g. after
-  // `invalidateQueries` on streaming complete) are a no-op here because
-  // `useChat` already holds the canonical message list at that point.
-  //
-  // After hydrating from the DB, we ask the transport to reattach to any
-  // active main-process stream for the same thread. If one exists, the
-  // buffered chunks replay through useChat's reducer and live tokens
-  // continue to arrive. If none exists, `reconnectToStream` returns null
-  // and the cached snapshot remains the source of truth.
+  // Hydrate `useChat` from the DB snapshot once per thread, then ask the
+  // transport to reattach to any in-flight main-process stream. The ref
+  // guards against later refetches overwriting live streaming state.
   const hydratedThreadRef = useRef<string | null>(null)
   useEffect(() => {
     if (!currentThreadId || !threadData) return
@@ -99,9 +89,8 @@ export function useChatStreaming(externalThreadId?: string | null) {
     void resumeStream()
   }, [currentThreadId, threadData, setMessages, resumeStream])
 
-  // Detach from the main-process stream subscription on unmount or
-  // before switching threads — the LLM call keeps running, but we stop
-  // receiving chunks for a thread we're no longer displaying.
+  // Detach on unmount / thread switch. The LLM call keeps running in
+  // the main process; we just stop receiving chunks for it here.
   useEffect(() => {
     if (!currentThreadId) return
     return () => {
@@ -122,7 +111,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
     isPersistentLoading ||
     isThreadLoading
 
-  // Publish a signal as soon as the user submits a message so the sidebar appears immediately
+  // Signal the sidebar as soon as the user submits, before streaming starts.
   useEffect(() => {
     if (status === 'submitted' && currentThreadId) {
       queryClient.setQueryData(['chat', 'threadStarted'], {
