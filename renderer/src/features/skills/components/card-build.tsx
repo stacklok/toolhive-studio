@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Button } from '@/common/components/ui/button'
 import { Badge } from '@/common/components/ui/badge'
-import { Trash2Icon } from 'lucide-react'
+import { PlusIcon, Trash2Icon } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import type { GithubComStacklokToolhivePkgSkillsLocalBuild as LocalBuild } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
@@ -67,6 +67,21 @@ export function CardBuild({ build }: { build: LocalBuild }) {
               className="relative z-10 rounded-full"
               onClick={(e) => {
                 e.stopPropagation()
+                trackEvent('Skills: install dialog opened', {
+                  source: 'build_card',
+                })
+                setInstallOpen(true)
+              }}
+              aria-label={`Install ${title}`}
+            >
+              <PlusIcon className="size-4" />
+              Install
+            </Button>
+            <Button
+              variant="secondary"
+              className="relative z-10 rounded-full"
+              onClick={(e) => {
+                e.stopPropagation()
                 trackEvent('Skills: delete build dialog opened', {
                   source: 'build_card',
                 })
@@ -76,20 +91,6 @@ export function CardBuild({ build }: { build: LocalBuild }) {
             >
               <Trash2Icon className="size-4" />
               Remove
-            </Button>
-            <Button
-              variant="secondary"
-              className="relative z-10 rounded-full"
-              onClick={(e) => {
-                e.stopPropagation()
-                trackEvent('Skills: install dialog opened', {
-                  source: 'build_card',
-                })
-                setInstallOpen(true)
-              }}
-              aria-label={`Install ${title}`}
-            >
-              Install
             </Button>
           </>
         }
