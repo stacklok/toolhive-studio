@@ -116,32 +116,10 @@ jobs:
           docker exec "$C" tail -200 /tmp/entrypoint.log || true
           exit 1
 
-      - name: Display + tooling sanity check
-        run: |
-          C=${{ steps.container.outputs.id }}
-          echo '--- which import / xdotool / xwininfo ---'
-          docker exec "$C" bash -c 'which import xdotool xwininfo xdpyinfo 2>&1 || true'
-          echo '--- xdpyinfo (X server reachable on :99?) ---'
-          docker exec -u node "$C" bash -c 'DISPLAY=:99 xdpyinfo 2>&1 | head -10' || echo "xdpyinfo failed exit=$?"
-          echo '--- xwininfo -root -tree ---'
-          docker exec -u node "$C" bash -c 'DISPLAY=:99 xwininfo -root -tree 2>&1' || true
-          echo '--- xdotool search --name ToolHive ---'
-          docker exec -u node "$C" bash -c 'DISPLAY=:99 xdotool search --name ToolHive 2>&1' || true
-
       - name: Screenshot 1 — initial paint
         run: |
-          set -x
-          C=${{ steps.container.outputs.id }}
-          # Run as `node` to match the X server owner. Capture stderr explicitly
-          # so we can see *why* import fails if it does, instead of inferring.
-          docker exec -u node "$C" bash -c '
-            set -x
-            DISPLAY=:99 import -window root /tmp/shot1.png 2>&1
-            echo "import exit=$?"
-            ls -la /tmp/shot1.png 2>&1
-          '
-          docker cp "$C:/tmp/shot1.png" ./shot1.png
-          ls -la ./shot1.png
+          scripts/devcontainer-screenshot.sh shot1.png
+          ls -la shot1.png
 
       - name: Drive xdotool — focus app and send Tab
         run: |
@@ -153,14 +131,8 @@ jobs:
 
       - name: Screenshot 2 — after input
         run: |
-          C=${{ steps.container.outputs.id }}
-          docker exec -u node "$C" bash -c '
-            DISPLAY=:99 import -window root /tmp/shot2.png 2>&1
-            echo "import exit=$?"
-            ls -la /tmp/shot2.png 2>&1
-          '
-          docker cp "$C:/tmp/shot2.png" ./shot2.png
-          ls -la ./shot2.png
+          scripts/devcontainer-screenshot.sh shot2.png
+          ls -la shot2.png
 
       - name: Workspace smoke check — type-check inside container
         id: type_check
