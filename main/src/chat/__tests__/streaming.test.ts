@@ -18,7 +18,6 @@ const mockGetCachedUiMetadata = vi.hoisted(() => vi.fn(() => ({})))
 const mockCreateBuiltinAgentTools = vi.hoisted(() =>
   vi.fn(() => ({ tools: {}, cleanup: vi.fn() }))
 )
-const mockStreamUIMessagesOverIPC = vi.hoisted(() => vi.fn())
 const mockRunManagedStream = vi.hoisted(() =>
   vi.fn().mockResolvedValue(undefined)
 )
@@ -73,10 +72,6 @@ vi.mock('../providers', () => ({
 vi.mock('../mcp-tools', () => ({
   createMcpTools: mockCreateMcpTools,
   getCachedUiMetadata: mockGetCachedUiMetadata,
-}))
-
-vi.mock('../stream-utils', () => ({
-  streamUIMessagesOverIPC: mockStreamUIMessagesOverIPC,
 }))
 
 vi.mock('../active-streams', () => ({
