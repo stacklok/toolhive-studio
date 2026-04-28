@@ -1,6 +1,12 @@
 import { useState } from 'react'
 import { Button } from '@/common/components/ui/button'
-import { TagIcon, GitForkIcon, GithubIcon, ScaleIcon } from 'lucide-react'
+import {
+  TagIcon,
+  GitForkIcon,
+  GithubIcon,
+  PlusIcon,
+  ScaleIcon,
+} from 'lucide-react'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { SkillDetailLayout } from './skill-detail-layout'
@@ -83,6 +89,7 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
                 setInstallOpen(true)
               }}
             >
+              <PlusIcon className="size-4" />
               Install
             </Button>
             {skill.repository?.url && (
