@@ -52,6 +52,35 @@ jobs:
         # "unknown cache importer: gha" and the build goes fully cold.
         uses: docker/setup-buildx-action@v3
 
+      - name: Cache devcontainer node_modules
+        # Image-layer caching alone doesn't help us, because the
+        # devcontainer's `node_modules` lives in a named Docker volume that
+        # is created fresh per run (volumes don't survive across CI jobs).
+        # postCreateCommand then runs `pnpm install` from scratch on every
+        # run, which dominates the build step's wall time. We cache the
+        # contents of that volume here and restore them into the volume
+        # before devcontainers/ci starts the container, so postCreateCommand
+        # sees an already-populated node_modules and pnpm install is a no-op
+        # (lockfile-equal).
+        id: nm-cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: nm-cache
+          key: dc-nm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Pre-populate devcontainer node_modules volume
+        if: steps.nm-cache.outputs.cache-hit == 'true'
+        run: |
+          # The volume name follows devcontainer.json's
+          # source=toolhive-node-modules-${localWorkspaceFolderBasename}.
+          # In CI the workspace basename is always `toolhive-studio`.
+          VOLUME=toolhive-node-modules-toolhive-studio
+          docker volume create "$VOLUME" >/dev/null
+          docker run --rm \
+            -v "$PWD/nm-cache:/src:ro" \
+            -v "$VOLUME:/dst" \
+            alpine:3 sh -c 'cp -a /src/. /dst/'
+
       - name: Build & start devcontainer (cached via gha)
         uses: devcontainers/ci@v0.3
         with:
@@ -167,6 +196,21 @@ jobs:
             echo "result=fail"                  >> $GITHUB_OUTPUT
             echo "::warning::type-check failed"
           fi
+
+      - name: Dump devcontainer node_modules for cache
+        # Runs only on cache miss. Populates nm-cache/ with the volume
+        # contents so actions/cache's post-step picks it up for next time.
+        # Multiple containers can mount the same named volume simultaneously,
+        # so this doesn't disturb the running devcontainer.
+        if: always() && steps.nm-cache.outputs.cache-hit != 'true'
+        run: |
+          VOLUME=toolhive-node-modules-toolhive-studio
+          rm -rf nm-cache && mkdir -p nm-cache
+          docker run --rm \
+            -v "$VOLUME:/src:ro" \
+            -v "$PWD/nm-cache:/dst" \
+            alpine:3 sh -c 'cp -a /src/. /dst/'
+          echo "::notice::node_modules dumped: $(du -sh nm-cache | cut -f1)"
 
       - name: Upload screenshots
         if: always()
