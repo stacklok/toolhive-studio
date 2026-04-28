@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSuspenseQuery, useQuery } from '@tanstack/react-query'
 import {
+  getApiV1BetaSkillsBuildsOptions,
   getApiV1BetaSkillsOptions,
   getRegistryByRegistryNameV01xDevToolhiveSkillsOptions,
 } from '@common/api/generated/@tanstack/react-query.gen'
@@ -158,6 +159,13 @@ export function SkillsPage() {
 
   // Builds tab
   const [buildsFilter, setBuildsFilter] = useState('')
+  // Non-suspense on purpose: this only drives the builds toolbar visibility.
+  // Using useSuspenseQuery here would block the whole Skills page (including
+  // the Registry/Installed tabs) on the builds endpoint. The actual builds
+  // table/grid still suspend via their own useSuspenseQuery when the Builds
+  // tab is active, and the data is shared via react-query's cache.
+  const { data: buildsData } = useQuery(getApiV1BetaSkillsBuildsOptions())
+  const hasBuilds = (buildsData?.builds?.length ?? 0) > 0
 
   const hasSkills = skills.length > 0
 
@@ -223,7 +231,7 @@ export function SkillsPage() {
                 />
               </>
             )}
-            {tab === 'builds' && (
+            {tab === 'builds' && hasBuilds && (
               <>
                 <InputSearch
                   value={buildsFilter}

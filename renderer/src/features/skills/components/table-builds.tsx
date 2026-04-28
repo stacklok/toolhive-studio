@@ -21,7 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
-import { HammerIcon, Trash2Icon } from 'lucide-react'
+import { HammerIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogDeleteBuild } from './dialog-delete-build'
 import { trackEvent } from '@/common/lib/analytics'
@@ -151,6 +151,22 @@ function BuildRow({ build }: { build: LocalBuild }) {
               className="rounded-full"
               onClick={(e) => {
                 e.stopPropagation()
+                trackEvent('Skills: install dialog opened', {
+                  source: 'build_table',
+                })
+                setInstallOpen(true)
+              }}
+              aria-label={`Install ${title}`}
+            >
+              <PlusIcon className="size-4" />
+              Install
+            </Button>
+            <Button
+              variant="secondary"
+              size="sm"
+              className="rounded-full"
+              onClick={(e) => {
+                e.stopPropagation()
                 trackEvent('Skills: delete build dialog opened', {
                   source: 'build_table',
                 })
@@ -160,21 +176,6 @@ function BuildRow({ build }: { build: LocalBuild }) {
             >
               <Trash2Icon className="size-4" />
               Remove
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              className="rounded-full"
-              onClick={(e) => {
-                e.stopPropagation()
-                trackEvent('Skills: install dialog opened', {
-                  source: 'build_table',
-                })
-                setInstallOpen(true)
-              }}
-              aria-label={`Install ${title}`}
-            >
-              Install
             </Button>
           </div>
         </TableCell>

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Github } from 'lucide-react'
+import { Github, PlusIcon } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { useNavigate } from '@tanstack/react-router'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
@@ -80,6 +80,7 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
                 setInstallOpen(true)
               }}
             >
+              <PlusIcon className="size-4" />
               Install
             </Button>
           </>

@@ -82,6 +82,7 @@ export function SkillDetailLayout({
           backTo={backTo}
           backSearch={backSearch}
           badges={badges}
+          badgesClassName="gap-4"
           historyBack={historyBack}
         />
       </div>
@@ -125,7 +126,7 @@ export function SkillDetailLayout({
                   {title}
                 </h2>
                 {badges && (
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-4">
                     {badges}
                   </div>
                 )}

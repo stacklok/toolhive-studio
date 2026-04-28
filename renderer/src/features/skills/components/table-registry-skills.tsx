@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Github } from 'lucide-react'
+import { Github, PlusIcon } from 'lucide-react'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { Button } from '@/common/components/ui/button'
 import {
@@ -147,6 +147,7 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
             }}
             aria-label={`Install ${title}`}
           >
+            <PlusIcon className="size-4" />
             Install
           </Button>
         </TableCell>
