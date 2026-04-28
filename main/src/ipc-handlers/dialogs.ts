@@ -1,4 +1,5 @@
 import { ipcMain, dialog } from 'electron'
+import fs from 'node:fs'
 import { getMainWindow } from '../main-window'
 import log from '../logger'
 
@@ -32,6 +33,16 @@ export function register() {
     } catch (error) {
       log.error('Failed to show folder dialog:', error)
       return null
+    }
+  })
+
+  ipcMain.handle('dialog:is-directory', async (_event, path: unknown) => {
+    if (typeof path !== 'string' || path.length === 0) return false
+    try {
+      const stat = await fs.promises.stat(path)
+      return stat.isDirectory()
+    } catch {
+      return false
     }
   })
 }
