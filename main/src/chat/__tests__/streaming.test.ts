@@ -19,6 +19,9 @@ const mockCreateBuiltinAgentTools = vi.hoisted(() =>
   vi.fn(() => ({ tools: {}, cleanup: vi.fn() }))
 )
 const mockStreamUIMessagesOverIPC = vi.hoisted(() => vi.fn())
+const mockRunManagedStream = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
+)
 const mockUpdateThreadMessages = vi.hoisted(() =>
   vi.fn(() => ({ success: true }))
 )
@@ -74,6 +77,11 @@ vi.mock('../mcp-tools', () => ({
 
 vi.mock('../stream-utils', () => ({
   streamUIMessagesOverIPC: mockStreamUIMessagesOverIPC,
+}))
+
+vi.mock('../active-streams', () => ({
+  runManagedStream: mockRunManagedStream,
+  setToolUiMetadata: vi.fn(),
 }))
 
 vi.mock('../threads-storage', () => ({
