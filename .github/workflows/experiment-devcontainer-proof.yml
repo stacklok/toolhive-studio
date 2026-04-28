@@ -1,0 +1,210 @@
+name: Devcontainer-in-CI Proof
+
+# Proof-of-concept: boot the project's devcontainer (Xvfb + fluxbox + Electron
+# + thv) inside a GitHub Actions runner, drive the live app via docker exec
+# (xdotool, screenshots), and run a workspace smoke check (type-check) inside
+# the container. No agent involved — this isolates the genuinely novel piece
+# (devcontainer-in-CI) from the AI-agent piece, which has a separate
+# constraint (`claude-code-action` enforces workflow_file == default branch).
+#
+# Trigger: push to this branch (no claude-code-action means no validation).
+#   git commit --allow-empty -m "trigger" && git push
+# To skip a run, use [skip ci] in the commit message.
+#
+# Once this proof is reliable, integrating it into the production
+# `_bug-fix-agent.yml` is small: add the devcontainer steps before the
+# claude-code-action step, expand `--allowedTools`, append the live-app
+# paragraph to the prompt.
+
+on:
+  push:
+    branches:
+      - experiment/bug-fix-visual
+
+permissions:
+  contents: read
+
+concurrency:
+  group: devcontainer-proof-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  proof:
+    name: Devcontainer Proof
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # Required by .devcontainer/devcontainer.json runArgs port mapping.
+      # Anything valid; we don't expose the port off-runner.
+      NOVNC_HOST_PORT: 6080
+
+    steps:
+      - name: Mark t0 (workflow start)
+        id: t0
+        run: echo "epoch=$(date +%s)" >> $GITHUB_OUTPUT
+
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Build & start devcontainer (cached via gha)
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: toolhive-studio-devcontainer
+          cacheFrom: type=gha
+          push: never
+          runCmd: |
+            echo "Devcontainer up. Workspace: $(pwd)"
+            ls -la
+            node --version
+            pnpm --version
+
+      - name: Mark t1 (devcontainer up); record cold/warm
+        id: t1
+        run: |
+          NOW=$(date +%s)
+          ELAPSED=$(( NOW - ${{ steps.t0.outputs.epoch }} ))
+          echo "epoch=$NOW"     >> $GITHUB_OUTPUT
+          echo "elapsed=$ELAPSED" >> $GITHUB_OUTPUT
+          echo "::notice::Devcontainer up after ${ELAPSED}s"
+
+      - name: Find container ID
+        id: container
+        run: |
+          C=$(docker ps \
+            --filter "label=devcontainer.local_folder=$GITHUB_WORKSPACE" \
+            --format '{{.ID}}' | head -1)
+          if [ -z "$C" ]; then
+            echo "::error::No devcontainer found for $GITHUB_WORKSPACE"
+            docker ps
+            exit 1
+          fi
+          echo "id=$C" >> $GITHUB_OUTPUT
+          echo "::notice::Devcontainer ID: $C"
+
+      - name: Launch app inside devcontainer (background)
+        run: |
+          docker exec -d -u node ${{ steps.container.outputs.id }} \
+            bash -c 'cd /workspaces/toolhive-studio && \
+              nohup bash scripts/devcontainer-entrypoint.sh \
+                > /tmp/entrypoint.log 2>&1 &'
+
+      - name: Wait for app readiness
+        id: ready
+        timeout-minutes: 10
+        run: |
+          C=${{ steps.container.outputs.id }}
+          T_START=$(date +%s)
+          for i in $(seq 1 120); do
+            # See devcontainer-dev skill — bracket trick avoids pgrep self-match.
+            if docker exec "$C" bash -c '
+                curl -fsS http://localhost:6080/ >/dev/null 2>&1 \
+                && pgrep -f "[e]lectron/dist/electron" >/dev/null \
+                && pgrep -f "[t]hv serve" >/dev/null
+              '; then
+              NOW=$(date +%s)
+              ELAPSED=$(( NOW - T_START ))
+              SINCE_T1=$(( NOW - ${{ steps.t1.outputs.epoch }} ))
+              echo "::notice::App ready in ${ELAPSED}s after launch (${SINCE_T1}s after devcontainer up)"
+              echo "elapsed=$ELAPSED"     >> $GITHUB_OUTPUT
+              echo "since_t1=$SINCE_T1"   >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            echo "[$i/120] not ready yet..."
+            sleep 5
+          done
+          echo "::error::App did not become ready within 10 minutes"
+          docker exec "$C" tail -200 /tmp/entrypoint.log || true
+          exit 1
+
+      - name: Screenshot 1 — initial paint
+        run: |
+          C=${{ steps.container.outputs.id }}
+          docker exec "$C" bash -c 'DISPLAY=:99 import -window root /tmp/shot1.png'
+          docker cp "$C:/tmp/shot1.png" ./shot1.png
+          ls -la ./shot1.png
+
+      - name: Inspect window tree (sanity check)
+        run: |
+          C=${{ steps.container.outputs.id }}
+          echo '--- xwininfo -root -tree ---'
+          docker exec "$C" bash -c 'DISPLAY=:99 xwininfo -root -tree' || true
+          echo '--- xdotool search --name ToolHive ---'
+          docker exec "$C" bash -c 'DISPLAY=:99 xdotool search --name ToolHive' || true
+
+      - name: Drive xdotool — focus app and send Tab
+        run: |
+          C=${{ steps.container.outputs.id }}
+          docker exec "$C" bash -c 'DISPLAY=:99 xdotool search --name ToolHive windowactivate' || true
+          sleep 2
+          docker exec "$C" bash -c 'DISPLAY=:99 xdotool key Tab' || true
+          sleep 1
+
+      - name: Screenshot 2 — after input
+        run: |
+          C=${{ steps.container.outputs.id }}
+          docker exec "$C" bash -c 'DISPLAY=:99 import -window root /tmp/shot2.png'
+          docker cp "$C:/tmp/shot2.png" ./shot2.png
+          ls -la ./shot2.png
+
+      - name: Workspace smoke check — type-check inside container
+        id: type_check
+        run: |
+          C=${{ steps.container.outputs.id }}
+          T_START=$(date +%s)
+          if docker exec -u node "$C" bash -c \
+              'cd /workspaces/toolhive-studio && pnpm run type-check'; then
+            NOW=$(date +%s)
+            echo "elapsed=$(( NOW - T_START ))" >> $GITHUB_OUTPUT
+            echo "result=pass"                  >> $GITHUB_OUTPUT
+          else
+            NOW=$(date +%s)
+            echo "elapsed=$(( NOW - T_START ))" >> $GITHUB_OUTPUT
+            echo "result=fail"                  >> $GITHUB_OUTPUT
+            echo "::warning::type-check failed"
+          fi
+
+      - name: Upload screenshots
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: screenshots
+          path: |
+            shot1.png
+            shot2.png
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Job summary
+        if: always()
+        run: |
+          {
+            echo "## Devcontainer-in-CI Proof"
+            echo
+            echo "| Stage | Elapsed |"
+            echo "|---|---|"
+            echo "| Checkout + devcontainer build/start | ${{ steps.t1.outputs.elapsed || 'n/a' }}s |"
+            echo "| App readiness (after launch)        | ${{ steps.ready.outputs.elapsed || 'n/a' }}s |"
+            echo "| App readiness (since devcontainer)  | ${{ steps.ready.outputs.since_t1 || 'n/a' }}s |"
+            echo "| Type-check inside container          | ${{ steps.type_check.outputs.elapsed || 'n/a' }}s (${{ steps.type_check.outputs.result || 'n/a' }}) |"
+            echo
+            echo "Cache backend: \`type=gha\`. Compare cold (first run) and warm (subsequent) timings to evaluate cache effectiveness."
+            echo
+            echo "Screenshots uploaded as the **screenshots** artifact (\`shot1.png\` initial, \`shot2.png\` after Tab keystroke)."
+          } >> $GITHUB_STEP_SUMMARY
+
+      - name: Diagnostics on failure
+        if: failure()
+        run: |
+          C=${{ steps.container.outputs.id }}
+          if [ -n "$C" ]; then
+            echo '=== Container processes ==='
+            docker exec "$C" ps auxf || true
+            echo '=== entrypoint.log ==='
+            docker exec "$C" tail -300 /tmp/entrypoint.log || true
+            echo '=== xvfb.log ==='
+            docker exec "$C" tail -100 /tmp/xvfb.log || true
+            echo '=== fluxbox.log ==='
+            docker exec "$C" tail -100 /tmp/fluxbox.log || true
+            echo '=== keyring.log ==='
+            docker exec "$C" tail -50 /tmp/keyring.log || true
+          fi
