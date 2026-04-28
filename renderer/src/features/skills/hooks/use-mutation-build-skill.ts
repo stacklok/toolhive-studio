@@ -3,7 +3,6 @@ import {
   postApiV1BetaSkillsBuildMutation,
   getApiV1BetaSkillsBuildsQueryKey,
 } from '@common/api/generated/@tanstack/react-query.gen'
-import { toast } from 'sonner'
 import { trackEvent } from '@/common/lib/analytics'
 
 export function useMutationBuildSkill() {
@@ -21,7 +20,6 @@ export function useMutationBuildSkill() {
       })
     },
     onError: (_error, variables) => {
-      toast.error('Failed to build skill')
       trackEvent('Skills: build failed', {
         has_tag: variables.body?.tag ? 'true' : 'false',
       })

@@ -23,6 +23,28 @@ const ociSkill: RegistrySkill = {
   repository: { type: 'git', url: 'https://github.com/org/repo' },
 }
 
+const taggedOciSkill: RegistrySkill = {
+  name: 'tagged-skill',
+  namespace: 'io.github.user',
+  description: 'A skill whose OCI identifier already includes a tag',
+  packages: [
+    { registryType: 'oci', identifier: 'ghcr.io/org/tagged-skill:v1.2.3' },
+  ],
+}
+
+const ociSkillWithRef: RegistrySkill = {
+  name: 'ref-skill',
+  namespace: 'io.github.user',
+  description: 'A skill with a separate OCI ref',
+  packages: [
+    {
+      registryType: 'oci',
+      identifier: 'ghcr.io/org/ref-skill',
+      ref: 'v3.4.5',
+    },
+  ],
+}
+
 const gitSkill: RegistrySkill = {
   name: 'git-skill',
   namespace: 'io.github.other',
@@ -101,7 +123,7 @@ describe('TableRegistrySkills', () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText(/no skills found matching the current filter/i)
+        screen.getByRole('heading', { name: /no skills found/i })
       ).toBeVisible()
     })
   })
@@ -162,6 +184,47 @@ describe('TableRegistrySkills', () => {
         'ghcr.io/org/my-skill'
       )
     })
+    expect(screen.getByPlaceholderText(/e\.g\. v1\.0\.0/i)).toHaveValue('')
+  })
+
+  it('splits a tagged OCI identifier so the version fills the version field', async () => {
+    const user = userEvent.setup()
+    const router = makeRouter([taggedOciSkill])
+    renderRoute(router)
+
+    const install = await screen.findByRole('button', {
+      name: /install tagged-skill/i,
+    })
+    await user.click(install)
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
+        'ghcr.io/org/tagged-skill'
+      )
+    })
+    expect(screen.getByPlaceholderText(/e\.g\. v1\.0\.0/i)).toHaveValue(
+      'v1.2.3'
+    )
+  })
+
+  it('uses the package ref to prefill the version field for bare OCI identifiers', async () => {
+    const user = userEvent.setup()
+    const router = makeRouter([ociSkillWithRef])
+    renderRoute(router)
+
+    const install = await screen.findByRole('button', {
+      name: /install ref-skill/i,
+    })
+    await user.click(install)
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
+        'ghcr.io/org/ref-skill'
+      )
+    })
+    expect(screen.getByPlaceholderText(/e\.g\. v1\.0\.0/i)).toHaveValue(
+      'v3.4.5'
+    )
   })
 
   it('opens install dialog with git reference without version suffix', async () => {

@@ -100,7 +100,7 @@ describe('TableInstalledSkills', () => {
     renderWithProviders(<TableInstalledSkills skills={[]} />)
 
     expect(
-      screen.getByText(/no skills found matching the current filter/i)
+      screen.getByRole('heading', { name: /no skills found/i })
     ).toBeVisible()
   })
 })

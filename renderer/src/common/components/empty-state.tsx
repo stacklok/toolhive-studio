@@ -22,7 +22,7 @@ type EmptyStateProps = {
   body: string
 } & (
   | { actions: [ReactNode, ReactNode?]; children?: never }
-  | { actions?: never; children: ReactNode }
+  | { actions?: never; children?: ReactNode }
 )
 
 export function EmptyState({

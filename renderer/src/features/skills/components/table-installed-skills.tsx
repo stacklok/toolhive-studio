@@ -14,6 +14,8 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
+import { EmptyState } from '@/common/components/empty-state'
+import { IllustrationNoSearchResults } from '@/common/components/illustrations/illustration-no-search-results'
 import { FolderGit2Icon, Trash2Icon, UserIcon } from 'lucide-react'
 import type { GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill } from '@common/api/generated/types.gen'
 import { DialogUninstallSkill } from './dialog-uninstall-skill'
@@ -154,9 +156,11 @@ function SkillRow({ skill }: { skill: InstalledSkill }) {
 export function TableInstalledSkills({ skills }: { skills: InstalledSkill[] }) {
   if (skills.length === 0) {
     return (
-      <div className="text-muted-foreground py-12 text-center">
-        <p className="text-sm">No skills found matching the current filter</p>
-      </div>
+      <EmptyState
+        illustration={IllustrationNoSearchResults}
+        title="No skills found"
+        body="Try adjusting your search to find what you're looking for."
+      />
     )
   }
 

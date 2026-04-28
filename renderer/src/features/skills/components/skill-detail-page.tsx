@@ -10,10 +10,7 @@ import {
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { SkillDetailLayout } from './skill-detail-layout'
-import {
-  getSkillInstallReference,
-  getSkillOciRef,
-} from '../lib/skill-reference'
+import { getSkillInstallDefaults, getSkillOciRef } from '../lib/skill-reference'
 import { getDisplayRepoLabel } from '../lib/get-display-repo-label'
 import { SkillMarkdown } from './skill-markdown'
 import { trackEvent } from '@/common/lib/analytics'
@@ -31,7 +28,7 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
   const version = skill.version
   const license = skill.license
   const repoLabel = getDisplayRepoLabel(skill.repository?.url)
-  const defaultReference = getSkillInstallReference(skill)
+  const installDefaults = getSkillInstallDefaults(skill)
   const ociRef = getSkillOciRef(skill)
 
   const hasBadges = !!(version || repoLabel || license)
@@ -140,7 +137,8 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
       <DialogInstallSkill
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={defaultReference}
+        defaultReference={installDefaults.reference}
+        defaultVersion={installDefaults.version}
       />
     </>
   )

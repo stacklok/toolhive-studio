@@ -16,8 +16,10 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
+import { EmptyState } from '@/common/components/empty-state'
+import { IllustrationNoSearchResults } from '@/common/components/illustrations/illustration-no-search-results'
 import { DialogInstallSkill } from './dialog-install-skill'
-import { getSkillInstallReference } from '../lib/skill-reference'
+import { getSkillInstallDefaults } from '../lib/skill-reference'
 import { getDisplayRepoLabel } from '../lib/get-display-repo-label'
 import { trackEvent } from '@/common/lib/analytics'
 
@@ -35,6 +37,7 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
   const title = skill.name ?? 'Unknown skill'
   const namespace = skill.namespace
   const canNavigate = !!(namespace && skill.name)
+  const installDefaults = getSkillInstallDefaults(skill)
   const repositoryUrl = skill.repository?.url
   const displayRepoLabel = repositoryUrl
     ? (getDisplayRepoLabel(repositoryUrl) ?? repositoryUrl)
@@ -153,7 +156,8 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
       <DialogInstallSkill
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={getSkillInstallReference(skill)}
+        defaultReference={installDefaults.reference}
+        defaultVersion={installDefaults.version}
       />
     </>
   )
@@ -162,9 +166,11 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
 export function TableRegistrySkills({ skills }: { skills: RegistrySkill[] }) {
   if (skills.length === 0) {
     return (
-      <div className="text-muted-foreground py-12 text-center">
-        <p className="text-sm">No skills found matching the current filter</p>
-      </div>
+      <EmptyState
+        illustration={IllustrationNoSearchResults}
+        title="No skills found"
+        body="Try adjusting your search to find what you're looking for."
+      />
     )
   }
 

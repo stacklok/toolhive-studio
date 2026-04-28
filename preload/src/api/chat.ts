@@ -6,6 +6,11 @@ import type {
   ChatUIMessage,
   ChatRequest,
 } from '../../../main/src/chat/types'
+import type {
+  AgentConfig,
+  CreateAgentInput,
+  UpdateAgentInput,
+} from '../../../main/src/chat/agents/types'
 
 export const chatApi = {
   chat: {
@@ -94,6 +99,31 @@ export const chatApi = {
       ipcRenderer.invoke('chat:ensure-thread-exists', threadId, title),
     generateThreadTitle: (threadId: string) =>
       ipcRenderer.invoke('chat:generate-thread-title', threadId),
+
+    agents: {
+      list: (): Promise<AgentConfig[]> =>
+        ipcRenderer.invoke('chat:agents:list'),
+      get: (id: string): Promise<AgentConfig | null> =>
+        ipcRenderer.invoke('chat:agents:get', id),
+      create: (input: CreateAgentInput): Promise<AgentConfig> =>
+        ipcRenderer.invoke('chat:agents:create', input),
+      update: (
+        id: string,
+        input: UpdateAgentInput
+      ): Promise<AgentConfig | null> =>
+        ipcRenderer.invoke('chat:agents:update', id, input),
+      delete: (id: string): Promise<{ success: boolean; error?: string }> =>
+        ipcRenderer.invoke('chat:agents:delete', id),
+      duplicate: (id: string): Promise<AgentConfig | null> =>
+        ipcRenderer.invoke('chat:agents:duplicate', id),
+      setThreadAgent: (
+        threadId: string,
+        agentId: string | null
+      ): Promise<void> =>
+        ipcRenderer.invoke('chat:agents:set-thread-agent', threadId, agentId),
+      getThreadAgentId: (threadId: string): Promise<string | null> =>
+        ipcRenderer.invoke('chat:agents:get-thread-agent-id', threadId),
+    },
   },
 }
 
@@ -115,6 +145,7 @@ export interface ChatAPI {
             model: string
             endpointURL: string
             enabledTools?: string[]
+            agentId?: string
           }
         | {
             chatId: string
@@ -123,6 +154,7 @@ export interface ChatAPI {
             model: string
             apiKey: string
             enabledTools?: string[]
+            agentId?: string
           }
     ) => Promise<{ streamId: string }>
     getSettings: (providerId: string) => Promise<
@@ -217,6 +249,7 @@ export interface ChatAPI {
       messages: ChatUIMessage[]
       lastEditTimestamp: number
       createdAt: number
+      agentId?: string | null
     } | null>
     getAllThreads: () => Promise<
       Array<{
@@ -227,6 +260,7 @@ export interface ChatAPI {
         messages: ChatUIMessage[]
         lastEditTimestamp: number
         createdAt: number
+        agentId?: string | null
       }>
     >
     updateThread: (
@@ -311,5 +345,22 @@ export interface ChatAPI {
       title?: string
       error?: string
     }>
+
+    agents: {
+      list: () => Promise<AgentConfig[]>
+      get: (id: string) => Promise<AgentConfig | null>
+      create: (input: CreateAgentInput) => Promise<AgentConfig>
+      update: (
+        id: string,
+        input: UpdateAgentInput
+      ) => Promise<AgentConfig | null>
+      delete: (id: string) => Promise<{ success: boolean; error?: string }>
+      duplicate: (id: string) => Promise<AgentConfig | null>
+      setThreadAgent: (
+        threadId: string,
+        agentId: string | null
+      ) => Promise<void>
+      getThreadAgentId: (threadId: string) => Promise<string | null>
+    }
   }
 }

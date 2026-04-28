@@ -6,6 +6,7 @@ import {
   useEffect,
 } from 'react'
 import {
+  Bot,
   MoreHorizontal,
   Pencil,
   SquarePen,
@@ -13,6 +14,7 @@ import {
   StarOff,
   Trash2,
 } from 'lucide-react'
+import { Link, useRouterState } from '@tanstack/react-router'
 import { Button } from '@/common/components/ui/button'
 import {
   DropdownMenu,
@@ -23,6 +25,8 @@ import {
 } from '@/common/components/ui/dropdown-menu'
 import { cn } from '@/common/lib/utils'
 import { useConfirm } from '@/common/hooks/use-confirm'
+import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
+import { featureFlagKeys } from '@utils/feature-flags'
 import type { PlaygroundThread } from '../hooks/use-playground-threads'
 
 interface PlaygroundSidebarProps {
@@ -116,7 +120,7 @@ function ThreadItem({
       <li>
         <div
           className={cn(
-            'flex w-full items-center gap-2 rounded-md px-2 py-1.5',
+            'flex w-full items-center gap-2 rounded-md px-2 py-1',
             'bg-accent text-accent-foreground'
           )}
         >
@@ -149,7 +153,7 @@ function ThreadItem({
           type="button"
           onClick={onSelect}
           onDoubleClick={(e) => startRenaming(e)}
-          className="min-w-0 flex-1 truncate px-2 py-1.5 text-left"
+          className="min-w-0 flex-1 truncate px-2 py-1 text-left"
           title="Double-click to rename"
         >
           <span className="truncate">{label}</span>
@@ -243,10 +247,10 @@ function ThreadItem({
 
 function SectionHeader({ label }: { label: string }): ReactElement {
   return (
-    <li className="px-2 pt-3 pb-1">
+    <li className="px-2 pt-2 pb-0.5">
       <span
-        className="text-muted-foreground text-xs font-semibold tracking-wider
-          uppercase"
+        className="text-muted-foreground text-[11px] font-semibold
+          tracking-wider uppercase"
       >
         {label}
       </span>
@@ -266,6 +270,10 @@ export function PlaygroundSidebar({
   const starredThreads = threads.filter((t) => t.starred)
   const recentThreads = threads.filter((t) => !t.starred)
   const hasStarred = starredThreads.length > 0
+  const isAgentsEnabled = useFeatureFlag(featureFlagKeys.AGENTS)
+  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const isAgentsActive =
+    isAgentsEnabled && pathname.startsWith('/playground/agents')
 
   const renderItem = (thread: PlaygroundThread) => (
     <ThreadItem
@@ -284,20 +292,38 @@ export function PlaygroundSidebar({
       className="border-input text-sidebar-foreground w-sidebar flex h-full
         shrink-0 flex-col border-r"
     >
-      <div className="px-2 pt-3 pb-2">
+      <div className="flex flex-col gap-0.5 px-2 pt-2 pb-1">
+        {isAgentsEnabled && (
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            className={cn(
+              'w-full justify-start gap-2 px-2',
+              isAgentsActive
+                ? 'bg-accent text-accent-foreground'
+                : 'text-muted-foreground'
+            )}
+          >
+            <Link to="/playground/agents" aria-label="Agents">
+              <Bot className="h-4 w-4 shrink-0" />
+              Agents
+            </Link>
+          </Button>
+        )}
         <Button
           variant="ghost"
-          className="text-muted-foreground hover:text-foreground w-full
-            justify-start gap-2 px-2 py-1.5 text-sm font-normal"
+          size="sm"
           onClick={onCreateThread}
           aria-label="New chat"
+          className="text-muted-foreground w-full justify-start gap-2 px-2"
         >
           <SquarePen className="h-4 w-4 shrink-0" />
           New chat
         </Button>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-2 pb-4">
+      <nav className="flex-1 overflow-y-auto px-2 pb-3">
         <ul className="flex flex-col gap-0.5">
           {hasStarred && (
             <>

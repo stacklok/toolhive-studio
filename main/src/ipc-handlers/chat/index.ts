@@ -1,3 +1,4 @@
+import { register as registerAgents } from './agents'
 import { register as registerMcpTools } from './mcp-tools'
 import { register as registerMcpApps } from './mcp-apps'
 import { register as registerProviders } from './providers'
@@ -12,4 +13,5 @@ export function register() {
   registerMcpTools()
   registerMcpApps()
   registerThreads()
+  registerAgents()
 }

@@ -273,7 +273,7 @@ export function SkillsPage() {
             <GridCardsRegistrySkills skills={registrySkills} />
           )}
           <Pagination
-            className="mt-auto"
+            className="mt-auto mb-5"
             page={registryMetadata?.page ?? registryPage}
             pageSize={registryMetadata?.limit ?? registryLimit}
             total={registryMetadata?.total ?? 0}

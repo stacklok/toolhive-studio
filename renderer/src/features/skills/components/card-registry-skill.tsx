@@ -5,7 +5,7 @@ import { useNavigate } from '@tanstack/react-router'
 import type { RegistrySkill } from '@common/api/generated/types.gen'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { CardSkillBase } from './card-skill-base'
-import { getSkillInstallReference } from '../lib/skill-reference'
+import { getSkillInstallDefaults } from '../lib/skill-reference'
 import { getDisplayRepoLabel } from '../lib/get-display-repo-label'
 import { trackEvent } from '@/common/lib/analytics'
 
@@ -17,7 +17,7 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
   const namespace = skill.namespace
   const description = skill.description
   const repoLabel = getDisplayRepoLabel(skill.repository?.url)
-  const defaultReference = getSkillInstallReference(skill)
+  const installDefaults = getSkillInstallDefaults(skill)
 
   const canNavigate = !!(namespace && skill.name)
 
@@ -90,7 +90,8 @@ export function CardRegistrySkill({ skill }: { skill: RegistrySkill }) {
       <DialogInstallSkill
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={defaultReference}
+        defaultReference={installDefaults.reference}
+        defaultVersion={installDefaults.version}
       />
     </>
   )
