@@ -18,6 +18,7 @@ import {
 } from '@/common/components/ui/tooltip'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { getSkillInstallReference } from '../lib/skill-reference'
+import { getDisplayRepoLabel } from '../lib/get-display-repo-label'
 import { trackEvent } from '@/common/lib/analytics'
 
 function activateOnKey(e: React.KeyboardEvent, onActivate: () => void) {
@@ -34,6 +35,10 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
   const title = skill.name ?? 'Unknown skill'
   const namespace = skill.namespace
   const canNavigate = !!(namespace && skill.name)
+  const repositoryUrl = skill.repository?.url
+  const displayRepoLabel = repositoryUrl
+    ? (getDisplayRepoLabel(repositoryUrl) ?? repositoryUrl)
+    : null
 
   function goToDetail() {
     if (!canNavigate) return
@@ -69,21 +74,6 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
           </Tooltip>
         </TableCell>
 
-        <TableCell className="text-muted-foreground hidden py-3 lg:table-cell">
-          {namespace ? (
-            <Tooltip onlyWhenTruncated>
-              <TooltipTrigger asChild>
-                <span className="block max-w-[200px] truncate text-sm">
-                  {namespace}
-                </span>
-              </TooltipTrigger>
-              <TooltipContent className="max-w-xs">{namespace}</TooltipContent>
-            </Tooltip>
-          ) : (
-            <span className="text-muted-foreground/60 text-sm">—</span>
-          )}
-        </TableCell>
-
         <TableCell
           className="text-muted-foreground hidden w-full max-w-0 py-3
             md:table-cell"
@@ -104,10 +94,10 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
           )}
         </TableCell>
 
-        <TableCell className="py-3">
-          {skill.repository?.url ? (
+        <TableCell className="text-muted-foreground py-3">
+          {repositoryUrl && displayRepoLabel ? (
             <a
-              href={skill.repository.url}
+              href={repositoryUrl}
               target="_blank"
               rel="noopener noreferrer"
               onClick={(e) => {
@@ -119,12 +109,23 @@ function RegistrySkillRow({ skill }: { skill: RegistrySkill }) {
                 })
               }}
               className="text-muted-foreground hover:bg-accent inline-flex
-                size-8 items-center justify-center rounded-md"
-              aria-label="Open repository on GitHub"
+                items-center gap-2 rounded-md px-2 py-1 text-sm"
             >
-              <Github className="size-4" />
+              <Github aria-hidden className="size-4 shrink-0" />
+              <Tooltip onlyWhenTruncated>
+                <TooltipTrigger asChild>
+                  <span className="block max-w-[200px] truncate">
+                    {displayRepoLabel}
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  {displayRepoLabel}
+                </TooltipContent>
+              </Tooltip>
             </a>
-          ) : null}
+          ) : (
+            <span className="text-muted-foreground/60 text-sm">—</span>
+          )}
         </TableCell>
 
         <TableCell className="py-3 pr-3 text-right">
@@ -174,18 +175,14 @@ export function TableRegistrySkills({ skills }: { skills: RegistrySkill[] }) {
             Skill
           </TableHead>
           <TableHead
-            className="text-muted-foreground hidden w-[200px] font-medium
-              lg:table-cell"
-          >
-            Registry
-          </TableHead>
-          <TableHead
             className="text-muted-foreground hidden w-full max-w-0 font-medium
               md:table-cell"
           >
             About
           </TableHead>
-          <TableHead className="w-12" aria-label="Repository" />
+          <TableHead className="text-muted-foreground w-[240px] font-medium">
+            Original Repo
+          </TableHead>
           <TableHead className="w-[120px] pr-3" aria-label="Actions" />
         </TableRow>
       </TableHeader>
