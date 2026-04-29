@@ -2,9 +2,8 @@ import path from 'path'
 import { defineConfig } from 'vite'
 import { sentryVitePlugin } from '@sentry/vite-plugin'
 import react from '@vitejs/plugin-react'
-import autoprefixer from 'autoprefixer'
 import { tanstackRouter } from '@tanstack/router-plugin/vite'
-import tailwindcss from '@tailwindcss/postcss'
+import tailwindcss from '@tailwindcss/vite'
 
 export default defineConfig({
   root: __dirname,
@@ -22,17 +21,13 @@ export default defineConfig({
       routeFileIgnorePattern: '(__tests__|guards|hooks|root-error)',
     }),
     react(),
+    tailwindcss(),
     sentryVitePlugin({
       authToken: process.env.SENTRY_AUTH_TOKEN, // NOTE: This should be available only during CI
       org: process.env.SENTRY_ORG, // NOTE: This should be available only during CI
       project: process.env.SENTRY_PROJECT, // NOTE: This should be available only during CI
     }),
   ],
-  css: {
-    postcss: {
-      plugins: [tailwindcss, autoprefixer],
-    },
-  },
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

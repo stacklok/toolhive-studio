@@ -33,7 +33,6 @@ export default {
     '@electron-forge/publisher-github',
     '@electron-forge/publisher-s3',
     '@electron-forge/maker-base',
-    '@tailwindcss/vite',
   ],
   ignoreBinaries: [],
   compilers: {
