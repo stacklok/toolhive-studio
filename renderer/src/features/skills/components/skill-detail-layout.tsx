@@ -120,8 +120,8 @@ export function SkillDetailLayout({
                   </LinkViewTransition>
                 </div>
                 <h2
-                  className="text-foreground m-0 truncate p-0 text-2xl
-                    font-semibold tracking-tight"
+                  className="text-foreground m-0 truncate p-0 font-serif
+                    text-2xl font-light tracking-tight"
                 >
                   {title}
                 </h2>
