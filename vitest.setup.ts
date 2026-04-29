@@ -84,7 +84,7 @@ beforeAll(() => {
         getActiveStreamId: vi.fn().mockResolvedValue(null),
         getStreamingThreadIds: vi.fn().mockResolvedValue([]),
       } as unknown as ElectronAPI['chat'],
-      on: vi.fn(),
+      on: vi.fn().mockReturnValue(() => {}),
       removeListener: vi.fn(),
     }
     Object.defineProperty(window, 'electronAPI', {

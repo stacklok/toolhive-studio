@@ -8,6 +8,7 @@ import {
   subscribeToStream,
   unsubscribeFromStream,
 } from '../../chat/active-streams'
+import log from '../../logger'
 
 let purgeListenerInstalled = false
 
@@ -24,7 +25,30 @@ export function register() {
 
   ipcMain.handle('chat:stream', async (event, request: ChatRequest) => {
     const streamId = `stream-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
-    handleChatStreamRealtime(request, streamId, event.sender)
+    // Fire-and-forget — the renderer attaches via IPC events. We only
+    // need this catch to surface failures that throw *before* the
+    // registry entry exists (provider misconfig, duplicate stream, …);
+    // otherwise the renderer would hang waiting for chunks.
+    void handleChatStreamRealtime(request, streamId, event.sender).catch(
+      (error) => {
+        const message = error instanceof Error ? error.message : 'Unknown error'
+        log.error(
+          `[CHAT_STREAM_IPC] Setup failed for ${request.chatId}:`,
+          error
+        )
+        if (!event.sender.isDestroyed()) {
+          try {
+            event.sender.send('chat:stream:error', {
+              streamId,
+              chatId: request.chatId,
+              error: message,
+            })
+          } catch {
+            // sender destroyed between guard and send
+          }
+        }
+      }
+    )
     return { streamId }
   })
 

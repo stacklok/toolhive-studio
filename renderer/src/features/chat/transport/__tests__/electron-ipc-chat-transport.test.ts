@@ -427,7 +427,7 @@ describe('Electron IPC Chat Transport', () => {
       const resumeStreamMock = vi.fn().mockResolvedValue(null)
       ;(window as unknown as { electronAPI: unknown }).electronAPI = {
         chat: { resumeStream: resumeStreamMock },
-        on: vi.fn(),
+        on: vi.fn().mockReturnValue(() => {}),
         removeListener: vi.fn(),
       }
 
@@ -451,10 +451,23 @@ describe('Electron IPC Chat Transport', () => {
 
       let chunkHandler: ((...args: unknown[]) => void) | null = null
       let endHandler: ((...args: unknown[]) => void) | null = null
+      const offChunk = vi.fn()
+      const offEnd = vi.fn()
+      const offError = vi.fn()
       const onMock = vi.fn(
         (channel: string, listener: (...args: unknown[]) => void) => {
-          if (channel === 'chat:stream:chunk') chunkHandler = listener
-          if (channel === 'chat:stream:end') endHandler = listener
+          if (channel === 'chat:stream:chunk') {
+            chunkHandler = listener
+            return offChunk
+          }
+          if (channel === 'chat:stream:end') {
+            endHandler = listener
+            return offEnd
+          }
+          if (channel === 'chat:stream:error') {
+            return offError
+          }
+          return () => {}
         }
       )
 
@@ -491,14 +504,54 @@ describe('Electron IPC Chat Transport', () => {
         delta: 'lo',
       })
 
-      // End event closes the stream and unsubscribes from main.
+      // End event closes the stream, unsubscribes from main, and detaches
+      // every listener via the unsubscribe handles returned by `on`.
       expect(endHandler).not.toBeNull()
       endHandler!({ streamId: 'stream-resumed', chatId: 'thread-1' })
       const done = await reader.read()
       expect(done.done).toBe(true)
       expect(unsubscribeStreamMock).toHaveBeenCalledWith('thread-1')
+      expect(offChunk).toHaveBeenCalledTimes(1)
+      expect(offEnd).toHaveBeenCalledTimes(1)
+      expect(offError).toHaveBeenCalledTimes(1)
 
       reader.releaseLock()
+    })
+
+    it('detaches all IPC listeners when the consumer cancels the stream', async () => {
+      const resumeStreamMock = vi.fn().mockResolvedValue({
+        streamId: 'stream-resumed',
+        bufferedChunks: [],
+        toolUiMetadata: null,
+      })
+      const unsubscribeStreamMock = vi.fn().mockResolvedValue(undefined)
+      const offChunk = vi.fn()
+      const offEnd = vi.fn()
+      const offError = vi.fn()
+      const onMock = vi.fn((channel: string) => {
+        if (channel === 'chat:stream:chunk') return offChunk
+        if (channel === 'chat:stream:end') return offEnd
+        if (channel === 'chat:stream:error') return offError
+        return () => {}
+      })
+
+      ;(window as unknown as { electronAPI: unknown }).electronAPI = {
+        chat: {
+          resumeStream: resumeStreamMock,
+          unsubscribeStream: unsubscribeStreamMock,
+        },
+        on: onMock,
+        removeListener: vi.fn(),
+      }
+
+      const stream = await transport.reconnectToStream({ chatId: 'thread-1' })
+      expect(stream).not.toBeNull()
+      await stream!.cancel()
+
+      expect(offChunk).toHaveBeenCalledTimes(1)
+      expect(offEnd).toHaveBeenCalledTimes(1)
+      expect(offError).toHaveBeenCalledTimes(1)
+      expect(unsubscribeStreamMock).toHaveBeenCalledWith('thread-1')
     })
   })
 })

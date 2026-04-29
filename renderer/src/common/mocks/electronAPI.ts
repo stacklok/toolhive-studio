@@ -56,7 +56,7 @@ function createElectronStub(): Partial<ElectronAPI> {
     } as unknown as ElectronAPI['chat'],
     selectFolder: vi.fn().mockResolvedValue(null),
     isDirectory: vi.fn().mockResolvedValue(true),
-    on: vi.fn(),
+    on: vi.fn().mockReturnValue(() => {}),
     removeListener: vi.fn(),
   }
 }

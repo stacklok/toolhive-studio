@@ -192,6 +192,18 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
           }
         }
 
+        // `events.on` wraps the listener internally, so `removeListener`
+        // by reference never matches — keep the unsubscribe handles.
+        const offChunk = window.electronAPI.on?.(
+          'chat:stream:chunk',
+          handleChunk
+        )
+        const offEnd = window.electronAPI.on?.('chat:stream:end', handleEnd)
+        const offError = window.electronAPI.on?.(
+          'chat:stream:error',
+          handleError
+        )
+
         // Captured so cleanup() can detach it on normal completion —
         // otherwise the AbortSignal pins the controller closure.
         let abortHandler: (() => void) | null = null
@@ -199,15 +211,9 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
         cleanup = () => {
           if (!isClosed) {
             isClosed = true
-            window.electronAPI.removeListener?.(
-              'chat:stream:chunk',
-              handleChunk
-            )
-            window.electronAPI.removeListener?.('chat:stream:end', handleEnd)
-            window.electronAPI.removeListener?.(
-              'chat:stream:error',
-              handleError
-            )
+            offChunk?.()
+            offEnd?.()
+            offError?.()
             if (abortSignal && abortHandler) {
               abortSignal.removeEventListener('abort', abortHandler)
               abortHandler = null
@@ -235,10 +241,6 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
 
           abortSignal.addEventListener('abort', abortHandler)
         }
-
-        window.electronAPI.on?.('chat:stream:chunk', handleChunk)
-        window.electronAPI.on?.('chat:stream:end', handleEnd)
-        window.electronAPI.on?.('chat:stream:error', handleError)
       },
       cancel() {
         cleanup?.()
