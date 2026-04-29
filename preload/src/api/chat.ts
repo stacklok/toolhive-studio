@@ -28,7 +28,7 @@ export const chatApi = {
     resumeStream: (chatId: string) =>
       ipcRenderer.invoke('chat:stream:resume', chatId) as Promise<{
         streamId: string
-        bufferedChunks: unknown[]
+        replayChunks: unknown[]
         toolUiMetadata: Record<string, unknown> | null
       } | null>,
     unsubscribeStream: (chatId: string) =>
@@ -175,7 +175,7 @@ export interface ChatAPI {
     ) => Promise<{ streamId: string }>
     resumeStream: (chatId: string) => Promise<{
       streamId: string
-      bufferedChunks: unknown[]
+      replayChunks: unknown[]
       toolUiMetadata: Record<string, unknown> | null
     } | null>
     unsubscribeStream: (chatId: string) => Promise<void>

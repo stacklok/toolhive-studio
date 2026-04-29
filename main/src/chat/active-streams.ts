@@ -14,11 +14,50 @@ import { updateThreadMessages } from './threads-storage'
  */
 const PERSIST_THROTTLE_MS = 250
 
-/** Hard cap on the per-stream replay buffer. Past this, late subscribers
- * fall back to the SQLite snapshot instead of replaying. */
-const MAX_BUFFER_CHUNKS = 5000
-
 type ChatUIMessageChunk = InferUIMessageChunk<ChatUIMessage>
+
+type ProviderMetadata = Record<string, Record<string, unknown>>
+
+/** Per-text-block replay state. The accumulated `text` is replayed as a
+ * single consolidated `text-delta` so a late subscriber lands on the
+ * exact same `runningMessage` without replaying every original delta. */
+interface TextPartReplay {
+  text: string
+  done: boolean
+  providerMetadata?: ProviderMetadata
+}
+
+/** Per-reasoning-block replay state. Same shape as text. */
+interface ReasoningPartReplay {
+  text: string
+  done: boolean
+  providerMetadata?: ProviderMetadata
+}
+
+/** Per-tool-block replay state. Tracks every metadata field the SDK
+ * threads through `processUIMessageStream`, plus the tool's lifecycle
+ * state so `buildReplayChunks` knows which output chunk to emit. */
+interface ToolPartReplay {
+  toolName: string
+  dynamic: boolean | undefined
+  providerExecuted: boolean | undefined
+  title: string | undefined
+  /** Accumulated raw input text (only meaningful while in
+   * `input-streaming`); the SDK re-parses this internally. */
+  partialInputText: string
+  input: unknown
+  rawInput: unknown
+  output: unknown
+  errorText: string | undefined
+  preliminary: boolean | undefined
+  callProviderMetadata?: ProviderMetadata
+  resultProviderMetadata?: ProviderMetadata
+  state:
+    | 'input-streaming'
+    | 'input-available'
+    | 'output-available'
+    | 'output-error'
+}
 
 interface ActiveStream {
   chatId: string
@@ -26,8 +65,6 @@ interface ActiveStream {
   /** The message list provided when streaming started. The running
    * assistant message is appended/replaced when persisting snapshots. */
   originalMessages: ChatUIMessage[]
-  /** Replay buffer for late subscribers. */
-  bufferedChunks: ChatUIMessageChunk[]
   subscribers: Set<WebContents>
   /** Latest UIMessage snapshot produced by the assembler — undefined until
    * the AI SDK has produced its first message. */
@@ -42,11 +79,20 @@ interface ActiveStream {
   /** Last UI metadata payload broadcast on the stream — replayed to late
    * subscribers so they can identify MCP App tools. */
   toolUiMetadata: Record<string, unknown> | null
-  /** Once tripped, late subscribers fall back to SQLite hydration. */
-  bufferOverflowed: boolean
   /** Tripped on the first persist failure to broadcast a one-shot
    * `chat:stream:persist-error`. */
   persistFailed: boolean
+  /** Captured from the `start` chunk; required to synthesize a replay. */
+  messageId: string | undefined
+  /** Ordered references to every block we've seen, replayed in order. */
+  blockOrder: Array<
+    | { kind: 'text'; id: string }
+    | { kind: 'reasoning'; id: string }
+    | { kind: 'tool'; toolCallId: string }
+  >
+  textParts: Map<string, TextPartReplay>
+  reasoningParts: Map<string, ReasoningPartReplay>
+  toolParts: Map<string, ToolPartReplay>
 }
 
 const streams = new Map<string, ActiveStream>()
@@ -214,7 +260,6 @@ function buildActiveStream(options: RunStreamOptions): ActiveStream {
     chatId,
     streamId: options.streamId,
     originalMessages: options.originalMessages,
-    bufferedChunks: [],
     subscribers: new Set(),
     runningMessage: undefined,
     persistTimer: null,
@@ -222,8 +267,12 @@ function buildActiveStream(options: RunStreamOptions): ActiveStream {
     abortController: options.abortController,
     status: 'streaming',
     toolUiMetadata: options.initialToolUiMetadata ?? null,
-    bufferOverflowed: false,
     persistFailed: false,
+    messageId: undefined,
+    blockOrder: [],
+    textParts: new Map(),
+    reasoningParts: new Map(),
+    toolParts: new Map(),
   }
   streams.set(chatId, stream)
   attachInitialSender(
@@ -271,21 +320,318 @@ function startAssembler(
   })
 }
 
-/** Drive the chunk branch: bound the replay buffer, broadcast each
- * chunk to live subscribers, and schedule throttled persistence. */
+/**
+ * Update the structural replay state from a single live chunk.
+ *
+ * The point of this state is to let `buildReplayChunks` synthesize a
+ * minimal, deterministic chunk sequence that drops a late subscriber's
+ * AI SDK assembler into the same `runningMessage` as the live tail —
+ * without replaying every original delta. We only track what the AI
+ * SDK's `processUIMessageStream` actually consumes to grow message
+ * parts; ephemeral chunks (`start-step`, `finish-step`, metadata,
+ * `finish`, `error`) are intentionally ignored — they'll arrive on the
+ * live tail as the upstream produces them.
+ */
+function recordChunkForReplay(
+  stream: ActiveStream,
+  chunk: ChatUIMessageChunk
+): void {
+  switch (chunk.type) {
+    case 'start': {
+      if (chunk.messageId) stream.messageId = chunk.messageId
+      return
+    }
+    case 'text-start': {
+      if (!stream.textParts.has(chunk.id)) {
+        stream.textParts.set(chunk.id, {
+          text: '',
+          done: false,
+          providerMetadata: chunk.providerMetadata,
+        })
+        stream.blockOrder.push({ kind: 'text', id: chunk.id })
+      }
+      return
+    }
+    case 'text-delta': {
+      const part = stream.textParts.get(chunk.id)
+      if (part) part.text += chunk.delta
+      return
+    }
+    case 'text-end': {
+      const part = stream.textParts.get(chunk.id)
+      if (part) {
+        part.done = true
+        if (chunk.providerMetadata)
+          part.providerMetadata = chunk.providerMetadata
+      }
+      return
+    }
+    case 'reasoning-start': {
+      if (!stream.reasoningParts.has(chunk.id)) {
+        stream.reasoningParts.set(chunk.id, {
+          text: '',
+          done: false,
+          providerMetadata: chunk.providerMetadata,
+        })
+        stream.blockOrder.push({ kind: 'reasoning', id: chunk.id })
+      }
+      return
+    }
+    case 'reasoning-delta': {
+      const part = stream.reasoningParts.get(chunk.id)
+      if (part) part.text += chunk.delta
+      return
+    }
+    case 'reasoning-end': {
+      const part = stream.reasoningParts.get(chunk.id)
+      if (part) {
+        part.done = true
+        if (chunk.providerMetadata)
+          part.providerMetadata = chunk.providerMetadata
+      }
+      return
+    }
+    case 'tool-input-start': {
+      if (!stream.toolParts.has(chunk.toolCallId)) {
+        stream.toolParts.set(chunk.toolCallId, {
+          toolName: chunk.toolName,
+          dynamic: chunk.dynamic,
+          providerExecuted: chunk.providerExecuted,
+          title: chunk.title,
+          partialInputText: '',
+          input: undefined,
+          rawInput: undefined,
+          output: undefined,
+          errorText: undefined,
+          preliminary: undefined,
+          callProviderMetadata: chunk.providerMetadata,
+          state: 'input-streaming',
+        })
+        stream.blockOrder.push({ kind: 'tool', toolCallId: chunk.toolCallId })
+      }
+      return
+    }
+    case 'tool-input-delta': {
+      const part = stream.toolParts.get(chunk.toolCallId)
+      if (part) part.partialInputText += chunk.inputTextDelta
+      return
+    }
+    case 'tool-input-available': {
+      const part = stream.toolParts.get(chunk.toolCallId)
+      if (part) {
+        part.toolName = chunk.toolName
+        part.input = chunk.input
+        part.dynamic = chunk.dynamic ?? part.dynamic
+        part.providerExecuted = chunk.providerExecuted ?? part.providerExecuted
+        part.title = chunk.title ?? part.title
+        if (chunk.providerMetadata) {
+          part.callProviderMetadata = chunk.providerMetadata
+        }
+        part.state = 'input-available'
+      }
+      return
+    }
+    case 'tool-input-error': {
+      const part = stream.toolParts.get(chunk.toolCallId)
+      if (part) {
+        part.toolName = chunk.toolName
+        part.rawInput = chunk.input
+        part.errorText = chunk.errorText
+        part.dynamic = chunk.dynamic ?? part.dynamic
+        part.providerExecuted = chunk.providerExecuted ?? part.providerExecuted
+        part.title = chunk.title ?? part.title
+        if (chunk.providerMetadata) {
+          part.callProviderMetadata = chunk.providerMetadata
+        }
+        part.state = 'output-error'
+      }
+      return
+    }
+    case 'tool-output-available': {
+      const part = stream.toolParts.get(chunk.toolCallId)
+      if (part) {
+        part.output = chunk.output
+        part.preliminary = chunk.preliminary
+        part.providerExecuted = chunk.providerExecuted ?? part.providerExecuted
+        if (chunk.providerMetadata) {
+          part.resultProviderMetadata = chunk.providerMetadata
+        }
+        part.state = 'output-available'
+      }
+      return
+    }
+    case 'tool-output-error': {
+      const part = stream.toolParts.get(chunk.toolCallId)
+      if (part) {
+        part.errorText = chunk.errorText
+        part.providerExecuted = chunk.providerExecuted ?? part.providerExecuted
+        if (chunk.providerMetadata) {
+          part.resultProviderMetadata = chunk.providerMetadata
+        }
+        part.state = 'output-error'
+      }
+      return
+    }
+    default:
+      // start-step / finish-step / message-metadata / finish / error /
+      // tool-approval-request / tool-output-denied / data-* / file /
+      // source-* — ignored for replay; live tail provides them.
+      return
+  }
+}
+
+function emitTextReplay(
+  out: ChatUIMessageChunk[],
+  id: string,
+  part: TextPartReplay
+): void {
+  out.push({
+    type: 'text-start',
+    id,
+    providerMetadata: part.providerMetadata,
+  } as ChatUIMessageChunk)
+  if (part.text.length > 0) {
+    out.push({
+      type: 'text-delta',
+      id,
+      delta: part.text,
+    } as ChatUIMessageChunk)
+  }
+  if (part.done) {
+    out.push({
+      type: 'text-end',
+      id,
+      providerMetadata: part.providerMetadata,
+    } as ChatUIMessageChunk)
+  }
+}
+
+function emitReasoningReplay(
+  out: ChatUIMessageChunk[],
+  id: string,
+  part: ReasoningPartReplay
+): void {
+  out.push({
+    type: 'reasoning-start',
+    id,
+    providerMetadata: part.providerMetadata,
+  } as ChatUIMessageChunk)
+  if (part.text.length > 0) {
+    out.push({
+      type: 'reasoning-delta',
+      id,
+      delta: part.text,
+    } as ChatUIMessageChunk)
+  }
+  if (part.done) {
+    out.push({
+      type: 'reasoning-end',
+      id,
+      providerMetadata: part.providerMetadata,
+    } as ChatUIMessageChunk)
+  }
+}
+
+function emitToolReplay(
+  out: ChatUIMessageChunk[],
+  toolCallId: string,
+  part: ToolPartReplay
+): void {
+  out.push({
+    type: 'tool-input-start',
+    toolCallId,
+    toolName: part.toolName,
+    dynamic: part.dynamic,
+    providerExecuted: part.providerExecuted,
+    title: part.title,
+    providerMetadata: part.callProviderMetadata,
+  } as ChatUIMessageChunk)
+
+  // Replay the partial input text only while the tool is still
+  // streaming its arguments. After `tool-input-available` the SDK
+  // ignores `partialToolCalls[id]` and reads `input` directly, so
+  // there's no point shipping the deltas.
+  if (part.state === 'input-streaming' && part.partialInputText.length > 0) {
+    out.push({
+      type: 'tool-input-delta',
+      toolCallId,
+      inputTextDelta: part.partialInputText,
+    } as ChatUIMessageChunk)
+  }
+
+  if (part.state !== 'input-streaming') {
+    if (part.input !== undefined) {
+      out.push({
+        type: 'tool-input-available',
+        toolCallId,
+        toolName: part.toolName,
+        input: part.input,
+        dynamic: part.dynamic,
+        providerExecuted: part.providerExecuted,
+        providerMetadata: part.callProviderMetadata,
+        title: part.title,
+      } as ChatUIMessageChunk)
+    }
+  }
+
+  if (part.state === 'output-available') {
+    out.push({
+      type: 'tool-output-available',
+      toolCallId,
+      output: part.output,
+      providerExecuted: part.providerExecuted,
+      preliminary: part.preliminary,
+      providerMetadata: part.resultProviderMetadata,
+      dynamic: part.dynamic,
+    } as ChatUIMessageChunk)
+  } else if (part.state === 'output-error' && part.errorText !== undefined) {
+    out.push({
+      type: 'tool-output-error',
+      toolCallId,
+      errorText: part.errorText,
+      providerExecuted: part.providerExecuted,
+      providerMetadata: part.resultProviderMetadata,
+      dynamic: part.dynamic,
+    } as ChatUIMessageChunk)
+  }
+}
+
+/**
+ * Synthesize a replay chunk sequence that drops a late subscriber's
+ * `processUIMessageStream` instance into the same `runningMessage` the
+ * live tail is producing. We compress every original delta into one
+ * consolidated delta per block, which is correct because the SDK only
+ * cares that `activeTextParts[id]` exists when a delta lands — it
+ * doesn't validate granularity.
+ */
+function buildReplayChunks(stream: ActiveStream): ChatUIMessageChunk[] {
+  if (!stream.messageId) return []
+  const out: ChatUIMessageChunk[] = [
+    { type: 'start', messageId: stream.messageId } as ChatUIMessageChunk,
+  ]
+  for (const ref of stream.blockOrder) {
+    if (ref.kind === 'text') {
+      const part = stream.textParts.get(ref.id)
+      if (part) emitTextReplay(out, ref.id, part)
+    } else if (ref.kind === 'reasoning') {
+      const part = stream.reasoningParts.get(ref.id)
+      if (part) emitReasoningReplay(out, ref.id, part)
+    } else {
+      const part = stream.toolParts.get(ref.toolCallId)
+      if (part) emitToolReplay(out, ref.toolCallId, part)
+    }
+  }
+  return out
+}
+
+/** Drive the chunk branch: update per-block replay state, broadcast
+ * each chunk to live subscribers, and schedule throttled persistence. */
 async function pumpChunks(
   stream: ActiveStream,
   branch: ReadableStream<ChatUIMessageChunk>
 ): Promise<void> {
   for await (const chunk of branch as unknown as AsyncIterable<ChatUIMessageChunk>) {
-    if (stream.bufferedChunks.length < MAX_BUFFER_CHUNKS) {
-      stream.bufferedChunks.push(chunk)
-    } else if (!stream.bufferOverflowed) {
-      stream.bufferOverflowed = true
-      log.warn(
-        `[ACTIVE_STREAMS] Buffer overflow for ${stream.chatId}; late subscribers will hydrate from SQLite.`
-      )
-    }
+    recordChunkForReplay(stream, chunk)
     broadcast(stream, 'chat:stream:chunk', {
       streamId: stream.streamId,
       chatId: stream.chatId,
@@ -371,26 +717,25 @@ export async function runManagedStream(
   }
 }
 
-/** Subscribe a renderer to an active stream. Returns the buffered
- * backlog so it can replay missed chunks before listening for new ones.
- * Returns `null` if the buffer has overflowed — the caller falls back
- * to the SQLite snapshot instead of replaying an inconsistent slice. */
+/** Subscribe a renderer to an active stream. Returns synthesized
+ * replay chunks generated from the stream's per-block structural state
+ * — enough to drop the renderer's AI SDK assembler into the same
+ * `runningMessage` that the live tail is producing. */
 export function subscribeToStream(
   chatId: string,
   sender: WebContents
 ): {
   streamId: string
-  bufferedChunks: ChatUIMessageChunk[]
+  replayChunks: ChatUIMessageChunk[]
   toolUiMetadata: Record<string, unknown> | null
 } | null {
   const stream = streams.get(chatId)
   if (!stream || stream.status !== 'streaming') return null
   if (sender.isDestroyed()) return null
-  if (stream.bufferOverflowed) return null
   stream.subscribers.add(sender)
   return {
     streamId: stream.streamId,
-    bufferedChunks: [...stream.bufferedChunks],
+    replayChunks: buildReplayChunks(stream),
     toolUiMetadata: stream.toolUiMetadata,
   }
 }

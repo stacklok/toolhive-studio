@@ -10,7 +10,7 @@ interface ElectronIPCChatTransportConfig {
 interface AttachOptions {
   streamId: string
   chatId: string
-  bufferedChunks?: UIMessageChunk[]
+  replayChunks?: UIMessageChunk[]
   abortSignal?: AbortSignal
   /** Called when the stream cleans up (end/error/abort). The renderer can
    * use this to e.g. tell the main process to drop our subscription. */
@@ -113,14 +113,14 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
   /**
    * Build a ReadableStream that bridges the main-process chat stream
    * (identified by streamId+chatId) into the renderer-side AI SDK
-   * pipeline. Optionally replays a buffered backlog before attaching to
-   * live IPC events — used by both `sendMessages` (no backlog) and
+   * pipeline. Optionally replays a synthesized backlog before attaching
+   * to live IPC events — used by both `sendMessages` (no backlog) and
    * `reconnectToStream` (mid-stream backlog from the registry).
    */
   private attachToActiveStream(
     options: AttachOptions
   ): ReadableStream<UIMessageChunk> {
-    const { streamId, chatId, bufferedChunks, abortSignal, onClose } = options
+    const { streamId, chatId, replayChunks, abortSignal, onClose } = options
 
     let cleanup: (() => void) | null = null
 
@@ -128,8 +128,8 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       start(controller) {
         let isClosed = false
 
-        if (bufferedChunks && bufferedChunks.length > 0) {
-          for (const chunk of bufferedChunks) {
+        if (replayChunks && replayChunks.length > 0) {
+          for (const chunk of replayChunks) {
             try {
               controller.enqueue(chunk)
             } catch {
@@ -327,7 +327,7 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
     if (!options.chatId) return null
     let resumed: {
       streamId: string
-      bufferedChunks: unknown[]
+      replayChunks: unknown[]
       toolUiMetadata: Record<string, unknown> | null
     } | null = null
     try {
@@ -340,7 +340,7 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
     return this.attachToActiveStream({
       streamId: resumed.streamId,
       chatId,
-      bufferedChunks: resumed.bufferedChunks as UIMessageChunk[],
+      replayChunks: resumed.replayChunks as UIMessageChunk[],
       onClose: () => {
         try {
           void window.electronAPI.chat.unsubscribeStream(chatId)

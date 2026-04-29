@@ -133,7 +133,7 @@ describe('active-streams registry', () => {
     expect(channels).toContain('chat:stream:end')
   })
 
-  it('exposes buffered chunks to a late subscriber via subscribeToStream', async () => {
+  it('synthesizes a replay for a late subscriber and forwards live chunks afterwards', async () => {
     const initialSender = makeSender()
     const { stream, controller } = createControllableStream<unknown>()
 
@@ -149,15 +149,23 @@ describe('active-streams registry', () => {
     controller.enqueue({ type: 'start', messageId: 'asst-1' })
     controller.enqueue({ type: 'text-start', id: 't1' })
     controller.enqueue({ type: 'text-delta', id: 't1', delta: 'Hel' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'lo' })
     await flushMicrotasks()
 
     const lateSender = makeSender()
     const resumed = subscribeToStream('thread-2', asWebContents(lateSender))
     expect(resumed).not.toBeNull()
     expect(resumed!.streamId).toBe('stream-2')
-    expect(resumed!.bufferedChunks.length).toBe(3)
 
-    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'lo' })
+    // Replay must be a deterministic, consolidated sequence — the four
+    // original deltas collapse to one synthesized delta carrying "Hello".
+    expect(resumed!.replayChunks).toEqual([
+      { type: 'start', messageId: 'asst-1' },
+      { type: 'text-start', id: 't1', providerMetadata: undefined },
+      { type: 'text-delta', id: 't1', delta: 'Hello' },
+    ])
+
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: '!' })
     await flushMicrotasks()
 
     const lateChunks = lateSender.send.mock.calls.filter(
@@ -166,7 +174,7 @@ describe('active-streams registry', () => {
     expect(lateChunks.length).toBe(1)
     expect(
       (lateChunks[0]![1] as { chunk: { delta: string } }).chunk.delta
-    ).toBe('lo')
+    ).toBe('!')
 
     controller.close()
     await run
@@ -356,35 +364,202 @@ describe('active-streams registry', () => {
     )
   })
 
-  it('falls back to SQLite hydration when the replay buffer overflows', async () => {
+  it('returns an empty replay when no chunks have arrived yet', async () => {
     const sender = makeSender()
     const { stream, controller } = createControllableStream<unknown>()
 
     const run = runManagedStream({
-      chatId: 'thread-overflow',
-      streamId: 'stream-overflow',
+      chatId: 'thread-empty',
+      streamId: 'stream-empty',
       originalMessages: initialUserMessages,
       uiMessageStream: stream as never,
       abortController: new AbortController(),
       initialSender: asWebContents(sender),
     })
 
-    // Push past MAX_BUFFER_CHUNKS (5000). `text-delta` chunks dodge the
-    // assembler's structural-state requirements.
+    // Subscribe before any chunk has been pumped: replay must be empty
+    // (no `messageId` known yet) so the late subscriber simply waits
+    // for the live tail.
+    const lateSender = makeSender()
+    const resumed = subscribeToStream('thread-empty', asWebContents(lateSender))
+    expect(resumed).not.toBeNull()
+    expect(resumed!.replayChunks).toEqual([])
+
+    controller.close()
+    await run
+  })
+
+  it('replays a completed text part with start/delta/end', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    const run = runManagedStream({
+      chatId: 'thread-text-done',
+      streamId: 'stream-text-done',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
     controller.enqueue({ type: 'start', messageId: 'asst-1' })
     controller.enqueue({ type: 'text-start', id: 't1' })
-    for (let i = 0; i < 5050; i++) {
-      controller.enqueue({ type: 'text-delta', id: 't1', delta: 'x' })
-    }
-    // ~3x cushion over chunk count to drain the for-await loop.
-    await flushMicrotasks(20000)
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'Done' })
+    controller.enqueue({ type: 'text-end', id: 't1' })
+    await flushMicrotasks()
 
     const lateSender = makeSender()
     const resumed = subscribeToStream(
-      'thread-overflow',
+      'thread-text-done',
       asWebContents(lateSender)
     )
-    expect(resumed).toBeNull()
+    expect(resumed!.replayChunks).toEqual([
+      { type: 'start', messageId: 'asst-1' },
+      { type: 'text-start', id: 't1', providerMetadata: undefined },
+      { type: 'text-delta', id: 't1', delta: 'Done' },
+      { type: 'text-end', id: 't1', providerMetadata: undefined },
+    ])
+
+    controller.close()
+    await run
+  })
+
+  it('replays mixed text + tool with output in blockOrder', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    const run = runManagedStream({
+      chatId: 'thread-mixed',
+      streamId: 'stream-mixed',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'Calling…' })
+    controller.enqueue({ type: 'text-end', id: 't1' })
+    controller.enqueue({
+      type: 'tool-input-start',
+      toolCallId: 'tc1',
+      toolName: 'search',
+    })
+    controller.enqueue({
+      type: 'tool-input-available',
+      toolCallId: 'tc1',
+      toolName: 'search',
+      input: { q: 'cats' },
+    })
+    controller.enqueue({
+      type: 'tool-output-available',
+      toolCallId: 'tc1',
+      output: { hits: 42 },
+    })
+    await flushMicrotasks()
+
+    const lateSender = makeSender()
+    const resumed = subscribeToStream('thread-mixed', asWebContents(lateSender))
+
+    // Order matches blockOrder: text first, then tool. The tool replay
+    // skips `tool-input-delta` because state already advanced past
+    // `input-streaming`.
+    expect(resumed!.replayChunks).toEqual([
+      { type: 'start', messageId: 'asst-1' },
+      { type: 'text-start', id: 't1', providerMetadata: undefined },
+      { type: 'text-delta', id: 't1', delta: 'Calling…' },
+      { type: 'text-end', id: 't1', providerMetadata: undefined },
+      {
+        type: 'tool-input-start',
+        toolCallId: 'tc1',
+        toolName: 'search',
+        dynamic: undefined,
+        providerExecuted: undefined,
+        title: undefined,
+        providerMetadata: undefined,
+      },
+      {
+        type: 'tool-input-available',
+        toolCallId: 'tc1',
+        toolName: 'search',
+        input: { q: 'cats' },
+        dynamic: undefined,
+        providerExecuted: undefined,
+        providerMetadata: undefined,
+        title: undefined,
+      },
+      {
+        type: 'tool-output-available',
+        toolCallId: 'tc1',
+        output: { hits: 42 },
+        providerExecuted: undefined,
+        preliminary: undefined,
+        providerMetadata: undefined,
+        dynamic: undefined,
+      },
+    ])
+
+    controller.close()
+    await run
+  })
+
+  it('replays a tool with partial input still streaming', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    const run = runManagedStream({
+      chatId: 'thread-tool-partial',
+      streamId: 'stream-tool-partial',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({
+      type: 'tool-input-start',
+      toolCallId: 'tc1',
+      toolName: 'search',
+    })
+    controller.enqueue({
+      type: 'tool-input-delta',
+      toolCallId: 'tc1',
+      inputTextDelta: '{"q":',
+    })
+    controller.enqueue({
+      type: 'tool-input-delta',
+      toolCallId: 'tc1',
+      inputTextDelta: '"cats"}',
+    })
+    await flushMicrotasks()
+
+    const lateSender = makeSender()
+    const resumed = subscribeToStream(
+      'thread-tool-partial',
+      asWebContents(lateSender)
+    )
+
+    // The two original deltas collapse into one consolidated delta
+    // carrying the full accumulated input text.
+    expect(resumed!.replayChunks).toEqual([
+      { type: 'start', messageId: 'asst-1' },
+      {
+        type: 'tool-input-start',
+        toolCallId: 'tc1',
+        toolName: 'search',
+        dynamic: undefined,
+        providerExecuted: undefined,
+        title: undefined,
+        providerMetadata: undefined,
+      },
+      {
+        type: 'tool-input-delta',
+        toolCallId: 'tc1',
+        inputTextDelta: '{"q":"cats"}',
+      },
+    ])
 
     controller.close()
     await run

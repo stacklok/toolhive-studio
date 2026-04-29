@@ -436,15 +436,15 @@ describe('Electron IPC Chat Transport', () => {
       expect(result).toBeNull()
     })
 
-    it('replays buffered chunks then attaches live IPC listeners', async () => {
-      const bufferedChunks = [
+    it('replays synthesized chunks then attaches live IPC listeners', async () => {
+      const replayChunks = [
         { type: 'start', messageId: 'msg-x' },
         { type: 'text-start', id: 't1' },
         { type: 'text-delta', id: 't1', delta: 'Hel' },
       ]
       const resumeStreamMock = vi.fn().mockResolvedValue({
         streamId: 'stream-resumed',
-        bufferedChunks,
+        replayChunks,
         toolUiMetadata: null,
       })
       const unsubscribeStreamMock = vi.fn().mockResolvedValue(undefined)
@@ -484,8 +484,8 @@ describe('Electron IPC Chat Transport', () => {
       expect(stream).not.toBeNull()
       const reader = stream!.getReader()
 
-      // First three reads come from the replay buffer.
-      for (const expected of bufferedChunks) {
+      // First three reads come from the synthesized replay backlog.
+      for (const expected of replayChunks) {
         const { value } = await reader.read()
         expect(value).toEqual(expected)
       }
@@ -521,7 +521,7 @@ describe('Electron IPC Chat Transport', () => {
     it('detaches all IPC listeners when the consumer cancels the stream', async () => {
       const resumeStreamMock = vi.fn().mockResolvedValue({
         streamId: 'stream-resumed',
-        bufferedChunks: [],
+        replayChunks: [],
         toolUiMetadata: null,
       })
       const unsubscribeStreamMock = vi.fn().mockResolvedValue(undefined)
