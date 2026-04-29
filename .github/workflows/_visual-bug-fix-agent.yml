@@ -66,6 +66,7 @@ jobs:
             exit 0
           fi
 
+          # Check if the agent already gave up on this issue (final comment exists)
           GAVE_UP=$(gh api "repos/${{ github.repository }}/issues/${{ inputs.issue-number }}/comments" \
             --paginate --jq '[.[] | select(.body | contains("Visual Bug Fix Agent"))] | length' 2>/dev/null || echo "0")
           if [ "$GAVE_UP" -gt "0" ]; then
@@ -194,20 +195,33 @@ jobs:
 
             LIVE APP AVAILABLE:
             A running ToolHive Studio is available inside the project's devcontainer.
-            The container ID is in the environment variable DEVCONTAINER_ID.
-            The workspace is bind-mounted at /workspaces/toolhive-studio inside the
-            container, so source edits on the runner propagate to the container via
-            Vite HMR (renderer changes only — main-process edits would need an
-            Electron restart, see the devcontainer-dev skill).
+            The container ID is in the environment variable DEVCONTAINER_ID. The
+            workspace is bind-mounted at /workspaces/toolhive-studio inside the
+            container, so renderer source edits on the runner propagate via Vite HMR.
+
+            Two important constraints:
+              - After editing renderer code, `sleep 2` before re-screenshotting so
+                HMR has time to apply. Otherwise you will see stale UI.
+              - If your fix touches anything under `main/`, visual verification
+                will NOT work in this run — Electron would need a manual restart
+                that costs ~15s and breaks the loop. Rely on unit tests for
+                main-process changes.
+
+            The agent loop is: capture screen → Read it with the Read tool →
+            reason about what you see → act → capture again.
 
             Useful commands:
-              scripts/devcontainer-screenshot.sh /tmp/shot.png   # captures the screen, prints absolute path
-              scripts/devcontainer-steal.sh "$DEVCONTAINER_ID" /tmp/foo ./foo   # extract any file from /tmp
+              # Capture screen to a runner-side path (NOT a container path), then Read it:
+              scripts/devcontainer-screenshot.sh ./shot.png
+              # Extract any other tmpfs file (logs, generated artifacts):
+              scripts/devcontainer-steal.sh "$DEVCONTAINER_ID" /tmp/foo ./foo
+              # Inspect the X11 window tree — the main app window has WM_CLASS=ToolHive:
               docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xwininfo -root -tree'
-              docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xdotool search --name ToolHive'
-              docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xdotool mousemove X Y click 1'
+              # Drive input — keyboard is more reliable than mouse-coordinate clicks:
               docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xdotool key Tab'
-              # Read /tmp/shot.png with the Read tool to view captured screenshots.
+              docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xdotool key Return'
+              # Mouse coordinates are fragile (modals shift the layout); use sparingly:
+              docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xdotool mousemove X Y click 1'
 
             WHEN TO USE THE LIVE APP:
             Default to a unit-test reproduction. Reach for the live app only when
