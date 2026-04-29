@@ -10,12 +10,40 @@ import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import log from '../logger'
 import { CHAT_PROVIDERS } from './providers'
 import { createMcpTools, getCachedUiMetadata } from './mcp-tools'
-import { streamUIMessagesOverIPC } from './stream-utils'
+import { runManagedStream } from './active-streams'
 import type { ChatRequest } from './types'
 import { updateThreadMessages } from './threads-storage'
 import { createModelFromRequest } from './utils'
 import { getAgent, resolveAgentForThread } from './agents/registry'
 import { createBuiltinAgentTools } from './agents/builtin-agent-tools'
+
+/** Sum two optional token counts, returning undefined only when both are. */
+function addCount(
+  a: number | undefined,
+  b: number | undefined
+): number | undefined {
+  if (a == null && b == null) return undefined
+  return (a ?? 0) + (b ?? 0)
+}
+
+/** Accumulate per-step usage into a running total. The right-hand value
+ * has the AI SDK's `LanguageModelUsage` shape but we use the
+ * `LanguageModelV2Usage` keys we already persist in message metadata. */
+function addUsage(
+  acc: LanguageModelV2Usage | null,
+  next: LanguageModelV2Usage | undefined | null
+): LanguageModelV2Usage | null {
+  if (!next) return acc
+  if (!acc) return { ...next }
+  return {
+    ...acc,
+    inputTokens: addCount(acc.inputTokens, next.inputTokens),
+    outputTokens: addCount(acc.outputTokens, next.outputTokens),
+    totalTokens: addCount(acc.totalTokens, next.totalTokens),
+    reasoningTokens: addCount(acc.reasoningTokens, next.reasoningTokens),
+    cachedInputTokens: addCount(acc.cachedInputTokens, next.cachedInputTokens),
+  } as LanguageModelV2Usage
+}
 
 /**
  * Handle chat streaming request using real-time IPC events
@@ -40,6 +68,8 @@ export async function handleChatStreamRealtime(
       },
     },
     async (span, finish) => {
+      const abortController = new AbortController()
+
       try {
         // Validate provider
         const provider = CHAT_PROVIDERS.find((p) => p.id === request.provider)
@@ -69,9 +99,6 @@ export async function handleChatStreamRealtime(
         )
         const builtinTools = builtinToolsHandle.tools
 
-        // Emit UI metadata so the renderer can identify MCP App tools
-        sender.send('chat:stream:tool-ui-metadata', getCachedUiMetadata())
-
         const combinedTools = {
           ...mcpTools,
           ...builtinTools,
@@ -89,6 +116,7 @@ export async function handleChatStreamRealtime(
 
           const result = await agent.stream({
             messages: await convertToModelMessages(request.messages),
+            abortSignal: abortController.signal,
           })
 
           // Create UI message stream with metadata and persistence
@@ -120,6 +148,12 @@ export async function handleChatStreamRealtime(
             }
           )
 
+          // Running token-usage accumulator. Multi-step tool loops
+          // emit one `finish-step` per step; we sum these so the running
+          // assistant message metadata exposes a live `totalUsage` value
+          // that the UI renders before the final `finish` chunk arrives.
+          let runningUsage: LanguageModelV2Usage | null = null
+
           // Use the AI SDK's built-in UI message stream
           const uiMessageStream = result.toUIMessageStream({
             originalMessages: request.messages,
@@ -134,6 +168,15 @@ export async function handleChatStreamRealtime(
                   createdAt,
                   model: request.model,
                   providerId: request.provider,
+                }
+              }
+              if (part.type === 'finish-step') {
+                runningUsage = addUsage(
+                  runningUsage,
+                  part.usage as unknown as LanguageModelV2Usage
+                )
+                return {
+                  ...(runningUsage ? { totalUsage: runningUsage } : {}),
                 }
               }
               if (part.type === 'tool-call') {
@@ -250,13 +293,18 @@ export async function handleChatStreamRealtime(
             },
           })
 
-          // Stream over IPC
-          streamUIMessagesOverIPC(
-            sender,
+          // Drive the stream through the active-streams registry so
+          // chunks are buffered and broadcast to any current/future
+          // subscribers, and snapshots are persisted to SQLite.
+          await runManagedStream({
+            chatId: request.chatId,
             streamId,
+            originalMessages: request.messages,
             uiMessageStream,
-            async () => {
-              // Clean up MCP clients after stream completes
+            abortController,
+            initialSender: sender,
+            initialToolUiMetadata: getCachedUiMetadata(),
+            onComplete: async () => {
               for (const client of mcpClients) {
                 try {
                   await client.close()
@@ -264,7 +312,6 @@ export async function handleChatStreamRealtime(
                   log.error('[CHAT] Error closing MCP client:', error)
                 }
               }
-              // Clean up any agent-owned temp resources (e.g. Skills workdirs)
               try {
                 await builtinToolsHandle.cleanup()
               } catch (error) {
@@ -273,8 +320,8 @@ export async function handleChatStreamRealtime(
                   error
                 )
               }
-            }
-          )
+            },
+          })
         } catch (error) {
           // Clean up MCP clients on error as well
 

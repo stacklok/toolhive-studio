@@ -2,6 +2,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ChatInterface } from '@/features/chat/components/chat-interface'
 import { PlaygroundSidebar } from '@/features/chat/components/playground-sidebar'
 import { usePlaygroundThreads } from '@/features/chat/hooks/use-playground-threads'
+import { useStreamingThreads } from '@/features/chat/hooks/use-streaming-threads'
 import { clearThreadDraft } from '@/features/chat/hooks/use-thread-draft'
 import { chatThreadQueryOptions } from '@/features/chat/lib/thread-query'
 
@@ -43,6 +44,7 @@ function PlaygroundChat() {
     renameThread,
     toggleStarThread,
   } = usePlaygroundThreads(threadId)
+  const streamingThreadIds = useStreamingThreads()
 
   if (isLoading) {
     return <ChatLoadingDots />
@@ -91,6 +93,7 @@ function PlaygroundChat() {
         <PlaygroundSidebar
           threads={threads}
           activeThreadId={threadId}
+          streamingThreadIds={streamingThreadIds}
           onSelectThread={handleSelectThread}
           onCreateThread={() => void handleCreateThread()}
           onDeleteThread={(id) => void handleDeleteThread(id)}

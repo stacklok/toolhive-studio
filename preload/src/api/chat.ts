@@ -25,6 +25,22 @@ export const chatApi = {
       ipcRenderer.invoke('chat:stream', request) as Promise<{
         streamId: string
       }>,
+    resumeStream: (chatId: string) =>
+      ipcRenderer.invoke('chat:stream:resume', chatId) as Promise<{
+        streamId: string
+        replayChunks: unknown[]
+        toolUiMetadata: Record<string, unknown> | null
+      } | null>,
+    unsubscribeStream: (chatId: string) =>
+      ipcRenderer.invoke('chat:stream:unsubscribe', chatId) as Promise<void>,
+    cancelStream: (chatId: string) =>
+      ipcRenderer.invoke('chat:stream:cancel', chatId) as Promise<boolean>,
+    getActiveStreamId: (chatId: string) =>
+      ipcRenderer.invoke('chat:stream:active-id', chatId) as Promise<
+        string | null
+      >,
+    getStreamingThreadIds: () =>
+      ipcRenderer.invoke('chat:stream:streaming-ids') as Promise<string[]>,
     getSettings: (providerId: string) =>
       ipcRenderer.invoke('chat:get-settings', providerId),
     saveSettings: (
@@ -157,6 +173,15 @@ export interface ChatAPI {
             agentId?: string
           }
     ) => Promise<{ streamId: string }>
+    resumeStream: (chatId: string) => Promise<{
+      streamId: string
+      replayChunks: unknown[]
+      toolUiMetadata: Record<string, unknown> | null
+    } | null>
+    unsubscribeStream: (chatId: string) => Promise<void>
+    cancelStream: (chatId: string) => Promise<boolean>
+    getActiveStreamId: (chatId: string) => Promise<string | null>
+    getStreamingThreadIds: () => Promise<string[]>
     getSettings: (providerId: string) => Promise<
       | {
           providerId: 'ollama' | 'lmstudio'

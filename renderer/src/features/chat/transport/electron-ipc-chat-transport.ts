@@ -7,6 +7,16 @@ interface ElectronIPCChatTransportConfig {
   queryClient: QueryClient
 }
 
+interface AttachOptions {
+  streamId: string
+  chatId: string
+  replayChunks?: UIMessageChunk[]
+  abortSignal?: AbortSignal
+  /** Called when the stream cleans up (end/error/abort). The renderer can
+   * use this to e.g. tell the main process to drop our subscription. */
+  onClose?: () => void
+}
+
 /**
  * Custom chat transport for Electron IPC that implements the AI SDK ChatTransport interface
  */
@@ -100,6 +110,144 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
     })
   }
 
+  /**
+   * Build a ReadableStream that bridges the main-process chat stream
+   * (identified by streamId+chatId) into the renderer-side AI SDK
+   * pipeline. Optionally replays a synthesized backlog before attaching
+   * to live IPC events — used by both `sendMessages` (no backlog) and
+   * `reconnectToStream` (mid-stream backlog from the registry).
+   */
+  private attachToActiveStream(
+    options: AttachOptions
+  ): ReadableStream<UIMessageChunk> {
+    const { streamId, chatId, replayChunks, abortSignal, onClose } = options
+
+    let cleanup: (() => void) | null = null
+
+    return new ReadableStream<UIMessageChunk>({
+      start(controller) {
+        let isClosed = false
+
+        if (replayChunks && replayChunks.length > 0) {
+          for (const chunk of replayChunks) {
+            try {
+              controller.enqueue(chunk)
+            } catch {
+              isClosed = true
+              break
+            }
+          }
+        }
+
+        // Prefer streamId equality; chatId is only a fallback so a
+        // follow-up turn on the same chat can't bleed into an old reader.
+        const matchesStream = (data: {
+          streamId?: string
+          chatId?: string
+        }) => {
+          if (data.streamId) return data.streamId === streamId
+          return !!data.chatId && data.chatId === chatId
+        }
+
+        const handleChunk = (...args: unknown[]) => {
+          const data = args[0] as {
+            streamId: string
+            chatId?: string
+            chunk: UIMessageChunk
+          }
+          if (data && matchesStream(data) && !isClosed) {
+            try {
+              controller.enqueue(data.chunk)
+            } catch {
+              cleanup?.()
+            }
+          }
+        }
+
+        const handleEnd = (...args: unknown[]) => {
+          const data = args[0] as { streamId: string; chatId?: string }
+          if (data && matchesStream(data) && !isClosed) {
+            try {
+              controller.close()
+            } catch {
+              // already closed
+            }
+            cleanup?.()
+          }
+        }
+
+        const handleError = (...args: unknown[]) => {
+          const data = args[0] as {
+            streamId: string
+            chatId?: string
+            error: string
+          }
+          if (data && matchesStream(data) && !isClosed) {
+            try {
+              controller.error(new Error(data.error))
+            } catch {
+              // already closed
+            }
+            cleanup?.()
+          }
+        }
+
+        // `events.on` wraps the listener internally, so `removeListener`
+        // by reference never matches — keep the unsubscribe handles.
+        const offChunk = window.electronAPI.on?.(
+          'chat:stream:chunk',
+          handleChunk
+        )
+        const offEnd = window.electronAPI.on?.('chat:stream:end', handleEnd)
+        const offError = window.electronAPI.on?.(
+          'chat:stream:error',
+          handleError
+        )
+
+        // Captured so cleanup() can detach it on normal completion —
+        // otherwise the AbortSignal pins the controller closure.
+        let abortHandler: (() => void) | null = null
+
+        cleanup = () => {
+          if (!isClosed) {
+            isClosed = true
+            offChunk?.()
+            offEnd?.()
+            offError?.()
+            if (abortSignal && abortHandler) {
+              abortSignal.removeEventListener('abort', abortHandler)
+              abortHandler = null
+            }
+            onClose?.()
+          }
+        }
+
+        if (abortSignal) {
+          abortHandler = () => {
+            if (!isClosed) {
+              try {
+                controller.error(new Error('Request aborted'))
+              } catch {
+                // already closed
+              }
+              cleanup?.()
+            }
+          }
+
+          if (abortSignal.aborted) {
+            abortHandler()
+            return
+          }
+
+          abortSignal.addEventListener('abort', abortHandler)
+        }
+      },
+      cancel() {
+        cleanup?.()
+      },
+    })
+  }
+
   async sendMessages(
     options: {
       trigger: 'submit-message' | 'regenerate-message'
@@ -158,104 +306,13 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
     }
 
     try {
-      // Start streaming and get stream ID
       const response = await window.electronAPI.chat.stream(backendRequest)
       const { streamId } = response as { streamId: string }
 
-      // Create a readable stream that will be populated by IPC events
-      let cleanup: (() => void) | null = null
-
-      return new ReadableStream<UIMessageChunk>({
-        start(controller) {
-          let isClosed = false
-
-          // Listen for stream chunks
-          const handleChunk = (...args: unknown[]) => {
-            const data = args[0] as { streamId: string; chunk: UIMessageChunk }
-            if (data && data.streamId === streamId && !isClosed) {
-              try {
-                controller.enqueue(data.chunk)
-              } catch {
-                // Stream is already closed, clean up silently
-                cleanup?.()
-              }
-            }
-          }
-
-          // Listen for stream end
-          const handleEnd = (...args: unknown[]) => {
-            const data = args[0] as { streamId: string }
-            if (data && data.streamId === streamId && !isClosed) {
-              try {
-                controller.close()
-              } catch {
-                // Stream already closed, ignore
-              }
-              cleanup?.()
-            }
-          }
-
-          // Listen for stream errors
-          const handleError = (...args: unknown[]) => {
-            const data = args[0] as { streamId: string; error: string }
-            if (data && data.streamId === streamId && !isClosed) {
-              try {
-                controller.error(new Error(data.error))
-              } catch {
-                // Stream already closed, ignore
-              }
-              cleanup?.()
-            }
-          }
-
-          // Clean up function to remove all listeners
-          cleanup = () => {
-            if (!isClosed) {
-              isClosed = true
-              window.electronAPI.removeListener?.(
-                'chat:stream:chunk',
-                handleChunk
-              )
-              window.electronAPI.removeListener?.('chat:stream:end', handleEnd)
-              window.electronAPI.removeListener?.(
-                'chat:stream:error',
-                handleError
-              )
-            }
-          }
-
-          // Handle abort signal
-          if (options.abortSignal) {
-            const handleAbort = () => {
-              if (!isClosed) {
-                try {
-                  controller.error(new Error('Request aborted'))
-                } catch {
-                  // Stream already closed, ignore
-                }
-                cleanup?.()
-              }
-            }
-
-            if (options.abortSignal.aborted) {
-              // Already aborted
-              handleAbort()
-              return
-            }
-
-            options.abortSignal.addEventListener('abort', handleAbort)
-          }
-
-          // Set up IPC listeners
-          window.electronAPI.on?.('chat:stream:chunk', handleChunk)
-          window.electronAPI.on?.('chat:stream:end', handleEnd)
-          window.electronAPI.on?.('chat:stream:error', handleError)
-        },
-        cancel() {
-          // This is called when the stream is cancelled (e.g., by abort signal)
-          // Clean up listeners to prevent further IPC events
-          cleanup?.()
-        },
+      return this.attachToActiveStream({
+        streamId,
+        chatId: options.chatId,
+        abortSignal: options.abortSignal,
       })
     } catch (error) {
       throw new Error(
@@ -264,8 +321,33 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
     }
   }
 
-  async reconnectToStream(): Promise<ReadableStream<UIMessageChunk> | null> {
-    // For now, we don't support reconnection - return null
-    return null
+  async reconnectToStream(options: {
+    chatId: string
+  }): Promise<ReadableStream<UIMessageChunk> | null> {
+    if (!options.chatId) return null
+    let resumed: {
+      streamId: string
+      replayChunks: unknown[]
+      toolUiMetadata: Record<string, unknown> | null
+    } | null = null
+    try {
+      resumed = await window.electronAPI.chat.resumeStream(options.chatId)
+    } catch {
+      return null
+    }
+    if (!resumed) return null
+    const chatId = options.chatId
+    return this.attachToActiveStream({
+      streamId: resumed.streamId,
+      chatId,
+      replayChunks: resumed.replayChunks as UIMessageChunk[],
+      onClose: () => {
+        try {
+          void window.electronAPI.chat.unsubscribeStream(chatId)
+        } catch {
+          // best effort
+        }
+      },
+    })
   }
 }

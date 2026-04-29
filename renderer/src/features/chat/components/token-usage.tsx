@@ -11,12 +11,18 @@ interface TokenUsageProps {
   usage: LanguageModelV2Usage
   responseTime?: number
   providerId?: string
+  /** When true, the assistant message this usage belongs to is still
+   * streaming. Most providers only report token counts at step
+   * boundaries, so we render a subtle in-flight indicator instead of
+   * a misleading "0 → 0 = 0" line until the first usage arrives. */
+  isStreaming?: boolean
 }
 
 export function TokenUsage({
   usage,
   responseTime,
   providerId,
+  isStreaming = false,
 }: TokenUsageProps) {
   const safeNumber = (value: number | undefined | null): number => {
     if (
@@ -44,11 +50,30 @@ export function TokenUsage({
 
   const hasUsageData = totalTokens > 0 || inputTokens > 0 || outputTokens > 0
   const isLMStudio = providerId === 'lmstudio'
+  const showStreamingPlaceholder = isStreaming && !hasUsageData
 
   return (
     <TooltipProvider>
       <div className="text-muted-foreground flex items-center gap-2 text-xs">
-        {isLMStudio && !hasUsageData ? (
+        {showStreamingPlaceholder ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex cursor-help items-center gap-1">
+                <Hash className="h-3 w-3 animate-pulse" />
+                <span className="animate-pulse">…</span>
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="top" className="max-w-xs">
+              <div className="space-y-1">
+                <div className="font-medium">Token Usage</div>
+                <div className="text-xs">
+                  Token counts will appear once the model reports them. Most
+                  providers only emit usage at the end of each step.
+                </div>
+              </div>
+            </TooltipContent>
+          </Tooltip>
+        ) : isLMStudio && !hasUsageData ? (
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex cursor-help items-center gap-1">

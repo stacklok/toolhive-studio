@@ -2,6 +2,7 @@ import { useCallback, useMemo, useEffect, useState, useRef } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
+import { toast } from 'sonner'
 import type { ChatUIMessage } from '../types'
 import { ElectronIPCChatTransport } from '../transport/electron-ipc-chat-transport'
 import { useChatSettings } from './use-chat-settings'
@@ -10,6 +11,17 @@ import type { FileUIPart } from 'ai'
 import { trackEvent } from '@/common/lib/analytics'
 import { hasValidCredentials } from '../lib/utils'
 import { chatThreadQueryOptions } from '../lib/thread-query'
+
+/**
+ * Strip the SQLite snapshot's trailing assistant message when a live
+ * stream is about to replay a synthesized version of the same one.
+ * Without this, the AI SDK's `processUIMessageStream` lands `text-start`
+ * onto a message that already has a text part, producing duplicates.
+ */
+function dropTrailingAssistant(messages: ChatUIMessage[]): ChatUIMessage[] {
+  if (messages.at(-1)?.role !== 'assistant') return messages
+  return messages.slice(0, -1)
+}
 
 export function useChatStreaming(externalThreadId?: string | null) {
   const queryClient = useQueryClient()
@@ -30,19 +42,16 @@ export function useChatStreaming(externalThreadId?: string | null) {
     clearMessages: clearThreadMessages,
   } = useThreadManagement(externalThreadId)
 
-  // Messages come from React Query. The `/playground/chat/$threadId` route
-  // loader primes the cache via `ensureQueryData`, so by the time this
-  // hook runs the data is already available — no loading flash on thread
-  // switch. `usePlaygroundThreads` invalidates this key on streaming
-  // completion to refresh titles/messages.
+  // Primed by the route loader via `ensureQueryData`, so available
+  // synchronously on thread switch. Invalidated on streaming completion
+  // by `usePlaygroundThreads`.
   const {
     data: threadData,
     isPending: isThreadDataPending,
     error: threadDataError,
   } = useQuery(chatThreadQueryOptions(currentThreadId))
 
-  // Surface IPC/query failures via `persistentError` so they flow into
-  // `processedError` below (matches the pre-refactor try/catch behaviour).
+  // Surface query failures via `persistentError` so they reach `processedError` below.
   useEffect(() => {
     if (!threadDataError) return
     const message =
@@ -69,27 +78,114 @@ export function useChatStreaming(externalThreadId?: string | null) {
     clearError,
     stop,
     setMessages,
+    resumeStream,
   } = useChat<ChatUIMessage>({
     id: currentThreadId || 'loading-thread',
     transport: ipcTransport,
-    resume: false,
+    // No `resume: true` on purpose — its on-mount auto-resume races our
+    // hydration-driven resume on full route remounts and clobbers the
+    // active response. We resume manually from the hydration effect below.
     experimental_throttle: 200,
   })
 
-  // Hydrate the `useChat` instance from cached loader data whenever the
-  // thread identity changes. We guard with a ref so streaming-in-progress
-  // token updates inside `useChat` are never overwritten by a stale loader
-  // payload for the same thread — subsequent refetches (e.g. after
-  // `invalidateQueries` on streaming complete) are a no-op here because
-  // `useChat` already holds the canonical message list at that point.
+  // Hydrate `useChat` from the DB snapshot once per thread, then ask the
+  // transport to reattach to any in-flight main-process stream. The ref
+  // guards against later refetches overwriting live streaming state.
   const hydratedThreadRef = useRef<string | null>(null)
   useEffect(() => {
     if (!currentThreadId || !threadData) return
     if (hydratedThreadRef.current === currentThreadId) return
     hydratedThreadRef.current = currentThreadId
     setPersistentError(null)
-    setMessages(threadData.messages)
-  }, [currentThreadId, threadData, setMessages])
+
+    const threadIdAtResume = currentThreadId
+    ;(async () => {
+      // Peek the registry first. When a stream is live, the SQLite
+      // snapshot's trailing assistant message is the same one the
+      // synthesized replay is about to rebuild — keeping it would let
+      // `processUIMessageStream` pile a second copy of every part on
+      // top of it. Drop it; the replay's `start { messageId }` creates
+      // a fresh assistant that the live tail extends.
+      let activeStreamId: string | null = null
+      try {
+        activeStreamId =
+          await window.electronAPI.chat.getActiveStreamId(threadIdAtResume)
+      } catch {
+        activeStreamId = null
+      }
+      if (hydratedThreadRef.current !== threadIdAtResume) return
+      const messagesToSet = activeStreamId
+        ? dropTrailingAssistant(threadData.messages)
+        : threadData.messages
+      setMessages(messagesToSet)
+
+      await resumeStream()
+      if (hydratedThreadRef.current !== threadIdAtResume) {
+        try {
+          void window.electronAPI.chat.unsubscribeStream(threadIdAtResume)
+        } catch {
+          // best effort
+        }
+        return
+      }
+      // Race guard: we trimmed the trailing assistant on the assumption
+      // a stream was live, but it finished between the peek and the
+      // resume call. `resumeStream()` itself returns `void`, so re-poke
+      // the registry and refetch the now-finalized snapshot if the
+      // stream is gone — `setMessages` will replay over the trimmed list.
+      if (activeStreamId) {
+        let stillActive: string | null = activeStreamId
+        try {
+          stillActive =
+            await window.electronAPI.chat.getActiveStreamId(threadIdAtResume)
+        } catch {
+          stillActive = null
+        }
+        if (!stillActive) {
+          try {
+            void queryClient.invalidateQueries({
+              queryKey: chatThreadQueryOptions(threadIdAtResume).queryKey,
+            })
+          } catch {
+            // best effort
+          }
+        }
+      }
+    })()
+  }, [currentThreadId, threadData, setMessages, resumeStream, queryClient])
+
+  // Detach on unmount / thread switch. The LLM call keeps running in
+  // the main process; we just stop receiving chunks for it here.
+  useEffect(() => {
+    if (!currentThreadId) return
+    return () => {
+      try {
+        void window.electronAPI.chat.unsubscribeStream(currentThreadId)
+      } catch {
+        // best effort
+      }
+    }
+  }, [currentThreadId])
+
+  // One-shot warning if the main process can't persist a snapshot
+  // (disk full, SQLite locked, …). Main emits this once per stream.
+  useEffect(() => {
+    if (!currentThreadId) return
+    const listener = (...args: unknown[]) => {
+      const event = args[0] as { chatId?: string; error?: string } | undefined
+      if (!event || event.chatId !== currentThreadId) return
+      toast.warning('Your chat may not be saved — saving to disk failed.', {
+        description: event.error,
+      })
+    }
+    const unsubscribe = window.electronAPI.on?.(
+      'chat:stream:persist-error',
+      listener
+    )
+    return () => {
+      unsubscribe?.()
+    }
+  }, [currentThreadId])
 
   const isPersistentLoading = !!currentThreadId && isThreadDataPending
 
@@ -100,7 +196,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
     isPersistentLoading ||
     isThreadLoading
 
-  // Publish a signal as soon as the user submits a message so the sidebar appears immediately
+  // Signal the sidebar as soon as the user submits, before streaming starts.
   useEffect(() => {
     if (status === 'submitted' && currentThreadId) {
       queryClient.setQueryData(['chat', 'threadStarted'], {
@@ -277,6 +373,13 @@ export function useChatStreaming(externalThreadId?: string | null) {
       sendMessage: validatedSendMessage,
       clearMessages,
       cancelRequest: async () => {
+        if (currentThreadId) {
+          try {
+            await window.electronAPI.chat.cancelStream(currentThreadId)
+          } catch {
+            // best effort: still tear down the renderer-side state below
+          }
+        }
         await stop()
         clearError()
       },

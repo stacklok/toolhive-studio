@@ -729,6 +729,7 @@ export function ChatMessage({
               }
               responseTime={message.metadata?.responseTime}
               providerId={message.metadata?.providerId}
+              isStreaming={status === 'streaming' || status === 'submitted'}
             />
           )}
         </div>
