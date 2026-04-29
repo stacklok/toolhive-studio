@@ -2,6 +2,7 @@ import { useCallback, useMemo, useEffect, useState, useRef } from 'react'
 import { useChat } from '@ai-sdk/react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
+import { toast } from 'sonner'
 import type { ChatUIMessage } from '../types'
 import { ElectronIPCChatTransport } from '../transport/electron-ipc-chat-transport'
 import { useChatSettings } from './use-chat-settings'
@@ -110,6 +111,26 @@ export function useChatStreaming(externalThreadId?: string | null) {
       } catch {
         // best effort
       }
+    }
+  }, [currentThreadId])
+
+  // One-shot warning if the main process can't persist a snapshot
+  // (disk full, SQLite locked, …). Main emits this once per stream.
+  useEffect(() => {
+    if (!currentThreadId) return
+    const listener = (...args: unknown[]) => {
+      const event = args[0] as { chatId?: string; error?: string } | undefined
+      if (!event || event.chatId !== currentThreadId) return
+      toast.warning('Your chat may not be saved — saving to disk failed.', {
+        description: event.error,
+      })
+    }
+    const unsubscribe = window.electronAPI.on?.(
+      'chat:stream:persist-error',
+      listener
+    )
+    return () => {
+      unsubscribe?.()
     }
   }, [currentThreadId])
 

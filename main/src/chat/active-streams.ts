@@ -14,6 +14,10 @@ import { updateThreadMessages } from './threads-storage'
  */
 const PERSIST_THROTTLE_MS = 250
 
+/** Hard cap on the per-stream replay buffer. Past this, late subscribers
+ * fall back to the SQLite snapshot instead of replaying. */
+const MAX_BUFFER_CHUNKS = 5000
+
 type ChatUIMessageChunk = InferUIMessageChunk<ChatUIMessage>
 
 interface ActiveStream {
@@ -38,6 +42,11 @@ interface ActiveStream {
   /** Last UI metadata payload broadcast on the stream — replayed to late
    * subscribers so they can identify MCP App tools. */
   toolUiMetadata: Record<string, unknown> | null
+  /** Once tripped, late subscribers fall back to SQLite hydration. */
+  bufferOverflowed: boolean
+  /** Tripped on the first persist failure to broadcast a one-shot
+   * `chat:stream:persist-error`. */
+  persistFailed: boolean
 }
 
 const streams = new Map<string, ActiveStream>()
@@ -46,14 +55,21 @@ const streams = new Map<string, ActiveStream>()
  * timers/writes during shutdown to keep teardown deterministic. */
 let isShuttingDown = false
 try {
-  app.once('before-quit', () => {
+  // `on` (not `once`) so a cancelled-then-retried quit still flushes.
+  app.on('before-quit', () => {
     isShuttingDown = true
     for (const stream of streams.values()) {
       flushPersist(stream)
+      // Tear down the upstream so the provider stops billing tokens.
+      try {
+        stream.abortController.abort()
+      } catch {
+        // already aborted
+      }
     }
   })
 } catch {
-  // `app` may be unavailable in unit-test contexts; that's fine.
+  // `app` may be unavailable in unit-test contexts.
 }
 
 function safeSend(
@@ -106,6 +122,16 @@ function buildSnapshot(stream: ActiveStream): ChatUIMessage[] {
   return [...stream.originalMessages, stream.runningMessage]
 }
 
+function reportPersistFailure(stream: ActiveStream, error: string) {
+  if (stream.persistFailed) return
+  stream.persistFailed = true
+  broadcast(stream, 'chat:stream:persist-error', {
+    streamId: stream.streamId,
+    chatId: stream.chatId,
+    error,
+  })
+}
+
 function flushPersist(stream: ActiveStream) {
   if (stream.persistTimer) {
     clearTimeout(stream.persistTimer)
@@ -119,11 +145,16 @@ function flushPersist(stream: ActiveStream) {
       log.warn(
         `[ACTIVE_STREAMS] Snapshot write failed for ${stream.chatId}: ${result.error}`
       )
+      reportPersistFailure(stream, result.error ?? 'Unknown persist error')
     }
   } catch (error) {
     log.error(
       `[ACTIVE_STREAMS] Snapshot write threw for ${stream.chatId}:`,
       error
+    )
+    reportPersistFailure(
+      stream,
+      error instanceof Error ? error.message : 'Unknown persist error'
     )
   }
 }
@@ -142,19 +173,21 @@ function schedulePersist(stream: ActiveStream, force: boolean) {
   }, PERSIST_THROTTLE_MS)
 }
 
+/** Chunk types that force an immediate snapshot flush. */
+const PERSISTENCE_BOUNDARIES: ReadonlySet<ChatUIMessageChunk['type']> = new Set(
+  [
+    'tool-input-start',
+    'tool-input-available',
+    'tool-output-available',
+    'tool-output-error',
+    'finish',
+    'finish-step',
+    'error',
+  ]
+)
+
 function isPersistenceBoundary(chunk: ChatUIMessageChunk): boolean {
-  switch (chunk.type) {
-    case 'tool-input-start':
-    case 'tool-input-available':
-    case 'tool-output-available':
-    case 'tool-output-error':
-    case 'finish':
-    case 'finish-step':
-    case 'error':
-      return true
-    default:
-      return false
-  }
+  return PERSISTENCE_BOUNDARIES.has(chunk.type)
 }
 
 interface RunStreamOptions {
@@ -170,6 +203,144 @@ interface RunStreamOptions {
   onComplete?: () => void | Promise<void>
 }
 
+/** Register a fresh stream in the global map. Throws if a stream for
+ * this chat is already running — the caller surfaces the error. */
+function buildActiveStream(options: RunStreamOptions): ActiveStream {
+  const { chatId } = options
+  if (streams.has(chatId)) {
+    throw new Error(`Stream already active for chat ${chatId}`)
+  }
+  const stream: ActiveStream = {
+    chatId,
+    streamId: options.streamId,
+    originalMessages: options.originalMessages,
+    bufferedChunks: [],
+    subscribers: new Set(),
+    runningMessage: undefined,
+    persistTimer: null,
+    pendingWrite: false,
+    abortController: options.abortController,
+    status: 'streaming',
+    toolUiMetadata: options.initialToolUiMetadata ?? null,
+    bufferOverflowed: false,
+    persistFailed: false,
+  }
+  streams.set(chatId, stream)
+  attachInitialSender(
+    stream,
+    options.initialSender,
+    options.initialToolUiMetadata
+  )
+  broadcastState(chatId, 'streaming')
+  return stream
+}
+
+function attachInitialSender(
+  stream: ActiveStream,
+  sender: WebContents | undefined,
+  initialToolUiMetadata: Record<string, unknown> | undefined
+): void {
+  if (!sender || sender.isDestroyed()) return
+  stream.subscribers.add(sender)
+  if (initialToolUiMetadata) {
+    safeSend(sender, 'chat:stream:tool-ui-metadata', initialToolUiMetadata)
+  }
+}
+
+/** Drain the assembler branch in the background, keeping
+ * `runningMessage` up to date for snapshot persistence. */
+function startAssembler(
+  stream: ActiveStream,
+  branch: ReadableStream<ChatUIMessageChunk>
+): Promise<void> {
+  const assembler = readUIMessageStream<ChatUIMessage>({
+    stream: branch,
+    onError: (error) => {
+      log.error(`[ACTIVE_STREAMS] Assembler error for ${stream.chatId}:`, error)
+    },
+  })
+  return (async () => {
+    for await (const message of assembler) {
+      stream.runningMessage = message as ChatUIMessage
+    }
+  })().catch((error) => {
+    log.error(
+      `[ACTIVE_STREAMS] Assembler iteration failed for ${stream.chatId}:`,
+      error
+    )
+  })
+}
+
+/** Drive the chunk branch: bound the replay buffer, broadcast each
+ * chunk to live subscribers, and schedule throttled persistence. */
+async function pumpChunks(
+  stream: ActiveStream,
+  branch: ReadableStream<ChatUIMessageChunk>
+): Promise<void> {
+  for await (const chunk of branch as unknown as AsyncIterable<ChatUIMessageChunk>) {
+    if (stream.bufferedChunks.length < MAX_BUFFER_CHUNKS) {
+      stream.bufferedChunks.push(chunk)
+    } else if (!stream.bufferOverflowed) {
+      stream.bufferOverflowed = true
+      log.warn(
+        `[ACTIVE_STREAMS] Buffer overflow for ${stream.chatId}; late subscribers will hydrate from SQLite.`
+      )
+    }
+    broadcast(stream, 'chat:stream:chunk', {
+      streamId: stream.streamId,
+      chatId: stream.chatId,
+      chunk,
+    })
+    schedulePersist(stream, isPersistenceBoundary(chunk))
+  }
+}
+
+function finalizeSuccess(stream: ActiveStream): void {
+  stream.status = 'finished'
+  flushPersist(stream)
+  broadcast(stream, 'chat:stream:end', {
+    streamId: stream.streamId,
+    chatId: stream.chatId,
+  })
+  broadcastState(stream.chatId, 'finished')
+}
+
+function finalizeError(stream: ActiveStream, error: unknown): void {
+  stream.status = 'error'
+  // Tear down the upstream even when the error came from above the
+  // fetch (e.g. schema mismatch). AbortController is idempotent.
+  try {
+    stream.abortController.abort()
+  } catch {
+    // already aborted
+  }
+  flushPersist(stream)
+  const message = error instanceof Error ? error.message : 'Unknown error'
+  broadcast(stream, 'chat:stream:error', {
+    streamId: stream.streamId,
+    chatId: stream.chatId,
+    error: message,
+  })
+  broadcastState(stream.chatId, 'error')
+  log.error(`[ACTIVE_STREAMS] Stream ${stream.chatId} failed:`, error)
+}
+
+async function teardownStream(
+  stream: ActiveStream,
+  onComplete: (() => void | Promise<void>) | undefined
+): Promise<void> {
+  streams.delete(stream.chatId)
+  if (!onComplete) return
+  try {
+    await onComplete()
+  } catch (cleanupError) {
+    log.error(
+      `[ACTIVE_STREAMS] onComplete threw for ${stream.chatId}:`,
+      cleanupError
+    )
+  }
+}
+
 /**
  * Drive a UI message stream through the active-streams registry. Chunks
  * are buffered, broadcast to all current subscribers, fed into a running
@@ -180,109 +351,30 @@ interface RunStreamOptions {
 export async function runManagedStream(
   options: RunStreamOptions
 ): Promise<void> {
-  const {
-    chatId,
-    streamId,
-    originalMessages,
-    uiMessageStream,
-    abortController,
-    initialSender,
-    initialToolUiMetadata,
-    onComplete,
-  } = options
+  const stream = buildActiveStream(options)
 
-  const stream: ActiveStream = {
-    chatId,
-    streamId,
-    originalMessages,
-    bufferedChunks: [],
-    subscribers: new Set(),
-    runningMessage: undefined,
-    persistTimer: null,
-    pendingWrite: false,
-    abortController,
-    status: 'streaming',
-    toolUiMetadata: initialToolUiMetadata ?? null,
-  }
-  streams.set(chatId, stream)
-  if (initialSender && !initialSender.isDestroyed()) {
-    stream.subscribers.add(initialSender)
-    if (initialToolUiMetadata) {
-      safeSend(
-        initialSender,
-        'chat:stream:tool-ui-metadata',
-        initialToolUiMetadata
-      )
-    }
-  }
-  broadcastState(chatId, 'streaming')
-
-  // Tee the upstream so one branch drives IPC + buffer and the other
+  // Tee the upstream: one branch broadcasts to subscribers, the other
   // feeds an assembler that yields running UIMessage snapshots.
   const [chunkBranch, assemblerBranch] = (
-    uiMessageStream as ReadableStream<ChatUIMessageChunk>
+    options.uiMessageStream as ReadableStream<ChatUIMessageChunk>
   ).tee()
-
-  const assembler = readUIMessageStream<ChatUIMessage>({
-    stream: assemblerBranch,
-    onError: (error) => {
-      log.error(`[ACTIVE_STREAMS] Assembler error for ${chatId}:`, error)
-    },
-  })
-
-  const assemblerTask = (async () => {
-    for await (const message of assembler) {
-      stream.runningMessage = message as ChatUIMessage
-    }
-  })().catch((error) => {
-    log.error(
-      `[ACTIVE_STREAMS] Assembler iteration failed for ${chatId}:`,
-      error
-    )
-  })
+  const assemblerTask = startAssembler(stream, assemblerBranch)
 
   try {
-    for await (const chunk of chunkBranch as unknown as AsyncIterable<ChatUIMessageChunk>) {
-      // Buffer is bounded by stream lifetime — released in `finally`
-      // below. Swap to snapshot + tail-buffer if streams ever go huge.
-      stream.bufferedChunks.push(chunk)
-      broadcast(stream, 'chat:stream:chunk', { streamId, chatId, chunk })
-      schedulePersist(stream, isPersistenceBoundary(chunk))
-    }
-
+    await pumpChunks(stream, chunkBranch)
     await assemblerTask
-    stream.status = 'finished'
-    flushPersist(stream)
-    broadcast(stream, 'chat:stream:end', { streamId, chatId })
-    broadcastState(chatId, 'finished')
+    finalizeSuccess(stream)
   } catch (error) {
-    stream.status = 'error'
-    flushPersist(stream)
-    const message = error instanceof Error ? error.message : 'Unknown error'
-    broadcast(stream, 'chat:stream:error', {
-      streamId,
-      chatId,
-      error: message,
-    })
-    broadcastState(chatId, 'error')
-    log.error(`[ACTIVE_STREAMS] Stream ${chatId} failed:`, error)
+    finalizeError(stream, error)
   } finally {
-    streams.delete(chatId)
-    if (onComplete) {
-      try {
-        await onComplete()
-      } catch (cleanupError) {
-        log.error(
-          `[ACTIVE_STREAMS] onComplete threw for ${chatId}:`,
-          cleanupError
-        )
-      }
-    }
+    await teardownStream(stream, options.onComplete)
   }
 }
 
 /** Subscribe a renderer to an active stream. Returns the buffered
- * backlog so it can replay missed chunks before listening for new ones. */
+ * backlog so it can replay missed chunks before listening for new ones.
+ * Returns `null` if the buffer has overflowed — the caller falls back
+ * to the SQLite snapshot instead of replaying an inconsistent slice. */
 export function subscribeToStream(
   chatId: string,
   sender: WebContents
@@ -294,6 +386,7 @@ export function subscribeToStream(
   const stream = streams.get(chatId)
   if (!stream || stream.status !== 'streaming') return null
   if (sender.isDestroyed()) return null
+  if (stream.bufferOverflowed) return null
   stream.subscribers.add(sender)
   return {
     streamId: stream.streamId,
