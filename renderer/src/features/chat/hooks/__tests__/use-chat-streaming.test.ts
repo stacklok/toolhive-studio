@@ -69,6 +69,9 @@ const mockChatAPI = {
   getThread: vi.fn(),
   getThreadMessagesForTransport: vi.fn(),
   updateThreadMessages: vi.fn(),
+  getActiveStreamId: vi.fn(),
+  unsubscribeStream: vi.fn(),
+  cancelStream: vi.fn(),
 }
 
 // Test wrapper with QueryClient
@@ -133,6 +136,9 @@ describe('useChatStreaming', () => {
     mockChatAPI.getThread.mockResolvedValue(null)
     mockChatAPI.getThreadMessagesForTransport.mockResolvedValue([])
     mockChatAPI.updateThreadMessages.mockResolvedValue({ success: true })
+    mockChatAPI.getActiveStreamId.mockResolvedValue(null)
+    mockChatAPI.unsubscribeStream.mockResolvedValue(undefined)
+    mockChatAPI.cancelStream.mockResolvedValue(true)
 
     // Reset mockUseChat state to default values
     mockUseChat.messages = []
@@ -390,8 +396,8 @@ describe('useChatStreaming', () => {
         expect(result.current.isLoading).toBe(false)
       })
 
-      act(() => {
-        result.current.cancelRequest()
+      await act(async () => {
+        await result.current.cancelRequest()
       })
 
       expect(mockUseChat.stop).toHaveBeenCalled()
@@ -641,6 +647,67 @@ describe('useChatStreaming', () => {
 
       // Initially should have the messages from mockUseChat
       expect(result.current.messages).toEqual(mockUseChat.messages)
+    })
+  })
+
+  describe('hydration', () => {
+    const snapshotMessages: ChatUIMessage[] = [
+      {
+        id: 'u1',
+        role: 'user',
+        parts: [{ type: 'text' as const, text: 'Question?' }],
+      },
+      {
+        id: 'a1',
+        role: 'assistant',
+        parts: [{ type: 'text' as const, text: 'Partial answer' }],
+      },
+    ]
+
+    it('drops the trailing assistant from the SQLite snapshot when a stream is active', async () => {
+      mockChatAPI.getThread.mockResolvedValue({
+        id: 'toolhive-chat',
+        messages: snapshotMessages,
+        lastEditTimestamp: 0,
+        createdAt: 0,
+      })
+      mockChatAPI.getThreadMessagesForTransport.mockResolvedValue(
+        snapshotMessages
+      )
+      mockChatAPI.getActiveStreamId.mockResolvedValue('stream-live')
+
+      const { Wrapper } = createTestUtils()
+      renderHook(() => useChatStreaming(), { wrapper: Wrapper })
+
+      // The synthesized replay will rebuild the assistant message;
+      // hydration drops it so the AI SDK doesn't pile a duplicate set
+      // of parts on top.
+      await waitFor(() => {
+        expect(mockUseChat.setMessages).toHaveBeenCalledWith([
+          snapshotMessages[0],
+        ])
+      })
+      expect(mockUseChat.resumeStream).toHaveBeenCalled()
+    })
+
+    it('seeds the full snapshot unchanged when no stream is active', async () => {
+      mockChatAPI.getThread.mockResolvedValue({
+        id: 'toolhive-chat',
+        messages: snapshotMessages,
+        lastEditTimestamp: 0,
+        createdAt: 0,
+      })
+      mockChatAPI.getThreadMessagesForTransport.mockResolvedValue(
+        snapshotMessages
+      )
+      mockChatAPI.getActiveStreamId.mockResolvedValue(null)
+
+      const { Wrapper } = createTestUtils()
+      renderHook(() => useChatStreaming(), { wrapper: Wrapper })
+
+      await waitFor(() => {
+        expect(mockUseChat.setMessages).toHaveBeenCalledWith(snapshotMessages)
+      })
     })
   })
 })

@@ -12,6 +12,17 @@ import { trackEvent } from '@/common/lib/analytics'
 import { hasValidCredentials } from '../lib/utils'
 import { chatThreadQueryOptions } from '../lib/thread-query'
 
+/**
+ * Strip the SQLite snapshot's trailing assistant message when a live
+ * stream is about to replay a synthesized version of the same one.
+ * Without this, the AI SDK's `processUIMessageStream` lands `text-start`
+ * onto a message that already has a text part, producing duplicates.
+ */
+function dropTrailingAssistant(messages: ChatUIMessage[]): ChatUIMessage[] {
+  if (messages.at(-1)?.role !== 'assistant') return messages
+  return messages.slice(0, -1)
+}
+
 export function useChatStreaming(externalThreadId?: string | null) {
   const queryClient = useQueryClient()
   const [persistentError, setPersistentError] = useState<string | null>(null)
@@ -86,20 +97,62 @@ export function useChatStreaming(externalThreadId?: string | null) {
     if (hydratedThreadRef.current === currentThreadId) return
     hydratedThreadRef.current = currentThreadId
     setPersistentError(null)
-    setMessages(threadData.messages)
-    // Drop late subscriptions if the thread changed mid-flight, so we
-    // don't stay attached to a stream we're no longer displaying.
+
     const threadIdAtResume = currentThreadId
-    void Promise.resolve(resumeStream()).finally(() => {
+    ;(async () => {
+      // Peek the registry first. When a stream is live, the SQLite
+      // snapshot's trailing assistant message is the same one the
+      // synthesized replay is about to rebuild — keeping it would let
+      // `processUIMessageStream` pile a second copy of every part on
+      // top of it. Drop it; the replay's `start { messageId }` creates
+      // a fresh assistant that the live tail extends.
+      let activeStreamId: string | null = null
+      try {
+        activeStreamId =
+          await window.electronAPI.chat.getActiveStreamId(threadIdAtResume)
+      } catch {
+        activeStreamId = null
+      }
+      if (hydratedThreadRef.current !== threadIdAtResume) return
+      const messagesToSet = activeStreamId
+        ? dropTrailingAssistant(threadData.messages)
+        : threadData.messages
+      setMessages(messagesToSet)
+
+      await resumeStream()
       if (hydratedThreadRef.current !== threadIdAtResume) {
         try {
           void window.electronAPI.chat.unsubscribeStream(threadIdAtResume)
         } catch {
           // best effort
         }
+        return
       }
-    })
-  }, [currentThreadId, threadData, setMessages, resumeStream])
+      // Race guard: we trimmed the trailing assistant on the assumption
+      // a stream was live, but it finished between the peek and the
+      // resume call. `resumeStream()` itself returns `void`, so re-poke
+      // the registry and refetch the now-finalized snapshot if the
+      // stream is gone — `setMessages` will replay over the trimmed list.
+      if (activeStreamId) {
+        let stillActive: string | null = activeStreamId
+        try {
+          stillActive =
+            await window.electronAPI.chat.getActiveStreamId(threadIdAtResume)
+        } catch {
+          stillActive = null
+        }
+        if (!stillActive) {
+          try {
+            void queryClient.invalidateQueries({
+              queryKey: chatThreadQueryOptions(threadIdAtResume).queryKey,
+            })
+          } catch {
+            // best effort
+          }
+        }
+      }
+    })()
+  }, [currentThreadId, threadData, setMessages, resumeStream, queryClient])
 
   // Detach on unmount / thread switch. The LLM call keeps running in
   // the main process; we just stop receiving chunks for it here.
