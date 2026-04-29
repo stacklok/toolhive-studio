@@ -1,7 +1,6 @@
 import { createContext, useCallback, useContext } from 'react'
 import { PERMISSION_KEYS, type PermissionKey } from './permission-keys'
 
-export type { PermissionKey } from './permission-keys'
 export { PERMISSION_KEYS } from './permission-keys'
 
 export type Permissions = Record<PermissionKey, boolean>
