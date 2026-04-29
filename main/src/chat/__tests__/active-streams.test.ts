@@ -2,8 +2,13 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { WebContents } from 'electron'
 
 const mockUpdateThreadMessages = vi.hoisted(() =>
-  vi.fn(() => ({ success: true }))
+  vi.fn(() => ({ success: true }) as { success: boolean; error?: string })
 )
+
+// Captures `before-quit` listeners so tests can fire them on demand.
+const { beforeQuitListeners } = vi.hoisted(() => ({
+  beforeQuitListeners: [] as Array<() => void>,
+}))
 
 vi.mock('../threads-storage', () => ({
   updateThreadMessages: mockUpdateThreadMessages,
@@ -13,8 +18,20 @@ vi.mock('../../logger', () => ({
   default: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
+// Local `electron` mock. `vitest:electron` exposes the real `app`, so
+// without this the module-level `app.on('before-quit', ...)` would
+// leak across test files. Also captures the registered listener for
+// the shutdown test and stubs `webContents` so broadcasts no-op.
 vi.mock('electron', () => ({
-  app: { once: vi.fn() },
+  app: {
+    on: vi.fn((event: string, listener: () => void) => {
+      if (event === 'before-quit') beforeQuitListeners.push(listener)
+    }),
+    once: vi.fn(),
+  },
+  webContents: {
+    getAllWebContents: vi.fn(() => []),
+  },
 }))
 
 import {
@@ -44,8 +61,8 @@ function asWebContents(sender: FakeSender): WebContents {
   return sender as unknown as WebContents
 }
 
-/** Drain pending microtasks so the for-await loop in runManagedStream can
- * pick up enqueued chunks. */
+/** Drain microtasks so `runManagedStream`'s for-await loop picks up
+ * chunks. ~20 hops covers the `tee()` + assembler + broadcast pipeline. */
 async function flushMicrotasks(times = 20) {
   for (let i = 0; i < times; i++) {
     await Promise.resolve()
@@ -73,7 +90,10 @@ const initialUserMessages: ChatUIMessage[] = [
 beforeEach(() => {
   vi.useFakeTimers()
   _resetActiveStreamsForTests()
-  mockUpdateThreadMessages.mockClear()
+  mockUpdateThreadMessages.mockReset()
+  mockUpdateThreadMessages.mockImplementation(() => ({ success: true }))
+  // `beforeQuitListeners` is intentionally not reset — registration
+  // happens once at import time and the listeners are idempotent.
 })
 
 afterEach(() => {
@@ -256,6 +276,149 @@ describe('active-streams registry', () => {
     expect(cancelStream('thread-6')).toBe(true)
     expect(abortController.signal.aborted).toBe(true)
     expect(cancelStream('missing')).toBe(false)
+  })
+
+  it('rejects a second stream for the same chatId while one is still running', async () => {
+    const sender = makeSender()
+    const { stream: streamA, controller: controllerA } =
+      createControllableStream<unknown>()
+    const { stream: streamB } = createControllableStream<unknown>()
+
+    const runA = runManagedStream({
+      chatId: 'thread-dup',
+      streamId: 'stream-a',
+      originalMessages: initialUserMessages,
+      uiMessageStream: streamA as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    expect(getActiveStreamId('thread-dup')).toBe('stream-a')
+
+    await expect(
+      runManagedStream({
+        chatId: 'thread-dup',
+        streamId: 'stream-b',
+        originalMessages: initialUserMessages,
+        uiMessageStream: streamB as never,
+        abortController: new AbortController(),
+        initialSender: asWebContents(sender),
+      })
+    ).rejects.toThrow(/already active/i)
+
+    // Original stream is unaffected.
+    expect(getActiveStreamId('thread-dup')).toBe('stream-a')
+
+    controllerA.close()
+    await runA
+  })
+
+  it('broadcasts chat:stream:persist-error once when the snapshot write fails', async () => {
+    mockUpdateThreadMessages.mockImplementation(() => ({
+      success: false,
+      error: 'disk full',
+    }))
+
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    const run = runManagedStream({
+      chatId: 'thread-persist',
+      streamId: 'stream-persist',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
+    await flushMicrotasks()
+    await vi.advanceTimersByTimeAsync(300)
+
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'more' })
+    await flushMicrotasks()
+    await vi.advanceTimersByTimeAsync(300)
+
+    controller.close()
+    await run
+
+    const persistErrors = sender.send.mock.calls.filter(
+      (args: unknown[]) => args[0] === 'chat:stream:persist-error'
+    )
+    expect(persistErrors).toHaveLength(1)
+    expect(
+      (persistErrors[0]![1] as { chatId: string; error: string }).chatId
+    ).toBe('thread-persist')
+    expect((persistErrors[0]![1] as { error: string }).error).toContain(
+      'disk full'
+    )
+  })
+
+  it('falls back to SQLite hydration when the replay buffer overflows', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    const run = runManagedStream({
+      chatId: 'thread-overflow',
+      streamId: 'stream-overflow',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    // Push past MAX_BUFFER_CHUNKS (5000). `text-delta` chunks dodge the
+    // assembler's structural-state requirements.
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    for (let i = 0; i < 5050; i++) {
+      controller.enqueue({ type: 'text-delta', id: 't1', delta: 'x' })
+    }
+    // ~3x cushion over chunk count to drain the for-await loop.
+    await flushMicrotasks(20000)
+
+    const lateSender = makeSender()
+    const resumed = subscribeToStream(
+      'thread-overflow',
+      asWebContents(lateSender)
+    )
+    expect(resumed).toBeNull()
+
+    controller.close()
+    await run
+  })
+
+  it('aborts every active stream on before-quit', async () => {
+    const sender = makeSender()
+    const { stream: s1 } = createControllableStream<unknown>()
+    const { stream: s2 } = createControllableStream<unknown>()
+    const ac1 = new AbortController()
+    const ac2 = new AbortController()
+
+    runManagedStream({
+      chatId: 'thread-q1',
+      streamId: 'stream-q1',
+      originalMessages: initialUserMessages,
+      uiMessageStream: s1 as never,
+      abortController: ac1,
+      initialSender: asWebContents(sender),
+    })
+    runManagedStream({
+      chatId: 'thread-q2',
+      streamId: 'stream-q2',
+      originalMessages: initialUserMessages,
+      uiMessageStream: s2 as never,
+      abortController: ac2,
+      initialSender: asWebContents(sender),
+    })
+
+    expect(beforeQuitListeners.length).toBeGreaterThan(0)
+    for (const listener of beforeQuitListeners) listener()
+
+    expect(ac1.signal.aborted).toBe(true)
+    expect(ac2.signal.aborted).toBe(true)
   })
 
   it('setToolUiMetadata broadcasts to subscribers and is replayed on subscribe', async () => {
