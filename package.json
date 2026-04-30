@@ -171,7 +171,7 @@
   },
   "pnpm": {
     "overrides": {
-      "@hono/node-server": ">=1.19.13",
+      "@hono/node-server": ">=1.19.14",
       "@xmldom/xmldom": ">=0.9.10",
       "fast-xml-parser": "5.5.8",
       "dompurify": ">=3.4.0",
