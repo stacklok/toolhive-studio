@@ -2,12 +2,15 @@ name: Visual Bug Fix Agent
 
 # Mirror of `_bug-fix-agent.yml` with one key difference: a live ToolHive
 # Studio is booted inside the project's devcontainer (Xvfb + Electron + thv)
-# alongside the agent, and the agent gets `docker exec` access to drive it
-# (xdotool, screenshots, in-container test runs). Aimed at bugs that resist
-# a pure unit-test reproduction — UI/routing side-effects, async backend
-# lifecycle, real IPC.
+# alongside the agent, and the agent drives it through `scripts/agent.sh`
+# (xdotool, screenshots, log tails, readiness check). Aimed at bugs that
+# resist a pure unit-test reproduction — UI/routing side-effects, async
+# backend lifecycle, real IPC.
 #
-# Substrate proven in PR #2120; helper scripts and skill doc landed there.
+# The agent's allowlist scopes `Bash(bash scripts/agent.sh:*)` rather than
+# raw `docker exec`, so the driving surface stays narrow. See
+# .claude/skills/devcontainer-dev/SKILL.md for the full wrapper recipe.
+#
 # Same `claude-code-action` workflow-validation constraint applies as
 # production: a triggering run will only succeed once this file is on
 # `main` (or its content matches `main` byte-for-byte at the head ref).
@@ -195,9 +198,12 @@ jobs:
 
             LIVE APP AVAILABLE:
             A running ToolHive Studio is available inside the project's devcontainer.
-            The container ID is in the environment variable DEVCONTAINER_ID. The
-            workspace is bind-mounted at /workspaces/toolhive-studio inside the
-            container, so renderer source edits on the runner propagate via Vite HMR.
+            All driving goes through `bash scripts/agent.sh` — a tightly-scoped
+            wrapper that finds the worktree's container by label and execs only
+            the documented commands. See .claude/skills/devcontainer-dev/SKILL.md
+            for the full surface. The workspace is bind-mounted at
+            /workspaces/toolhive-studio inside the container, so renderer source
+            edits on the runner propagate via Vite HMR.
 
             Two important constraints:
               - After editing renderer code, `sleep 2` before re-screenshotting so
@@ -211,17 +217,22 @@ jobs:
             reason about what you see → act → capture again.
 
             Useful commands:
-              # Capture screen to a runner-side path (NOT a container path), then Read it:
-              scripts/devcontainer-screenshot.sh ./shot.png
-              # Extract any other tmpfs file (logs, generated artifacts):
-              scripts/devcontainer-steal.sh "$DEVCONTAINER_ID" /tmp/foo ./foo
-              # Inspect the X11 window tree — the main app window has WM_CLASS=ToolHive:
-              docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xwininfo -root -tree'
+              # Capture screen to a runner-side path, then Read it:
+              bash scripts/agent.sh shot ./shot.png
+              # Cropped screenshot for vision-model focus (WxH+X+Y):
+              bash scripts/agent.sh shot --crop 800x600+560+300 ./dialog.png
+              # Tail one of the in-container logs (xvfb, fluxbox, x11vnc,
+              # websockify, keyring, entrypoint):
+              bash scripts/agent.sh tail entrypoint
+              # Find the main window — its WM_CLASS is ToolHive:
+              bash scripts/agent.sh xdo search --class ToolHive
               # Drive input — keyboard is more reliable than mouse-coordinate clicks:
-              docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xdotool key Tab'
-              docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xdotool key Return'
+              bash scripts/agent.sh xdo key Tab
+              bash scripts/agent.sh xdo key Return
               # Mouse coordinates are fragile (modals shift the layout); use sparingly:
-              docker exec -u node "$DEVCONTAINER_ID" bash -c 'DISPLAY=:99 xdotool mousemove X Y click 1'
+              bash scripts/agent.sh xdo mousemove X Y click 1
+              # One-call readiness check (electron, thv serve, window, noVNC):
+              bash scripts/agent.sh health
 
             WHEN TO USE THE LIVE APP:
             Default to a unit-test reproduction. Reach for the live app only when
@@ -250,7 +261,7 @@ jobs:
           claude_args: >-
             --model opus
             --max-turns 75
-            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(cat *),Bash(ls *),Bash(docker exec *),Bash(docker cp *),Bash(docker ps *),Bash(scripts/devcontainer-screenshot.sh *),Bash(scripts/devcontainer-steal.sh *)"
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash scripts/agent.sh:*)"
 
       - name: 'Hard gate — Verify test fails'
         id: gate
@@ -313,7 +324,7 @@ jobs:
           claude_args: >-
             --model sonnet
             --max-turns 150
-            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(docker exec *),Bash(docker cp *),Bash(scripts/devcontainer-screenshot.sh *),Bash(scripts/devcontainer-steal.sh *)"
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash scripts/agent.sh:*)"
 
       - name: 'Phase 2b — Direct Fix without TDD (Sonnet)'
         id: phase2b
@@ -354,7 +365,7 @@ jobs:
           claude_args: >-
             --model sonnet
             --max-turns 150
-            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(docker exec *),Bash(docker cp *),Bash(scripts/devcontainer-screenshot.sh *),Bash(scripts/devcontainer-steal.sh *)"
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash scripts/agent.sh:*)"
 
       - name: 'Hard gate — Verify all checks pass'
         id: verify
