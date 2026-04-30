@@ -54,12 +54,24 @@ describe('agent registry — seedBuiltinAgents', () => {
     const all = listAgents()
     const ids = all.map((a) => a.id).sort()
     expect(ids).toEqual(
-      [BUILTIN_AGENT_IDS.toolhiveAssistant, BUILTIN_AGENT_IDS.skills].sort()
+      [
+        BUILTIN_AGENT_IDS.toolhiveAssistant,
+        BUILTIN_AGENT_IDS.skills,
+        BUILTIN_AGENT_IDS.skillTester,
+      ].sort()
     )
     for (const agent of all) {
       expect(agent.kind).toBe('builtin')
       expect(agent.instructions.length).toBeGreaterThan(0)
     }
+  })
+
+  it('seeds the skill-tester built-in with the matching tools key', () => {
+    seedBuiltinAgents()
+    const tester = getAgent(BUILTIN_AGENT_IDS.skillTester)
+    expect(tester).not.toBeNull()
+    expect(tester?.builtinToolsKey).toBe('skill-tester')
+    expect(tester?.kind).toBe('builtin')
   })
 
   it('refreshes curated built-in fields when the seed content changes', () => {

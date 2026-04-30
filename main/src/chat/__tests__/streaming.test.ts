@@ -16,7 +16,13 @@ const mockCreateMcpTools = vi.hoisted(() =>
 )
 const mockGetCachedUiMetadata = vi.hoisted(() => vi.fn(() => ({})))
 const mockCreateBuiltinAgentTools = vi.hoisted(() =>
-  vi.fn(() => ({ tools: {}, cleanup: vi.fn() }))
+  vi.fn<
+    () => {
+      tools: Record<string, unknown>
+      cleanup: () => void
+      instructionsSuffix?: string
+    }
+  >(() => ({ tools: {}, cleanup: vi.fn() }))
 )
 const mockRunManagedStream = vi.hoisted(() =>
   vi.fn().mockResolvedValue(undefined)
@@ -115,7 +121,7 @@ function makeRequest(overrides: Partial<ChatRequest> = {}): ChatRequest {
 function fakeAgent(
   id: string,
   instructions: string,
-  builtinToolsKey: 'skills' | null = null
+  builtinToolsKey: 'skills' | 'skill-tester' | null = null
 ) {
   return {
     id,
@@ -229,6 +235,31 @@ describe('handleChatStreamRealtime — agent resolution', () => {
       expect.objectContaining({
         tools: expect.objectContaining({ build_skill: expect.anything() }),
         toolChoice: 'auto',
+      })
+    )
+  })
+
+  it('appends instructionsSuffix from the built-in tools handle to the agent instructions', async () => {
+    mockGetAgent.mockReturnValue(
+      fakeAgent('builtin.skill-tester', 'BASE INSTRUCTIONS', 'skill-tester')
+    )
+    mockCreateBuiltinAgentTools.mockReturnValue({
+      tools: { list_skills: { description: 'x' } },
+      cleanup: vi.fn(),
+      instructionsSuffix: '## Available installed skills\n\n- foo: bar',
+    })
+
+    await handleChatStreamRealtime(
+      makeRequest({ agentId: 'builtin.skill-tester' }),
+      'stream-suffix',
+      fakeSender
+    )
+
+    expect(mockCreateBuiltinAgentTools).toHaveBeenCalledWith('skill-tester')
+    expect(mockToolLoopAgentCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        instructions:
+          'BASE INSTRUCTIONS\n\n## Available installed skills\n\n- foo: bar',
       })
     )
   })
