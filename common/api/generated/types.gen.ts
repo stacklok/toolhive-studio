@@ -399,6 +399,52 @@ export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
 }
 
 /**
+ * DCRConfig enables RFC 7591 Dynamic Client Registration against the
+ * upstream authorization server. When set, the client credentials are
+ * obtained at runtime rather than being pre-provisioned via ClientID /
+ * ClientSecretFile / ClientSecretEnvVar, and ClientID must be left empty.
+ * Mutually exclusive with ClientID.
+ */
+export type GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig = {
+  /**
+   * DiscoveryURL is the RFC 8414 / OIDC Discovery URL from which the
+   * registration_endpoint is resolved at runtime. Mutually exclusive with
+   * RegistrationEndpoint.
+   */
+  discovery_url?: string
+  /**
+   * InitialAccessTokenEnvVar is the name of an environment variable
+   * containing the RFC 7591 initial access token. Mutually exclusive with
+   * InitialAccessTokenFile.
+   */
+  initial_access_token_env_var?: string
+  /**
+   * InitialAccessTokenFile is the path to a file containing the RFC 7591
+   * initial access token presented to the registration endpoint. Mutually
+   * exclusive with InitialAccessTokenEnvVar. Both may be omitted for open
+   * registration endpoints.
+   */
+  initial_access_token_file?: string
+  /**
+   * RegistrationEndpoint is the RFC 7591 registration endpoint URL used
+   * directly, bypassing discovery. Mutually exclusive with DiscoveryURL.
+   */
+  registration_endpoint?: string
+  /**
+   * SoftwareID is the RFC 7591 "software_id" registration metadata value,
+   * identifying the client software independent of any particular
+   * registration instance.
+   */
+  software_id?: string
+  /**
+   * SoftwareStatement is the RFC 7591 "software_statement" JWT asserting
+   * metadata about the client software, signed by a party the authorization
+   * server trusts.
+   */
+  software_statement?: string
+}
+
+/**
  * OAuth2Config contains OAuth 2.0-specific configuration.
  * Required when Type is "oauth2", must be nil when Type is "oidc".
  */
@@ -417,6 +463,8 @@ export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
   authorization_endpoint?: string
   /**
    * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
+   * Mutually exclusive with DCRConfig: when DCRConfig is set, ClientID is obtained
+   * at runtime via RFC 7591 Dynamic Client Registration and must be left empty.
    */
   client_id?: string
   /**
@@ -429,6 +477,7 @@ export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
    * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
    */
   client_secret_file?: string
+  dcr_config?: GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig
   /**
    * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
    * When not specified, defaults to `{issuer}/oauth/callback`.
