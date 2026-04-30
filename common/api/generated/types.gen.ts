@@ -233,6 +233,12 @@ export type GithubComStacklokToolhivePkgAuthAwsstsConfig = {
    * SessionNameClaim is the JWT claim to use for role session name (default: "sub").
    */
   session_name_claim?: string
+  /**
+   * SubjectProviderName identifies which upstream provider's access token to use
+   * for STS AssumeRoleWithWebIdentity. Used by vMCP only. When empty, the bearer
+   * token from the incoming HTTP request is used.
+   */
+  subject_provider_name?: string
 }
 
 export type GithubComStacklokToolhivePkgAuthAwsstsRoleMapping = {
@@ -658,7 +664,11 @@ export type GithubComStacklokToolhivePkgAuthserverUserInfoFieldMappingRunConfig 
   }
 
 /**
- * UserInfo contains configuration for fetching user information (required for OAuth2).
+ * UserInfo contains configuration for fetching user information.
+ * Optional: when nil, the upstream OAuth2 provider derives a deterministic
+ * subject by SHA-256-hashing the access token (with a "tk-" prefix) instead
+ * of calling a userinfo endpoint. OIDC providers always derive Subject from
+ * the ID token and are unaffected.
  */
 export type GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig = {
   /**
@@ -815,7 +825,6 @@ export type GithubComStacklokToolhivePkgClientClientApp =
   | 'codex'
   | 'kimi-cli'
   | 'factory'
-  | 'xcode'
 
 export type GithubComStacklokToolhivePkgClientClientAppStatus = {
   client_type?: GithubComStacklokToolhivePkgClientClientApp
