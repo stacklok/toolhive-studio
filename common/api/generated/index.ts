@@ -233,6 +233,7 @@ export type {
   GithubComStacklokToolhivePkgAuthAwsstsConfig,
   GithubComStacklokToolhivePkgAuthAwsstsRoleMapping,
   GithubComStacklokToolhivePkgAuthRemoteConfig,
+  GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig,
   GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig,
   GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig,
   GithubComStacklokToolhivePkgAuthserverRunConfig,
