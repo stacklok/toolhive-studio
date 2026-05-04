@@ -105,9 +105,10 @@ export async function handleChatStreamRealtime(
         }
         const hasTools = Object.keys(combinedTools).length > 0
 
-        // Some bundles (e.g. skill-tester) augment the agent's instructions
-        // with runtime data such as the list of installed skills, following
-        // the Vercel "Add Skills to Your Agent" progressive-disclosure pattern.
+        // Some bundles (e.g. the skills bundle) augment the agent's
+        // instructions with runtime data such as the list of installed skills,
+        // following the Vercel "Add Skills to Your Agent" progressive-
+        // disclosure pattern.
         const instructions = builtinToolsHandle.instructionsSuffix
           ? `${agentConfig.instructions}\n\n${builtinToolsHandle.instructionsSuffix}`
           : agentConfig.instructions

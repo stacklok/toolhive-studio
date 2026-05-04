@@ -121,7 +121,7 @@ function makeRequest(overrides: Partial<ChatRequest> = {}): ChatRequest {
 function fakeAgent(
   id: string,
   instructions: string,
-  builtinToolsKey: 'skills' | 'skill-tester' | null = null
+  builtinToolsKey: 'skills' | null = null
 ) {
   return {
     id,
@@ -241,7 +241,7 @@ describe('handleChatStreamRealtime — agent resolution', () => {
 
   it('appends instructionsSuffix from the built-in tools handle to the agent instructions', async () => {
     mockGetAgent.mockReturnValue(
-      fakeAgent('builtin.skill-tester', 'BASE INSTRUCTIONS', 'skill-tester')
+      fakeAgent('builtin.skills', 'BASE INSTRUCTIONS', 'skills')
     )
     mockCreateBuiltinAgentTools.mockReturnValue({
       tools: { list_skills: { description: 'x' } },
@@ -250,12 +250,12 @@ describe('handleChatStreamRealtime — agent resolution', () => {
     })
 
     await handleChatStreamRealtime(
-      makeRequest({ agentId: 'builtin.skill-tester' }),
+      makeRequest({ agentId: 'builtin.skills' }),
       'stream-suffix',
       fakeSender
     )
 
-    expect(mockCreateBuiltinAgentTools).toHaveBeenCalledWith('skill-tester')
+    expect(mockCreateBuiltinAgentTools).toHaveBeenCalledWith('skills')
     expect(mockToolLoopAgentCtor).toHaveBeenCalledWith(
       expect.objectContaining({
         instructions:

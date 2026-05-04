@@ -1,10 +1,6 @@
 import type { ToolSet } from 'ai'
 import type { BuiltinToolsKey } from '../types'
 import { createSkillsAgentTools, type SkillsAgentToolsHandle } from './skills'
-import {
-  createSkillTesterAgentTools,
-  type SkillTesterAgentToolsHandle,
-} from './skill-tester'
 
 export interface BuiltinToolsHandle {
   tools: ToolSet
@@ -29,12 +25,7 @@ export async function createBuiltinAgentTools(
 
   switch (key) {
     case 'skills': {
-      const handle: SkillsAgentToolsHandle = createSkillsAgentTools()
-      return handle
-    }
-    case 'skill-tester': {
-      const handle: SkillTesterAgentToolsHandle =
-        await createSkillTesterAgentTools()
+      const handle: SkillsAgentToolsHandle = await createSkillsAgentTools()
       return handle
     }
     default:

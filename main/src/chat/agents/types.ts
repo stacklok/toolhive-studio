@@ -1,6 +1,6 @@
 export type AgentKind = 'builtin' | 'custom'
 
-export type BuiltinToolsKey = 'skills' | 'skill-tester'
+export type BuiltinToolsKey = 'skills'
 
 export interface AgentConfig {
   id: string
@@ -38,26 +38,22 @@ export const BUILTIN_TOOL_BUNDLES: ReadonlyArray<{
 }> = [
   {
     key: 'skills',
-    label: 'Skills authoring',
+    label: 'Skills',
     description:
-      'Gives the agent tools to scaffold a skill directory (write_skill_files) and build it into an OCI artifact (build_skill).',
-  },
-  {
-    key: 'skill-tester',
-    label: 'Skill testing',
-    description:
-      'Discovers user-scoped skills installed via ToolHive and gives the agent tools to load (load_skill) and refresh (list_skills) their SKILL.md instructions for testing.',
+      'Gives the agent tools to scaffold a skill directory (write_skill_files), build it into an OCI artifact (build_skill), and inspect installed user-scope skills (list_skills, load_skill, read_skill_file, list_skill_tree).',
   },
 ]
 
 export const BUILTIN_AGENT_IDS = {
   toolhiveAssistant: 'builtin.toolhive-assistant',
   skills: 'builtin.skills',
-  skillTester: 'builtin.skill-tester',
 } as const
 
 /** IDs of built-in agents that existed in previous versions and should be
  * removed on startup to avoid stale rows in user databases. */
-export const LEGACY_BUILTIN_AGENT_IDS = ['builtin.planner'] as const
+export const LEGACY_BUILTIN_AGENT_IDS = [
+  'builtin.planner',
+  'builtin.skill-tester',
+] as const
 
 export const DEFAULT_AGENT_ID = BUILTIN_AGENT_IDS.toolhiveAssistant

@@ -54,11 +54,7 @@ describe('agent registry — seedBuiltinAgents', () => {
     const all = listAgents()
     const ids = all.map((a) => a.id).sort()
     expect(ids).toEqual(
-      [
-        BUILTIN_AGENT_IDS.toolhiveAssistant,
-        BUILTIN_AGENT_IDS.skills,
-        BUILTIN_AGENT_IDS.skillTester,
-      ].sort()
+      [BUILTIN_AGENT_IDS.toolhiveAssistant, BUILTIN_AGENT_IDS.skills].sort()
     )
     for (const agent of all) {
       expect(agent.kind).toBe('builtin')
@@ -66,12 +62,32 @@ describe('agent registry — seedBuiltinAgents', () => {
     }
   })
 
-  it('seeds the skill-tester built-in with the matching tools key', () => {
+  it('seeds the skills built-in with the matching tools key', () => {
     seedBuiltinAgents()
-    const tester = getAgent(BUILTIN_AGENT_IDS.skillTester)
-    expect(tester).not.toBeNull()
-    expect(tester?.builtinToolsKey).toBe('skill-tester')
-    expect(tester?.kind).toBe('builtin')
+    const skills = getAgent(BUILTIN_AGENT_IDS.skills)
+    expect(skills).not.toBeNull()
+    expect(skills?.builtinToolsKey).toBe('skills')
+    expect(skills?.kind).toBe('builtin')
+  })
+
+  it('removes legacy built-in agents (e.g. deprecated skill-tester) on seed', () => {
+    const now = Date.now()
+    // Simulate a user who upgraded from a version that seeded `builtin.skill-tester`.
+    writeAgent({
+      id: 'builtin.skill-tester',
+      kind: 'builtin',
+      name: 'Skill Tester',
+      description: 'legacy',
+      instructions: 'legacy',
+      builtinToolsKey: null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    expect(getAgent('builtin.skill-tester')).not.toBeNull()
+
+    seedBuiltinAgents()
+
+    expect(getAgent('builtin.skill-tester')).toBeNull()
   })
 
   it('refreshes curated built-in fields when the seed content changes', () => {
