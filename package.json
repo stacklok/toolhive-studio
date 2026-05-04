@@ -106,7 +106,7 @@
     "@ai-sdk/openai-compatible": "^2.0.43",
     "@ai-sdk/provider": "^3.0.10",
     "@ai-sdk/react": "^3.0.174",
-    "@ai-sdk/xai": "^3.0.84",
+    "@ai-sdk/xai": "^3.0.85",
     "@fontsource-variable/inter": "^5.2.8",
     "@fontsource-variable/merriweather": "^5.2.6",
     "@fontsource/atkinson-hyperlegible": "^5.2.8",
