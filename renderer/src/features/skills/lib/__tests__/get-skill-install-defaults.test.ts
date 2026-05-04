@@ -37,11 +37,24 @@ describe('getSkillInstallDefaults', () => {
     })
   })
 
-  it('returns a bare OCI identifier with no version when no ref is available', () => {
+  it('falls back to skill.version when the bare OCI identifier has no ref', () => {
     const skill: RegistrySkill = {
       name: 'my-skill',
       namespace: 'io.github.user',
       version: 'v1.0.0',
+      packages: [{ registryType: 'oci', identifier: 'ghcr.io/org/my-skill' }],
+    }
+
+    expect(getSkillInstallDefaults(skill)).toEqual({
+      reference: 'ghcr.io/org/my-skill',
+      version: 'v1.0.0',
+    })
+  })
+
+  it('returns no version when bare OCI identifier has no ref and skill has no version', () => {
+    const skill: RegistrySkill = {
+      name: 'my-skill',
+      namespace: 'io.github.user',
       packages: [{ registryType: 'oci', identifier: 'ghcr.io/org/my-skill' }],
     }
 
@@ -90,11 +103,24 @@ describe('getSkillInstallDefaults', () => {
     })
   })
 
-  it('falls back to namespace/name with no version for non-OCI registry skills', () => {
+  it('falls back to namespace/name and skill.version for non-OCI registry skills', () => {
     const skill: RegistrySkill = {
       name: 'git-skill',
       namespace: 'io.github.other',
       version: 'v2.0.0',
+      packages: [{ registryType: 'git', identifier: 'https://github.com/x/y' }],
+    }
+
+    expect(getSkillInstallDefaults(skill)).toEqual({
+      reference: 'io.github.other/git-skill',
+      version: 'v2.0.0',
+    })
+  })
+
+  it('returns no version for non-OCI registry skills without a version', () => {
+    const skill: RegistrySkill = {
+      name: 'git-skill',
+      namespace: 'io.github.other',
       packages: [{ registryType: 'git', identifier: 'https://github.com/x/y' }],
     }
 
