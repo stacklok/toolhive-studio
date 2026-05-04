@@ -21,6 +21,9 @@ toolhive-gui://v1/<intent>[?<query>]
 Examples:
 
 - `toolhive-gui://v1/open-registry-server-detail?serverName=fetch` — open a registry server detail page
+- `toolhive-gui://v1/open-registry-server-install?serverName=fetch` — open the registry server detail page and auto-open the install dialog
+- `toolhive-gui://v1/open-registry-skill-detail?namespace=io.github.stacklok&skillName=skill-creator` — open a registry skill detail page
+- `toolhive-gui://v1/open-registry-skill-install?namespace=io.github.stacklok&skillName=skill-creator&version=v1.0.0` — open the skill detail page and auto-open the install dialog with the reference (and optional `?version` tag) prefilled. Tag-only — OCI digests (`sha256:…`) are intentionally not supported because `safeIdentifier` rejects colons; users wanting digest pinning can paste it into the dialog directly.
 
 The `v1` segment is the version. The intent is a kebab-case action name. Query params carry intent-specific data.
 
