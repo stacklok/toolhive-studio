@@ -151,6 +151,7 @@ export function McpServerSelector() {
                 size="sm"
                 className="flex h-8 items-center justify-between gap-1.5 px-2
                   has-[>svg]:px-2"
+                aria-label="MCP server picker"
               >
                 <ServerIcon className="size-4" />
                 <span className="tabular-nums">{enabledMcpServers.length}</span>

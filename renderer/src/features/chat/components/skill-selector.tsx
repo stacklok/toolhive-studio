@@ -128,6 +128,7 @@ export function SkillSelector({ threadId }: SkillSelectorProps) {
                 has-[>svg]:px-2"
               data-testid="skill-selector-trigger"
               disabled={!supportsSkills}
+              aria-label="Skills picker"
             >
               <FileText className="size-4" />
               <span className="tabular-nums">{enabledCount}</span>
