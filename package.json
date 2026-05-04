@@ -104,7 +104,7 @@
     "@ai-sdk/mcp": "^1.0.38",
     "@ai-sdk/openai": "^3.0.54",
     "@ai-sdk/openai-compatible": "^2.0.43",
-    "@ai-sdk/provider": "^3.0.9",
+    "@ai-sdk/provider": "^3.0.10",
     "@ai-sdk/react": "^3.0.174",
     "@ai-sdk/xai": "^3.0.84",
     "@fontsource-variable/inter": "^5.2.8",
