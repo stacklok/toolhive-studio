@@ -40,6 +40,7 @@ import {
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
 import { ChevronDown, FolderOpenIcon, TriangleAlertIcon } from 'lucide-react'
 import { useMutationInstallSkill } from '../hooks/use-mutation-install-skill'
+import { parseSkillReference } from '../lib/skill-reference'
 import { trackEvent } from '@/common/lib/analytics'
 
 const formSchema = z
@@ -182,6 +183,22 @@ export function DialogInstallSkill({
                       {...field}
                       placeholder="e.g. your-org/your-skill"
                       autoFocus
+                      onBlur={(e) => {
+                        field.onBlur()
+                        const value = e.target.value.trim()
+                        if (!value) return
+                        const parsed = parseSkillReference(value)
+                        if (!parsed.version) return
+                        form.setValue('name', parsed.reference, {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        })
+                        if (!form.getValues('version')) {
+                          form.setValue('version', parsed.version, {
+                            shouldDirty: true,
+                          })
+                        }
+                      }}
                     />
                   </FormControl>
                   <FormMessage />
