@@ -40,7 +40,7 @@ export const BUILTIN_TOOL_BUNDLES: ReadonlyArray<{
     key: 'skills',
     label: 'Skills',
     description:
-      'Gives the agent tools to scaffold a skill directory (write_skill_files), build it into an OCI artifact (build_skill), and inspect installed user-scope skills (list_skills, load_skill, read_skill_file, list_skill_tree).',
+      'Gives the agent tools to scaffold a skill directory (write_skill_files), build it into an OCI artifact (build_skill), and inspect installed skills across user-scope (~/.<client>/skills) and project-scope (<projectRoot>/.<client>/skills) installs (list_skills, load_skill, read_skill_file, list_skill_tree).',
   },
 ]
 
