@@ -98,7 +98,7 @@ describe('TableBuilds', () => {
     })
   })
 
-  it('opens install dialog prefilled with the build tag', async () => {
+  it('opens install dialog with bare reference and version split out of the build tag', async () => {
     const user = userEvent.setup()
     const router = makeRouter()
     renderRoute(router)
@@ -109,9 +109,12 @@ describe('TableBuilds', () => {
     await user.click(install)
 
     await waitFor(() => {
+      // Reference comes from build.name (already bare) and the version is
+      // pre-split rather than baked into the reference.
       expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
-        'localhost/my-skill:v1.0.0'
+        'my-skill'
       )
+      expect(screen.getByPlaceholderText('e.g. v1.0.0')).toHaveValue('v1.0.0')
     })
   })
 

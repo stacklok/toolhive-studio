@@ -19,7 +19,7 @@ import { DialogDeleteBuild } from './dialog-delete-build'
 import { SkillDetailLayout } from './skill-detail-layout'
 import { SkillMarkdown } from './skill-markdown'
 import { trackEvent } from '@/common/lib/analytics'
-import { getBuildTitle } from '../lib/build-reference'
+import { getBuildInstallDefaults, getBuildTitle } from '../lib/build-reference'
 
 interface BuildDetailPageProps {
   build: LocalBuild
@@ -35,6 +35,7 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
   const tag = build.tag
   const digest = build.digest
   const description = build.description
+  const installDefaults = getBuildInstallDefaults(build)
 
   const shortDigest = digest
     ? digest.startsWith('sha256:')
@@ -144,11 +145,11 @@ export function BuildDetailPage({ build }: BuildDetailPageProps) {
       />
 
       <DialogInstallSkill
-        key={`${build.name ?? tag ?? title}-${version ?? ''}`}
+        key={`${installDefaults.reference ?? title}-${installDefaults.version ?? ''}`}
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={build.name ?? tag}
-        defaultVersion={version ?? ''}
+        defaultReference={installDefaults.reference}
+        defaultVersion={installDefaults.version ?? ''}
       />
       <DialogDeleteBuild
         open={deleteOpen}

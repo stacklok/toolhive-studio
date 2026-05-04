@@ -8,7 +8,7 @@ import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogDeleteBuild } from './dialog-delete-build'
 import { CardSkillBase } from './card-skill-base'
 import { trackEvent } from '@/common/lib/analytics'
-import { getBuildTitle } from '../lib/build-reference'
+import { getBuildInstallDefaults, getBuildTitle } from '../lib/build-reference'
 
 export function CardBuild({ build }: { build: LocalBuild }) {
   const [installOpen, setInstallOpen] = useState(false)
@@ -20,6 +20,7 @@ export function CardBuild({ build }: { build: LocalBuild }) {
   const version = build.version
   const tag = build.tag
   const digest = build.digest
+  const installDefaults = getBuildInstallDefaults(build)
 
   const shortDigest = digest
     ? digest.startsWith('sha256:')
@@ -98,11 +99,11 @@ export function CardBuild({ build }: { build: LocalBuild }) {
       />
 
       <DialogInstallSkill
-        key={`${build.name ?? tag ?? title}-${version ?? ''}`}
+        key={`${installDefaults.reference ?? title}-${installDefaults.version ?? ''}`}
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={build.name ?? tag}
-        defaultVersion={version ?? ''}
+        defaultReference={installDefaults.reference}
+        defaultVersion={installDefaults.version ?? ''}
       />
       <DialogDeleteBuild
         open={deleteOpen}

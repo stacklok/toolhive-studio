@@ -18,6 +18,8 @@ import {
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
 import { DialogInstallSkill } from '@/features/skills/components/dialog-install-skill'
+import { getBuildInstallDefaults } from '@/features/skills/lib/build-reference'
+import { parseSkillReference } from '@/features/skills/lib/skill-reference'
 import { trackEvent } from '@/common/lib/analytics'
 import type { SkillBuildResult } from '../../lib/parse-skill-build-result'
 
@@ -87,8 +89,14 @@ export function SkillBuildResultCard({ result }: { result: SkillBuildResult }) {
     !!v && (v.includes('/') || v.includes(':'))
   const navTag = apiReference ?? (isRegistryRef(tag) ? tag : undefined)
   const canViewDetails = !!navTag
-  const installName = build.name ?? reference
-  const installVersion = version
+  // Mirror the local-build install defaults logic: prefer build.name +
+  // build.version, then split build.tag, then split the canonical
+  // reference. This keeps the version field prefilled even when only
+  // `result.reference` (in `name:tag` form) is available.
+  const buildDefaults = getBuildInstallDefaults(build)
+  const referenceFallback = parseSkillReference(reference)
+  const installName = buildDefaults.reference ?? referenceFallback.reference
+  const installVersion = buildDefaults.version ?? referenceFallback.version
   const copyValue = build.name ?? reference
 
   const handleCopyReference = async () => {

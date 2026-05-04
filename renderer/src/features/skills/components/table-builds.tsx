@@ -24,6 +24,7 @@ import {
 import { HammerIcon, PlusIcon, Trash2Icon } from 'lucide-react'
 import { DialogInstallSkill } from './dialog-install-skill'
 import { DialogDeleteBuild } from './dialog-delete-build'
+import { getBuildInstallDefaults } from '../lib/build-reference'
 import { trackEvent } from '@/common/lib/analytics'
 
 function getShortDigest(digest: string | undefined): string | undefined {
@@ -53,6 +54,7 @@ function BuildRow({ build }: { build: LocalBuild }) {
   const shortDigest = getShortDigest(build.digest)
   const subtitle = tag && tag !== title ? tag : undefined
   const canNavigate = !!tag
+  const installDefaults = getBuildInstallDefaults(build)
 
   function goToDetail() {
     if (!tag) return
@@ -182,10 +184,11 @@ function BuildRow({ build }: { build: LocalBuild }) {
       </TableRow>
 
       <DialogInstallSkill
-        key={tag ?? title}
+        key={`${installDefaults.reference ?? title}-${installDefaults.version ?? ''}`}
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={tag ?? build.name}
+        defaultReference={installDefaults.reference}
+        defaultVersion={installDefaults.version ?? ''}
       />
       <DialogDeleteBuild
         open={deleteOpen}
