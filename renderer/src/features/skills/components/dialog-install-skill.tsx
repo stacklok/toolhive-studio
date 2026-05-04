@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm, useWatch } from 'react-hook-form'
+import { useForm, useFormState, useWatch } from 'react-hook-form'
 import z from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useQuery } from '@tanstack/react-query'
@@ -102,6 +102,11 @@ export function DialogInstallSkill({
   })
 
   const scope = useWatch({ control: form.control, name: 'scope' })
+  // Subscribe to dirtyFields so the blur splitter below can reliably
+  // tell prefilled defaults apart from values the user actually typed.
+  // Reading `form.formState.dirtyFields.version` from inside a callback
+  // is not enough because RHF tracks subscriptions at render-time.
+  const { dirtyFields } = useFormState({ control: form.control })
 
   function handleClose() {
     trackEvent('Skills: install dialog cancelled')
@@ -193,7 +198,12 @@ export function DialogInstallSkill({
                           shouldValidate: true,
                           shouldDirty: true,
                         })
-                        if (!form.getValues('version')) {
+                        // Only preserve the version if the user has
+                        // actively edited it; a value that came from
+                        // `defaultVersion` is still considered pristine
+                        // and should be replaced when the pasted ref
+                        // disagrees with the prefill.
+                        if (!dirtyFields.version) {
                           form.setValue('version', parsed.version, {
                             shouldDirty: true,
                           })

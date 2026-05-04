@@ -119,4 +119,16 @@ describe('getBuildInstallDefaults', () => {
       version: undefined,
     })
   })
+
+  it('does not treat a bare OCI reference tag as a version (no slash heuristic)', () => {
+    const build: LocalBuild = {
+      name: 'my-skill',
+      tag: 'ghcr.io/org/my-skill',
+    }
+
+    expect(getBuildInstallDefaults(build)).toEqual({
+      reference: 'my-skill',
+      version: undefined,
+    })
+  })
 })

@@ -340,6 +340,54 @@ describe('DialogBuildSkill', () => {
     ).toHaveValue('v3.4.5')
   })
 
+  it('parses the user-supplied tag before using it as the version fallback', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkillsBuild.override(() => ({
+      reference: 'ghcr.io/org/skill',
+    }))
+    vi.mocked(window.electronAPI.selectFolder).mockResolvedValue(
+      '/home/user/my-skill'
+    )
+
+    renderWithProviders(<DialogBuildSkill open onOpenChange={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: /browse for folder/i }))
+    await waitFor(() => {
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
+    })
+    // User typed a full OCI ref into the build form's Tag field. Only
+    // the version portion should land in the install dialog's Version
+    // field, never the whole conjoined string.
+    await user.type(
+      screen.getByPlaceholderText(/e\.g\. v1\.0\.0/i),
+      'ghcr.io/org/skill:v3.4.5'
+    )
+    await user.click(screen.getByRole('button', { name: /^build$/i }))
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalled()
+    })
+
+    const lastCall = vi.mocked(toast.success).mock.calls.at(-1)
+    const opts = lastCall?.[1] as
+      | { action?: { onClick?: () => void } }
+      | undefined
+    opts?.action?.onClick?.()
+
+    const nameInput = await screen.findByLabelText(/name or reference/i)
+    expect(nameInput).toHaveValue('ghcr.io/org/skill')
+
+    const installDialog = nameInput.closest(
+      '[role="dialog"]'
+    ) as HTMLElement | null
+    expect(installDialog).not.toBeNull()
+    expect(
+      within(installDialog!).getByPlaceholderText('e.g. v1.0.0')
+    ).toHaveValue('v3.4.5')
+  })
+
   it('blocks submit and shows validation error when typed path is not a directory', async () => {
     const user = userEvent.setup()
     const rec = recordRequests()

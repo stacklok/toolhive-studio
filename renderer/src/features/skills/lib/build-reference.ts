@@ -37,12 +37,16 @@ export function getBuildInstallDefaults(
   const parsedTag = tag ? parseSkillReference(tag) : undefined
 
   if (build.name) {
-    // When build.name covers the reference, a leftover tag that isn't
-    // the same as the name and carries no parseable suffix is best
-    // interpreted as the version itself (e.g. `name="my-skill"`,
-    // `tag="v0.0.1"` -> version "v0.0.1").
+    // When build.name covers the reference, a leftover tag that is a
+    // plain version-only string (no `/`, so we know it's not an OCI
+    // ref) is best interpreted as the version itself (e.g.
+    // `name="my-skill"`, `tag="v0.0.1"` -> version "v0.0.1"). A bare
+    // OCI reference like `ghcr.io/org/my-skill` has no version info
+    // and must NOT bleed into the Version field.
     const tagAsVersion =
-      tag && tag !== build.name && !parsedTag?.version ? tag : undefined
+      tag && tag !== build.name && !tag.includes('/') && !parsedTag?.version
+        ? tag
+        : undefined
 
     return {
       reference: build.name,

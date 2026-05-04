@@ -420,4 +420,57 @@ describe('DialogInstallSkill', () => {
       expect(versionInput).toHaveValue('')
     })
   })
+
+  it('overwrites a prefilled (non-dirty) version when a new tagged reference is pasted', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(
+      <DialogInstallSkill
+        open
+        onOpenChange={vi.fn()}
+        defaultReference="ghcr.io/org/skill"
+        defaultVersion="v1.0.0"
+      />
+    )
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    const versionInput = screen.getByPlaceholderText('e.g. v1.0.0')
+    expect(versionInput).toHaveValue('v1.0.0')
+
+    await user.clear(nameInput)
+    await user.type(nameInput, 'ghcr.io/org/skill:v9.9.9')
+    await user.tab()
+
+    await waitFor(() => {
+      expect(nameInput).toHaveValue('ghcr.io/org/skill')
+      // Prefilled v1.0.0 is non-dirty, so it must be replaced by the
+      // version parsed from the freshly pasted reference.
+      expect(versionInput).toHaveValue('v9.9.9')
+    })
+  })
+
+  it('preserves a user-edited version even when it equals the prefilled default', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(
+      <DialogInstallSkill
+        open
+        onOpenChange={vi.fn()}
+        defaultReference="ghcr.io/org/skill"
+        defaultVersion=""
+      />
+    )
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    const versionInput = screen.getByPlaceholderText('e.g. v1.0.0')
+
+    await user.type(versionInput, 'v8.8.8')
+    await user.clear(nameInput)
+    await user.type(nameInput, 'ghcr.io/org/skill:v9.9.9')
+    await user.tab()
+
+    await waitFor(() => {
+      expect(nameInput).toHaveValue('ghcr.io/org/skill')
+      // User actively typed v8.8.8, so the blur split must not clobber it.
+      expect(versionInput).toHaveValue('v8.8.8')
+    })
+  })
 })

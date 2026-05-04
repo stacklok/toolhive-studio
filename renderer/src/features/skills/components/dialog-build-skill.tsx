@@ -106,9 +106,20 @@ export function DialogBuildSkill({
 
       if (reference) {
         const parsed = parseSkillReference(reference)
+        // The build form's Tag field accepts arbitrary strings, so the
+        // user might have typed either a clean version (`v3.4.5`) or a
+        // full OCI reference (`ghcr.io/org/skill:v3.4.5`). Extract just
+        // the version portion before falling back to it; only use the
+        // raw value when it is a plain version-only string (no `/`).
+        const userTagParsed = values.tag
+          ? parseSkillReference(values.tag)
+          : undefined
+        const userVersion =
+          userTagParsed?.version ??
+          (values.tag && !values.tag.includes('/') ? values.tag : undefined)
         setBuiltInstallDefaults({
           reference: parsed.reference,
-          version: parsed.version ?? values.tag ?? undefined,
+          version: parsed.version ?? userVersion ?? undefined,
         })
         toast.success(`Skill built: ${reference}`, {
           duration: 10_000,
