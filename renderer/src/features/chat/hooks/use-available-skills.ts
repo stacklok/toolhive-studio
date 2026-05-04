@@ -8,7 +8,7 @@ import type { GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill
  * with a `projectRoot` path. The same skill `name` may have multiple variants
  * across these locations.
  */
-export interface SkillVariant {
+interface SkillVariant {
   scope: 'user' | 'project'
   projectRoot?: string
 }
@@ -17,7 +17,7 @@ export interface SkillVariant {
  * A skill dedup-grouped by `metadata.name`. `variants` lists every install
  * site the backend reported. Sorted user-first, then by project root.
  */
-export interface AvailableSkill {
+interface AvailableSkill {
   name: string
   description: string
   version?: string
