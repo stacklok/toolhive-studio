@@ -913,16 +913,22 @@ describe('skills bundle — enabled-skills filter', () => {
     ])
   })
 
-  it('does not prune when the API refresh returns zero skills', async () => {
+  it('prunes against an empty install list when the API refresh returns zero skills', async () => {
+    // A successful empty response means the user genuinely has no installed
+    // skills (e.g. they uninstalled their last one). The prune must still
+    // run so stale rows in `enabled_skills` get wiped — otherwise the
+    // toolbar can show non-zero stale counts forever.
     mockGetApiV1BetaSkills.mockResolvedValue({
       data: { skills: [] },
       error: undefined,
     })
     await buildHandle()
-    expect(mockPruneEnabledSkillsTo).not.toHaveBeenCalled()
+    expect(mockPruneEnabledSkillsTo).toHaveBeenCalledWith([])
   })
 
   it('does not prune when the API refresh errors', async () => {
+    // A failed fetch (network blip, ToolHive down) must NOT be allowed to
+    // wipe the allow-list — that would lose the user's selections.
     mockGetApiV1BetaSkills.mockResolvedValue({
       data: undefined,
       error: 'boom',

@@ -341,4 +341,33 @@ describe('useAvailableSkills', () => {
     // inflated by it.
     expect(result.current.enabledSet.has('uninstalled')).toBe(true)
   })
+
+  it('passes the live install-name set to getEnabledSkills so the main process prunes', async () => {
+    // Reverse-sorted on purpose to verify the hook normalizes ordering before
+    // sending — otherwise the queryKey would churn on backend reordering.
+    mockedGetApiV1BetaSkills.override(() => ({
+      skills: [
+        {
+          reference: 'zeta',
+          scope: 'user',
+          clients: ['claude-code'],
+          metadata: { name: 'zeta' },
+        },
+        {
+          reference: 'alpha',
+          scope: 'user',
+          clients: ['claude-code'],
+          metadata: { name: 'alpha' },
+        },
+      ],
+    }))
+    const getEnabledSkills = vi.mocked(window.electronAPI.chat.getEnabledSkills)
+    getEnabledSkills.mockResolvedValue([])
+
+    renderHook(() => useAvailableSkills(), { wrapper: createWrapper() })
+
+    await waitFor(() => {
+      expect(getEnabledSkills).toHaveBeenCalledWith(['alpha', 'zeta'])
+    })
+  })
 })

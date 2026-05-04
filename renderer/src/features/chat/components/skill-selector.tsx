@@ -41,6 +41,7 @@ export function SkillSelector() {
   const {
     availableSkills,
     enabledSet,
+    enabledNames,
     enabledCount,
     isLoading: skillsLoading,
   } = useAvailableSkills()
@@ -75,12 +76,15 @@ export function SkillSelector() {
   const handleClearAll = async () => {
     try {
       trackEvent('Playground: disable all skills', {
-        skill_count: enabledCount,
+        skill_count: enabledNames.length,
       })
+      // Iterate the raw allow-list (not the joined `availableSkills`) so the
+      // button still wipes rows whose underlying skill is no longer
+      // installed — defense in depth alongside the server-side prune.
       await Promise.allSettled(
-        availableSkills
-          .filter((s) => enabledSet.has(s.name))
-          .map((s) => window.electronAPI.chat.setEnabledSkill(s.name, false))
+        enabledNames.map((name) =>
+          window.electronAPI.chat.setEnabledSkill(name, false)
+        )
       )
       queryClient.invalidateQueries({ queryKey: ['enabled-skills'] })
     } catch (error) {
@@ -211,7 +215,7 @@ export function SkillSelector() {
           )}
         </ScrollArea>
 
-        {availableSkills.length > 0 && (
+        {(availableSkills.length > 0 || enabledNames.length > 0) && (
           <>
             <DropdownMenuSeparator />
             <div className="p-2">
@@ -220,7 +224,7 @@ export function SkillSelector() {
                 size="sm"
                 className="w-full cursor-pointer font-light"
                 onClick={handleClearAll}
-                disabled={enabledCount === 0}
+                disabled={enabledNames.length === 0}
               >
                 Clear enabled skills
               </Button>

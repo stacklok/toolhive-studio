@@ -480,20 +480,19 @@ export async function createSkillsAgentTools(
     const result = await fetchInstalledSkills(apiClient)
     if (!result.error) {
       cached = result.skills
-      // Opportunistically purge stale enabled_skills rows for skills that are
-      // no longer installed. Only run when the fetch returned at least one
-      // skill to avoid wiping the allow-list on transient empty responses.
-      if (result.skills.length > 0) {
-        try {
-          const pruned = pruneEnabledSkillsTo(result.skills.map((s) => s.name))
-          if (pruned > 0) {
-            log.info(
-              `[AGENTS:skills] Pruned ${pruned} stale enabled-skill row(s) after refresh`
-            )
-          }
-        } catch (err) {
-          log.warn('[AGENTS:skills] Failed to prune stale enabled skills:', err)
+      // Purge stale enabled_skills rows for skills that are no longer
+      // installed. We only skip pruning when the fetch itself failed
+      // (`result.error` set), so a successful response listing zero installs
+      // — e.g. user uninstalled their last skill — still wipes the allow-list.
+      try {
+        const pruned = pruneEnabledSkillsTo(result.skills.map((s) => s.name))
+        if (pruned > 0) {
+          log.info(
+            `[AGENTS:skills] Pruned ${pruned} stale enabled-skill row(s) after refresh`
+          )
         }
+      } catch (err) {
+        log.warn('[AGENTS:skills] Failed to prune stale enabled skills:', err)
       }
     }
     return result

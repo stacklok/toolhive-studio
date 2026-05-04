@@ -101,6 +101,12 @@ export function groupInstalledSkills(
  * Fetches installed skills (all scopes), dedups them by name, and joins with
  * the local `enabled_skills` allow-list so the selector can render a single
  * row per name with enabled state and a live count.
+ *
+ * The two queries are chained: the enabled-skills query passes the live set
+ * of installed names to the main process, which prunes stale `enabled_skills`
+ * rows in the same round-trip. This way, uninstalling a skill removes its
+ * row the next time the picker resyncs — without needing the Skill Engineer
+ * agent to fire its own `list_skills` first.
  */
 export function useAvailableSkills() {
   const { data: skillsPayload, isLoading } = useQuery({
@@ -113,9 +119,22 @@ export function useAvailableSkills() {
     refetchOnMount: true,
   })
 
+  // Sorted to keep the queryKey stable regardless of backend ordering.
+  const installedSkillNames: string[] | undefined = skillsPayload?.skills
+    ? skillsPayload.skills
+        .map((s) => s.metadata?.name?.trim())
+        .filter((n): n is string => !!n)
+        .sort()
+    : undefined
+
   const { data: enabledNames = [] } = useQuery({
-    queryKey: ['enabled-skills'],
-    queryFn: async () => await window.electronAPI.chat.getEnabledSkills(),
+    // Including the install-name list in the key means this query
+    // automatically refetches (and re-prunes server-side) whenever the
+    // installed set changes — install, uninstall, scope change, all flow
+    // through here without an explicit invalidation.
+    queryKey: ['enabled-skills', installedSkillNames ?? null],
+    queryFn: async () =>
+      await window.electronAPI.chat.getEnabledSkills(installedSkillNames),
     refetchInterval: SKILLS_REFRESH_MS,
     refetchOnMount: true,
   })
