@@ -419,6 +419,131 @@ describe('skills bundle — load_skill', () => {
     ).execute({ name: 'algorithmic-art' })) as { error: string }
     expect(result.error).toMatch(/No SKILL\.md found/i)
   })
+
+  it('rejects miscased filenames (Skill.md / skill.md) instead of silently passing', async () => {
+    // Build the skill dir with a lowercased SKILL file — ToolHive's contract
+    // is that the root file must be exactly `SKILL.md`. Audits should treat
+    // this as a load failure, not pass it through.
+    const skillDir = path.join(homeRoot, '.claude', 'skills', 'algorithmic-art')
+    await fs.mkdir(skillDir, { recursive: true })
+    await fs.writeFile(path.join(skillDir, 'skill.md'), '# wrong case\n')
+    mockGetApiV1BetaSkills.mockResolvedValue({
+      data: {
+        skills: [
+          {
+            reference: 'algorithmic-art',
+            clients: ['claude-code'],
+            metadata: { name: 'algorithmic-art', description: '' },
+          },
+        ],
+      },
+      error: undefined,
+    })
+    const handle = await buildHandle()
+    const result = (await (
+      handle.tools.load_skill as unknown as {
+        execute: (input: unknown) => Promise<unknown>
+      }
+    ).execute({ name: 'algorithmic-art' })) as { error: string }
+    expect(result.error).toMatch(/No SKILL\.md found/i)
+    expect(result.error).toMatch(/case-sensitive/i)
+  })
+
+  it('surfaces filesTruncated=false on small skills', async () => {
+    await ensureClientSkill(homeRoot, '.claude', 'algorithmic-art', {
+      'SKILL.md': '# small\n',
+      'scripts/run.sh': '#!/bin/sh\necho hi\n',
+    })
+    mockGetApiV1BetaSkills.mockResolvedValue({
+      data: {
+        skills: [
+          {
+            reference: 'algorithmic-art',
+            clients: ['claude-code'],
+            metadata: { name: 'algorithmic-art', description: '' },
+          },
+        ],
+      },
+      error: undefined,
+    })
+    const handle = await buildHandle()
+    const result = (await (
+      handle.tools.load_skill as unknown as {
+        execute: (input: unknown) => Promise<unknown>
+      }
+    ).execute({ name: 'algorithmic-art' })) as { filesTruncated: boolean }
+    expect(result.filesTruncated).toBe(false)
+  })
+
+  it('surfaces filesTruncated=true when the bundled-file tree exceeds the cap', async () => {
+    // The bundle's TREE_ENTRY_CAP is 1000. Seed >1000 dummy files alongside
+    // SKILL.md so walkTree must stop early.
+    const files: Record<string, string> = { 'SKILL.md': '# big\n' }
+    for (let i = 0; i < 1100; i++) {
+      files[`assets/file-${i}.txt`] = `f${i}`
+    }
+    await ensureClientSkill(homeRoot, '.claude', 'algorithmic-art', files)
+    mockGetApiV1BetaSkills.mockResolvedValue({
+      data: {
+        skills: [
+          {
+            reference: 'algorithmic-art',
+            clients: ['claude-code'],
+            metadata: { name: 'algorithmic-art', description: '' },
+          },
+        ],
+      },
+      error: undefined,
+    })
+    const handle = await buildHandle()
+    const result = (await (
+      handle.tools.load_skill as unknown as {
+        execute: (input: unknown) => Promise<unknown>
+      }
+    ).execute({ name: 'algorithmic-art' })) as {
+      filesTruncated: boolean
+      files: Array<{ path: string }>
+    }
+    expect(result.filesTruncated).toBe(true)
+    // The listing was capped, so we shouldn't have all 1101 entries.
+    expect(result.files.length).toBeLessThan(1101)
+  })
+
+  it('preserves filesTruncated on the cached return path', async () => {
+    const files: Record<string, string> = { 'SKILL.md': '# cached big\n' }
+    for (let i = 0; i < 1100; i++) {
+      files[`assets/file-${i}.txt`] = `f${i}`
+    }
+    await ensureClientSkill(homeRoot, '.claude', 'algorithmic-art', files)
+    mockGetApiV1BetaSkills.mockResolvedValue({
+      data: {
+        skills: [
+          {
+            reference: 'algorithmic-art',
+            clients: ['claude-code'],
+            metadata: { name: 'algorithmic-art', description: '' },
+          },
+        ],
+      },
+      error: undefined,
+    })
+    const handle = await buildHandle()
+    const exec = handle.tools.load_skill as unknown as {
+      execute: (input: unknown) => Promise<unknown>
+    }
+    const first = (await exec.execute({ name: 'algorithmic-art' })) as {
+      filesTruncated: boolean
+      cached: boolean
+    }
+    const second = (await exec.execute({ name: 'algorithmic-art' })) as {
+      filesTruncated: boolean
+      cached: boolean
+    }
+    expect(first.filesTruncated).toBe(true)
+    expect(first.cached).toBe(false)
+    expect(second.filesTruncated).toBe(true)
+    expect(second.cached).toBe(true)
+  })
 })
 
 describe('skills bundle — read_skill_file', () => {

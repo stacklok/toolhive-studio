@@ -32,7 +32,7 @@ const LIST_SKILL_TREE_TOOL = 'list_skill_tree'
 
 const READ_FILE_BYTE_CAP = 256 * 1024
 const TREE_ENTRY_CAP = 1000
-const SKILL_MD_FILENAMES = ['SKILL.md', 'Skill.md', 'skill.md']
+const SKILL_MD_FILENAME = 'SKILL.md'
 
 /**
  * Mapping from ToolHive client identifier (returned in
@@ -121,6 +121,13 @@ interface LoadedSkill {
   projectRoot?: string
   body: string
   files: { path: string; size: number }[]
+  /**
+   * `true` when `walkTree` hit `TREE_ENTRY_CAP` while listing bundled files —
+   * the `files` array is incomplete and audit verdicts that depend on
+   * cross-checking referenced paths must treat unknown entries as "not yet
+   * verified" rather than "missing".
+   */
+  filesTruncated: boolean
 }
 
 interface RawInstalledSkill {
@@ -266,25 +273,24 @@ async function resolveSkillDir(
   return null
 }
 
-async function findSkillMdInDir(rootDir: string): Promise<string | null> {
-  for (const candidate of SKILL_MD_FILENAMES) {
-    const abs = path.join(rootDir, candidate)
-    try {
-      const stat = await fs.stat(abs)
-      if (stat.isFile()) return abs
-    } catch {
-      // try next variant
-    }
-  }
-  return null
-}
-
 async function readSkillMd(rootDir: string): Promise<string> {
-  const abs = await findSkillMdInDir(rootDir)
-  if (!abs) {
-    throw new Error(
-      `No SKILL.md found in ${rootDir} (looked for ${SKILL_MD_FILENAMES.join(', ')})`
-    )
+  // Strict filename match: a skill is required to ship `SKILL.md` exactly.
+  // Lower-case or title-case variants must fail audit, not silently pass.
+  const abs = path.join(rootDir, SKILL_MD_FILENAME)
+  try {
+    const stat = await fs.stat(abs)
+    if (!stat.isFile()) {
+      throw new Error(
+        `${SKILL_MD_FILENAME} in ${rootDir} is not a regular file`
+      )
+    }
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      throw new Error(
+        `No ${SKILL_MD_FILENAME} found in ${rootDir} (filename is case-sensitive — Skill.md / skill.md are not accepted)`
+      )
+    }
+    throw err
   }
   return await fs.readFile(abs, 'utf8')
 }
@@ -701,7 +707,7 @@ export async function createSkillsAgentTools(
 
     [LOAD_SKILL_TOOL]: tool({
       description:
-        'Resolves the on-disk install of an installed skill and reads `SKILL.md`. Returns `{ name, version, scope, projectRoot?, client, dir, body, files }`. `scope` is `"user"` (install under `~/.<client>/skills/<name>/`) or `"project"` (install under `<projectRoot>/.<client>/skills/<name>/`); `projectRoot` is present only for project-scope hits. When a skill is installed in multiple places, resolution prefers the user home, then falls back to each project in backend order, and for each site it tries every `InstalledSkill.clients` entry until a directory exists on disk. Call this exactly once per skill before any read_skill_file/list_skill_tree call. Only works on skills the user has enabled via the Skills picker.',
+        'Resolves the on-disk install of an installed skill and reads `SKILL.md`. Returns `{ name, version, scope, projectRoot?, client, dir, body, files, filesTruncated }`. `scope` is `"user"` (install under `~/.<client>/skills/<name>/`) or `"project"` (install under `<projectRoot>/.<client>/skills/<name>/`); `projectRoot` is present only for project-scope hits. The required SKILL.md filename is case-sensitive — `Skill.md` / `skill.md` will surface as a load error. `filesTruncated` is `true` when the bundled-file listing hit the cap (1000 entries); when it is `true`, treat any path you cannot find in `files` as "not yet verified" rather than "missing", and call `list_skill_tree({ name, maxEntries })` on the relevant subtree before declaring an audit FAIL. When a skill is installed in multiple places, resolution prefers the user home, then falls back to each project in backend order, and for each site it tries every `InstalledSkill.clients` entry until a directory exists on disk. Call this exactly once per skill before any read_skill_file/list_skill_tree call. Only works on skills the user has enabled via the Skills picker.',
       inputSchema: z.object({
         name: z
           .string()
@@ -732,6 +738,7 @@ export async function createSkillsAgentTools(
             dir: existing.rootDir,
             body: existing.body,
             files: existing.files,
+            filesTruncated: existing.filesTruncated,
             cached: true,
           }
         }
@@ -790,7 +797,7 @@ export async function createSkillsAgentTools(
 
         try {
           const body = await readSkillMd(resolved.dir)
-          const { entries: files } = await walkTree(
+          const { entries: files, truncated: filesTruncated } = await walkTree(
             resolved.dir,
             TREE_ENTRY_CAP
           )
@@ -806,10 +813,11 @@ export async function createSkillsAgentTools(
               : {}),
             body,
             files,
+            filesTruncated,
           }
           loaded.set(trimmed, entry)
           log.info(
-            `[AGENTS:skills] load_skill ready for "${trimmed}" (${files.length} file(s), client=${resolved.client}, scope=${resolved.scope}${resolved.projectRoot ? `, projectRoot=${resolved.projectRoot}` : ''}, dir=${resolved.dir})`
+            `[AGENTS:skills] load_skill ready for "${trimmed}" (${files.length} file(s)${filesTruncated ? ', TRUNCATED' : ''}, client=${resolved.client}, scope=${resolved.scope}${resolved.projectRoot ? `, projectRoot=${resolved.projectRoot}` : ''}, dir=${resolved.dir})`
           )
           return {
             name: trimmed,
@@ -822,6 +830,7 @@ export async function createSkillsAgentTools(
             dir: resolved.dir,
             body,
             files,
+            filesTruncated,
             cached: false,
           }
         } catch (err) {
