@@ -14,6 +14,7 @@ import * as m002 from './migrations/002-thread-title-flag'
 import * as m003 from './migrations/003-thread-starred'
 import * as m004 from './migrations/004-mcp-app-ui-metadata'
 import * as m005 from './migrations/005-agents'
+import * as m006 from './migrations/006-enabled-skills'
 
 const migrations: Migration[] = [
   { id: 1, name: '001-initial-schema', up: m001.up },
@@ -21,6 +22,7 @@ const migrations: Migration[] = [
   { id: 3, name: '003-thread-starred', up: m003.up },
   { id: 4, name: '004-mcp-app-ui-metadata', up: m004.up },
   { id: 5, name: '005-agents', up: m005.up },
+  { id: 6, name: '006-enabled-skills', up: m006.up },
 ]
 
 export function runMigrations(): void {

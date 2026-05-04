@@ -98,3 +98,13 @@ export function readEnabledMcpTools(): Record<string, string[]> {
     return result
   })
 }
+
+export function readEnabledSkills(): string[] {
+  return withDbSpan('DB read enabled skills', 'db.read', {}, () => {
+    const db = getDb()
+    const rows = db
+      .prepare('SELECT name FROM enabled_skills ORDER BY name')
+      .all() as { name: string }[]
+    return rows.map((r) => r.name)
+  })
+}
