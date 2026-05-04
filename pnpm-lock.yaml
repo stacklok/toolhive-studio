@@ -221,8 +221,8 @@ importers:
         specifier: ^1.4.0
         version: 1.4.0
       update-electron-app:
-        specifier: ^3.1.2
-        version: 3.1.2
+        specifier: ^3.2.0
+        version: 3.2.0
       zod:
         specifier: 4.3.6
         version: 4.3.6
@@ -8095,8 +8095,8 @@ packages:
     peerDependencies:
       browserslist: '>= 4.21.0'
 
-  update-electron-app@3.1.2:
-    resolution: {integrity: sha512-htLyPJv7mEoCpaSzCg0W3Hxz7ID0GC7BIhhpK32/ITG7McrWak4aOkLEOjJheKAI94AxtBVTjCk4EFIvyttw2w==}
+  update-electron-app@3.2.0:
+    resolution: {integrity: sha512-l2e7bzsW+rw70pfyyQeA9E/ofpNY2ZS99XuYxD2qWL4fEy3qMjpqwwgB0me7ESpGogIQE1CM0SaDvKGsK4Jg3Q==}
 
   uri-js@4.4.1:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
@@ -17586,7 +17586,7 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
-  update-electron-app@3.1.2:
+  update-electron-app@3.2.0:
     dependencies:
       github-url-to-object: 4.0.6
       ms: 2.1.3
