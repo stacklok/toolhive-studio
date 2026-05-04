@@ -20,11 +20,15 @@ import {
   writeSelectedModel,
   writeEnabledMcpTools,
   deleteEnabledMcpTools,
+  writeEnabledSkill,
+  deleteEnabledSkill,
+  deleteEnabledSkillsNotIn,
 } from '../db/writers/chat-settings-writer'
 import {
   readChatProvider as readChatProviderFromDb,
   readSelectedModel as readSelectedModelFromDb,
   readEnabledMcpTools as readEnabledMcpToolsFromDb,
+  readEnabledSkills as readEnabledSkillsFromDb,
 } from '../db/readers/chat-settings-reader'
 
 // Extract provider IDs from CHAT_PROVIDER_INFO
@@ -327,6 +331,54 @@ export async function getEnabledMcpServersFromTools(): Promise<string[]> {
   } catch (error) {
     log.error('Failed to get enabled MCP servers from tools:', error)
     return []
+  }
+}
+
+// Get the set of user-scope skills the user has enabled via the toolbar.
+export function getEnabledSkills(): string[] {
+  try {
+    return readEnabledSkillsFromDb()
+  } catch (error) {
+    log.error('[DB] Failed to read enabled skills:', error)
+    return []
+  }
+}
+
+// Toggle a single skill on/off. Rows are pure existence flags.
+export function setSkillEnabled(
+  name: string,
+  enabled: boolean
+): { success: boolean; error?: string } {
+  try {
+    const trimmed = name.trim()
+    if (!trimmed) {
+      return { success: false, error: 'Skill name cannot be empty.' }
+    }
+    if (enabled) {
+      writeEnabledSkill(trimmed)
+    } else {
+      deleteEnabledSkill(trimmed)
+    }
+    return { success: true }
+  } catch (error) {
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error',
+    }
+  }
+}
+
+// Prune any enabled_skills rows whose names are not in the given list.
+// Intended to be called with the current set of installed user-scope skill
+// names so stale selections (from uninstalled skills) are cleaned up.
+export function pruneEnabledSkillsTo(
+  installedNames: readonly string[]
+): number {
+  try {
+    return deleteEnabledSkillsNotIn(installedNames)
+  } catch (error) {
+    log.error('[DB] Failed to prune enabled skills:', error)
+    return 0
   }
 }
 
