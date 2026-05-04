@@ -68,11 +68,41 @@ export const openRegistryServerInstall = v1DeepLink({
   }),
 })
 
+export const openRegistrySkillDetail = v1DeepLink({
+  intent: 'open-registry-skill-detail',
+  params: z.object({
+    namespace: safeIdentifier,
+    skillName: safeIdentifier,
+  }),
+  navigate: (params) => ({
+    to: '/skills/$namespace/$skillName',
+    params: { namespace: params.namespace, skillName: params.skillName },
+  }),
+})
+
+export const openRegistrySkillInstall = v1DeepLink({
+  intent: 'open-registry-skill-install',
+  params: z.object({
+    namespace: safeIdentifier,
+    skillName: safeIdentifier,
+    version: safeIdentifier.optional(),
+  }),
+  navigate: (params) => ({
+    to: '/skills/$namespace/$skillName',
+    params: { namespace: params.namespace, skillName: params.skillName },
+    search: params.version
+      ? { install: true, version: params.version }
+      : { install: true },
+  }),
+})
+
 // ── Registry ───────────────────────────────────────────────────────────
 
 const allDeepLinks = [
   openRegistryServerDetail,
   openRegistryServerInstall,
+  openRegistrySkillDetail,
+  openRegistrySkillInstall,
   showNotFound,
 ] as const
 
@@ -85,6 +115,8 @@ const deepLinksByIntent: ReadonlyMap<string, DeepLinkDef> = new Map(
 export const deepLinkSchema = z.discriminatedUnion('intent', [
   openRegistryServerDetail.schema,
   openRegistryServerInstall.schema,
+  openRegistrySkillDetail.schema,
+  openRegistrySkillInstall.schema,
   showNotFound.schema,
 ])
 
