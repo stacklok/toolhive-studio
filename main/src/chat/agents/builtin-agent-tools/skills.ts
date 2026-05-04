@@ -276,21 +276,32 @@ async function resolveSkillDir(
 async function readSkillMd(rootDir: string): Promise<string> {
   // Strict filename match: a skill is required to ship `SKILL.md` exactly.
   // Lower-case or title-case variants must fail audit, not silently pass.
-  const abs = path.join(rootDir, SKILL_MD_FILENAME)
+  //
+  // We compare against the real on-disk casing via `fs.readdir` rather than
+  // `fs.stat(rootDir/SKILL.md)`, because case-insensitive filesystems
+  // (default APFS on macOS, NTFS) make `stat` succeed for a `skill.md` file
+  // even when no `SKILL.md` exists. `readdir` always returns the literal
+  // stored casing, so the audit verdict stays consistent across platforms.
+  let entries: string[]
   try {
-    const stat = await fs.stat(abs)
-    if (!stat.isFile()) {
-      throw new Error(
-        `${SKILL_MD_FILENAME} in ${rootDir} is not a regular file`
-      )
-    }
+    entries = await fs.readdir(rootDir)
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
       throw new Error(
-        `No ${SKILL_MD_FILENAME} found in ${rootDir} (filename is case-sensitive — Skill.md / skill.md are not accepted)`
+        `No ${SKILL_MD_FILENAME} found in ${rootDir} (install dir does not exist)`
       )
     }
     throw err
+  }
+  if (!entries.includes(SKILL_MD_FILENAME)) {
+    throw new Error(
+      `No ${SKILL_MD_FILENAME} found in ${rootDir} (filename is case-sensitive — Skill.md / skill.md are not accepted)`
+    )
+  }
+  const abs = path.join(rootDir, SKILL_MD_FILENAME)
+  const stat = await fs.stat(abs)
+  if (!stat.isFile()) {
+    throw new Error(`${SKILL_MD_FILENAME} in ${rootDir} is not a regular file`)
   }
   return await fs.readFile(abs, 'utf8')
 }
