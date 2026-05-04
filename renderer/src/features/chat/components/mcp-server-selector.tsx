@@ -143,21 +143,32 @@ export function McpServerSelector() {
   return (
     <>
       <DropdownMenu open={isOpen} onOpenChange={handleOpenSettings}>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="flex h-8 items-center justify-between gap-1.5 px-2
-              has-[>svg]:px-2"
-          >
-            <ServerIcon className="size-4" /> {enabledMcpServers.length} Servers
-            / {getTotalToolsCount()} Tools
-            <ChevronDown
-              className="size-4"
-              data-testid="mcp-server-selector-chevron"
-            />
-          </Button>
-        </DropdownMenuTrigger>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex h-8 items-center justify-between gap-1.5 px-2
+                  has-[>svg]:px-2"
+              >
+                <ServerIcon className="size-4" />
+                <span className="tabular-nums">{enabledMcpServers.length}</span>
+                <ChevronDown
+                  className="size-4"
+                  data-testid="mcp-server-selector-chevron"
+                />
+              </Button>
+            </DropdownMenuTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            {enabledMcpServers.length} server
+            {enabledMcpServers.length === 1 ? '' : 's'}
+            {' / '}
+            {getTotalToolsCount()} tool
+            {getTotalToolsCount() === 1 ? '' : 's'} enabled
+          </TooltipContent>
+        </Tooltip>
         <DropdownMenuContent align="start" side="top" className="max-h-96 w-72">
           <DropdownMenuLabel>Available MCP Servers</DropdownMenuLabel>
           <DropdownMenuSeparator />
