@@ -162,7 +162,7 @@ function InputWithAttachments({
                 onProviderChange={handleProviderChange}
               />
               <McpServerSelector />
-              <SkillSelector />
+              <SkillSelector threadId={threadId} />
             </>
           )}
         </PromptInputTools>

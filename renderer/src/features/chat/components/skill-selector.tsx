@@ -28,15 +28,33 @@ import {
 } from '@/common/components/ui/tooltip'
 import { trackEvent } from '@/common/lib/analytics'
 import { useAvailableSkills } from '../hooks/use-available-skills'
+import { useAgents, useThreadAgentId } from '../../agents/hooks/use-agents'
+import { DEFAULT_AGENT_ID } from '../../../../../main/src/chat/agents/types'
 
 function projectLeaf(projectRoot: string): string {
   return projectRoot.split(/[\\/]/).filter(Boolean).at(-1) ?? projectRoot
 }
 
-export function SkillSelector() {
+interface SkillSelectorProps {
+  threadId?: string | null
+}
+
+export function SkillSelector({ threadId }: SkillSelectorProps) {
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
   const [toggling, setToggling] = useState<string | null>(null)
+
+  // Toggling skills is a no-op for any agent that does not bind the `skills`
+  // built-in tool bundle (the bundle is what reads `enabled_skills` and
+  // injects the list into the system prompt). Disable the picker — but keep
+  // it visible — when the active agent doesn't, so the affordance stays
+  // discoverable and we can explain *why* via the tooltip.
+  const { data: agents = [] } = useAgents()
+  const { data: threadAgentId } = useThreadAgentId(threadId ?? undefined)
+  const activeAgent = agents.find(
+    (a) => a.id === (threadAgentId || DEFAULT_AGENT_ID)
+  )
+  const supportsSkills = activeAgent?.builtinToolsKey === 'skills'
 
   const {
     availableSkills,
@@ -109,6 +127,7 @@ export function SkillSelector() {
               className="flex h-8 items-center justify-between gap-1.5 px-2
                 has-[>svg]:px-2"
               data-testid="skill-selector-trigger"
+              disabled={!supportsSkills}
             >
               <FileText className="size-4" />
               <span className="tabular-nums">{enabledCount}</span>
@@ -120,8 +139,17 @@ export function SkillSelector() {
           </DropdownMenuTrigger>
         </TooltipTrigger>
         <TooltipContent>
-          {enabledCount} of {availableSkills.length} skill
-          {availableSkills.length === 1 ? '' : 's'} enabled
+          {!supportsSkills ? (
+            <span>
+              Skills are only used by agents bound to the Skills bundle (e.g.{' '}
+              <strong>Skill Engineer</strong>). Switch agent to enable.
+            </span>
+          ) : (
+            <>
+              {enabledCount} of {availableSkills.length} skill
+              {availableSkills.length === 1 ? '' : 's'} enabled
+            </>
+          )}
         </TooltipContent>
       </Tooltip>
       <DropdownMenuContent align="start" side="top" className="max-h-96 w-72">
