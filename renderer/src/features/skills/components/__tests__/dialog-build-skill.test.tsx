@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { expect, it, vi, describe } from 'vitest'
 import userEvent from '@testing-library/user-event'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
@@ -253,6 +253,91 @@ describe('DialogBuildSkill', () => {
     expect(window.electronAPI.isDirectory).toHaveBeenCalledWith(
       '/home/user/.agents/my-skill'
     )
+  })
+
+  it('opens install dialog with reference and version split out of the built name:tag', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkillsBuild.override(() => ({
+      reference: 'ghcr.io/org/skill:v2.0.0',
+    }))
+    vi.mocked(window.electronAPI.selectFolder).mockResolvedValue(
+      '/home/user/my-skill'
+    )
+
+    renderWithProviders(<DialogBuildSkill open onOpenChange={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: /browse for folder/i }))
+    await waitFor(() => {
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
+    })
+    await user.click(screen.getByRole('button', { name: /^build$/i }))
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalled()
+    })
+
+    // Sonner is globally mocked, so the action button is never rendered.
+    // Trigger the "Install now" handler captured by the toast call directly.
+    const lastCall = vi.mocked(toast.success).mock.calls.at(-1)
+    const opts = lastCall?.[1] as
+      | { action?: { onClick?: () => void } }
+      | undefined
+    opts?.action?.onClick?.()
+
+    const nameInput = await screen.findByLabelText(/name or reference/i)
+    expect(nameInput).toHaveValue('ghcr.io/org/skill')
+
+    const installDialog = nameInput.closest(
+      '[role="dialog"]'
+    ) as HTMLElement | null
+    expect(installDialog).not.toBeNull()
+    expect(
+      within(installDialog!).getByPlaceholderText('e.g. v1.0.0')
+    ).toHaveValue('v2.0.0')
+  })
+
+  it('falls back to the user-supplied tag as version when the built reference has none', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkillsBuild.override(() => ({
+      reference: 'ghcr.io/org/skill',
+    }))
+    vi.mocked(window.electronAPI.selectFolder).mockResolvedValue(
+      '/home/user/my-skill'
+    )
+
+    renderWithProviders(<DialogBuildSkill open onOpenChange={vi.fn()} />)
+
+    await user.click(screen.getByRole('button', { name: /browse for folder/i }))
+    await waitFor(() => {
+      expect(
+        screen.getByPlaceholderText(/paste or type a folder/i)
+      ).toHaveValue('/home/user/my-skill')
+    })
+    await user.type(screen.getByPlaceholderText(/e\.g\. v1\.0\.0/i), 'v3.4.5')
+    await user.click(screen.getByRole('button', { name: /^build$/i }))
+
+    await waitFor(() => {
+      expect(toast.success).toHaveBeenCalled()
+    })
+
+    const lastCall = vi.mocked(toast.success).mock.calls.at(-1)
+    const opts = lastCall?.[1] as
+      | { action?: { onClick?: () => void } }
+      | undefined
+    opts?.action?.onClick?.()
+
+    const nameInput = await screen.findByLabelText(/name or reference/i)
+    expect(nameInput).toHaveValue('ghcr.io/org/skill')
+
+    const installDialog = nameInput.closest(
+      '[role="dialog"]'
+    ) as HTMLElement | null
+    expect(installDialog).not.toBeNull()
+    expect(
+      within(installDialog!).getByPlaceholderText('e.g. v1.0.0')
+    ).toHaveValue('v3.4.5')
   })
 
   it('blocks submit and shows validation error when typed path is not a directory', async () => {

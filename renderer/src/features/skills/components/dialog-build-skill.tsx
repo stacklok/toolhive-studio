@@ -25,6 +25,7 @@ import { FolderOpenIcon, TriangleAlertIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useMutationBuildSkill } from '../hooks/use-mutation-build-skill'
 import { DialogInstallSkill } from './dialog-install-skill'
+import { parseSkillReference } from '../lib/skill-reference'
 import { trackEvent } from '@/common/lib/analytics'
 
 const formSchema = z.object({
@@ -54,7 +55,10 @@ export function DialogBuildSkill({
 }: DialogBuildSkillProps) {
   const { mutateAsync: buildSkill, isPending } = useMutationBuildSkill()
   const [installOpen, setInstallOpen] = useState(false)
-  const [builtReference, setBuiltReference] = useState<string | undefined>()
+  const [builtInstallDefaults, setBuiltInstallDefaults] = useState<{
+    reference: string
+    version?: string
+  } | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const form = useForm<FormSchema>({
@@ -101,7 +105,11 @@ export function DialogBuildSkill({
       onOpenChange(false)
 
       if (reference) {
-        setBuiltReference(reference)
+        const parsed = parseSkillReference(reference)
+        setBuiltInstallDefaults({
+          reference: parsed.reference,
+          version: parsed.version ?? values.tag ?? undefined,
+        })
         toast.success(`Skill built: ${reference}`, {
           duration: 10_000,
           closeButton: true,
@@ -217,10 +225,11 @@ export function DialogBuildSkill({
       </Dialog>
 
       <DialogInstallSkill
-        key={builtReference}
+        key={`${builtInstallDefaults?.reference ?? ''}-${builtInstallDefaults?.version ?? ''}`}
         open={installOpen}
         onOpenChange={setInstallOpen}
-        defaultReference={builtReference}
+        defaultReference={builtInstallDefaults?.reference}
+        defaultVersion={builtInstallDefaults?.version ?? ''}
       />
     </>
   )
