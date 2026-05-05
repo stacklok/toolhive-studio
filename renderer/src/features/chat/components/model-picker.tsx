@@ -80,7 +80,7 @@ export function ModelPicker({
             {value?.provider && value.model ? (
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <span className="max-w-48 truncate text-sm">
+                  <span className="max-w-32 truncate text-sm">
                     {value.model}
                   </span>
                 </TooltipTrigger>

@@ -4,6 +4,7 @@ import { up as applyMigration002 } from '../migrations/002-thread-title-flag'
 import { up as applyMigration003 } from '../migrations/003-thread-starred'
 import { up as applyMigration004 } from '../migrations/004-mcp-app-ui-metadata'
 import { up as applyMigration005 } from '../migrations/005-agents'
+import { up as applyMigration006 } from '../migrations/006-enabled-skills'
 
 /**
  * Creates a fresh in-memory SQLite database with the full schema applied,
@@ -17,5 +18,6 @@ export function createTestDb(): Database.Database {
   applyMigration003(db)
   applyMigration004(db)
   applyMigration005(db)
+  applyMigration006(db)
   return db
 }

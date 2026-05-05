@@ -9,10 +9,7 @@ import {
   setThreadAgent,
   getThreadAgentId,
 } from '../../chat/agents/registry'
-import type {
-  CreateAgentInput,
-  UpdateAgentInput,
-} from '../../chat/agents/types'
+import type { CreateAgentInput, UpdateAgentInput } from '@common/types/agents'
 
 export function register() {
   ipcMain.handle('chat:agents:list', () => listAgents())

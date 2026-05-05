@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React, { type ReactNode } from 'react'
 import { AgentDetailPage } from '../agent-detail-page'
-import type { AgentConfig } from '../../../../../../main/src/chat/agents/types'
+import type { AgentConfig } from '@common/types/agents'
 
 const mockNavigate = vi.fn()
 vi.mock('@tanstack/react-router', () => ({

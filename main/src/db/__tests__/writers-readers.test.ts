@@ -43,12 +43,16 @@ import {
   writeSelectedModel,
   writeEnabledMcpTools,
   deleteEnabledMcpTools,
+  writeEnabledSkill,
+  deleteEnabledSkill,
+  deleteEnabledSkillsNotIn,
 } from '../writers/chat-settings-writer'
 import {
   readChatProvider,
   readAllProviders,
   readSelectedModel,
   readEnabledMcpTools,
+  readEnabledSkills,
 } from '../readers/chat-settings-reader'
 import {
   writeThread,
@@ -194,6 +198,54 @@ describe('chat settings writer/reader', () => {
     deleteEnabledMcpTools('server1')
     const tools = readEnabledMcpTools()
     expect(tools['server1']).toBeUndefined()
+  })
+})
+
+describe('enabled skills writer/reader', () => {
+  it('returns an empty list when nothing is enabled', () => {
+    expect(readEnabledSkills()).toEqual([])
+  })
+
+  it('writes and reads a skill', () => {
+    writeEnabledSkill('algorithmic-art')
+    expect(readEnabledSkills()).toEqual(['algorithmic-art'])
+  })
+
+  it('deduplicates repeated writes for the same name', () => {
+    writeEnabledSkill('foo')
+    writeEnabledSkill('foo')
+    expect(readEnabledSkills()).toEqual(['foo'])
+  })
+
+  it('returns the enabled set sorted by name', () => {
+    writeEnabledSkill('beta')
+    writeEnabledSkill('alpha')
+    writeEnabledSkill('gamma')
+    expect(readEnabledSkills()).toEqual(['alpha', 'beta', 'gamma'])
+  })
+
+  it('deletes a single skill', () => {
+    writeEnabledSkill('alpha')
+    writeEnabledSkill('beta')
+    deleteEnabledSkill('alpha')
+    expect(readEnabledSkills()).toEqual(['beta'])
+  })
+
+  it('prunes skills whose names are not in the keep-list', () => {
+    writeEnabledSkill('alpha')
+    writeEnabledSkill('beta')
+    writeEnabledSkill('gamma')
+    const pruned = deleteEnabledSkillsNotIn(['beta', 'gamma', 'unknown'])
+    expect(pruned).toBe(1)
+    expect(readEnabledSkills()).toEqual(['beta', 'gamma'])
+  })
+
+  it('prunes everything when the keep-list is empty', () => {
+    writeEnabledSkill('alpha')
+    writeEnabledSkill('beta')
+    const pruned = deleteEnabledSkillsNotIn([])
+    expect(pruned).toBe(2)
+    expect(readEnabledSkills()).toEqual([])
   })
 })
 

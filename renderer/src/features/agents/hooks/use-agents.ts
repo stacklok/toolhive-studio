@@ -3,7 +3,7 @@ import type {
   AgentConfig,
   CreateAgentInput,
   UpdateAgentInput,
-} from '../../../../../main/src/chat/agents/types'
+} from '@common/types/agents'
 
 const AGENT_QUERY_KEYS = {
   list: ['agents'] as const,

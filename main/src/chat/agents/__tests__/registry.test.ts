@@ -36,7 +36,7 @@ import {
   getThreadAgentId,
   resolveAgentForThread,
 } from '../registry'
-import { BUILTIN_AGENT_IDS, DEFAULT_AGENT_ID } from '../types'
+import { BUILTIN_AGENT_IDS, DEFAULT_AGENT_ID } from '@common/types/agents'
 import { writeThread } from '../../../db/writers/threads-writer'
 import { writeAgent } from '../../../db/writers/agents-writer'
 
@@ -60,6 +60,34 @@ describe('agent registry — seedBuiltinAgents', () => {
       expect(agent.kind).toBe('builtin')
       expect(agent.instructions.length).toBeGreaterThan(0)
     }
+  })
+
+  it('seeds the skills built-in with the matching tools key', () => {
+    seedBuiltinAgents()
+    const skills = getAgent(BUILTIN_AGENT_IDS.skills)
+    expect(skills).not.toBeNull()
+    expect(skills?.builtinToolsKey).toBe('skills')
+    expect(skills?.kind).toBe('builtin')
+  })
+
+  it('removes legacy built-in agents (e.g. deprecated skill-tester) on seed', () => {
+    const now = Date.now()
+    // Simulate a user who upgraded from a version that seeded `builtin.skill-tester`.
+    writeAgent({
+      id: 'builtin.skill-tester',
+      kind: 'builtin',
+      name: 'Skill Tester',
+      description: 'legacy',
+      instructions: 'legacy',
+      builtinToolsKey: null,
+      createdAt: now,
+      updatedAt: now,
+    })
+    expect(getAgent('builtin.skill-tester')).not.toBeNull()
+
+    seedBuiltinAgents()
+
+    expect(getAgent('builtin.skill-tester')).toBeNull()
   })
 
   it('refreshes curated built-in fields when the seed content changes', () => {

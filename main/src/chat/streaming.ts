@@ -93,8 +93,8 @@ export async function handleChatStreamRealtime(
           enabledTools,
         } = await createMcpTools()
 
-        // Agent-specific built-in tools (e.g. Skills Builder)
-        const builtinToolsHandle = createBuiltinAgentTools(
+        // Agent-specific built-in tools (e.g. Skills Builder, Skill Tester)
+        const builtinToolsHandle = await createBuiltinAgentTools(
           agentConfig.builtinToolsKey ?? null
         )
         const builtinTools = builtinToolsHandle.tools
@@ -105,10 +105,18 @@ export async function handleChatStreamRealtime(
         }
         const hasTools = Object.keys(combinedTools).length > 0
 
+        // Some bundles (e.g. the skills bundle) augment the agent's
+        // instructions with runtime data such as the list of installed skills,
+        // following the Vercel "Add Skills to Your Agent" progressive-
+        // disclosure pattern.
+        const instructions = builtinToolsHandle.instructionsSuffix
+          ? `${agentConfig.instructions}\n\n${builtinToolsHandle.instructionsSuffix}`
+          : agentConfig.instructions
+
         try {
           const agent = new ToolLoopAgent({
             model,
-            instructions: agentConfig.instructions,
+            instructions,
             tools: hasTools ? combinedTools : undefined,
             toolChoice: hasTools ? 'auto' : undefined,
             stopWhen: stepCountIs(50),

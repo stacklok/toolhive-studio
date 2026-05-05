@@ -3,6 +3,7 @@ import Database from 'better-sqlite3'
 import { up as applyInitialSchema } from '../migrations/001-initial-schema'
 import { up as applyMigration002 } from '../migrations/002-thread-title-flag'
 import { up as applyMigration003 } from '../migrations/003-thread-starred'
+import { up as applyMigration006 } from '../migrations/006-enabled-skills'
 
 vi.mock('electron', () => ({
   app: { getPath: vi.fn(() => ':memory:') },
@@ -239,6 +240,43 @@ describe('003-thread-starred migration', () => {
       .prepare('SELECT starred FROM threads WHERE id = ?')
       .get('t2') as { starred: number }
     expect(row.starred).toBe(1)
+  })
+})
+
+describe('006-enabled-skills migration', () => {
+  let db: Database.Database
+
+  beforeEach(() => {
+    db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    applyInitialSchema(db)
+  })
+
+  afterEach(() => {
+    db.close()
+  })
+
+  it('creates the enabled_skills table', () => {
+    applyMigration006(db)
+    const tables = db
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+      )
+      .all() as { name: string }[]
+    expect(tables.map((t) => t.name)).toContain('enabled_skills')
+  })
+
+  it('enforces the name primary key', () => {
+    applyMigration006(db)
+    db.prepare("INSERT INTO enabled_skills (name) VALUES ('foo')").run()
+    db.prepare(
+      "INSERT OR IGNORE INTO enabled_skills (name) VALUES ('foo')"
+    ).run()
+    const rows = db.prepare('SELECT name FROM enabled_skills').all() as {
+      name: string
+    }[]
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.name).toBe('foo')
   })
 })
 

@@ -12,7 +12,7 @@ import { STREAMDOWN_PROSE_CLASS } from '@/common/lib/streamdown-prose'
 import { trackEvent } from '@/common/lib/analytics'
 import { SkillDetailLayout } from '@/features/skills/components/skill-detail-layout'
 import { useDeleteAgent, useDuplicateAgent } from '../hooks/use-agents'
-import type { AgentConfig } from '../../../../../main/src/chat/agents/types'
+import type { AgentConfig } from '@common/types/agents'
 
 const STREAMDOWN_PLUGINS = { code, mermaid, cjk }
 

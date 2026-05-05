@@ -20,7 +20,7 @@ import {
 } from '@/common/components/ui/tabs'
 import { trackEvent } from '@/common/lib/analytics'
 import { useAgents, useDuplicateAgent } from '../hooks/use-agents'
-import type { AgentConfig } from '../../../../../main/src/chat/agents/types'
+import type { AgentConfig } from '@common/types/agents'
 
 type AgentsTab = 'all' | 'builtin' | 'custom'
 

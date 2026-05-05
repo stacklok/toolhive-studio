@@ -10,7 +10,7 @@ import type {
   AgentConfig,
   CreateAgentInput,
   UpdateAgentInput,
-} from '../../../main/src/chat/agents/types'
+} from '@common/types/agents'
 
 export const chatApi = {
   chat: {
@@ -67,6 +67,15 @@ export const chatApi = {
         enabledTools
       ),
     getToolhiveMcpInfo: () => ipcRenderer.invoke('chat:get-toolhive-mcp-info'),
+    getEnabledSkills: (installedNames?: readonly string[]) =>
+      ipcRenderer.invoke('chat:get-enabled-skills', installedNames) as Promise<
+        string[]
+      >,
+    setEnabledSkill: (name: string, enabled: boolean) =>
+      ipcRenderer.invoke('chat:set-enabled-skill', name, enabled) as Promise<{
+        success: boolean
+        error?: string
+      }>,
     getToolUiMetadata: () => ipcRenderer.invoke('chat:get-tool-ui-metadata'),
     fetchUiResource: (serverName: string, resourceUri: string) =>
       ipcRenderer.invoke('chat:fetch-ui-resource', serverName, resourceUri),
@@ -225,6 +234,11 @@ export interface ChatAPI {
       enabledTools: string[]
     ) => Promise<{ success: boolean; error?: string }>
     getToolhiveMcpInfo: () => Promise<AvailableServer>
+    getEnabledSkills: (installedNames?: readonly string[]) => Promise<string[]>
+    setEnabledSkill: (
+      name: string,
+      enabled: boolean
+    ) => Promise<{ success: boolean; error?: string }>
     getToolUiMetadata: () => Promise<
       Record<string, { resourceUri: string; serverName: string }>
     >

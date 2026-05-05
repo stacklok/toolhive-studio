@@ -4,7 +4,7 @@ import type {
   AgentConfig,
   AgentKind,
   BuiltinToolsKey,
-} from '../../chat/agents/types'
+} from '@common/types/agents'
 
 interface DbAgent {
   id: string

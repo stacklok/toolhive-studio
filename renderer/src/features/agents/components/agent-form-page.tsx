@@ -34,7 +34,7 @@ import {
   BUILTIN_TOOL_BUNDLES,
   type AgentConfig,
   type BuiltinToolsKey,
-} from '../../../../../main/src/chat/agents/types'
+} from '@common/types/agents'
 
 const STREAMDOWN_PLUGINS = { code, mermaid, cjk }
 

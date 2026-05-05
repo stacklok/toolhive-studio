@@ -25,6 +25,7 @@ import {
 } from '@/common/components/ui/tooltip'
 import { ModelSelector } from './model-selector'
 import { McpServerSelector } from './mcp-server-selector'
+import { SkillSelector } from './skill-selector'
 import { AgentSelector } from './agent-selector'
 import type { ChatSettings } from '../types'
 import { toast } from 'sonner'
@@ -142,7 +143,7 @@ function InputWithAttachments({
         />
       </PromptInputBody>
       <PromptInputToolbar>
-        <PromptInputTools className="gap-1">
+        <PromptInputTools className="min-w-0 flex-nowrap gap-1">
           <PromptInputActionMenu>
             <PromptInputActionMenuTrigger
               className="bg-secondary text-secondary-foreground rounded-full"
@@ -161,6 +162,7 @@ function InputWithAttachments({
                 onProviderChange={handleProviderChange}
               />
               <McpServerSelector />
+              <SkillSelector threadId={threadId} />
             </>
           )}
         </PromptInputTools>

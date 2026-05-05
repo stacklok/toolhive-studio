@@ -12,12 +12,17 @@ import {
 } from '@/common/components/ui/dropdown-menu'
 import { trackEvent } from '@/common/lib/analytics'
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
+import {
   useAgents,
   useSetThreadAgent,
   useThreadAgentId,
 } from '../../agents/hooks/use-agents'
-import { DEFAULT_AGENT_ID } from '../../../../../main/src/chat/agents/types'
-import type { AgentConfig } from '../../../../../main/src/chat/agents/types'
+import { DEFAULT_AGENT_ID } from '@common/types/agents'
+import type { AgentConfig } from '@common/types/agents'
 
 interface AgentSelectorProps {
   threadId?: string | null
@@ -64,23 +69,38 @@ export function AgentSelector({ threadId }: AgentSelectorProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="h-8 justify-between gap-1 px-2 has-[>svg]:px-2"
-          disabled={isLoading || !threadId}
-          data-testid="agent-selector"
-          title={selectedAgent?.description ?? 'Select an agent'}
-        >
-          <div className="flex min-w-0 items-center gap-1.5">
-            {getAgentIcon(selectedAgent)}
-            <span className="max-w-32 truncate text-sm">
-              {selectedAgent?.name ?? 'Agent'}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              className="h-8 justify-between gap-1 px-2 has-[>svg]:px-2"
+              disabled={isLoading || !threadId}
+              data-testid="agent-selector"
+            >
+              <div className="flex min-w-0 items-center gap-1.5">
+                {getAgentIcon(selectedAgent)}
+                <span className="max-w-24 truncate text-sm">
+                  {selectedAgent?.name ?? 'Agent'}
+                </span>
+              </div>
+              <ChevronDown className="h-4 w-4 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+        </TooltipTrigger>
+        <TooltipContent>
+          <div className="flex flex-col gap-0.5">
+            <span className="font-medium">
+              {selectedAgent?.name ?? 'Select an agent'}
             </span>
+            {selectedAgent?.description && (
+              <span className="text-muted-foreground max-w-xs text-xs">
+                {selectedAgent.description}
+              </span>
+            )}
           </div>
-          <ChevronDown className="h-4 w-4 opacity-50" />
-        </Button>
-      </DropdownMenuTrigger>
+        </TooltipContent>
+      </Tooltip>
       <DropdownMenuContent align="start" className="w-72">
         <DropdownMenuLabel className="flex items-center gap-2">
           <Bot className="h-4 w-4" />

@@ -94,3 +94,47 @@ export function deleteEnabledMcpTools(serverName: string): void {
     }
   )
 }
+
+export function writeEnabledSkill(name: string): void {
+  if (!isDbWritable()) return
+  withDbSpan(
+    'DB write enabled skill',
+    'db.write',
+    { 'db.skill_name': name },
+    () => {
+      const db = getDb()
+      db.prepare('INSERT OR IGNORE INTO enabled_skills (name) VALUES (?)').run(
+        name
+      )
+    }
+  )
+}
+
+export function deleteEnabledSkill(name: string): void {
+  if (!isDbWritable()) return
+  withDbSpan(
+    'DB delete enabled skill',
+    'db.write',
+    { 'db.skill_name': name },
+    () => {
+      const db = getDb()
+      db.prepare('DELETE FROM enabled_skills WHERE name = ?').run(name)
+    }
+  )
+}
+
+export function deleteEnabledSkillsNotIn(names: readonly string[]): number {
+  if (!isDbWritable()) return 0
+  return withDbSpan('DB prune enabled skills', 'db.write', {}, () => {
+    const db = getDb()
+    if (names.length === 0) {
+      const info = db.prepare('DELETE FROM enabled_skills').run()
+      return info.changes ?? 0
+    }
+    const placeholders = names.map(() => '?').join(', ')
+    const info = db
+      .prepare(`DELETE FROM enabled_skills WHERE name NOT IN (${placeholders})`)
+      .run(...names)
+    return info.changes ?? 0
+  })
+}
