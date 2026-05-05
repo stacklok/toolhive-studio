@@ -92,13 +92,20 @@ export function DialogInstallSkill({
 
   const form = useForm<FormSchema>({
     resolver: zodV4Resolver(formSchema),
-    defaultValues: {
+    // Use `values` so the form re-syncs when defaultReference/defaultVersion
+    // change (e.g. a deep link arrives while the dialog is already mounted).
+    // `keepDirtyValues` preserves any user edits across re-syncs — fields the
+    // user has not touched (including `name` and `version` when prefilled
+    // from a deep link) get the new values, while user-edited `scope`,
+    // `project_root`, `clients`, etc. stay put.
+    values: {
       name: defaultReference ?? '',
       scope: 'user',
       project_root: '',
       clients: [],
       version: defaultVersion ?? '',
     },
+    resetOptions: { keepDirtyValues: true },
   })
 
   const scope = useWatch({ control: form.control, name: 'scope' })

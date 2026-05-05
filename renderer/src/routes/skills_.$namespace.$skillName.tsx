@@ -1,4 +1,9 @@
-import { createFileRoute, notFound, useParams } from '@tanstack/react-router'
+import {
+  createFileRoute,
+  notFound,
+  useParams,
+  useSearch,
+} from '@tanstack/react-router'
 import { useSuspenseQuery } from '@tanstack/react-query'
 import { getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillName } from '@common/api/generated/sdk.gen'
@@ -56,6 +61,13 @@ function SkillNotFound() {
 }
 
 export const Route = createFileRoute('/skills_/$namespace/$skillName')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    install: search.install === true,
+    version:
+      typeof search.version === 'string' && search.version.length > 0
+        ? search.version
+        : undefined,
+  }),
   loader: ({ context: { queryClient }, params }) =>
     queryClient.ensureQueryData(skillQueryOptions(params)),
   component: SkillDetail,
@@ -64,9 +76,20 @@ export const Route = createFileRoute('/skills_/$namespace/$skillName')({
 
 function SkillDetail() {
   const params = useParams({ from: '/skills_/$namespace/$skillName' })
+  const { install, version } = useSearch({
+    from: '/skills_/$namespace/$skillName',
+  })
   const { data: skill } = useSuspenseQuery(skillQueryOptions(params))
 
   if (!skill) return null
 
-  return <SkillDetailPage skill={skill} />
+  return (
+    <SkillDetailPage
+      skill={skill}
+      namespace={params.namespace}
+      skillName={params.skillName}
+      initialInstall={install}
+      initialVersion={version}
+    />
+  )
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/common/components/ui/button'
 import {
   TagIcon,
@@ -17,19 +17,63 @@ import { trackEvent } from '@/common/lib/analytics'
 
 interface SkillDetailPageProps {
   skill: RegistrySkill
+  /**
+   * Route-param namespace. Always present on this page, unlike
+   * `skill.namespace` which is optional on the registry response.
+   */
+  namespace: string
+  /**
+   * Route-param skill name. Always present on this page, unlike
+   * `skill.name` which is optional on the registry response.
+   */
+  skillName: string
+  /** When true, opens the install dialog on mount (e.g. from a deep link). */
+  initialInstall?: boolean
+  /**
+   * Overrides the metadata-derived default version when prefilling the
+   * install dialog. Sourced from the deep-link `?version=<v>` param.
+   */
+  initialVersion?: string
 }
 
-export function SkillDetailPage({ skill }: SkillDetailPageProps) {
-  const [installOpen, setInstallOpen] = useState(false)
+export function SkillDetailPage({
+  skill,
+  namespace,
+  skillName,
+  initialInstall,
+  initialVersion,
+}: SkillDetailPageProps) {
+  const [installOpen, setInstallOpen] = useState(initialInstall ?? false)
+  const [overrideVersion, setOverrideVersion] = useState<string | undefined>(
+    initialVersion
+  )
 
   const name = skill.name ?? 'Unknown skill'
-  const namespace = skill.namespace
   const description = skill.description
   const version = skill.version
   const license = skill.license
   const repoLabel = getDisplayRepoLabel(skill.repository?.url)
   const installDefaults = getSkillInstallDefaults(skill)
   const ociRef = getSkillOciRef(skill)
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (
+        e as CustomEvent<{
+          namespace: string
+          skillName: string
+          version?: string
+        }>
+      ).detail
+      if (detail.namespace === namespace && detail.skillName === skillName) {
+        setOverrideVersion(detail.version)
+        setInstallOpen(true)
+      }
+    }
+    window.addEventListener('toolhive:open-install-skill-modal', handler)
+    return () =>
+      window.removeEventListener('toolhive:open-install-skill-modal', handler)
+  }, [namespace, skillName])
 
   const hasBadges = !!(version || repoLabel || license)
 
@@ -81,8 +125,9 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
                 trackEvent('Skills: install dialog opened', {
                   source: 'registry_detail',
                   name,
-                  namespace: namespace ?? '',
+                  namespace,
                 })
+                setOverrideVersion(undefined)
                 setInstallOpen(true)
               }}
             >
@@ -97,7 +142,7 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
                 onClick={() =>
                   trackEvent('Skills: detail github clicked', {
                     name,
-                    namespace: namespace ?? '',
+                    namespace,
                   })
                 }
               >
@@ -138,7 +183,7 @@ export function SkillDetailPage({ skill }: SkillDetailPageProps) {
         open={installOpen}
         onOpenChange={setInstallOpen}
         defaultReference={installDefaults.reference}
-        defaultVersion={installDefaults.version}
+        defaultVersion={overrideVersion ?? installDefaults.version}
       />
     </>
   )

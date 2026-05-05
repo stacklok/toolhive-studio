@@ -109,4 +109,138 @@ describe('parseDeepLinkUrl', () => {
     // Zod strips unknown keys by default, so this should still parse
     expect(result.ok).toBe(true)
   })
+
+  describe('open-registry-skill-detail', () => {
+    it('parses a valid URL', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-detail?namespace=stacklok&skillName=skill-creator'
+      )
+      expect(result).toEqual({
+        ok: true,
+        deepLink: {
+          version: 'v1',
+          intent: 'open-registry-skill-detail',
+          params: { namespace: 'stacklok', skillName: 'skill-creator' },
+        },
+      })
+    })
+
+    it('accepts dotted namespaces (e.g. io.github.stacklok)', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-detail?namespace=io.github.stacklok&skillName=skill-creator'
+      )
+      expect(result.ok).toBe(true)
+    })
+
+    it('rejects missing namespace', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-detail?skillName=skill-creator'
+      )
+      expect(result.ok).toBe(false)
+    })
+
+    it('rejects missing skillName', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-detail?namespace=stacklok'
+      )
+      expect(result.ok).toBe(false)
+    })
+
+    it('rejects path-traversal in namespace', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-detail?namespace=../../etc&skillName=passwd'
+      )
+      expect(result.ok).toBe(false)
+    })
+
+    it('rejects spaces in skillName', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-detail?namespace=stacklok&skillName=my%20skill'
+      )
+      expect(result.ok).toBe(false)
+    })
+  })
+
+  describe('open-registry-skill-install', () => {
+    it('parses a valid URL without version', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-install?namespace=stacklok&skillName=skill-creator'
+      )
+      expect(result).toEqual({
+        ok: true,
+        deepLink: {
+          version: 'v1',
+          intent: 'open-registry-skill-install',
+          params: { namespace: 'stacklok', skillName: 'skill-creator' },
+        },
+      })
+    })
+
+    it('parses a valid URL with version=v1.2.3', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-install?namespace=stacklok&skillName=skill-creator&version=v1.2.3'
+      )
+      expect(result).toEqual({
+        ok: true,
+        deepLink: {
+          version: 'v1',
+          intent: 'open-registry-skill-install',
+          params: {
+            namespace: 'stacklok',
+            skillName: 'skill-creator',
+            version: 'v1.2.3',
+          },
+        },
+      })
+    })
+
+    it('accepts pre-release tags like 1.2.3-rc.1', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-install?namespace=stacklok&skillName=skill-creator&version=1.2.3-rc.1'
+      )
+      expect(result.ok).toBe(true)
+      if (result.ok) {
+        expect(
+          'version' in result.deepLink.params
+            ? result.deepLink.params.version
+            : undefined
+        ).toBe('1.2.3-rc.1')
+      }
+    })
+
+    it('rejects digest-style version (sha256:...) — colons not supported', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-install?namespace=stacklok&skillName=skill-creator&version=sha256:abc123'
+      )
+      expect(result.ok).toBe(false)
+    })
+
+    it('rejects spaces in version', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-install?namespace=stacklok&skillName=skill-creator&version=v1%200'
+      )
+      expect(result.ok).toBe(false)
+    })
+
+    it('rejects missing namespace', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-install?skillName=skill-creator'
+      )
+      expect(result.ok).toBe(false)
+    })
+
+    it('rejects missing skillName', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-install?namespace=stacklok'
+      )
+      expect(result.ok).toBe(false)
+    })
+
+    it('ignores extra query parameters', () => {
+      const result = parseDeepLinkUrl(
+        'toolhive-gui://v1/open-registry-skill-install?namespace=stacklok&skillName=skill-creator&extra=ignored'
+      )
+      expect(result.ok).toBe(true)
+    })
+  })
 })
