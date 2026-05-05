@@ -1,12 +1,7 @@
 import { useState, useCallback } from 'react'
 import { Button } from '@/common/components/ui/button'
-import {
-  MessageSquare,
-  Plus,
-  MessageCircleMore,
-  ChevronDown,
-} from 'lucide-react'
-import { ChatMessage } from './chat-message'
+import { Plus, MessageCircleMore, ChevronDown } from 'lucide-react'
+import { ChatMessageList } from './chat-message-list'
 import { DialogProviderSettings } from './dialog-provider-settings'
 import { ErrorAlert } from './error-alert'
 import { useChatStreaming } from '../hooks/use-chat-streaming'
@@ -100,61 +95,13 @@ export function ChatInterface({
               motion-safe:transition-all motion-safe:duration-300"
           >
             {hasMessages && (
-              <div className="space-y-6 pt-8 pr-2 pb-24">
-                {messages.map((message, index: number) => (
-                  <div
-                    key={message.id}
-                    className="animate-in fade-in-0 slide-in-from-bottom-2
-                      duration-300"
-                    style={{
-                      animationDelay: `${Math.min(index * 50, 200)}ms`,
-                      animationFillMode: 'both',
-                    }}
-                  >
-                    <ChatMessage
-                      status={status}
-                      message={message}
-                      toolUiMetadata={toolUiMetadata}
-                    />
-                  </div>
-                ))}
-                {isLoading && (
-                  <div
-                    className="animate-in fade-in-0 flex items-start gap-4
-                      duration-500"
-                  >
-                    <div
-                      className="bg-muted flex h-8 w-8 shrink-0 items-center
-                        justify-center rounded-lg"
-                    >
-                      <MessageSquare className="h-4 w-4" />
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center space-x-2">
-                        <div className="flex space-x-1">
-                          <div
-                            className="bg-muted-foreground h-1.5 w-1.5
-                              animate-bounce rounded-full
-                              [animation-delay:-0.3s]"
-                          ></div>
-                          <div
-                            className="bg-muted-foreground h-1.5 w-1.5
-                              animate-bounce rounded-full
-                              [animation-delay:-0.15s]"
-                          ></div>
-                          <div
-                            className="bg-muted-foreground h-1.5 w-1.5
-                              animate-bounce rounded-full"
-                          ></div>
-                        </div>
-                        <span className="text-muted-foreground text-sm">
-                          Thinking...
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
+              <ChatMessageList
+                messages={messages}
+                status={status}
+                isLoading={isLoading}
+                toolUiMetadata={toolUiMetadata}
+                scrollElementRef={containerRef}
+              />
             )}
           </div>
 
