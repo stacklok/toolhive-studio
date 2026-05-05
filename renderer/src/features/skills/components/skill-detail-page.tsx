@@ -17,6 +17,16 @@ import { trackEvent } from '@/common/lib/analytics'
 
 interface SkillDetailPageProps {
   skill: RegistrySkill
+  /**
+   * Route-param namespace. Always present on this page, unlike
+   * `skill.namespace` which is optional on the registry response.
+   */
+  namespace: string
+  /**
+   * Route-param skill name. Always present on this page, unlike
+   * `skill.name` which is optional on the registry response.
+   */
+  skillName: string
   /** When true, opens the install dialog on mount (e.g. from a deep link). */
   initialInstall?: boolean
   /**
@@ -28,6 +38,8 @@ interface SkillDetailPageProps {
 
 export function SkillDetailPage({
   skill,
+  namespace,
+  skillName,
   initialInstall,
   initialVersion,
 }: SkillDetailPageProps) {
@@ -35,13 +47,8 @@ export function SkillDetailPage({
   const [overrideVersion, setOverrideVersion] = useState<string | undefined>(
     initialVersion
   )
-  // Bumped every time the dialog is (re)opened from a deep link so the
-  // dialog remounts and `useForm`'s defaultValues pick up the latest
-  // reference/version (defaultValues are only read once on mount).
-  const [openCount, setOpenCount] = useState(initialInstall ? 1 : 0)
 
   const name = skill.name ?? 'Unknown skill'
-  const namespace = skill.namespace
   const description = skill.description
   const version = skill.version
   const license = skill.license
@@ -58,16 +65,15 @@ export function SkillDetailPage({
           version?: string
         }>
       ).detail
-      if (detail.namespace === namespace && detail.skillName === skill.name) {
+      if (detail.namespace === namespace && detail.skillName === skillName) {
         setOverrideVersion(detail.version)
         setInstallOpen(true)
-        setOpenCount((c) => c + 1)
       }
     }
     window.addEventListener('toolhive:open-install-skill-modal', handler)
     return () =>
       window.removeEventListener('toolhive:open-install-skill-modal', handler)
-  }, [namespace, skill.name])
+  }, [namespace, skillName])
 
   const hasBadges = !!(version || repoLabel || license)
 
@@ -119,10 +125,9 @@ export function SkillDetailPage({
                 trackEvent('Skills: install dialog opened', {
                   source: 'registry_detail',
                   name,
-                  namespace: namespace ?? '',
+                  namespace,
                 })
                 setOverrideVersion(undefined)
-                setOpenCount((c) => c + 1)
                 setInstallOpen(true)
               }}
             >
@@ -137,7 +142,7 @@ export function SkillDetailPage({
                 onClick={() =>
                   trackEvent('Skills: detail github clicked', {
                     name,
-                    namespace: namespace ?? '',
+                    namespace,
                   })
                 }
               >
@@ -175,7 +180,6 @@ export function SkillDetailPage({
       />
 
       <DialogInstallSkill
-        key={`${namespace ?? ''}/${skill.name ?? ''}#${openCount}`}
         open={installOpen}
         onOpenChange={setInstallOpen}
         defaultReference={installDefaults.reference}

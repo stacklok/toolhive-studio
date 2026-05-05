@@ -86,6 +86,8 @@ function SkillDetail() {
   return (
     <SkillDetailPage
       skill={skill}
+      namespace={params.namespace}
+      skillName={params.skillName}
       initialInstall={install}
       initialVersion={version}
     />

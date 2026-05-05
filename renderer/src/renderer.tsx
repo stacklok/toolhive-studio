@@ -59,29 +59,32 @@ if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
   const deepLinkCleanup = window.electronAPI.onDeepLinkNavigation((target) => {
     log.info(`[deep-link] Navigating to: ${target.to}`, target.params)
     router.navigate(target)
-    if (target.search?.install) {
-      if (target.params?.name) {
-        window.dispatchEvent(
-          new CustomEvent('toolhive:open-install-modal', {
-            detail: { serverName: target.params.name },
-          })
-        )
-      } else if (target.params?.namespace && target.params?.skillName) {
-        const version =
-          typeof target.search.version === 'string'
-            ? target.search.version
-            : undefined
-        window.dispatchEvent(
-          new CustomEvent('toolhive:open-install-skill-modal', {
-            detail: {
-              namespace: target.params.namespace,
-              skillName: target.params.skillName,
-              version,
-            },
-          })
-        )
-      }
+
+    if (!target.search?.install || !target.params) return
+
+    if (target.params.name) {
+      window.dispatchEvent(
+        new CustomEvent('toolhive:open-install-modal', {
+          detail: { serverName: target.params.name },
+        })
+      )
+      return
     }
+
+    if (!target.params.namespace || !target.params.skillName) return
+
+    window.dispatchEvent(
+      new CustomEvent('toolhive:open-install-skill-modal', {
+        detail: {
+          namespace: target.params.namespace,
+          skillName: target.params.skillName,
+          version:
+            typeof target.search.version === 'string'
+              ? target.search.version
+              : undefined,
+        },
+      })
+    )
   })
 
   const rootElement = document.getElementById('root')!

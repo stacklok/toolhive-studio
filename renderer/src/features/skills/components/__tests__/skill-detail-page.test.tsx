@@ -48,10 +48,14 @@ beforeEach(() => {
   mockedGetApiV1BetaDiscoveryClients.activateScenario('empty')
 })
 
-function renderSkillDetailPage(props: {
-  initialInstall?: boolean
-  initialVersion?: string
-}) {
+function renderSkillDetailPage(
+  props: {
+    initialInstall?: boolean
+    initialVersion?: string
+  },
+  options: { skill?: RegistrySkill } = {}
+) {
+  const skill = options.skill ?? SKILL
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0, staleTime: 0 },
@@ -65,7 +69,14 @@ function renderSkillDetailPage(props: {
   const detailRoute = createRoute({
     getParentRoute: () => rootRoute,
     path: '/skills_/$namespace/$skillName',
-    component: () => <SkillDetailPage skill={SKILL} {...props} />,
+    component: () => (
+      <SkillDetailPage
+        skill={skill}
+        namespace="io.github.stacklok"
+        skillName="skill-creator"
+        {...props}
+      />
+    ),
   })
   const skillsRoute = createRoute({
     getParentRoute: () => rootRoute,
@@ -169,5 +180,41 @@ describe('SkillDetailPage deep-link install flow', () => {
     // Give any effects a tick to run before asserting absence
     await new Promise((r) => setTimeout(r, 0))
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('matches reopen events using route params even when skill metadata is missing namespace/name', async () => {
+    // Regression: registry response can omit skill.namespace / skill.name; the
+    // page must still match deep-link reopen events by the URL-derived route
+    // params (which are always present), not the optional skill metadata.
+    const skillWithoutMetadataIds: RegistrySkill = {
+      description: 'No name/namespace on the skill object.',
+      packages: [
+        {
+          registryType: 'oci',
+          identifier: 'ghcr.io/stacklok/skill-creator:v1.0.0',
+        },
+      ],
+    }
+
+    renderSkillDetailPage({}, { skill: skillWithoutMetadataIds })
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { level: 1 })).toBeVisible()
+    })
+
+    act(() => {
+      window.dispatchEvent(
+        new CustomEvent('toolhive:open-install-skill-modal', {
+          detail: {
+            namespace: 'io.github.stacklok',
+            skillName: 'skill-creator',
+            version: 'v3.0.0',
+          },
+        })
+      )
+    })
+
+    const dialog = await screen.findByRole('dialog')
+    expect(within(dialog).getByLabelText(/version/i)).toHaveValue('v3.0.0')
   })
 })
