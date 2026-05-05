@@ -75,7 +75,7 @@ export const Route = createFileRoute('/(registry)/registry_/$name')({
           signal,
         })
         if (result.error !== undefined) {
-          if (result.response.status === 404) {
+          if (result.response?.status === 404) {
             throw notFound()
           }
           throw result.error
