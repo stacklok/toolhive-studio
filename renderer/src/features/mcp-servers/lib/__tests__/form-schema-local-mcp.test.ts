@@ -369,7 +369,11 @@ it('fails when type is empty', () => {
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
-        type: { errors: ['Invalid input'] },
+        type: {
+          errors: [
+            "Invalid discriminator value. Expected 'docker_image' | 'package_manager'",
+          ],
+        },
       }),
     })
   )
@@ -399,7 +403,11 @@ it('fails when type is invalid', () => {
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
     expect.objectContaining({
       properties: expect.objectContaining({
-        type: { errors: ['Invalid input'] },
+        type: {
+          errors: [
+            "Invalid discriminator value. Expected 'docker_image' | 'package_manager'",
+          ],
+        },
       }),
     })
   )
