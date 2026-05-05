@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useId } from 'react'
 import {
   Wrench,
   CheckCircle,
@@ -9,16 +9,30 @@ import {
 import type { ChatStatus } from 'ai'
 import type { ChatUIMessage } from '../../types'
 import { ToolOutputContent } from './tool-output-content'
+import { useDisclosure } from '../../lib/disclosure-store'
 
 interface ToolCallComponentProps {
   part: ChatUIMessage['parts'][0]
   status: ChatStatus
+  /**
+   * Stable key (typically `${message.id}:${partIndex}`) so the three
+   * expand/collapse flags survive unmounts when virtualized rows recycle.
+   * When omitted, falls back to a per-instance `useId` so callers/tests
+   * that don't need cross-mount state are unaffected.
+   */
+  disclosureKey?: string
 }
 
-function ToolCallComponentImpl({ part, status }: ToolCallComponentProps) {
-  const [isInputOpen, setIsInputOpen] = useState(false)
-  const [isOutputOpen, setIsOutputOpen] = useState(false)
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+function ToolCallComponentImpl({
+  part,
+  status,
+  disclosureKey,
+}: ToolCallComponentProps) {
+  const fallbackKey = useId()
+  const baseKey = disclosureKey ?? fallbackKey
+  const [isDetailsOpen, toggleDetails] = useDisclosure(`${baseKey}:details`)
+  const [isInputOpen, toggleInput] = useDisclosure(`${baseKey}:input`)
+  const [isOutputOpen, toggleOutput] = useDisclosure(`${baseKey}:output`)
 
   if (!part.type.startsWith('tool-') && part.type !== 'dynamic-tool')
     return null
@@ -68,7 +82,7 @@ function ToolCallComponentImpl({ part, status }: ToolCallComponentProps) {
 
       <div className="mb-2">
         <button
-          onClick={() => setIsDetailsOpen(!isDetailsOpen)}
+          onClick={toggleDetails}
           className="text-muted-foreground hover:text-foreground flex
             items-center gap-2 text-xs transition-colors"
         >
@@ -111,7 +125,7 @@ function ToolCallComponentImpl({ part, status }: ToolCallComponentProps) {
       {'input' in part && part.input !== undefined && (
         <div className="mt-2">
           <button
-            onClick={() => setIsInputOpen(!isInputOpen)}
+            onClick={toggleInput}
             className="text-muted-foreground hover:text-foreground flex
               items-center gap-2 text-xs transition-colors"
           >
@@ -141,7 +155,7 @@ function ToolCallComponentImpl({ part, status }: ToolCallComponentProps) {
       {'output' in part && part.output !== undefined && (
         <div className="mt-2">
           <button
-            onClick={() => setIsOutputOpen(!isOutputOpen)}
+            onClick={toggleOutput}
             className="text-muted-foreground hover:text-foreground flex
               items-center gap-2 text-xs transition-colors"
           >

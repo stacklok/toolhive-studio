@@ -61,6 +61,7 @@ export function AssistantMessage({
                     key={`reasoning-${index}`}
                     part={part}
                     status={status}
+                    disclosureKey={`${message.id}:${index}`}
                   />
                 )
 
@@ -70,7 +71,11 @@ export function AssistantMessage({
                 const dynUi = dynToolName ? uiMetadata[dynToolName] : undefined
                 return (
                   <Fragment key={`dynamic-tool-${index}`}>
-                    <ToolCallComponent part={part} status={status} />
+                    <ToolCallComponent
+                      part={part}
+                      status={status}
+                      disclosureKey={`${message.id}:${index}`}
+                    />
                     {dynUi &&
                       'state' in part &&
                       part.state === 'output-available' && (
@@ -159,7 +164,11 @@ export function AssistantMessage({
                       : null
                   return (
                     <Fragment key={`tool-${index}`}>
-                      <ToolCallComponent part={part} status={status} />
+                      <ToolCallComponent
+                        part={part}
+                        status={status}
+                        disclosureKey={`${message.id}:${index}`}
+                      />
                       {skillBuildResult && (
                         <SkillBuildResultCard result={skillBuildResult} />
                       )}

@@ -1,9 +1,14 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ReactNode } from 'react'
 import type { ChatUIMessage } from '../../../types'
 import { ReasoningComponent } from '../reasoning-component'
+import { _resetDisclosureStore } from '../../../lib/disclosure-store'
+
+beforeEach(() => {
+  _resetDisclosureStore()
+})
 
 vi.mock('streamdown', () => ({
   Streamdown: ({ children }: { children: ReactNode }) => (
@@ -58,5 +63,26 @@ describe('ReasoningComponent', () => {
     expect(screen.getByTestId('streamdown')).toHaveTextContent(
       'No reasoning content'
     )
+  })
+
+  it('preserves expanded/collapsed state across remount when a disclosureKey is provided', async () => {
+    const user = userEvent.setup()
+    const props = {
+      part: reasoningPart('thinking…'),
+      status: 'ready' as const,
+      disclosureKey: 'msg-1:0',
+    }
+
+    const { unmount } = render(<ReasoningComponent {...props} />)
+    expect(screen.queryByTestId('streamdown')).not.toBeInTheDocument()
+
+    await user.click(screen.getByText('View reasoning steps'))
+    expect(screen.getByTestId('streamdown')).toBeInTheDocument()
+    unmount()
+
+    // Same key after unmount + remount = reasoning still expanded. This is
+    // the contract that makes virtualized rows safe to recycle.
+    render(<ReasoningComponent {...props} />)
+    expect(screen.getByTestId('streamdown')).toBeInTheDocument()
   })
 })

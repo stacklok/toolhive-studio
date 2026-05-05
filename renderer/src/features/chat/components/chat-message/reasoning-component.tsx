@@ -1,4 +1,4 @@
-import { memo, useState } from 'react'
+import { memo, useId } from 'react'
 import { Brain, ChevronDown, ChevronRight } from 'lucide-react'
 import { Streamdown } from 'streamdown'
 import { code } from '@streamdown/code'
@@ -6,14 +6,29 @@ import { mermaid } from '@streamdown/mermaid'
 import { cjk } from '@streamdown/cjk'
 import type { ChatStatus } from 'ai'
 import type { ChatUIMessage } from '../../types'
+import { useDisclosure } from '../../lib/disclosure-store'
 
 interface ReasoningComponentProps {
   part: ChatUIMessage['parts'][0]
   status: ChatStatus
+  /**
+   * Stable key (typically `${message.id}:${partIndex}`) so the open/closed
+   * flag survives unmounts when virtualized rows recycle. When omitted, the
+   * component falls back to a per-instance `useId` and behaves like local
+   * state — preserved for callers/tests that don't need cross-mount state.
+   */
+  disclosureKey?: string
 }
 
-function ReasoningComponentImpl({ part, status }: ReasoningComponentProps) {
-  const [isOpen, setIsOpen] = useState(false)
+function ReasoningComponentImpl({
+  part,
+  status,
+  disclosureKey,
+}: ReasoningComponentProps) {
+  const fallbackKey = useId()
+  const [isOpen, toggle] = useDisclosure(
+    `${disclosureKey ?? fallbackKey}:reasoning`
+  )
 
   if (part.type !== 'reasoning') return null
 
@@ -28,7 +43,7 @@ function ReasoningComponentImpl({ part, status }: ReasoningComponentProps) {
 
       <div className="mb-2">
         <button
-          onClick={() => setIsOpen(!isOpen)}
+          onClick={toggle}
           className="text-muted-foreground hover:text-foreground flex
             items-center gap-2 text-xs transition-colors"
         >

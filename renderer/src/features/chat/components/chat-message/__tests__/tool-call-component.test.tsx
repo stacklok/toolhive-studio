@@ -1,8 +1,13 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ChatUIMessage } from '../../../types'
 import { ToolCallComponent } from '../tool-call-component'
+import { _resetDisclosureStore } from '../../../lib/disclosure-store'
+
+beforeEach(() => {
+  _resetDisclosureStore()
+})
 
 // `ToolOutputContent` is exercised end-to-end in its own suite — stub here
 // so we only exercise `ToolCallComponent`'s state/branch logic.
@@ -106,5 +111,31 @@ describe('ToolCallComponent', () => {
   it('marks the call as Completed when both input and output are present', () => {
     render(<ToolCallComponent part={makeStaticToolPart()} status="ready" />)
     expect(screen.getByText(/Completed/)).toBeInTheDocument()
+  })
+
+  it('preserves all three disclosure slots independently across remount when a disclosureKey is provided', async () => {
+    const user = userEvent.setup()
+    const props = {
+      part: makeStaticToolPart(),
+      status: 'ready' as const,
+      disclosureKey: 'msg-1:2',
+    }
+
+    // Open Tool Result and Tool Details, leave Input Parameters closed.
+    const first = render(<ToolCallComponent {...props} />)
+    await user.click(screen.getByText('Tool Result'))
+    await user.click(screen.getByText('Tool Details'))
+    expect(screen.getByTestId('tool-output')).toBeInTheDocument()
+    expect(screen.getByText(/Tool Name:/)).toBeInTheDocument()
+    expect(screen.queryByText(/"query": "kittens"/)).not.toBeInTheDocument()
+    first.unmount()
+
+    // Same key after unmount + remount: each slot's open/closed state is
+    // restored independently — output and details stay open, input stays
+    // closed.
+    render(<ToolCallComponent {...props} />)
+    expect(screen.getByTestId('tool-output')).toBeInTheDocument()
+    expect(screen.getByText(/Tool Name:/)).toBeInTheDocument()
+    expect(screen.queryByText(/"query": "kittens"/)).not.toBeInTheDocument()
   })
 })
