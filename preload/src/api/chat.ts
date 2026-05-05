@@ -10,7 +10,7 @@ import type {
   AgentConfig,
   CreateAgentInput,
   UpdateAgentInput,
-} from '../../../main/src/chat/agents/types'
+} from '@common/types/agents'
 
 export const chatApi = {
   chat: {

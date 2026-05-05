@@ -21,8 +21,8 @@ import {
   useSetThreadAgent,
   useThreadAgentId,
 } from '../../agents/hooks/use-agents'
-import { DEFAULT_AGENT_ID } from '../../../../../main/src/chat/agents/types'
-import type { AgentConfig } from '../../../../../main/src/chat/agents/types'
+import { DEFAULT_AGENT_ID } from '@common/types/agents'
+import type { AgentConfig } from '@common/types/agents'
 
 interface AgentSelectorProps {
   threadId?: string | null

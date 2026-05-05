@@ -36,7 +36,7 @@ import {
   getThreadAgentId,
   resolveAgentForThread,
 } from '../registry'
-import { BUILTIN_AGENT_IDS, DEFAULT_AGENT_ID } from '../types'
+import { BUILTIN_AGENT_IDS, DEFAULT_AGENT_ID } from '@common/types/agents'
 import { writeThread } from '../../../db/writers/threads-writer'
 import { writeAgent } from '../../../db/writers/agents-writer'
 

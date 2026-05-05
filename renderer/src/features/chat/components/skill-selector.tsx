@@ -29,7 +29,7 @@ import {
 import { trackEvent } from '@/common/lib/analytics'
 import { useAvailableSkills } from '../hooks/use-available-skills'
 import { useAgents, useThreadAgentId } from '../../agents/hooks/use-agents'
-import { DEFAULT_AGENT_ID } from '../../../../../main/src/chat/agents/types'
+import { DEFAULT_AGENT_ID } from '@common/types/agents'
 
 function projectLeaf(projectRoot: string): string {
   return projectRoot.split(/[\\/]/).filter(Boolean).at(-1) ?? projectRoot

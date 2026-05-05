@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import React from 'react'
 import { SkillSelector } from '../skill-selector'
 import { mockedGetApiV1BetaSkills } from '@/common/mocks/fixtures/skills/get'
-import type { AgentConfig } from '../../../../../../main/src/chat/agents/types'
+import type { AgentConfig } from '@common/types/agents'
 
 // Radix DropdownMenu relies on pointer capture / ResizeObserver APIs that
 // jsdom does not provide. Stub them so the dropdown can open in tests.

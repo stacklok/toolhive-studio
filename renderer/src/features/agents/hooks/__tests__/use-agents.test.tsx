@@ -16,7 +16,7 @@ import type {
   AgentConfig,
   CreateAgentInput,
   UpdateAgentInput,
-} from '../../../../../../main/src/chat/agents/types'
+} from '@common/types/agents'
 
 const mockAgentsApi = {
   list: vi.fn(),

@@ -1,5 +1,5 @@
 import type { ToolSet } from 'ai'
-import type { BuiltinToolsKey } from '../types'
+import type { BuiltinToolsKey } from '@common/types/agents'
 import { createSkillsAgentTools, type SkillsAgentToolsHandle } from './skills'
 
 interface BuiltinToolsHandle {

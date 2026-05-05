@@ -1,4 +1,4 @@
-import { BUILTIN_AGENT_IDS, type AgentConfig } from './types'
+import { BUILTIN_AGENT_IDS, type AgentConfig } from '@common/types/agents'
 
 const TOOLHIVE_ASSISTANT_INSTRUCTIONS = `You are a helpful assistant with access to MCP (Model Context Protocol) servers from ToolHive.
 

@@ -1,6 +1,6 @@
 import { getDb, isDbWritable } from '../database'
 import { withDbSpan } from '../telemetry'
-import type { AgentConfig } from '../../chat/agents/types'
+import type { AgentConfig } from '@common/types/agents'
 
 export function writeAgent(agent: AgentConfig): void {
   if (!isDbWritable()) return

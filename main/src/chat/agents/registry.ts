@@ -10,8 +10,15 @@ import {
   deleteAgentFromDb,
   writeThreadAgentId,
 } from '../../db/writers/agents-writer'
-import type { AgentConfig, CreateAgentInput, UpdateAgentInput } from './types'
-import { DEFAULT_AGENT_ID, LEGACY_BUILTIN_AGENT_IDS } from './types'
+import type {
+  AgentConfig,
+  CreateAgentInput,
+  UpdateAgentInput,
+} from '@common/types/agents'
+import {
+  DEFAULT_AGENT_ID,
+  LEGACY_BUILTIN_AGENT_IDS,
+} from '@common/types/agents'
 import { getBuiltinAgentSeeds } from './builtin-prompts'
 
 /**
