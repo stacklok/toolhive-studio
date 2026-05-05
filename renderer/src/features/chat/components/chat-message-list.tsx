@@ -1,10 +1,11 @@
 import { MessageSquare } from 'lucide-react'
 import { useMemo, type RefObject } from 'react'
 import type { ChatStatus } from 'ai'
-import { useVirtualizer } from '@tanstack/react-virtual'
+import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
 import { ChatMessage } from './chat-message'
 import type { ChatUIMessage } from '../types'
 import type { ToolUiMetadataEntry } from '../hooks/use-mcp-app-metadata'
+import { hasMcpUiPart } from '../lib/has-mcp-ui-part'
 
 interface ChatMessageListProps {
   messages: ChatUIMessage[]
@@ -114,6 +115,19 @@ function VirtualChatMessageList({
     }
   }, [messages])
 
+  // Rows hosting an `<McpAppView>` iframe must stay mounted so iframe DOM,
+  // bridge connection, and any in-progress user input survive scroll
+  // recycling. We extend the virtualizer's range to always include their
+  // indices — that keeps them in `getVirtualItems()` with proper offsets
+  // even when scrolled far out of the window.
+  const pinnedIndices = useMemo(() => {
+    const set = new Set<number>()
+    historical.forEach((message, index) => {
+      if (hasMcpUiPart(message, toolUiMetadata)) set.add(index)
+    })
+    return set
+  }, [historical, toolUiMetadata])
+
   // eslint-disable-next-line react-hooks/incompatible-library
   const virtualizer = useVirtualizer({
     count: historical.length,
@@ -123,6 +137,13 @@ function VirtualChatMessageList({
     overscan: 5,
     // Avoids React 19's `flushSync` warning (per TanStack Virtual docs).
     useFlushSync: false,
+    rangeExtractor: (range) => {
+      const base = defaultRangeExtractor(range)
+      if (pinnedIndices.size === 0) return base
+      const merged = new Set(base)
+      pinnedIndices.forEach((i) => merged.add(i))
+      return Array.from(merged).sort((a, b) => a - b)
+    },
   })
 
   const totalSize = virtualizer.getTotalSize()
