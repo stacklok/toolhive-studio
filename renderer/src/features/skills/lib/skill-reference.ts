@@ -19,35 +19,40 @@ function getNamespaceNameReference(skill: RegistrySkill): string | undefined {
   return undefined
 }
 
-interface OciIdentifierParts {
-  identifier: string
+interface ParsedSkillReference {
+  reference: string
   version?: string
 }
 
 /**
- * Splits an OCI identifier into the bare identifier and an optional
- * version (tag or digest). Returns the original input when no version
- * suffix is present.
+ * Splits a skill reference into the bare reference and an optional
+ * version (OCI tag or digest). Returns the original input as `reference`
+ * with no `version` when no version suffix is present.
+ *
+ * Examples:
+ * - "ghcr.io/org/skill:v1.0.0" -> { reference: "ghcr.io/org/skill", version: "v1.0.0" }
+ * - "ghcr.io/org/skill@sha256:deadbeef" -> { reference: "ghcr.io/org/skill", version: "sha256:deadbeef" }
+ * - "ghcr.io/org/skill" -> { reference: "ghcr.io/org/skill" }
  */
-function splitOciIdentifier(identifier: string): OciIdentifierParts {
-  const digestIndex = identifier.indexOf('@')
+export function parseSkillReference(reference: string): ParsedSkillReference {
+  const digestIndex = reference.indexOf('@')
   if (digestIndex !== -1) {
     return {
-      identifier: identifier.slice(0, digestIndex),
-      version: identifier.slice(digestIndex + 1),
+      reference: reference.slice(0, digestIndex),
+      version: reference.slice(digestIndex + 1),
     }
   }
 
-  const lastSlashIndex = identifier.lastIndexOf('/')
-  const lastColonIndex = identifier.lastIndexOf(':')
+  const lastSlashIndex = reference.lastIndexOf('/')
+  const lastColonIndex = reference.lastIndexOf(':')
   if (lastColonIndex > lastSlashIndex) {
     return {
-      identifier: identifier.slice(0, lastColonIndex),
-      version: identifier.slice(lastColonIndex + 1),
+      reference: reference.slice(0, lastColonIndex),
+      version: reference.slice(lastColonIndex + 1),
     }
   }
 
-  return { identifier }
+  return { reference }
 }
 
 /**
@@ -69,8 +74,9 @@ interface SkillInstallDefaults {
   reference: string
   /**
    * The version to prefill in the install dialog's version field,
-   * derived from the OCI tag/digest or the package `ref` field.
-   * Undefined when no version information is available.
+   * derived (in order) from the OCI tag/digest, the package `ref`
+   * field, or the top-level `skill.version`. Undefined when no version
+   * information is available anywhere on the skill.
    */
   version?: string
 }
@@ -79,7 +85,9 @@ interface SkillInstallDefaults {
  * Derives the values to prefill in the install dialog. The OCI identifier
  * is split so the version (tag or digest) lives in its own field rather
  * than being baked into the reference. Falls back to `namespace/name`,
- * then `name`, when no OCI package is available.
+ * then `name`, when no OCI package is available. The version field falls
+ * back to `skill.version` (the same value shown as a badge on the detail
+ * page) when the OCI package carries no tag/digest/ref of its own.
  */
 export function getSkillInstallDefaults(
   skill: RegistrySkill
@@ -88,16 +96,17 @@ export function getSkillInstallDefaults(
   const ociIdentifier = ociPackage?.identifier
 
   if (ociIdentifier) {
-    const { identifier, version } = splitOciIdentifier(ociIdentifier)
+    const { reference, version } = parseSkillReference(ociIdentifier)
 
     return {
-      reference: identifier,
-      version: version ?? ociPackage?.ref ?? undefined,
+      reference,
+      version: version ?? ociPackage?.ref ?? skill.version ?? undefined,
     }
   }
 
   return {
     reference:
       getNamespaceNameReference(skill) ?? skill.name ?? 'Unknown skill',
+    version: skill.version ?? undefined,
   }
 }

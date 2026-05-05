@@ -143,7 +143,7 @@ describe('SkillBuildResultCard', () => {
     )
   })
 
-  it('passes an empty version to the install dialog when no explicit version exists', async () => {
+  it('falls back to the tag suffix when no explicit build.version exists', async () => {
     const result: SkillBuildResult = {
       reference: 'my-skill',
       apiReference: 'ghcr.io/example/my-skill:latest',
@@ -156,10 +156,30 @@ describe('SkillBuildResultCard', () => {
     render(<SkillBuildResultCard result={result} />)
     await userEvent.click(screen.getByTestId('chat-build-install'))
 
-    expect(screen.getByTestId('install-default-version')).toHaveTextContent('')
     expect(screen.getByTestId('install-default-reference')).toHaveTextContent(
       'my-skill'
     )
+    expect(screen.getByTestId('install-default-version')).toHaveTextContent(
+      'latest'
+    )
+  })
+
+  it('passes an empty version to the install dialog when no version info exists anywhere', async () => {
+    const result: SkillBuildResult = {
+      reference: 'my-skill',
+      build: {
+        name: 'my-skill',
+      },
+    }
+
+    render(<SkillBuildResultCard result={result} />)
+    await userEvent.click(screen.getByTestId('chat-build-install'))
+
+    expect(screen.getByTestId('install-default-reference')).toHaveTextContent(
+      'my-skill'
+    )
+    // installVersion is undefined and the JSX coerces it to '' via `?? ''`.
+    expect(screen.getByTestId('install-default-version').textContent).toBe('')
   })
 
   it('shows an error toast when copying to the clipboard fails', async () => {

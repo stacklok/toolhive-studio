@@ -169,7 +169,7 @@ describe('TableRegistrySkills', () => {
     expect(screen.queryByRole('button', { name: 'standalone' })).toBeNull()
   })
 
-  it('opens install dialog with OCI package identifier when no ref is available', async () => {
+  it('opens install dialog with OCI identifier and falls back to skill.version when no tag/ref is present', async () => {
     const user = userEvent.setup()
     const router = makeRouter([ociSkill])
     renderRoute(router)
@@ -184,7 +184,9 @@ describe('TableRegistrySkills', () => {
         'ghcr.io/org/my-skill'
       )
     })
-    expect(screen.getByPlaceholderText(/e\.g\. v1\.0\.0/i)).toHaveValue('')
+    expect(screen.getByPlaceholderText(/e\.g\. v1\.0\.0/i)).toHaveValue(
+      'v1.0.0'
+    )
   })
 
   it('splits a tagged OCI identifier so the version fills the version field', async () => {

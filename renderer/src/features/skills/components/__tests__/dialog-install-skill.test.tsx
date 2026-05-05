@@ -88,6 +88,8 @@ describe('DialogInstallSkill', () => {
 
     renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
 
+    // The name field auto-splits a tagged reference into name + version on
+    // blur, so submitting "ghcr.io/org/skill:v1" should send them separately.
     await user.type(
       screen.getByLabelText(/name or reference/i),
       'ghcr.io/org/skill:v1'
@@ -100,8 +102,9 @@ describe('DialogInstallSkill', () => {
       )
       expect(postCall).toBeDefined()
       expect(postCall?.payload).toMatchObject({
-        name: 'ghcr.io/org/skill:v1',
+        name: 'ghcr.io/org/skill',
         scope: 'user',
+        version: 'v1',
       })
       expect(postCall?.payload).not.toHaveProperty('clients')
     })
@@ -350,6 +353,124 @@ describe('DialogInstallSkill', () => {
 
     await waitFor(() => {
       expect(onOpenChange).toHaveBeenCalledWith(false)
+    })
+  })
+
+  it('splits a tagged reference into name + version on blur', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    const versionInput = screen.getByPlaceholderText('e.g. v1.0.0')
+
+    await user.type(nameInput, 'ghcr.io/org/skill:v1.2.3')
+    await user.tab()
+
+    await waitFor(() => {
+      expect(nameInput).toHaveValue('ghcr.io/org/skill')
+      expect(versionInput).toHaveValue('v1.2.3')
+    })
+  })
+
+  it('splits a digested reference into name + sha256 version on blur', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    const versionInput = screen.getByPlaceholderText('e.g. v1.0.0')
+
+    await user.type(nameInput, 'ghcr.io/org/skill@sha256:deadbeef')
+    await user.tab()
+
+    await waitFor(() => {
+      expect(nameInput).toHaveValue('ghcr.io/org/skill')
+      expect(versionInput).toHaveValue('sha256:deadbeef')
+    })
+  })
+
+  it('does not overwrite a version the user already typed', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    const versionInput = screen.getByPlaceholderText('e.g. v1.0.0')
+
+    await user.type(versionInput, 'v9.9.9')
+    await user.type(nameInput, 'ghcr.io/org/skill:v1.2.3')
+    await user.tab()
+
+    await waitFor(() => {
+      expect(nameInput).toHaveValue('ghcr.io/org/skill')
+      expect(versionInput).toHaveValue('v9.9.9')
+    })
+  })
+
+  it('leaves a bare reference (no tag/digest) untouched on blur', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    const versionInput = screen.getByPlaceholderText('e.g. v1.0.0')
+
+    await user.type(nameInput, 'ghcr.io/org/skill')
+    await user.tab()
+
+    await waitFor(() => {
+      expect(nameInput).toHaveValue('ghcr.io/org/skill')
+      expect(versionInput).toHaveValue('')
+    })
+  })
+
+  it('overwrites a prefilled (non-dirty) version when a new tagged reference is pasted', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(
+      <DialogInstallSkill
+        open
+        onOpenChange={vi.fn()}
+        defaultReference="ghcr.io/org/skill"
+        defaultVersion="v1.0.0"
+      />
+    )
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    const versionInput = screen.getByPlaceholderText('e.g. v1.0.0')
+    expect(versionInput).toHaveValue('v1.0.0')
+
+    await user.clear(nameInput)
+    await user.type(nameInput, 'ghcr.io/org/skill:v9.9.9')
+    await user.tab()
+
+    await waitFor(() => {
+      expect(nameInput).toHaveValue('ghcr.io/org/skill')
+      // Prefilled v1.0.0 is non-dirty, so it must be replaced by the
+      // version parsed from the freshly pasted reference.
+      expect(versionInput).toHaveValue('v9.9.9')
+    })
+  })
+
+  it('preserves a user-edited version even when it equals the prefilled default', async () => {
+    const user = userEvent.setup()
+    renderWithProviders(
+      <DialogInstallSkill
+        open
+        onOpenChange={vi.fn()}
+        defaultReference="ghcr.io/org/skill"
+        defaultVersion=""
+      />
+    )
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    const versionInput = screen.getByPlaceholderText('e.g. v1.0.0')
+
+    await user.type(versionInput, 'v8.8.8')
+    await user.clear(nameInput)
+    await user.type(nameInput, 'ghcr.io/org/skill:v9.9.9')
+    await user.tab()
+
+    await waitFor(() => {
+      expect(nameInput).toHaveValue('ghcr.io/org/skill')
+      // User actively typed v8.8.8, so the blur split must not clobber it.
+      expect(versionInput).toHaveValue('v8.8.8')
     })
   })
 })
