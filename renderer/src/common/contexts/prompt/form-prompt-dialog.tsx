@@ -14,47 +14,26 @@ import { useForm } from 'react-hook-form'
 import type { UseFormReturn } from 'react-hook-form'
 
 interface FormDialogProps {
-  isOpen: boolean
   config: ReactHookFormPromptConfig<Record<string, unknown>>
   onSubmit: (data: Record<string, unknown>) => void
   onCancel: () => void
-  onOpenChange: (open: boolean) => void
 }
 
-export function FormDialog({
-  isOpen,
-  config,
-  onSubmit,
-  onCancel,
-  onOpenChange,
-}: FormDialogProps) {
+export function FormDialog({ config, onSubmit, onCancel }: FormDialogProps) {
   const form = useForm({
     defaultValues: config.defaultValues,
     resolver: config.resolver,
     mode: 'onChange',
   })
 
-  // Reset form with new default values when config changes.
-  // This is needed when showing multiple prompts in sequence with different defaults.
-  // For example: first prompt returns "default", second prompt should show "server-default" not "default".
   useEffect(() => {
-    form.reset(config.defaultValues)
-    // Optionally validate immediately to show errors for invalid defaults
     if (config.validateOnMount) {
       void form.trigger()
     }
-  }, [form, config.defaultValues, config.validateOnMount])
+  }, [form, config.validateOnMount])
 
   const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      onCancel()
-    } else {
-      onOpenChange(open)
-    }
-  }
-
-  const handleSubmit = (data: Record<string, unknown>) => {
-    onSubmit(data)
+    if (!open) onCancel()
   }
 
   const handleCancel = () => {
@@ -63,10 +42,10 @@ export function FormDialog({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+    <Dialog open onOpenChange={handleOpenChange}>
       <DialogContent>
         <form
-          onSubmit={form.handleSubmit(handleSubmit)}
+          onSubmit={form.handleSubmit(onSubmit)}
           className="flex flex-col gap-5"
         >
           <DialogHeader className="px-1">

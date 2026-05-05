@@ -1,66 +1,34 @@
-import { useState, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { PromptContext, type ReactHookFormPromptConfig } from '.'
 import { FormDialog } from './form-prompt-dialog'
+import { DialogProvider } from '@/common/contexts/dialog/provider'
+import { useDialog } from '@/common/hooks/use-dialog'
 
-export function PromptProvider({ children }: { children: ReactNode }) {
-  const [activePrompt, setActivePrompt] = useState<{
-    config: ReactHookFormPromptConfig<Record<string, unknown>>
-    resolve: (value: unknown) => void
-  } | null>(null)
-
-  const [isOpen, setIsOpen] = useState(false)
+function PromptBridge({ children }: { children: ReactNode }) {
+  const showDialog = useDialog()
 
   const promptForm = <TValues extends Record<string, unknown>>(
     config: ReactHookFormPromptConfig<TValues>
-  ) => {
-    return new Promise<TValues | null>((resolve) => {
-      setActivePrompt({
-        config: config as ReactHookFormPromptConfig<Record<string, unknown>>,
-        resolve: (value: unknown) => {
-          resolve(value as TValues)
-        },
-      })
-      setIsOpen(true)
-    })
-  }
-
-  const handleSubmit = (data: unknown) => {
-    if (!activePrompt) return
-    activePrompt.resolve(data)
-    closeDialog()
-  }
-
-  const handleCancel = () => {
-    if (activePrompt) {
-      activePrompt.resolve(null)
-    }
-    closeDialog()
-  }
-
-  const closeDialog = () => {
-    setIsOpen(false)
-    setActivePrompt(null)
-  }
-
-  const handleOpenChange = (open: boolean) => {
-    if (!open) {
-      handleCancel()
-    }
-  }
+  ): Promise<TValues | null> =>
+    showDialog<TValues>(({ resolve, dismiss }) => (
+      <FormDialog
+        config={config as ReactHookFormPromptConfig<Record<string, unknown>>}
+        onSubmit={(data) => resolve(data as TValues)}
+        onCancel={dismiss}
+      />
+    ))
 
   return (
     <PromptContext.Provider value={{ promptForm }}>
       {children}
-
-      {activePrompt && (
-        <FormDialog
-          isOpen={isOpen}
-          config={activePrompt.config}
-          onSubmit={handleSubmit as (v: Record<string, unknown>) => void}
-          onCancel={handleCancel}
-          onOpenChange={handleOpenChange}
-        />
-      )}
     </PromptContext.Provider>
+  )
+}
+
+export function PromptProvider({ children }: { children: ReactNode }) {
+  return (
+    <DialogProvider>
+      <PromptBridge>{children}</PromptBridge>
+    </DialogProvider>
   )
 }
