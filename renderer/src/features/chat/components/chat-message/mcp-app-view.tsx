@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, useContext, useCallback } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 import {
   AppBridge,
@@ -92,58 +93,50 @@ export function McpAppView({
 }: McpAppViewProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null)
   const bridgeRef = useRef<AppBridge | null>(null)
-  const [html, setHtml] = useState<string | null>(null)
-  const [allowAttr, setAllowAttr] = useState<string>('')
-  const [prefersBorder, setPrefersBorder] = useState<boolean>(true)
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(true)
   const [iframeHeight, setIframeHeight] = useState<number>(300)
   const [displayMode, setDisplayMode] = useState<McpUiDisplayMode>('inline')
   const { theme } = useContext(ThemeProviderContext)
 
-  // Fetch the HTML for the MCP App view, inject per-resource CSP.
-  // State is keyed off the deps so a dependency change resets to initial values.
-  const fetchKey = `${serverName}:${resourceUri}`
-  const [prevFetchKey, setPrevFetchKey] = useState(fetchKey)
-  if (fetchKey !== prevFetchKey) {
-    setPrevFetchKey(fetchKey)
-    setLoading(true)
-    setHtml(null)
-    setError(null)
-  }
+  // Cached so virtualized rows that scroll out and back in don't reopen a raw
+  // MCP client per remount (`fetchUiResource` allocates one per call). Keys
+  // include both serverName and resourceUri because the same URI can mean
+  // different things across servers.
+  const {
+    data,
+    isPending: loading,
+    error: queryError,
+  } = useQuery({
+    queryKey: ['mcp-ui-resource', serverName, resourceUri],
+    queryFn: async () => {
+      const res = await window.electronAPI.chat.fetchUiResource(
+        serverName,
+        resourceUri
+      )
+      if (!res.success || !res.html) {
+        throw new Error(res.error ?? 'Failed to load MCP App view')
+      }
+      return res
+    },
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: false,
+  })
 
-  useEffect(() => {
-    let cancelled = false
-
-    window.electronAPI.chat
-      .fetchUiResource(serverName, resourceUri)
-      .then((res) => {
-        if (cancelled) return
-        if (res.success && res.html) {
-          const csp = res.csp as McpUiResourceCsp | undefined
-          const perms = res.permissions as McpUiResourcePermissions | undefined
-          setHtml(injectCspIntoHtml(res.html, csp))
-          setAllowAttr(buildAllowAttribute(perms))
-          setPrefersBorder(res.prefersBorder ?? true)
-          setError(null)
-        } else {
-          setError(res.error ?? 'Failed to load MCP App view')
-        }
-      })
-      .catch((err: unknown) => {
-        if (cancelled) return
-        setError(
-          err instanceof Error ? err.message : 'Failed to load MCP App view'
-        )
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false)
-      })
-
-    return () => {
-      cancelled = true
-    }
-  }, [serverName, resourceUri])
+  const error =
+    queryError instanceof Error
+      ? queryError.message
+      : queryError
+        ? 'Failed to load MCP App view'
+        : null
+  const html = data?.html
+    ? injectCspIntoHtml(data.html, data.csp as McpUiResourceCsp | undefined)
+    : null
+  const allowAttr = data
+    ? buildAllowAttribute(
+        data.permissions as McpUiResourcePermissions | undefined
+      )
+    : ''
+  const prefersBorder = data?.prefersBorder ?? true
 
   // Set up AppBridge once the iframe loads
   const setupBridge = useCallback(() => {

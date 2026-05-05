@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor, fireEvent, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import type { ReactNode } from 'react'
 import { McpAppView } from '../mcp-app-view'
 import { ThemeProviderContext } from '@/common/contexts/theme-context'
 import { buildAllowAttribute } from '@modelcontextprotocol/ext-apps/app-bridge'
@@ -59,6 +61,31 @@ interface RenderViewOptions {
   toolInput?: Record<string, unknown>
   toolResult?: unknown
   onMessage?: (text: string) => void
+  queryClient?: QueryClient
+}
+
+function createTestQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  })
+}
+
+function withProviders(queryClient: QueryClient, children: ReactNode) {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProviderContext.Provider
+        value={{
+          theme: 'light',
+          setTheme: vi.fn().mockResolvedValue(undefined),
+        }}
+      >
+        {children}
+      </ThemeProviderContext.Provider>
+    </QueryClientProvider>
+  )
 }
 
 function renderView(options: RenderViewOptions = {}) {
@@ -69,12 +96,12 @@ function renderView(options: RenderViewOptions = {}) {
     toolInput = {},
     toolResult = undefined,
     onMessage,
+    queryClient = createTestQueryClient(),
   } = options
 
   return render(
-    <ThemeProviderContext.Provider
-      value={{ theme: 'light', setTheme: vi.fn().mockResolvedValue(undefined) }}
-    >
+    withProviders(
+      queryClient,
       <McpAppView
         toolName={toolName}
         serverName={serverName}
@@ -83,7 +110,7 @@ function renderView(options: RenderViewOptions = {}) {
         toolResult={toolResult}
         onMessage={onMessage}
       />
-    </ThemeProviderContext.Provider>
+    )
   )
 }
 
@@ -537,5 +564,71 @@ describe('onMessage callback', () => {
         await onmessageHandler({ content: { type: 'text', text: 'hi' } })
       })
     ).resolves.not.toThrow()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// Resource caching
+//
+// Virtualized chat threads unmount/remount rows freely; without a cache each
+// remount opens a fresh raw MCP client in the main process and loses any
+// in-iframe state. The query cache should hand the second mount back the
+// same response without touching IPC.
+// ---------------------------------------------------------------------------
+
+describe('resource caching', () => {
+  it('does not re-fetch when remounted with the same serverName + resourceUri', async () => {
+    const queryClient = createTestQueryClient()
+    const fetchMock = vi.mocked(window.electronAPI.chat.fetchUiResource)
+
+    const { unmount } = renderView({ queryClient })
+    await waitFor(() =>
+      expect(screen.getByTitle('MCP App: my-tool')).toBeInTheDocument()
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    unmount()
+
+    render(
+      withProviders(
+        queryClient,
+        <McpAppView
+          toolName="my-tool"
+          serverName="my-server"
+          resourceUri="ui://my-tool/view.html"
+          toolInput={{}}
+          toolResult={undefined}
+        />
+      )
+    )
+    await waitFor(() =>
+      expect(screen.getByTitle('MCP App: my-tool')).toBeInTheDocument()
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('fetches again when resourceUri changes', async () => {
+    const queryClient = createTestQueryClient()
+    const fetchMock = vi.mocked(window.electronAPI.chat.fetchUiResource)
+
+    const { unmount } = renderView({
+      queryClient,
+      resourceUri: 'ui://my-tool/view-a.html',
+    })
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1))
+    unmount()
+
+    render(
+      withProviders(
+        queryClient,
+        <McpAppView
+          toolName="my-tool"
+          serverName="my-server"
+          resourceUri="ui://my-tool/view-b.html"
+          toolInput={{}}
+          toolResult={undefined}
+        />
+      )
+    )
+    await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2))
   })
 })
