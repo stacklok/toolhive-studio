@@ -5,7 +5,7 @@ import { getToolhiveSocketPath, getToolhivePort } from './toolhive-manager'
 import { getHeaders } from './headers'
 import { createClient, type Client } from '@common/api/generated/client'
 
-export interface ApiFetchRequest {
+interface ApiFetchRequest {
   requestId: string
   method: string
   path: string
@@ -13,7 +13,7 @@ export interface ApiFetchRequest {
   body?: string
 }
 
-export interface ApiFetchResponse {
+interface ApiFetchResponse {
   status: number
   headers: Record<string, string>
   body: string
