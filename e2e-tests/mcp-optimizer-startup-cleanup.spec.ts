@@ -57,16 +57,16 @@ async function createGroupViaUi(
 }
 
 async function seedOptimizerState(
-  baseUrl: string,
+  socketPath: string,
   testServer: TestMcpServer
 ): Promise<void> {
-  await thvFetch(baseUrl, '/api/v1beta/groups', {
+  await thvFetch(socketPath, '/api/v1beta/groups', {
     method: 'POST',
     body: JSON.stringify({ name: OPTIMIZER_GROUP }),
     expectStatus: [200, 201],
   })
 
-  await thvFetch(baseUrl, '/api/v1beta/clients/register', {
+  await thvFetch(socketPath, '/api/v1beta/clients/register', {
     method: 'POST',
     body: JSON.stringify({
       names: [TEST_CLIENT],
@@ -78,7 +78,7 @@ async function seedOptimizerState(
   // Create a remote meta-mcp workload so GET /workloads/meta-mcp later returns
   // the ALLOWED_GROUPS env var that drives the restoration path. A remote
   // workload avoids any Docker image pull complications.
-  await thvFetch(baseUrl, '/api/v1beta/workloads', {
+  await thvFetch(socketPath, '/api/v1beta/workloads', {
     method: 'POST',
     body: JSON.stringify({
       name: META_MCP_SERVER,
@@ -93,13 +93,13 @@ async function seedOptimizerState(
   })
 }
 
-async function waitForOptimizerCleanup(baseUrl: string): Promise<void> {
+async function waitForOptimizerCleanup(socketPath: string): Promise<void> {
   await expect
     .poll(
       async () => {
         const { json } = await thvFetch<{
           groups?: Array<{ name?: string; registered_clients?: string[] }>
-        }>(baseUrl, '/api/v1beta/groups', { expectStatus: [200] })
+        }>(socketPath, '/api/v1beta/groups', { expectStatus: [200] })
         const groups = json?.groups ?? []
         const optimizerGroup = groups.find((g) => g.name === OPTIMIZER_GROUP)
         const customGroup = groups.find((g) => g.name === CUSTOM_GROUP)
@@ -147,12 +147,12 @@ test.describe('MCP Optimizer startup cleanup', () => {
     const firstLaunch = await launchApp(userDataDir)
     try {
       await createGroupViaUi(firstLaunch, CUSTOM_GROUP)
-      await seedOptimizerState(firstLaunch.baseUrl, testServer)
+      await seedOptimizerState(firstLaunch.socketPath, testServer)
 
       // Sanity: both groups exist and optimizer has the registered client.
       const { json: seeded } = await thvFetch<{
         groups?: Array<{ name?: string; registered_clients?: string[] }>
-      }>(firstLaunch.baseUrl, '/api/v1beta/groups', { expectStatus: [200] })
+      }>(firstLaunch.socketPath, '/api/v1beta/groups', { expectStatus: [200] })
       const seededOptimizer = seeded?.groups?.find(
         (g) => g.name === OPTIMIZER_GROUP
       )
@@ -166,11 +166,11 @@ test.describe('MCP Optimizer startup cleanup', () => {
     // startup cleanup hook, which restores clients and deletes the group.
     const secondLaunch = await launchApp(userDataDir)
     try {
-      await waitForOptimizerCleanup(secondLaunch.baseUrl)
+      await waitForOptimizerCleanup(secondLaunch.socketPath)
 
       // The meta-mcp workload is deleted as part of ?with-workloads=true.
       const { status: workloadStatus } = await thvFetch(
-        secondLaunch.baseUrl,
+        secondLaunch.socketPath,
         `/api/v1beta/workloads/${META_MCP_SERVER}`
       )
       expect(workloadStatus).toBe(404)
@@ -178,7 +178,9 @@ test.describe('MCP Optimizer startup cleanup', () => {
       // The user's custom group is preserved.
       const { json: finalGroups } = await thvFetch<{
         groups?: Array<{ name?: string }>
-      }>(secondLaunch.baseUrl, '/api/v1beta/groups', { expectStatus: [200] })
+      }>(secondLaunch.socketPath, '/api/v1beta/groups', {
+        expectStatus: [200],
+      })
       expect(finalGroups?.groups?.some((g) => g.name === CUSTOM_GROUP)).toBe(
         true
       )
