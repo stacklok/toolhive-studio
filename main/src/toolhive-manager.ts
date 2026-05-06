@@ -130,11 +130,21 @@ async function findFreePort(
 }
 
 function generateSocketPath(): string {
+  // Windows AF_UNIX sockets created in %TEMP% hit EACCES on connect due to
+  // DACL handling. Named pipes are the canonical Windows IPC and are
+  // supported natively by Node's http.request({ socketPath }) and Go's
+  // Microsoft/go-winio.
+  if (process.platform === 'win32') {
+    return `\\\\.\\pipe\\toolhive-${process.pid}`
+  }
   const socketName = `toolhive-${process.pid}.sock`
   return path.join(app.getPath('temp'), socketName)
 }
 
 function cleanupSocketFile(socketPath: string): void {
+  // Named pipes are released by the kernel when the listener exits; there's
+  // no filesystem entry to remove.
+  if (process.platform === 'win32') return
   try {
     if (existsSync(socketPath)) {
       unlinkSync(socketPath)

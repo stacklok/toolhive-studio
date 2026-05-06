@@ -374,19 +374,73 @@ describe('toolhive-manager', () => {
       expect(mockCaptureMessage).not.toHaveBeenCalled()
     })
 
-    it('uses a UNIX socket for main service and a port for MCP', async () => {
-      const startPromise = startToolhive()
+    it('uses a UNIX socket for main service and a port for MCP on non-Windows', async () => {
+      const originalPlatform = process.platform
+      Object.defineProperty(process, 'platform', {
+        value: 'linux',
+        configurable: true,
+      })
 
-      await vi.advanceTimersByTimeAsync(50)
-      await startPromise
+      try {
+        const startPromise = startToolhive()
 
-      const socketPath = getToolhiveSocketPath()
-      const mcpPort = getToolhiveMcpPort()
+        await vi.advanceTimersByTimeAsync(50)
+        await startPromise
 
-      expect(socketPath).toBeTypeOf('string')
-      expect(socketPath).toMatch(/toolhive-\d+\.sock$/)
-      expect(mcpPort).toBeTypeOf('number')
-      expect(getToolhivePort()).toBeUndefined()
+        const socketPath = getToolhiveSocketPath()
+        const mcpPort = getToolhiveMcpPort()
+
+        expect(socketPath).toBeTypeOf('string')
+        expect(socketPath).toMatch(/toolhive-\d+\.sock$/)
+        expect(mcpPort).toBeTypeOf('number')
+        expect(getToolhivePort()).toBeUndefined()
+
+        const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
+        expect(spawnArgs).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/^--socket=.*toolhive-\d+\.sock$/),
+          ])
+        )
+      } finally {
+        Object.defineProperty(process, 'platform', {
+          value: originalPlatform,
+          configurable: true,
+        })
+      }
+    })
+
+    it('uses a Windows named pipe for main service when process.platform is win32', async () => {
+      const originalPlatform = process.platform
+      Object.defineProperty(process, 'platform', {
+        value: 'win32',
+        configurable: true,
+      })
+
+      try {
+        const startPromise = startToolhive()
+
+        await vi.advanceTimersByTimeAsync(50)
+        await startPromise
+
+        const socketPath = getToolhiveSocketPath()
+        expect(socketPath).toBeTypeOf('string')
+        // Named pipe shape: \\.\pipe\toolhive-<pid>
+        expect(socketPath).toMatch(/^\\\\\.\\pipe\\toolhive-\d+$/)
+        expect(getToolhivePort()).toBeUndefined()
+        expect(getToolhiveMcpPort()).toBeTypeOf('number')
+
+        const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
+        expect(spawnArgs).toEqual(
+          expect.arrayContaining([
+            expect.stringMatching(/^--socket=\\\\\.\\pipe\\toolhive-\d+$/),
+          ])
+        )
+      } finally {
+        Object.defineProperty(process, 'platform', {
+          value: originalPlatform,
+          configurable: true,
+        })
+      }
     })
 
     it('logs socket path and MCP port on startup', async () => {
