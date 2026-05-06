@@ -124,6 +124,9 @@ export function createMainProcessFetch(): typeof fetch {
  * TCP port as fallback) to the thv server.
  */
 export function registerApiFetchHandlers(): void {
+  ipcMain.removeHandler('api-fetch')
+  ipcMain.removeHandler('api-fetch-abort')
+
   ipcMain.handle(
     'api-fetch',
     async (_event, opts: ApiFetchRequest): Promise<ApiFetchResponse> => {
