@@ -178,10 +178,10 @@ paths, networking flags, etc.) — only the visual layout.
 
 ## Developer notes: Using a custom thv binary (dev only)
 
-The studio talks to its managed `thv` over a UNIX domain socket on
-macOS/Linux and a Windows named pipe on Windows. To test the UI with a
-custom `thv` binary, run it manually with the same `--socket` flag the
-studio uses internally and point the studio at it via `THV_SOCKET`:
+The studio talks to its managed `thv` over a UNIX domain socket on macOS/Linux
+and a Windows named pipe on Windows. To test the UI with a custom `thv` binary,
+run it manually with the same `--socket` flag the studio uses internally and
+point the studio at it via `THV_SOCKET`:
 
 1. Start your custom `thv` binary with the serve command:
 
@@ -221,8 +221,8 @@ studio uses internally and point the studio at it via `THV_SOCKET`:
    ```
 
 The UI displays a banner with the socket / pipe path when `THV_SOCKET` is set.
-This works in development mode only; packaged builds use the embedded binary
-and an auto-generated per-process socket path.
+This works in development mode only; packaged builds use the embedded binary and
+an auto-generated per-process socket path.
 
 ## Code signing
 
