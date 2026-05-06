@@ -30,6 +30,8 @@ vi.mock('../headers', () => ({
   getHeaders: vi.fn(() => ({
     'X-Client-Type': 'studio',
     'X-Client-Version': '1.0.0',
+    'X-Client-Platform': 'darwin' as NodeJS.Platform,
+    'X-Client-Release-Build': false,
   })),
 }))
 
@@ -58,6 +60,13 @@ import {
   createMainProcessApiClient,
   registerApiFetchHandlers,
 } from '../unix-socket-fetch'
+
+const stubClientHeaders: ReturnType<typeof getHeaders> = {
+  'X-Client-Type': 'studio',
+  'X-Client-Version': '1.0.0',
+  'X-Client-Platform': 'darwin',
+  'X-Client-Release-Build': false,
+}
 
 const mockHttpRequest = vi.mocked(http.request) as unknown as ReturnType<
   typeof vi.fn
@@ -146,10 +155,7 @@ function setupHttpRequest(opts: {
 beforeEach(() => {
   vi.clearAllMocks()
   mockGetSocketPath.mockReturnValue('/tmp/toolhive.sock')
-  mockGetHeaders.mockReturnValue({
-    'X-Client-Type': 'studio',
-    'X-Client-Version': '1.0.0',
-  })
+  mockGetHeaders.mockReturnValue(stubClientHeaders)
 })
 
 afterEach(() => {
@@ -297,19 +303,18 @@ describe('createMainProcessFetch', () => {
 
 describe('createMainProcessApiClient', () => {
   it('delegates to createClient with sentinel http://localhost baseUrl, headers, and a custom fetch', () => {
-    const headers = { 'X-Client-Type': 'studio', 'X-Client-Version': '1.0.0' }
-    mockGetHeaders.mockReturnValue(headers)
+    mockGetHeaders.mockReturnValue(stubClientHeaders)
 
     const client = createMainProcessApiClient()
 
     expect(mockCreateClient).toHaveBeenCalledTimes(1)
     const cfg = mockCreateClient.mock.calls[0]?.[0] as {
       baseUrl: string
-      headers: typeof headers
+      headers: ReturnType<typeof getHeaders>
       fetch: unknown
     }
     expect(cfg.baseUrl).toBe('http://localhost')
-    expect(cfg.headers).toEqual(headers)
+    expect(cfg.headers).toEqual(stubClientHeaders)
     expect(typeof cfg.fetch).toBe('function')
     expect(client).toEqual({ __client: true, cfg })
   })
@@ -339,10 +344,7 @@ describe('registerApiFetchHandlers', () => {
   })
 
   it('api-fetch handler merges getHeaders() into the request, with renderer-supplied headers winning', async () => {
-    mockGetHeaders.mockReturnValue({
-      'X-Client-Type': 'studio',
-      'X-Client-Version': '1.0.0',
-    })
+    mockGetHeaders.mockReturnValue(stubClientHeaders)
 
     const { getCapturedOpts } = setupHttpRequest({
       status: 200,
