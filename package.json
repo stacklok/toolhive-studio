@@ -176,6 +176,7 @@
       "fast-xml-parser": "5.5.8",
       "dompurify": ">=3.4.0",
       "hono": ">=4.12.14",
+      "ip-address": ">=10.1.1",
       "lodash": ">=4.18.0",
       "lodash-es": ">=4.18.0",
       "postcss": ">=8.5.10",
