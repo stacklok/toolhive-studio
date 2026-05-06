@@ -11,10 +11,9 @@ import type {
   McpUiResourceCsp,
   McpUiResourcePermissions,
 } from '@modelcontextprotocol/ext-apps/app-bridge'
-import { createClient } from '@common/api/generated/client'
 import { getApiV1BetaWorkloads } from '@common/api/generated/sdk.gen'
-import { getHeaders } from '../headers'
-import { getToolhivePort, getToolhiveMcpPort } from '../toolhive-manager'
+import { getToolhiveMcpPort } from '../toolhive-manager'
+import { createMainProcessApiClient } from '../unix-socket-fetch'
 import log from '../logger'
 import type { AvailableServer } from './types'
 import { getEnabledMcpTools } from './settings-storage'
@@ -86,11 +85,7 @@ function createToolhiveMcpTransport(): StreamableHTTPClientTransport {
 
 /** Fetches all workloads from the ToolHive API. */
 async function fetchWorkloads(): Promise<CoreWorkload[]> {
-  const port = getToolhivePort()
-  const client = createClient({
-    baseUrl: `http://localhost:${port}`,
-    headers: getHeaders(),
-  })
+  const client = createMainProcessApiClient()
   const { data } = await getApiV1BetaWorkloads({ client })
   return data?.workloads ?? []
 }

@@ -3,6 +3,7 @@ import { ipcMain } from 'electron'
 import log from './logger'
 import { getToolhiveSocketPath, getToolhivePort } from './toolhive-manager'
 import { getHeaders } from './headers'
+import { createClient, type Client } from '@common/api/generated/client'
 
 export interface ApiFetchRequest {
   requestId: string
@@ -86,6 +87,29 @@ function getConnectionOpts():
   if (port) return { hostname: '127.0.0.1', port }
 
   throw new Error('No ToolHive connection available (no socket path or port)')
+}
+
+/**
+ * Returns whether a thv connection (socket or TCP) is currently available.
+ * Use this to short-circuit code paths that would otherwise build a client
+ * eagerly during bootstrap when thv has not started yet.
+ */
+export function hasToolhiveConnection(): boolean {
+  return !!getToolhiveSocketPath() || !!getToolhivePort()
+}
+
+/**
+ * Creates a hey-api Client configured to talk to the local thv API. Routing
+ * is handled by `createMainProcessFetch`, so callers do not need to know
+ * whether the transport is a UNIX socket or TCP. The `baseUrl` is a sentinel
+ * — the custom fetch ignores it and dials the live transport.
+ */
+export function createMainProcessApiClient(): Client {
+  return createClient({
+    baseUrl: 'http://localhost',
+    headers: getHeaders(),
+    fetch: createMainProcessFetch(),
+  })
 }
 
 /**
