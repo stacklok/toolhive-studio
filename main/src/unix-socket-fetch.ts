@@ -1,5 +1,6 @@
 import http from 'node:http'
 import { ipcMain } from 'electron'
+import * as Sentry from '@sentry/electron/main'
 import log from './logger'
 import { getToolhiveSocketPath } from './toolhive-manager'
 import { getHeaders } from './headers'
@@ -157,8 +158,15 @@ export function registerApiFetchHandlers(): void {
       }
       const mergedHeaders = { ...telemetryHeaders, ...opts.headers }
 
-      try {
-        return await performRequest(
+      // Suppress main's Sentry tracing for this socket call. The renderer is
+      // the only owner of the trace context: it injects `sentry-trace` and
+      // `baggage` into the IPC payload from its own `getTraceData()` and
+      // those headers must reach thv unmodified. Without this, the
+      // `httpIntegration` from `@sentry/electron/main` would auto-instrument
+      // `http.request` and overwrite the headers with main's active scope,
+      // breaking distributed tracing across the studio + thv projects.
+      return Sentry.suppressTracing(() =>
+        performRequest(
           requireSocketPath(),
           {
             method: opts.method,
@@ -167,14 +175,14 @@ export function registerApiFetchHandlers(): void {
             body: opts.body,
           },
           opts.requestId
-        )
-      } catch (err) {
-        log.error(
-          `[api-fetch] Request failed: ${opts.method} ${opts.path}`,
-          err
-        )
-        throw err
-      }
+        ).catch((err) => {
+          log.error(
+            `[api-fetch] Request failed: ${opts.method} ${opts.path}`,
+            err
+          )
+          throw err
+        })
+      )
     }
   )
 
