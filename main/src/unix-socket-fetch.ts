@@ -20,6 +20,11 @@ interface ApiFetchResponse {
   body: string
 }
 
+// Status codes where the Fetch spec forbids a response body. Constructing
+// `new Response(body, { status })` with a non-null body for any of these
+// throws `TypeError: Response with null body status cannot have body`.
+const NULL_BODY_STATUSES = new Set([101, 204, 205, 304])
+
 const inflightRequests = new Map<string, http.ClientRequest>()
 
 function serializeResponseHeaders(
@@ -128,11 +133,15 @@ export function createMainProcessFetch(): typeof fetch {
     const result = await performRequest(requireSocketPath(), {
       method: request.method,
       path: url.pathname + url.search,
-      headers: Object.fromEntries(request.headers.entries()),
+      headers: Object.fromEntries(request.headers),
       body,
     })
 
-    return new Response(result.body, {
+    const responseBody = NULL_BODY_STATUSES.has(result.status)
+      ? null
+      : result.body
+
+    return new Response(responseBody, {
       status: result.status,
       headers: result.headers,
     })

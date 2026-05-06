@@ -49,6 +49,11 @@ export function getToolhiveSocketPath(): string | undefined {
 }
 
 export function isToolhiveRunning(): boolean {
+  // When THV_SOCKET points at an externally managed thv we never spawn a
+  // child process, but the API is still reachable. Treat that as "running"
+  // so renderer guards (e.g. setupSecretProvider) and tray UI behave the
+  // same as in the bundled-binary case.
+  if (isUsingCustomSocket()) return true
   const isRunning = !!toolhiveProcess && !toolhiveProcess.killed
   return isRunning
 }
@@ -66,6 +71,23 @@ export function getToolhiveStatus(): ToolhiveStatus {
  */
 export function isUsingCustomSocket(): boolean {
   return !app.isPackaged && !!process.env.THV_SOCKET
+}
+
+/**
+ * Parses THV_MCP_PORT into a positive integer. Returns `undefined` for
+ * unset / blank / non-numeric / out-of-range values and logs a warning so
+ * a typo doesn't silently turn into NaN being treated as a real port.
+ */
+function parseMcpPortEnv(raw: string | undefined): number | undefined {
+  if (!raw) return undefined
+  const port = Number(raw)
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
+    log.warn(
+      `Ignoring invalid THV_MCP_PORT=${raw}; expected an integer in 1..65535`
+    )
+    return undefined
+  }
+  return port
 }
 
 async function findFreePort(
@@ -154,9 +176,7 @@ export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
     if (isUsingCustomSocket()) {
       toolhiveSocketPath = process.env.THV_SOCKET!
-      toolhiveMcpPort = process.env.THV_MCP_PORT
-        ? parseInt(process.env.THV_MCP_PORT, 10)
-        : undefined
+      toolhiveMcpPort = parseMcpPortEnv(process.env.THV_MCP_PORT)
       log.info(`Using external ToolHive on socket ${toolhiveSocketPath}`)
       return
     }

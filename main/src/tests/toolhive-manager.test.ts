@@ -851,4 +851,61 @@ describe('toolhive-manager', () => {
       )
     })
   })
+
+  describe('external thv via THV_SOCKET', () => {
+    const originalSocket = process.env.THV_SOCKET
+    const originalMcpPort = process.env.THV_MCP_PORT
+
+    afterEach(() => {
+      if (originalSocket === undefined) delete process.env.THV_SOCKET
+      else process.env.THV_SOCKET = originalSocket
+      if (originalMcpPort === undefined) delete process.env.THV_MCP_PORT
+      else process.env.THV_MCP_PORT = originalMcpPort
+    })
+
+    it('reports running and exposes the socket without spawning thv', async () => {
+      process.env.THV_SOCKET = '/tmp/external-thv.sock'
+      delete process.env.THV_MCP_PORT
+
+      await startToolhive()
+
+      expect(mockSpawn).not.toHaveBeenCalled()
+      expect(isToolhiveRunning()).toBe(true)
+      expect(getToolhiveSocketPath()).toBe('/tmp/external-thv.sock')
+      expect(getToolhiveMcpPort()).toBeUndefined()
+    })
+
+    it('parses a valid THV_MCP_PORT', async () => {
+      process.env.THV_SOCKET = '/tmp/external-thv.sock'
+      process.env.THV_MCP_PORT = '40000'
+
+      await startToolhive()
+
+      expect(getToolhiveMcpPort()).toBe(40000)
+    })
+
+    it('falls back to undefined and warns on a non-numeric THV_MCP_PORT', async () => {
+      process.env.THV_SOCKET = '/tmp/external-thv.sock'
+      process.env.THV_MCP_PORT = 'not-a-port'
+
+      await startToolhive()
+
+      expect(getToolhiveMcpPort()).toBeUndefined()
+      expect(mockLog.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Ignoring invalid THV_MCP_PORT=not-a-port')
+      )
+    })
+
+    it('rejects out-of-range THV_MCP_PORT values', async () => {
+      process.env.THV_SOCKET = '/tmp/external-thv.sock'
+      process.env.THV_MCP_PORT = '70000'
+
+      await startToolhive()
+
+      expect(getToolhiveMcpPort()).toBeUndefined()
+      expect(mockLog.warn).toHaveBeenCalledWith(
+        expect.stringContaining('Ignoring invalid THV_MCP_PORT=70000')
+      )
+    })
+  })
 })
