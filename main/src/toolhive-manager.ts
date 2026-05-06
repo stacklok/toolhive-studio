@@ -170,6 +170,7 @@ export async function startToolhive(): Promise<void> {
 
     processError = undefined
     toolhiveMcpPort = await findFreePort()
+    toolhivePort = undefined
     toolhiveSocketPath = generateSocketPath()
     cleanupSocketFile(toolhiveSocketPath)
 
@@ -209,7 +210,7 @@ export async function startToolhive(): Promise<void> {
         TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
       },
     })
-    
+
     log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
 
     scope.addBreadcrumb({

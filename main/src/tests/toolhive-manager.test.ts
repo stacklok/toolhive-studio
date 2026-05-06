@@ -9,6 +9,7 @@ import {
   startToolhive,
   getToolhivePort,
   getToolhiveMcpPort,
+  getToolhiveSocketPath,
   getToolhiveStatus,
   isToolhiveRunning,
   stopToolhive,
@@ -227,8 +228,7 @@ describe('toolhive-manager', () => {
           '--experimental-mcp',
           '--experimental-mcp-host=127.0.0.1',
           expect.stringMatching(/--experimental-mcp-port=\d+/),
-          '--host=127.0.0.1',
-          expect.stringMatching(/--port=\d+/),
+          expect.stringMatching(/--socket=.+/),
         ]),
         {
           stdio: ['ignore', 'ignore', 'pipe'],
@@ -244,7 +244,8 @@ describe('toolhive-manager', () => {
         expect.stringContaining('Starting ToolHive from:')
       )
       expect(isToolhiveRunning()).toBe(true)
-      expect(getToolhivePort()).toBeTypeOf('number')
+      expect(getToolhivePort()).toBeUndefined()
+      expect(getToolhiveSocketPath()).toBeTypeOf('string')
       expect(getToolhiveMcpPort()).toBeTypeOf('number')
     })
 
@@ -373,39 +374,34 @@ describe('toolhive-manager', () => {
       expect(mockCaptureMessage).not.toHaveBeenCalled()
     })
 
-    it('assigns different ports to main and MCP services', async () => {
+    it('uses a UNIX socket for main service and a port for MCP', async () => {
       const startPromise = startToolhive()
 
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
-      const toolhivePort = getToolhivePort()
+      const socketPath = getToolhiveSocketPath()
       const mcpPort = getToolhiveMcpPort()
 
-      expect(toolhivePort).toBeTypeOf('number')
+      expect(socketPath).toBeTypeOf('string')
+      expect(socketPath).toMatch(/toolhive-\d+\.sock$/)
       expect(mcpPort).toBeTypeOf('number')
-      expect(toolhivePort).not.toBe(mcpPort)
+      expect(getToolhivePort()).toBeUndefined()
     })
 
-    it('uses range for main port but any port for MCP', async () => {
+    it('logs socket path and MCP port on startup', async () => {
       const startPromise = startToolhive()
 
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
-      const toolhivePort = getToolhivePort()
-      const mcpPort = getToolhiveMcpPort()
+      expect(getToolhiveSocketPath()).toBeTypeOf('string')
+      expect(getToolhiveMcpPort()).toBeTypeOf('number')
 
-      // Main port should be in preferred range (when available) or fallback
-      expect(toolhivePort).toBeTypeOf('number')
-      // MCP port can be any available port
-      expect(mcpPort).toBeTypeOf('number')
-      expect(toolhivePort).not.toBe(mcpPort)
-
-      // Verify the log message includes both ports
+      // Verify the log message includes the socket path and MCP port
       expect(mockLog.info).toHaveBeenCalledWith(
         expect.stringMatching(
-          /Starting ToolHive from: .+ on port \d+, MCP on port \d+/
+          /Starting ToolHive from: .+ on socket .+, MCP on port \d+/
         )
       )
     })
@@ -424,8 +420,7 @@ describe('toolhive-manager', () => {
           '--experimental-mcp',
           '--experimental-mcp-host=127.0.0.1',
           expect.stringMatching(/--experimental-mcp-port=\d+/),
-          '--host=127.0.0.1',
-          expect.stringMatching(/--port=\d+/),
+          expect.stringMatching(/--socket=.+/),
         ]),
         {
           stdio: ['ignore', 'ignore', 'pipe'],
@@ -548,49 +543,21 @@ describe('toolhive-manager', () => {
     })
   })
 
-  describe('port finding with fallback', () => {
-    it('falls back to random port when preferred range is unavailable', async () => {
-      // Mock all ports in range to be unavailable, then allow random port
-      mockNet.createServer.mockImplementation(function createServer() {
-        const server = new MockServer() as unknown as net.Server
-        const originalListen = server.listen.bind(server)
-
-        server.listen = vi.fn(function listen(
-          port: number,
-          callback?: () => void
-        ) {
-          if (port >= 50000 && port <= 50100) {
-            // Simulate all ports in range being unavailable
-            setTimeout(() => {
-              server.emit('error', { code: 'EADDRINUSE' })
-            }, 5)
-          } else if (port === 0) {
-            // Allow OS assignment (fallback)
-            setTimeout(() => {
-              originalListen(port, callback)
-            }, 5)
-          } else {
-            // Any other specific port
-            originalListen(port, callback)
-          }
-          return server
-        }) as unknown as typeof server.listen
-
-        return server
-      })
-
+  describe('port finding', () => {
+    it('uses an OS-assigned random port for the MCP service', async () => {
       const startPromise = startToolhive()
 
-      // Advance timers to complete all async operations including fallback attempts
-      await vi.advanceTimersByTimeAsync(1000)
+      await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
-      expect(mockLog.warn).toHaveBeenCalledWith(
-        expect.stringContaining(
-          'No free port found in range 50000-50100, falling back to random port'
-        )
+      // findFreePort() is called without a range, so it uses OS assignment
+      // (server.listen(0, ...)) which always succeeds. No fallback warning is
+      // expected on the happy path.
+      expect(mockLog.warn).not.toHaveBeenCalledWith(
+        expect.stringContaining('falling back to random port')
       )
       expect(isToolhiveRunning()).toBe(true)
+      expect(getToolhiveMcpPort()).toBeTypeOf('number')
     })
   })
 
