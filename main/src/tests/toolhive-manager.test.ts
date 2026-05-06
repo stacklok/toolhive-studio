@@ -7,7 +7,6 @@ import { platform } from 'node:os'
 import { app } from 'electron'
 import {
   startToolhive,
-  getToolhivePort,
   getToolhiveMcpPort,
   getToolhiveSocketPath,
   getToolhiveStatus,
@@ -244,7 +243,6 @@ describe('toolhive-manager', () => {
         expect.stringContaining('Starting ToolHive from:')
       )
       expect(isToolhiveRunning()).toBe(true)
-      expect(getToolhivePort()).toBeUndefined()
       expect(getToolhiveSocketPath()).toBeTypeOf('string')
       expect(getToolhiveMcpPort()).toBeTypeOf('number')
     })
@@ -393,7 +391,6 @@ describe('toolhive-manager', () => {
         expect(socketPath).toBeTypeOf('string')
         expect(socketPath).toMatch(/toolhive-\d+\.sock$/)
         expect(mcpPort).toBeTypeOf('number')
-        expect(getToolhivePort()).toBeUndefined()
 
         const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
         expect(spawnArgs).toEqual(
@@ -426,7 +423,6 @@ describe('toolhive-manager', () => {
         expect(socketPath).toBeTypeOf('string')
         // Named pipe shape: \\.\pipe\toolhive-<pid>
         expect(socketPath).toMatch(/^\\\\\.\\pipe\\toolhive-\d+$/)
-        expect(getToolhivePort()).toBeUndefined()
         expect(getToolhiveMcpPort()).toBeTypeOf('number')
 
         const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]

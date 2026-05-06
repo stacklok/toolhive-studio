@@ -1,12 +1,11 @@
-const getCspMap = (port: number | undefined, sentryDsn?: string) => {
+const getCspMap = (sentryDsn?: string) => {
   const hasSentry = Boolean(sentryDsn)
   const workerSrc = hasSentry ? "'self' blob:" : "'self'"
 
-  // When using UNIX sockets the renderer never makes direct HTTP requests
-  // to the thv server, so no localhost entry is needed in connect-src.
-  const connectParts = ["'self'"]
-  if (port != null) connectParts.push(`http://localhost:${port}`)
-  connectParts.push('https://api.hsforms.com')
+  // The renderer never makes direct HTTP requests to thv — they are forwarded
+  // over IPC to the main process, which dials the UNIX socket / named pipe —
+  // so no localhost entry is needed in connect-src.
+  const connectParts = ["'self'", 'https://api.hsforms.com']
   if (hasSentry) connectParts.push('https://*.sentry.io')
 
   return {
@@ -28,7 +27,7 @@ const getCspMap = (port: number | undefined, sentryDsn?: string) => {
   }
 }
 
-export const getCspString = (port: number | undefined, sentryDsn?: string) =>
-  Object.entries(getCspMap(port, sentryDsn))
+export const getCspString = (sentryDsn?: string) =>
+  Object.entries(getCspMap(sentryDsn))
     .map(([key, value]) => `${key} ${value}`)
     .join('; ')

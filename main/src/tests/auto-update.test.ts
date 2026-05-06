@@ -119,7 +119,6 @@ vi.mock('../graceful-exit', () => ({
 
 vi.mock('../toolhive-manager', () => ({
   stopToolhive: vi.fn(),
-  getToolhivePort: vi.fn(() => 3000),
   isToolhiveRunning: vi.fn(() => true),
   binPath: '/mock/bin/path',
 }))

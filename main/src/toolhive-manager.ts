@@ -34,16 +34,11 @@ const binPath = app.isPackaged
     )
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
-let toolhivePort: number | undefined
 let toolhiveMcpPort: number | undefined
 let toolhiveSocketPath: string | undefined
 let isRestarting = false
 let killTimer: NodeJS.Timeout | undefined
 let processError: ToolhiveProcessError | undefined
-
-export function getToolhivePort(): number | undefined {
-  return toolhivePort
-}
 
 export function getToolhiveMcpPort(): number | undefined {
   return toolhiveMcpPort
@@ -66,10 +61,11 @@ export function getToolhiveStatus(): ToolhiveStatus {
 }
 
 /**
- * Returns whether the app is using a custom ToolHive port (externally managed thv).
+ * Returns whether the app is using an externally managed thv reachable over
+ * a custom UNIX socket / Windows named pipe (THV_SOCKET env var).
  */
-export function isUsingCustomPort(): boolean {
-  return !app.isPackaged && !!process.env.THV_PORT
+export function isUsingCustomSocket(): boolean {
+  return !app.isPackaged && !!process.env.THV_SOCKET
 }
 
 async function findFreePort(
@@ -156,20 +152,12 @@ function cleanupSocketFile(socketPath: string): void {
 
 export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
-    if (isUsingCustomPort()) {
-      const customPort = parseInt(process.env.THV_PORT!, 10)
-      if (isNaN(customPort)) {
-        log.error(
-          `Invalid THV_PORT environment variable: ${process.env.THV_PORT}`
-        )
-        return
-      }
-      toolhivePort = customPort
-      toolhiveSocketPath = undefined
+    if (isUsingCustomSocket()) {
+      toolhiveSocketPath = process.env.THV_SOCKET!
       toolhiveMcpPort = process.env.THV_MCP_PORT
-        ? parseInt(process.env.THV_MCP_PORT!, 10)
+        ? parseInt(process.env.THV_MCP_PORT, 10)
         : undefined
-      log.info(`Using external ToolHive on port ${toolhivePort}`)
+      log.info(`Using external ToolHive on socket ${toolhiveSocketPath}`)
       return
     }
 
@@ -180,7 +168,6 @@ export async function startToolhive(): Promise<void> {
 
     processError = undefined
     toolhiveMcpPort = await findFreePort()
-    toolhivePort = undefined
     toolhiveSocketPath = generateSocketPath()
     cleanupSocketFile(toolhiveSocketPath)
 

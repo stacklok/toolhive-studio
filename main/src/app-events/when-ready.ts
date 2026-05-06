@@ -10,7 +10,6 @@ import { initTray, safeTrayDestroy } from '../system-tray'
 import { createApplicationMenu } from '../menu'
 import {
   startToolhive,
-  getToolhivePort,
   isToolhiveRunning,
   stopToolhive,
 } from '../toolhive-manager'
@@ -132,19 +131,15 @@ export function register() {
       }
     }
 
-    // Setup CSP headers
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
       if (process.env.NODE_ENV === 'development') {
         return callback({ responseHeaders: details.responseHeaders })
       }
-      // When using UNIX sockets, API requests go through IPC so no port is
-      // needed in connect-src. Pass the port only when available (TCP fallback).
-      const port = getToolhivePort()
       return callback({
         responseHeaders: {
           ...details.responseHeaders,
           'Content-Security-Policy': [
-            getCspString(port, import.meta.env.VITE_SENTRY_DSN),
+            getCspString(import.meta.env.VITE_SENTRY_DSN),
           ],
         },
       })

@@ -4,13 +4,12 @@ import { TOOLHIVE_VERSION } from '../../../utils/constants'
 import type { ToolhiveStatus } from '../../../common/types/toolhive-status'
 
 export const toolhiveApi = {
-  getToolhivePort: () => ipcRenderer.invoke('get-toolhive-port'),
   getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
   getToolhiveSocketPath: () => ipcRenderer.invoke('get-toolhive-socket-path'),
   getToolhiveVersion: () => TOOLHIVE_VERSION,
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
   getToolhiveStatus: () => ipcRenderer.invoke('get-toolhive-status'),
-  isUsingCustomPort: () => ipcRenderer.invoke('is-using-custom-port'),
+  isUsingCustomSocket: () => ipcRenderer.invoke('is-using-custom-socket'),
   checkContainerEngine: () => ipcRenderer.invoke('check-container-engine'),
   restartToolhive: () => ipcRenderer.invoke('restart-toolhive'),
 
@@ -33,13 +32,12 @@ export const toolhiveApi = {
 }
 
 export interface ToolhiveAPI {
-  getToolhivePort: () => Promise<number | undefined>
   getToolhiveMcpPort: () => Promise<number | undefined>
   getToolhiveSocketPath: () => Promise<string | undefined>
   getToolhiveVersion: () => string
   isToolhiveRunning: () => Promise<boolean>
   getToolhiveStatus: () => Promise<ToolhiveStatus>
-  isUsingCustomPort: () => Promise<boolean>
+  isUsingCustomSocket: () => Promise<boolean>
   checkContainerEngine: () => Promise<{
     docker: boolean
     podman: boolean

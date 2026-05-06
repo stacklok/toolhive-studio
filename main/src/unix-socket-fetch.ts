@@ -1,7 +1,7 @@
 import http from 'node:http'
 import { ipcMain } from 'electron'
 import log from './logger'
-import { getToolhiveSocketPath, getToolhivePort } from './toolhive-manager'
+import { getToolhiveSocketPath } from './toolhive-manager'
 import { getHeaders } from './headers'
 import { createClient, type Client } from '@common/api/generated/client'
 
@@ -34,7 +34,7 @@ function serializeResponseHeaders(
 }
 
 function performRequest(
-  connectionOpts: { socketPath: string } | { hostname: string; port: number },
+  socketPath: string,
   opts: {
     method: string
     path: string
@@ -46,7 +46,7 @@ function performRequest(
   return new Promise((resolve, reject) => {
     const req = http.request(
       {
-        ...connectionOpts,
+        socketPath,
         method: opts.method,
         path: opts.path,
         headers: opts.headers,
@@ -77,25 +77,21 @@ function performRequest(
   })
 }
 
-function getConnectionOpts():
-  | { socketPath: string }
-  | { hostname: string; port: number } {
+function requireSocketPath(): string {
   const socketPath = getToolhiveSocketPath()
-  if (socketPath) return { socketPath }
-
-  const port = getToolhivePort()
-  if (port) return { hostname: '127.0.0.1', port }
-
-  throw new Error('No ToolHive connection available (no socket path or port)')
+  if (!socketPath) {
+    throw new Error('No ToolHive socket available')
+  }
+  return socketPath
 }
 
 /**
- * Returns whether a thv connection (socket or TCP) is currently available.
- * Use this to short-circuit code paths that would otherwise build a client
- * eagerly during bootstrap when thv has not started yet.
+ * Returns whether a thv socket is currently available. Use this to
+ * short-circuit code paths that would otherwise build a client eagerly during
+ * bootstrap when thv has not started yet.
  */
 export function hasToolhiveConnection(): boolean {
-  return !!getToolhiveSocketPath() || !!getToolhivePort()
+  return !!getToolhiveSocketPath()
 }
 
 /**
@@ -113,9 +109,9 @@ export function createMainProcessApiClient(): Client {
 }
 
 /**
- * Creates a `fetch`-compatible function that routes requests through a UNIX
- * socket (or TCP fallback). Intended for use in the main process (e.g. the
- * graceful-exit client) where Node.js APIs are available.
+ * Creates a `fetch`-compatible function that routes requests through the
+ * thv UNIX socket / Windows named pipe. Intended for use in the main process
+ * (e.g. the graceful-exit client) where Node.js APIs are available.
  */
 export function createMainProcessFetch(): typeof fetch {
   return async (
@@ -128,7 +124,7 @@ export function createMainProcessFetch(): typeof fetch {
       ? await new Response(request.body).text()
       : undefined
 
-    const result = await performRequest(getConnectionOpts(), {
+    const result = await performRequest(requireSocketPath(), {
       method: request.method,
       path: url.pathname + url.search,
       headers: Object.fromEntries(request.headers.entries()),
@@ -144,8 +140,8 @@ export function createMainProcessFetch(): typeof fetch {
 
 /**
  * Registers IPC handlers that let the renderer make API requests through the
- * main process. The main process then forwards them over the UNIX socket (or
- * TCP port as fallback) to the thv server.
+ * main process. The main process then forwards them over the thv UNIX socket
+ * / Windows named pipe.
  */
 export function registerApiFetchHandlers(): void {
   ipcMain.removeHandler('api-fetch')
@@ -163,7 +159,7 @@ export function registerApiFetchHandlers(): void {
 
       try {
         return await performRequest(
-          getConnectionOpts(),
+          requireSocketPath(),
           {
             method: opts.method,
             path: opts.path,
