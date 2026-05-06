@@ -1,4 +1,4 @@
-import type { ChatUIMessage } from '../types'
+import type { ChatUIMessage } from '../../types'
 
 interface NoContentMessageProps {
   message: ChatUIMessage

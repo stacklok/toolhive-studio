@@ -54,9 +54,9 @@ function makeScrollContainer(
     el.dispatchEvent(new Event('scroll'))
   }) as HTMLDivElement['scrollTo']
 
-  // The ResizeObserver branch observes the firstElementChild — give the
-  // container one so the hook can hook into it.
+  // ResizeObserver target — the hook looks up `[data-chat-inner]`.
   const inner = document.createElement('div')
+  inner.setAttribute('data-chat-inner', '')
   el.appendChild(inner)
 
   return el

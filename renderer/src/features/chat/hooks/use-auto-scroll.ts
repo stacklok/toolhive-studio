@@ -162,11 +162,15 @@ export function useAutoScroll({
   // One ResizeObserver, two modes:
   // - streaming: follow the bottom if user was already near it;
   // - placement window: re-apply the target as MCP iframes grow the DOM.
+  // Looks up `[data-chat-inner]` so we stay valid across both the flat
+  // and virtualized list shapes (virtualizer spacer + tail).
   useLayoutEffect(() => {
     if (!threadId || !hasContent) return
     const container = containerRef.current
     if (!container) return
-    const inner = container.firstElementChild
+    const inner =
+      container.querySelector<HTMLElement>('[data-chat-inner]') ??
+      (container.firstElementChild as HTMLElement | null)
     if (!inner) return
 
     const observer = new ResizeObserver(() => {
