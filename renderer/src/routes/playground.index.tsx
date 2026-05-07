@@ -1,5 +1,6 @@
 import { createFileRoute, redirect } from '@tanstack/react-router'
 import log from 'electron-log/renderer'
+import { generateDraftThreadId } from '@/features/chat/lib/thread-id'
 
 async function resolveInitialThreadId(): Promise<string | null> {
   const [allThreads, activeId] = await Promise.all([
@@ -18,14 +19,11 @@ async function resolveInitialThreadId(): Promise<string | null> {
   const target = activeThread ?? sorted[0]
   if (target) return target.id
 
-  const result = await window.electronAPI.chat.createChatThread()
-  if (result.success && result.threadId) return result.threadId
-
-  log.error(
-    '[PlaygroundIndexRedirect] Failed to create initial thread:',
-    result.error
-  )
-  return null
+  // No persisted threads — generate a draft id locally instead of
+  // writing an empty row to the DB. The thread is promoted to a real
+  // SQLite row by `ensureThreadExists` when the user sends the first
+  // message (see `use-chat-streaming.ts`).
+  return generateDraftThreadId()
 }
 
 export const Route = createFileRoute('/playground/')({

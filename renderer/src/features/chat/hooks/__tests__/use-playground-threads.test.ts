@@ -156,7 +156,7 @@ describe('usePlaygroundThreads', () => {
   })
 
   describe('createThread', () => {
-    it('calls createChatThread, prepends new thread to list, and returns the new thread ID', async () => {
+    it('generates a draft id locally, prepends a pending entry, and skips IPC', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 'existing' }),
       ])
@@ -170,29 +170,32 @@ describe('usePlaygroundThreads', () => {
         returnedId = await result.current.createThread()
       })
 
-      expect(mockChatAPI.createChatThread).toHaveBeenCalledOnce()
-      expect(result.current.threads[0]!.id).toBe('new-thread')
-      expect(returnedId).toBe('new-thread')
+      expect(mockChatAPI.createChatThread).not.toHaveBeenCalled()
+      expect(returnedId).toMatch(/^thread_/)
+      expect(result.current.threads[0]!.id).toBe(returnedId)
+      expect(result.current.threads[0]!.pending).toBe(true)
     })
 
-    it('returns null when createChatThread returns failure', async () => {
+    it('reuses an existing empty draft instead of generating another one', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([])
-      mockChatAPI.createChatThread.mockResolvedValue({
-        success: false,
-        error: 'db error',
-      })
-      const { result } = renderHook(() => usePlaygroundThreads('any-thread'), {
+      const { result } = renderHook(() => usePlaygroundThreads(null), {
         wrapper: createWrapper(),
       })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
 
-      let returnedId: string | null = 'sentinel'
+      let firstId: string | null = null
       await act(async () => {
-        returnedId = await result.current.createThread()
+        firstId = await result.current.createThread()
       })
 
-      expect(result.current.threads).toHaveLength(0)
-      expect(returnedId).toBeNull()
+      let secondId: string | null = null
+      await act(async () => {
+        secondId = await result.current.createThread()
+      })
+
+      expect(firstId).not.toBeNull()
+      expect(secondId).toBe(firstId)
+      expect(result.current.threads).toHaveLength(1)
     })
   })
 
@@ -276,6 +279,32 @@ describe('usePlaygroundThreads', () => {
 
       expect(result.current.threads).toHaveLength(1)
       expect(res).toEqual({ success: false })
+    })
+
+    it('removes a pending draft locally without calling deleteThread IPC', async () => {
+      mockChatAPI.getAllThreads.mockResolvedValue([])
+      const { result } = renderHook(() => usePlaygroundThreads(null), {
+        wrapper: createWrapper(),
+      })
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+      let draftId: string | null = null
+      await act(async () => {
+        draftId = await result.current.createThread()
+      })
+
+      expect(draftId).not.toBeNull()
+
+      let res: Awaited<ReturnType<typeof result.current.deleteThread>> = {
+        success: false,
+      }
+      await act(async () => {
+        res = await result.current.deleteThread(draftId!)
+      })
+
+      expect(mockChatAPI.deleteThread).not.toHaveBeenCalled()
+      expect(res).toEqual({ success: true, nextId: null })
+      expect(result.current.threads).toHaveLength(0)
     })
   })
 
