@@ -34,28 +34,28 @@ importers:
   .:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: ^3.0.73
+        specifier: ^3.0.74
         version: 3.0.74(zod@4.4.3)
       '@ai-sdk/google':
-        specifier: ^3.0.66
+        specifier: ^3.0.67
         version: 3.0.67(zod@4.4.3)
       '@ai-sdk/mcp':
-        specifier: ^1.0.38
+        specifier: ^1.0.39
         version: 1.0.39(zod@4.4.3)
       '@ai-sdk/openai':
-        specifier: ^3.0.55
+        specifier: ^3.0.58
         version: 3.0.58(zod@4.4.3)
       '@ai-sdk/openai-compatible':
-        specifier: ^2.0.43
+        specifier: ^2.0.45
         version: 2.0.45(zod@4.4.3)
       '@ai-sdk/provider':
         specifier: ^3.0.10
         version: 3.0.10
       '@ai-sdk/react':
-        specifier: ^3.0.174
+        specifier: ^3.0.176
         version: 3.0.176(react@19.2.5)(zod@4.4.3)
       '@ai-sdk/xai':
-        specifier: ^3.0.85
+        specifier: ^3.0.87
         version: 3.0.87(zod@4.4.3)
       '@fontsource-variable/inter':
         specifier: ^5.2.8
@@ -157,7 +157,7 @@ importers:
         specifier: ^3.13.24
         version: 3.13.24(react-dom@19.2.5(react@19.2.5))(react@19.2.5)
       ai:
-        specifier: ^6.0.172
+        specifier: ^6.0.174
         version: 6.0.174(zod@4.4.3)
       ai-sdk-ollama:
         specifier: ^3.8.3
@@ -935,7 +935,7 @@ packages:
     engines: {node: '>=14'}
 
   '@electron/node-gyp@https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2':
-    resolution: {gitHosted: true, integrity: sha512-MXgzlTDEEndJB3TBbvd5uFQO/8gaINo1Hfen8vef5rq/VHVPeB63uuv/uO5+8GFsAJ/rauu6XB79S6K4+aXc+w==, tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
+    resolution: {tarball: https://codeload.github.com/electron/node-gyp/tar.gz/06b29aafb7708acef8b3669835c8a7857ebc92d2}
     version: 10.2.0-electron.1
     engines: {node: '>=12.13.0'}
     hasBin: true
