@@ -10,13 +10,7 @@ export interface PlaygroundThread {
   starred?: boolean
   lastEditTimestamp: number
   createdAt: number
-  /**
-   * True for threads that exist only in renderer state and have not yet
-   * been persisted to the DB. A draft is promoted to a real DB row by
-   * `ensureThreadExists` in `use-chat-streaming` when the user sends the
-   * first message — at which point `refreshThread` replaces the entry
-   * with the lightweight projection from the DB (no `pending` field).
-   */
+  /** Renderer-only draft: promoted to a real DB row on first send. */
   pending?: boolean
 }
 
@@ -29,6 +23,9 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
   const [isLoading, setIsLoading] = useState(true)
   const threadsRef = useRef(threads)
   threadsRef.current = threads
+  // Read by the load effect without becoming a dep (would refetch on URL change).
+  const activeThreadIdRef = useRef(activeThreadId)
+  activeThreadIdRef.current = activeThreadId
 
   useEffect(() => {
     async function loadThreads() {
@@ -38,7 +35,7 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
         const sorted = [...allThreads].sort(
           (a, b) => b.lastEditTimestamp - a.lastEditTimestamp
         )
-        const lightweight = sorted.map(
+        const lightweight: PlaygroundThread[] = sorted.map(
           ({ id, title, starred, lastEditTimestamp, createdAt }) => ({
             id,
             title,
@@ -47,6 +44,20 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
             createdAt,
           })
         )
+        // Seed the URL-driven id as a pending draft if not in the DB
+        // (fresh visit / deep-link). Atomic with the load so the persist
+        // effect below sees it on first run and skips the noisy IPC.
+        const initialActive = activeThreadIdRef.current
+        if (initialActive && !lightweight.some((t) => t.id === initialActive)) {
+          const now = Date.now()
+          lightweight.unshift({
+            id: initialActive,
+            title: undefined,
+            lastEditTimestamp: now,
+            createdAt: now,
+            pending: true,
+          })
+        }
         setThreads(lightweight)
       } catch (err) {
         log.error('[usePlaygroundThreads] Failed to load threads:', err)
@@ -58,22 +69,26 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
     loadThreads()
   }, [])
 
-  // Persist the URL-driven active thread to IPC whenever it changes.
-  // When the URL has no thread (e.g. user navigated to /playground/agents),
-  // explicitly clear the main-process pointer so it doesn't keep a stale id.
-  // For pending drafts the IPC validates the row exists and returns failure
-  // silently — that's fine, drafts intentionally don't survive reloads.
-  useEffect(() => {
-    window.electronAPI.chat.setActiveThreadId(activeThreadId ?? undefined)
-  }, [activeThreadId])
+  // Persist the URL-driven active thread to main. Skip pending drafts —
+  // their row doesn't exist yet and the IPC would reject with
+  // `Thread not found`. Promotion flips `pending` (via `refreshThread`)
+  // and re-runs this effect.
+  const isActivePending = activeThreadId
+    ? (threads.find((t) => t.id === activeThreadId)?.pending ?? false)
+    : false
 
-  // Seed the URL-driven thread id as a pending draft when the initial DB
-  // load doesn't include it (typical first-visit / deep-link case where
-  // `playground.index.tsx` redirected to a renderer-generated id). Without
-  // this, `hasThreads` stays false on a fresh visit, the sidebar disappears,
-  // and `ChatInterface` falls into the legacy `useThreadManagement`
-  // auto-create path — which calls `createChatThread()` over IPC and writes
-  // the empty row this PR is trying to avoid.
+  useEffect(() => {
+    if (isLoading) return
+    if (!activeThreadId) {
+      window.electronAPI.chat.setActiveThreadId(undefined)
+      return
+    }
+    if (isActivePending) return
+    window.electronAPI.chat.setActiveThreadId(activeThreadId)
+  }, [activeThreadId, isActivePending, isLoading])
+
+  // Seed unknown ids that arrive post-load (deep link, manual URL edit).
+  // Initial mount is handled atomically inside the loader above.
   useEffect(() => {
     if (isLoading) return
     if (!activeThreadId) return
@@ -91,23 +106,15 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
     })
   }, [activeThreadId, isLoading])
 
-  /**
-   * Returns the id of an existing in-memory draft thread (created locally,
-   * not yet persisted) so the caller can navigate to it instead of piling
-   * up empty drafts. Returns `null` if no reusable draft is available.
-   */
+  /** Reuses an existing pending draft to avoid piling up empty entries. */
   const findReusableDraftId = useCallback((): string | null => {
     const draft = threadsRef.current.find((t) => t.pending)
     return draft?.id ?? null
   }, [])
 
   /**
-   * Returns the id of an existing or newly-generated draft thread.
-   *
-   * No IPC call: the thread row is only written to SQLite when the user
-   * sends the first message (see `ensureThreadExists` in
-   * `use-chat-streaming.ts`). Until then the entry lives in renderer
-   * state with `pending: true` so the sidebar can render it.
+   * Returns an existing or newly-generated draft id. No IPC — the row is
+   * written on first send via `ensureThreadExists` in `use-chat-streaming`.
    */
   const createThread = useCallback(async (): Promise<string | null> => {
     const reusable = findReusableDraftId()
@@ -142,8 +149,7 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
       { success: true; nextId: string | null } | { success: false }
     > => {
       try {
-        // Pending drafts only exist in renderer state — skip the IPC call
-        // (which would fail with "Thread not found") and remove locally.
+        // Pending drafts only exist in renderer state — skip the IPC.
         const isPending = threadsRef.current.find(
           (t) => t.id === threadId
         )?.pending

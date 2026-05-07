@@ -94,7 +94,10 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('updates setActiveThreadId when activeThreadId changes', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([])
+      mockChatAPI.getAllThreads.mockResolvedValue([
+        makeDbThread({ id: 'thread-a' }),
+        makeDbThread({ id: 'thread-b' }),
+      ])
       let activeId = 'thread-a'
       const { rerender } = renderHook(() => usePlaygroundThreads(activeId), {
         wrapper: createWrapper(),
@@ -112,7 +115,9 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('clears the active thread id when activeThreadId becomes null', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([])
+      mockChatAPI.getAllThreads.mockResolvedValue([
+        makeDbThread({ id: 'thread-a' }),
+      ])
       let activeId: string | null = 'thread-a'
       const { rerender } = renderHook(() => usePlaygroundThreads(activeId), {
         wrapper: createWrapper(),
@@ -131,6 +136,23 @@ describe('usePlaygroundThreads', () => {
       )
     })
 
+    it('does not call setActiveThreadId for a pending draft id', async () => {
+      // Drafts have no DB row; the IPC would reject with `Thread not found`.
+      mockChatAPI.getAllThreads.mockResolvedValue([])
+      const { result } = renderHook(
+        () => usePlaygroundThreads('thread_url_draft'),
+        { wrapper: createWrapper() }
+      )
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+      expect(result.current.threads[0]).toMatchObject({
+        id: 'thread_url_draft',
+        pending: true,
+      })
+      expect(mockChatAPI.setActiveThreadId).not.toHaveBeenCalledWith(
+        'thread_url_draft'
+      )
+    })
+
     it('maps starred field from DB thread', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
         makeDbThread({ id: 'starred-thread', starred: true }),
@@ -144,10 +166,8 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('seeds the URL-driven activeThreadId as a pending draft when not in the DB', async () => {
-      // Mirrors the fresh-visit / deep-link case: `playground.index.tsx`
-      // redirects to a renderer-generated draft id, the hook loads zero
-      // DB threads, and we still need `hasThreads` to be true so the
-      // sidebar renders and the legacy auto-create path stays out of it.
+      // Fresh-visit / deep-link case: keeps `hasThreads` true so the
+      // sidebar renders and ChatInterface skips the legacy auto-create.
       mockChatAPI.getAllThreads.mockResolvedValue([])
       const { result } = renderHook(
         () => usePlaygroundThreads('thread_url_draft'),
