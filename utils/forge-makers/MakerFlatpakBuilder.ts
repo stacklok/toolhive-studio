@@ -168,6 +168,10 @@ export default class MakerFlatpakBuilder extends MakerBase<
         '--filesystem=/run/docker.sock',
         '--filesystem=/run/podman/podman.sock',
         '--filesystem=xdg-run/podman/podman.sock',
+        // Docker Desktop on Linux registers a `desktop-linux` Docker context whose
+        // socket lives in the user's home dir. `thv` v0.26.1+ probes this path; the
+        // sandbox needs to expose it so detection can find it.
+        '--filesystem=~/.docker/desktop/docker.sock',
         // CLI alignment: wrapper script + marker file
         '--filesystem=~/.toolhive:create',
         // CLI alignment: PATH entries in shell RC files
