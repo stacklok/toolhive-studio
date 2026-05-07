@@ -54,10 +54,17 @@ function generateThreadId(): string {
 
 export function createThread(
   title?: string,
-  initialMessages: ChatSettingsThread['messages'] = []
+  initialMessages: ChatSettingsThread['messages'] = [],
+  /**
+   * Optional caller-supplied id. When provided, the thread row is written
+   * with this id verbatim — used to "promote" a renderer-side draft thread
+   * (whose id was already routed to in the URL) to a real DB row without
+   * the id changing under the user.
+   */
+  explicitId?: string
 ): { success: boolean; threadId?: string; error?: string } {
   try {
-    const threadId = generateThreadId()
+    const threadId = explicitId ?? generateThreadId()
     const now = Date.now()
 
     const newThread: ChatSettingsThread = {

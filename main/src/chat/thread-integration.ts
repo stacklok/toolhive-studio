@@ -110,8 +110,10 @@ export function ensureThreadExists(
       }
     }
 
-    // Create new thread
-    const result = createThread(title)
+    // Promote a draft id (provided but not yet in the DB) by creating the
+    // row with that exact id, so the URL/threadId the renderer is already
+    // bound to keeps working. When no id is provided, generate a fresh one.
+    const result = createThread(title, [], threadId)
     if (result.success && result.threadId) {
       return { success: true, threadId: result.threadId, isNew: true }
     }
