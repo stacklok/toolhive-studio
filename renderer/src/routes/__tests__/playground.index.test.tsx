@@ -36,9 +36,11 @@ beforeEach(() => {
   }
   mockChatAPI.getAllThreads.mockResolvedValue([])
   mockChatAPI.getActiveThreadId.mockResolvedValue(undefined)
+  // Kept for assertions that the IPC is NOT called now that drafts are
+  // generated locally — no test expects a successful response.
   mockChatAPI.createChatThread.mockResolvedValue({
-    success: true,
-    threadId: 'created-thread',
+    success: false,
+    error: 'should not be called',
   })
 })
 
@@ -155,34 +157,19 @@ describe('Playground index route (/playground/)', () => {
     )
   })
 
-  it('creates a new thread and redirects when no threads exist', async () => {
+  it('redirects to a locally-generated draft thread when no DB threads exist', async () => {
     mockChatAPI.getActiveThreadId.mockResolvedValue(undefined)
     mockChatAPI.getAllThreads.mockResolvedValue([])
-    mockChatAPI.createChatThread.mockResolvedValue({
-      success: true,
-      threadId: 'brand-new',
-    })
 
     const { router } = renderIndexRoute()
 
     await waitFor(() =>
-      expect(router.state.location.pathname).toBe('/playground/chat/brand-new')
+      expect(router.state.location.pathname).toMatch(
+        /^\/playground\/chat\/thread_/
+      )
     )
-    expect(mockChatAPI.createChatThread).toHaveBeenCalledOnce()
-  })
-
-  it('does not redirect when createChatThread fails', async () => {
-    mockChatAPI.getActiveThreadId.mockResolvedValue(undefined)
-    mockChatAPI.getAllThreads.mockResolvedValue([])
-    mockChatAPI.createChatThread.mockResolvedValue({
-      success: false,
-      error: 'db error',
-    })
-
-    const { router } = renderIndexRoute()
-
-    // Give the effect time to run — route should stay on /playground/
-    await new Promise((r) => setTimeout(r, 100))
-    expect(router.state.location.pathname).toBe('/playground/')
+    // Drafts are generated in the renderer — no IPC round-trip and no
+    // empty row written to SQLite until the user sends a message.
+    expect(mockChatAPI.createChatThread).not.toHaveBeenCalled()
   })
 })

@@ -48,17 +48,36 @@ export const threadsStore = new Store<ChatSettingsThreads>({
   },
 })
 
+/**
+ * Mirrored by `generateDraftThreadId` in
+ * `renderer/src/features/chat/lib/thread-id.ts` — keep the formats in sync.
+ */
 function generateThreadId(): string {
   return `thread_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
 }
 
 export function createThread(
   title?: string,
-  initialMessages: ChatSettingsThread['messages'] = []
+  initialMessages: ChatSettingsThread['messages'] = [],
+  /**
+   * Caller-supplied id used to promote a renderer-side draft to a real
+   * row without the URL/`useChat` id changing. Refuses to overwrite an
+   * existing row (`writeThread` is `INSERT OR REPLACE` and would nuke
+   * the prior thread's messages); callers intending an upsert must
+   * consult `getThread` first — `ensureThreadExists` already does.
+   */
+  explicitId?: string
 ): { success: boolean; threadId?: string; error?: string } {
   try {
-    const threadId = generateThreadId()
+    const threadId = explicitId ?? generateThreadId()
     const now = Date.now()
+
+    if (explicitId && readThreadFromDb(threadId)) {
+      return {
+        success: false,
+        error: `Thread ${threadId} already exists`,
+      }
+    }
 
     const newThread: ChatSettingsThread = {
       id: threadId,

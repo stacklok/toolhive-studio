@@ -66,6 +66,7 @@ const mockChatAPI = {
   getAllThreads: vi.fn(),
   setActiveThreadId: vi.fn(),
   createChatThread: vi.fn(),
+  ensureThreadExists: vi.fn(),
   getThread: vi.fn(),
   getThreadMessagesForTransport: vi.fn(),
   updateThreadMessages: vi.fn(),
@@ -132,6 +133,11 @@ describe('useChatStreaming', () => {
     mockChatAPI.createChatThread.mockResolvedValue({
       success: true,
       threadId: 'toolhive-chat',
+    })
+    mockChatAPI.ensureThreadExists.mockResolvedValue({
+      success: true,
+      threadId: 'toolhive-chat',
+      isNew: false,
     })
     mockChatAPI.getThread.mockResolvedValue(null)
     mockChatAPI.getThreadMessagesForTransport.mockResolvedValue([])
@@ -343,6 +349,52 @@ describe('useChatStreaming', () => {
       expect(mockUseChat.sendMessage).toHaveBeenCalledWith({
         text: 'Hello, world!',
       })
+    })
+
+    it('promotes a draft thread via ensureThreadExists before sending', async () => {
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      await act(async () => {
+        await result.current.sendMessage('Hello, world!')
+      })
+
+      // Must run before sendMessage so the row exists when the main
+      // process starts writing snapshots from the active stream.
+      const ensureOrder =
+        mockChatAPI.ensureThreadExists.mock.invocationCallOrder[0]
+      const sendOrder = mockUseChat.sendMessage.mock.invocationCallOrder[0]
+      expect(ensureOrder).toBeLessThan(sendOrder!)
+      expect(mockChatAPI.ensureThreadExists).toHaveBeenCalledWith(
+        'toolhive-chat'
+      )
+    })
+
+    it('throws and skips sendMessage when ensureThreadExists fails', async () => {
+      mockChatAPI.ensureThreadExists.mockResolvedValueOnce({
+        success: false,
+        error: 'disk full',
+      })
+
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      await expect(result.current.sendMessage('Hello')).rejects.toThrow(
+        'disk full'
+      )
+      expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
     })
 
     it('handles whitespace-only API keys', async () => {

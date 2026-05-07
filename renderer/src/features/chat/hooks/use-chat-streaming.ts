@@ -349,13 +349,24 @@ export function useChatStreaming(externalThreadId?: string | null) {
         throw new Error('Please configure your AI provider settings first')
       }
 
+      // Promote a renderer-side draft to a real DB row before the
+      // stream starts — `runManagedStream` writes snapshots via
+      // `updateThreadMessages`, which needs the row to exist.
+      if (currentThreadId) {
+        const ensured =
+          await window.electronAPI.chat.ensureThreadExists(currentThreadId)
+        if (!ensured.success) {
+          throw new Error(ensured.error ?? 'Failed to create chat thread')
+        }
+      }
+
       if (typeof messageOrText === 'string') {
         return sendMessage({ text: messageOrText })
       } else {
         return sendMessage(messageOrText)
       }
     },
-    [settings, sendMessage]
+    [settings, sendMessage, currentThreadId]
   )
 
   // Memoize the processed error to avoid recalculating on every render
