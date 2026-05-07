@@ -71,10 +71,9 @@ describe('usePlaygroundThreads', () => {
         makeDbThread({ id: 'old', lastEditTimestamp: 1000 }),
         makeDbThread({ id: 'new', lastEditTimestamp: 3000 }),
       ])
-      const { result } = renderHook(
-        () => usePlaygroundThreads('initial-thread'),
-        { wrapper: createWrapper() }
-      )
+      const { result } = renderHook(() => usePlaygroundThreads('new'), {
+        wrapper: createWrapper(),
+      })
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.threads[0]!.id).toBe('new')
       expect(result.current.threads[1]!.id).toBe('old')
@@ -134,23 +133,54 @@ describe('usePlaygroundThreads', () => {
 
     it('maps starred field from DB thread', async () => {
       mockChatAPI.getAllThreads.mockResolvedValue([
-        makeDbThread({ starred: true }),
+        makeDbThread({ id: 'starred-thread', starred: true }),
       ])
       const { result } = renderHook(
-        () => usePlaygroundThreads('initial-thread'),
+        () => usePlaygroundThreads('starred-thread'),
         { wrapper: createWrapper() }
       )
       await waitFor(() => expect(result.current.isLoading).toBe(false))
       expect(result.current.threads[0]!.starred).toBe(true)
     })
 
-    it('has no threads when DB is empty', async () => {
+    it('seeds the URL-driven activeThreadId as a pending draft when not in the DB', async () => {
+      // Mirrors the fresh-visit / deep-link case: `playground.index.tsx`
+      // redirects to a renderer-generated draft id, the hook loads zero
+      // DB threads, and we still need `hasThreads` to be true so the
+      // sidebar renders and the legacy auto-create path stays out of it.
       mockChatAPI.getAllThreads.mockResolvedValue([])
       const { result } = renderHook(
-        () => usePlaygroundThreads('initial-thread'),
+        () => usePlaygroundThreads('thread_url_draft'),
         { wrapper: createWrapper() }
       )
       await waitFor(() => expect(result.current.isLoading).toBe(false))
+      await waitFor(() => expect(result.current.threads).toHaveLength(1))
+      expect(result.current.threads[0]).toMatchObject({
+        id: 'thread_url_draft',
+        pending: true,
+      })
+      expect(result.current.hasThreads).toBe(true)
+    })
+
+    it('does not seed when the URL activeThreadId is already in the loaded DB threads', async () => {
+      mockChatAPI.getAllThreads.mockResolvedValue([
+        makeDbThread({ id: 'thread-1' }),
+      ])
+      const { result } = renderHook(() => usePlaygroundThreads('thread-1'), {
+        wrapper: createWrapper(),
+      })
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+      expect(result.current.threads).toHaveLength(1)
+      expect(result.current.threads[0]?.pending).toBeUndefined()
+    })
+
+    it('does not seed when activeThreadId is null', async () => {
+      mockChatAPI.getAllThreads.mockResolvedValue([])
+      const { result } = renderHook(() => usePlaygroundThreads(null), {
+        wrapper: createWrapper(),
+      })
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+      expect(result.current.threads).toHaveLength(0)
       expect(result.current.hasThreads).toBe(false)
     })
   })

@@ -67,6 +67,30 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
     window.electronAPI.chat.setActiveThreadId(activeThreadId ?? undefined)
   }, [activeThreadId])
 
+  // Seed the URL-driven thread id as a pending draft when the initial DB
+  // load doesn't include it (typical first-visit / deep-link case where
+  // `playground.index.tsx` redirected to a renderer-generated id). Without
+  // this, `hasThreads` stays false on a fresh visit, the sidebar disappears,
+  // and `ChatInterface` falls into the legacy `useThreadManagement`
+  // auto-create path — which calls `createChatThread()` over IPC and writes
+  // the empty row this PR is trying to avoid.
+  useEffect(() => {
+    if (isLoading) return
+    if (!activeThreadId) return
+    setThreads((prev) => {
+      if (prev.some((t) => t.id === activeThreadId)) return prev
+      const now = Date.now()
+      const seed: PlaygroundThread = {
+        id: activeThreadId,
+        title: undefined,
+        lastEditTimestamp: now,
+        createdAt: now,
+        pending: true,
+      }
+      return [seed, ...prev]
+    })
+  }, [activeThreadId, isLoading])
+
   /**
    * Returns the id of an existing in-memory draft thread (created locally,
    * not yet persisted) so the caller can navigate to it instead of piling
