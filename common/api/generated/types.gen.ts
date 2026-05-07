@@ -281,6 +281,14 @@ export type GithubComStacklokToolhivePkgAuthRemoteConfig = {
   bearer_token?: string
   bearer_token_file?: string
   /**
+   * CachedCIMDClientID stores the CIMD metadata URL used as client_id when CIMD
+   * authentication was used. Kept separate from CachedClientID (which holds
+   * DCR-issued IDs) so the two can have independent lifecycles — DCR credential
+   * rotation clears CachedClientID without touching the stable CIMD URL.
+   * Read by resolveClientCredentials to send the correct client_id on token refresh.
+   */
+  cached_cimd_client_id?: string
+  /**
    * Cached DCR client credentials for persistence across restarts.
    * These are obtained during Dynamic Client Registration and needed to refresh tokens.
    * ClientID is stored as plain text since it's public information.
@@ -407,9 +415,21 @@ export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
  */
 export type GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig = {
   /**
-   * DiscoveryURL is the RFC 8414 / OIDC Discovery URL from which the
-   * registration_endpoint is resolved at runtime. Mutually exclusive with
-   * RegistrationEndpoint.
+   * DiscoveryURL is the exact RFC 8414 / OIDC Discovery document URL to
+   * fetch at runtime. The resolver issues a single GET against this URL
+   * (no well-known-path fallback) and reads registration_endpoint,
+   * authorization_endpoint, token_endpoint,
+   * token_endpoint_auth_methods_supported, and scopes_supported from the
+   * response. Per RFC 8414 §3.3, the document's "issuer" field must
+   * exactly match the upstream issuer configured on the parent
+   * run-config.
+   *
+   * Use this field when the upstream publishes discovery metadata at a
+   * path that differs from the issuer-derived well-known paths — for
+   * example a multi-tenant IdP whose metadata lives at
+   * https://idp.example.com/tenants/acme/.well-known/openid-configuration.
+   *
+   * Mutually exclusive with RegistrationEndpoint.
    */
   discovery_url?: string
   /**
@@ -427,7 +447,14 @@ export type GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig = {
   initial_access_token_file?: string
   /**
    * RegistrationEndpoint is the RFC 7591 registration endpoint URL used
-   * directly, bypassing discovery. Mutually exclusive with DiscoveryURL.
+   * directly, bypassing discovery. Because no discovery is performed,
+   * server-capability fields (token_endpoint_auth_methods_supported,
+   * scopes_supported) are unavailable on this code path; the caller is
+   * expected to also supply AuthorizationEndpoint, TokenEndpoint, and an
+   * explicit Scopes list on the parent OAuth2UpstreamRunConfig. Auth
+   * method falls back to the resolver's default (client_secret_basic).
+   *
+   * Mutually exclusive with DiscoveryURL.
    */
   registration_endpoint?: string
   /**
@@ -759,9 +786,18 @@ export type GithubComStacklokToolhivePkgAuthserverStorageAclUserRunConfig = {
 export type GithubComStacklokToolhivePkgAuthserverStorageRedisRunConfig = {
   acl_user_config?: GithubComStacklokToolhivePkgAuthserverStorageAclUserRunConfig
   /**
+   * Addr is the Redis server address (host:port). Required for standalone and cluster modes.
+   * Mutually exclusive with SentinelConfig.
+   */
+  addr?: string
+  /**
    * AuthType must be "aclUser" - only ACL user authentication is supported.
    */
   auth_type?: string
+  /**
+   * ClusterMode enables the Redis Cluster protocol. Requires Addr to be set.
+   */
+  cluster_mode?: boolean
   /**
    * DialTimeout is the timeout for establishing connections (e.g., "5s").
    */
@@ -784,8 +820,7 @@ export type GithubComStacklokToolhivePkgAuthserverStorageRedisRunConfig = {
 }
 
 /**
- * SentinelTLS configures TLS for Sentinel connections.
- * Falls back to TLS config when nil.
+ * SentinelTLS configures TLS for Sentinel connections. Only applies when SentinelConfig is set.
  */
 export type GithubComStacklokToolhivePkgAuthserverStorageRedisTlsRunConfig = {
   /**
@@ -812,6 +847,7 @@ export type GithubComStacklokToolhivePkgAuthserverStorageRunConfig = {
 
 /**
  * SentinelConfig contains Sentinel-specific configuration.
+ * Mutually exclusive with Addr.
  */
 export type GithubComStacklokToolhivePkgAuthserverStorageSentinelRunConfig = {
   /**
