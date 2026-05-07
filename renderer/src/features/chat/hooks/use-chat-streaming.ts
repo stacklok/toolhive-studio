@@ -349,11 +349,9 @@ export function useChatStreaming(externalThreadId?: string | null) {
         throw new Error('Please configure your AI provider settings first')
       }
 
-      // Promote a renderer-side draft thread to a real DB row before the
-      // first stream starts. `runManagedStream` in the main process
-      // periodically writes snapshots via `updateThreadMessages`, which
-      // requires the row to exist — so this must complete before the
-      // `chat:stream` IPC fires inside `sendMessage`.
+      // Promote a renderer-side draft to a real DB row before the
+      // stream starts — `runManagedStream` writes snapshots via
+      // `updateThreadMessages`, which needs the row to exist.
       if (currentThreadId) {
         const ensured =
           await window.electronAPI.chat.ensureThreadExists(currentThreadId)
