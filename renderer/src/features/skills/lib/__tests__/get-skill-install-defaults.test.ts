@@ -108,7 +108,7 @@ describe('getSkillInstallDefaults', () => {
       name: 'git-skill',
       namespace: 'io.github.other',
       version: 'v2.0.0',
-      packages: [{ registryType: 'git', identifier: 'https://github.com/x/y' }],
+      packages: [{ registryType: 'git', url: 'https://github.com/x/y' }],
     }
 
     expect(getSkillInstallDefaults(skill)).toEqual({
@@ -121,7 +121,7 @@ describe('getSkillInstallDefaults', () => {
     const skill: RegistrySkill = {
       name: 'git-skill',
       namespace: 'io.github.other',
-      packages: [{ registryType: 'git', identifier: 'https://github.com/x/y' }],
+      packages: [{ registryType: 'git', url: 'https://github.com/x/y' }],
     }
 
     expect(getSkillInstallDefaults(skill)).toEqual({
