@@ -103,7 +103,7 @@ describe('getSkillInstallDefaults', () => {
     })
   })
 
-  it('falls back to namespace/name and skill.version for non-OCI registry skills', () => {
+  it('falls back to the bare skill name and skill.version for non-OCI registry skills', () => {
     const skill: RegistrySkill = {
       name: 'git-skill',
       namespace: 'io.github.other',
@@ -112,7 +112,7 @@ describe('getSkillInstallDefaults', () => {
     }
 
     expect(getSkillInstallDefaults(skill)).toEqual({
-      reference: 'io.github.other/git-skill',
+      reference: 'git-skill',
       version: 'v2.0.0',
     })
   })
@@ -125,8 +125,32 @@ describe('getSkillInstallDefaults', () => {
     }
 
     expect(getSkillInstallDefaults(skill)).toEqual({
-      reference: 'io.github.other/git-skill',
+      reference: 'git-skill',
       version: undefined,
+    })
+  })
+
+  it('uses the bare name (not namespace/name) for git-package-only skills so the install backend can resolve them via the index', () => {
+    // Regression for #2208: the install backend rejects `namespace/name`
+    // values because it interprets the `/` as an OCI reference and tries
+    // to dial the namespace as a registry host.
+    const skill: RegistrySkill = {
+      name: 'skill-creator',
+      namespace: 'io.github.stacklok',
+      version: '0.1.0',
+      packages: [
+        {
+          registryType: 'git',
+          url: 'https://github.com/stacklok/toolhive-catalog',
+          ref: 'main',
+          subfolder: 'registries/toolhive/skills/skill-creator/skill',
+        },
+      ],
+    }
+
+    expect(getSkillInstallDefaults(skill)).toEqual({
+      reference: 'skill-creator',
+      version: '0.1.0',
     })
   })
 })

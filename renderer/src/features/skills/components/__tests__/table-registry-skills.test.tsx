@@ -241,7 +241,7 @@ describe('TableRegistrySkills', () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
-        'io.github.other/git-skill'
+        'git-skill'
       )
     })
   })

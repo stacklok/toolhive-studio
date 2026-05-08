@@ -84,10 +84,13 @@ interface SkillInstallDefaults {
 /**
  * Derives the values to prefill in the install dialog. The OCI identifier
  * is split so the version (tag or digest) lives in its own field rather
- * than being baked into the reference. Falls back to `namespace/name`,
- * then `name`, when no OCI package is available. The version field falls
- * back to `skill.version` (the same value shown as a badge on the detail
- * page) when the OCI package carries no tag/digest/ref of its own.
+ * than being baked into the reference. Falls back to the bare `skill.name`
+ * when no OCI package is available — the install backend resolves bare
+ * names against the registry index, while a `namespace/name` value would
+ * be misinterpreted as an OCI reference and fail with a DNS error. The
+ * version field falls back to `skill.version` (the same value shown as a
+ * badge on the detail page) when the OCI package carries no
+ * tag/digest/ref of its own.
  */
 export function getSkillInstallDefaults(
   skill: RegistrySkill
@@ -105,8 +108,7 @@ export function getSkillInstallDefaults(
   }
 
   return {
-    reference:
-      getNamespaceNameReference(skill) ?? skill.name ?? 'Unknown skill',
+    reference: skill.name ?? 'Unknown skill',
     version: skill.version ?? undefined,
   }
 }
