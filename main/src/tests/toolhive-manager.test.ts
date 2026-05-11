@@ -775,6 +775,8 @@ describe('toolhive-manager', () => {
       stopToolhive()
 
       expect(isToolhiveRunning()).toBe(false)
+      expect(getToolhiveSocketPath()).toBeUndefined()
+      expect(getToolhiveMcpPort()).toBeUndefined()
       expect(mockLog.info).toHaveBeenCalledWith(
         '[stopToolhive] Process cleanup completed'
       )
@@ -873,6 +875,17 @@ describe('toolhive-manager', () => {
       expect(isToolhiveRunning()).toBe(true)
       expect(getToolhiveSocketPath()).toBe('/tmp/external-thv.sock')
       expect(getToolhiveMcpPort()).toBeUndefined()
+    })
+
+    it('does not clear THV_SOCKET path when stopToolhive has no child to stop', async () => {
+      process.env.THV_SOCKET = '/tmp/external-thv.sock'
+      delete process.env.THV_MCP_PORT
+
+      await startToolhive()
+      stopToolhive()
+
+      expect(getToolhiveSocketPath()).toBe('/tmp/external-thv.sock')
+      expect(isToolhiveRunning()).toBe(true)
     })
 
     it('parses a valid THV_MCP_PORT', async () => {

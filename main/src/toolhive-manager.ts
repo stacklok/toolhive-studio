@@ -215,7 +215,7 @@ export async function startToolhive(): Promise<void> {
       )
     }
 
-    toolhiveProcess = spawn(binPath, serveArgs, {
+    const child = spawn(binPath, serveArgs, {
       stdio: ['ignore', 'ignore', 'pipe'],
       detached: false,
       // Ensure child process is killed when parent exits
@@ -227,20 +227,21 @@ export async function startToolhive(): Promise<void> {
         TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
       },
     })
+    toolhiveProcess = child
 
-    log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
+    log.info(`[startToolhive] Process spawned with PID: ${child.pid}`)
 
     scope.addBreadcrumb({
       category: 'debug',
-      message: `Starting ToolHive from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}, PID: ${toolhiveProcess.pid}`,
+      message: `Starting ToolHive from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}, PID: ${child.pid}`,
     })
 
-    updateTrayStatus(!!toolhiveProcess)
+    updateTrayStatus(!!child)
 
     // Capture and log stderr
-    if (toolhiveProcess.stderr) {
+    if (child.stderr) {
       log.info(`[ToolHive] Capturing stderr enabled`)
-      toolhiveProcess.stderr.on('data', (data) => {
+      child.stderr.on('data', (data) => {
         const output = data.toString().trim()
         if (!output) return
         if (output.includes('A new version of ToolHive is available')) {
@@ -261,7 +262,7 @@ export async function startToolhive(): Promise<void> {
       })
     }
 
-    toolhiveProcess.on('error', (error) => {
+    child.on('error', (error) => {
       log.error('Failed to start ToolHive: ', error)
       Sentry.captureMessage(
         `Failed to start ToolHive: ${JSON.stringify(error)}`,
@@ -270,9 +271,16 @@ export async function startToolhive(): Promise<void> {
       updateTrayStatus(false)
     })
 
-    toolhiveProcess.on('exit', (code) => {
+    child.on('exit', (code) => {
       log.warn(`ToolHive process exited with code: ${code}`)
-      toolhiveProcess = undefined
+      // Only clear globals if this exit is for the currently tracked child.
+      // Otherwise a prior child's exit can run after restart has spawned a
+      // replacement and would wipe the new socket path / process reference.
+      if (toolhiveProcess === child) {
+        toolhiveProcess = undefined
+        toolhiveSocketPath = undefined
+        toolhiveMcpPort = undefined
+      }
       if (!isRestarting && !getQuittingState()) {
         updateTrayStatus(false)
         Sentry.captureMessage(
@@ -364,6 +372,12 @@ export function stopToolhive(options?: { force?: boolean }): void {
     log.info(
       `[stopToolhive] No process to stop (process=${!!toolhiveProcess}, killed=${toolhiveProcess?.killed})`
     )
+    // Drop stale managed socket path (e.g. after crash) without touching external
+    // THV_SOCKET — that path is not owned by this process and must stay visible.
+    if (!isUsingCustomSocket()) {
+      toolhiveSocketPath = undefined
+      toolhiveMcpPort = undefined
+    }
     return
   }
 
@@ -381,6 +395,12 @@ export function stopToolhive(options?: { force?: boolean }): void {
   // If graceful shutdown failed, try force kill immediately
   if (!killed) {
     tryKillProcess(processToKill, 'SIGKILL', '[stopToolhive]')
+    // Child is going away; avoid keeping a socket path that will 404 the API
+    // bridge until the real `exit` handler runs (mock tests may not emit exit).
+    if (!isUsingCustomSocket()) {
+      toolhiveSocketPath = undefined
+      toolhiveMcpPort = undefined
+    }
     log.info(`[stopToolhive] Process cleanup completed`)
     return
   }
@@ -393,6 +413,8 @@ export function stopToolhive(options?: { force?: boolean }): void {
   if (toolhiveSocketPath) {
     cleanupSocketFile(toolhiveSocketPath)
   }
+  toolhiveSocketPath = undefined
+  toolhiveMcpPort = undefined
 
   log.info(`[stopToolhive] Process cleanup completed`)
 }
