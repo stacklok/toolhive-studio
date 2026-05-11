@@ -801,6 +801,35 @@ describe('toolhive-manager', () => {
     })
   })
 
+  // Regression: orphaned thv after Cmd+Q.
+  // Graceful stop sent SIGTERM and scheduled SIGKILL via setTimeout, then
+  // nulled the module-level reference. When Electron's parent exited before
+  // the 2s timer fired, the synchronous `process.on('exit')` handler called
+  // stopToolhive({ force: true }) but it short-circuited on `!toolhiveProcess`
+  // - leaving the child alive and blocking the next launch's port.
+  describe('Bug: orphaned thv after parent exits before SIGKILL timer fires', () => {
+    beforeEach(async () => {
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+      vi.clearAllMocks()
+    })
+
+    it('stopToolhive({ force: true }) sends SIGKILL after a graceful stopToolhive() initiated shutdown', () => {
+      const killSpy = vi.spyOn(mockProcess, 'kill')
+
+      stopToolhive()
+      expect(killSpy).toHaveBeenCalledWith('SIGTERM')
+      killSpy.mockClear()
+
+      // Simulate process.on('exit') firing synchronously before the
+      // scheduled 2s SIGKILL timer can run.
+      stopToolhive({ force: true })
+
+      expect(killSpy).toHaveBeenCalledWith('SIGKILL')
+    })
+  })
+
   describe('restartToolhive', () => {
     it('stops existing process and starts a new one', async () => {
       // Start initial process

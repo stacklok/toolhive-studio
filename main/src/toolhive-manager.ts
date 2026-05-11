@@ -37,6 +37,7 @@ let toolhiveProcess: ReturnType<typeof spawn> | undefined
 let toolhiveMcpPort: number | undefined
 let toolhiveSocketPath: string | undefined
 let isRestarting = false
+let isStopping = false
 let killTimer: NodeJS.Timeout | undefined
 let processError: ToolhiveProcessError | undefined
 
@@ -54,7 +55,7 @@ export function isToolhiveRunning(): boolean {
   // so renderer guards (e.g. setupSecretProvider) and tray UI behave the
   // same as in the bundled-binary case.
   if (isUsingCustomSocket()) return true
-  const isRunning = !!toolhiveProcess && !toolhiveProcess.killed
+  const isRunning = !!toolhiveProcess && !toolhiveProcess.killed && !isStopping
   return isRunning
 }
 
@@ -228,6 +229,7 @@ export async function startToolhive(): Promise<void> {
       },
     })
     toolhiveProcess = child
+    isStopping = false
 
     log.info(`[startToolhive] Process spawned with PID: ${child.pid}`)
 
@@ -280,6 +282,7 @@ export async function startToolhive(): Promise<void> {
         toolhiveProcess = undefined
         toolhiveSocketPath = undefined
         toolhiveMcpPort = undefined
+        isStopping = false
       }
       if (!isRestarting && !getQuittingState()) {
         updateTrayStatus(false)
@@ -361,32 +364,36 @@ function scheduleForceKill(
 export function stopToolhive(options?: { force?: boolean }): void {
   const force = options?.force ?? false
 
-  // Clear any pending kill timer
-  if (killTimer) {
-    clearTimeout(killTimer)
-    killTimer = undefined
-  }
-
-  // Early return if no process to stop
-  if (!toolhiveProcess || toolhiveProcess.killed) {
+  // Early return if no process to stop, or a graceful stop is already in
+  // flight and the caller isn't asking us to escalate to SIGKILL. The
+  // reference must stay alive until the child's 'exit' event fires so the
+  // synchronous parent-exit handler can still SIGKILL an orphaned child.
+  if (!toolhiveProcess || toolhiveProcess.killed || (isStopping && !force)) {
     log.info(
-      `[stopToolhive] No process to stop (process=${!!toolhiveProcess}, killed=${toolhiveProcess?.killed})`
+      `[stopToolhive] No process to stop (process=${!!toolhiveProcess}, killed=${toolhiveProcess?.killed}, isStopping=${isStopping})`
     )
     // Drop stale managed socket path (e.g. after crash) without touching external
     // THV_SOCKET — that path is not owned by this process and must stay visible.
-    if (!isUsingCustomSocket()) {
+    if (
+      (!toolhiveProcess || toolhiveProcess.killed) &&
+      !isUsingCustomSocket()
+    ) {
       toolhiveSocketPath = undefined
       toolhiveMcpPort = undefined
     }
     return
   }
 
-  const pidToKill = toolhiveProcess.pid
-  log.info(`Stopping ToolHive process (PID: ${pidToKill})...`)
+  // Clear any pending kill timer - we're (re)issuing a kill below.
+  if (killTimer) {
+    clearTimeout(killTimer)
+    killTimer = undefined
+  }
 
-  // Capture process reference before clearing global
+  const pidToKill = toolhiveProcess.pid
   const processToKill = toolhiveProcess
-  toolhiveProcess = undefined
+  isStopping = true
+  log.info(`Stopping ToolHive process (PID: ${pidToKill})...`)
 
   // Attempt to kill the process
   const signal: NodeJS.Signals = force ? 'SIGKILL' : 'SIGTERM'
