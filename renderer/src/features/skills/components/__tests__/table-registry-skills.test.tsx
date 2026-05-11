@@ -50,7 +50,7 @@ const gitSkill: RegistrySkill = {
   namespace: 'io.github.other',
   description: 'A git-based skill',
   version: 'v2.0.0',
-  packages: [{ registryType: 'git', identifier: 'https://github.com/x/y' }],
+  packages: [{ registryType: 'git', url: 'https://github.com/x/y' }],
 }
 
 const skillNoNamespace: RegistrySkill = {
@@ -241,7 +241,7 @@ describe('TableRegistrySkills', () => {
 
     await waitFor(() => {
       expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
-        'io.github.other/git-skill'
+        'git-skill'
       )
     })
   })

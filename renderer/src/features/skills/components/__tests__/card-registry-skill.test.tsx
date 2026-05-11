@@ -215,7 +215,7 @@ describe('CardRegistrySkill', () => {
       })
     })
 
-    it('prefills the install dialog with namespace/name for non-OCI skills', async () => {
+    it('prefills the install dialog with the bare skill name for non-OCI skills', async () => {
       const user = userEvent.setup()
       renderRoute(router)
 
@@ -223,7 +223,7 @@ describe('CardRegistrySkill', () => {
 
       await waitFor(() => {
         expect(screen.getByLabelText(/name or reference/i)).toHaveValue(
-          'io.github.user/my-skill'
+          'my-skill'
         )
       })
     })
