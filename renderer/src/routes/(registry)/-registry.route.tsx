@@ -14,6 +14,7 @@ import { EmptyState } from '@/common/components/empty-state'
 import { ExternalLinkIcon } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { IllustrationNoConnection } from '@/common/components/illustrations/illustration-no-connection'
+import { RefreshButton } from '@/common/components/refresh-button'
 import { TitlePage } from '@/common/components/title-page'
 import { InputSearch } from '@/common/components/ui/input-search'
 import { ViewToggle } from '@/common/components/view-toggle'
@@ -25,13 +26,13 @@ import { DOCS_BASE_URL } from '@common/app-info'
 const DEFAULT_REGISTRY_NAME = 'default'
 
 export default function RegistryRouteComponent() {
-  const { data: serversData } = useSuspenseQuery(
+  const { data: serversData, refetch: refetchServers } = useSuspenseQuery(
     getApiV1BetaRegistryByNameServersOptions({
       path: { name: DEFAULT_REGISTRY_NAME },
     })
   )
 
-  const { data: registryData } = useSuspenseQuery(
+  const { data: registryData, refetch: refetchRegistry } = useSuspenseQuery(
     getApiV1BetaRegistryByNameOptions({
       path: { name: DEFAULT_REGISTRY_NAME },
     })
@@ -74,6 +75,15 @@ export default function RegistryRouteComponent() {
       <TitlePage title="Registry">
         {hasContent && (
           <div className="flex items-center gap-3">
+            {!isDefaultRegistry && (
+              <RefreshButton
+                aria-label="Refresh"
+                refresh={() => {
+                  void refetchServers()
+                  void refetchRegistry()
+                }}
+              />
+            )}
             <InputSearch
               value={filter}
               onChange={(v) => setFilter(v)}
