@@ -61,9 +61,18 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
       // ToolHive provides the correct URL with path in workload.url
       // Fallback to /mcp for local containers if url is missing
       const urlString = workload.url || `http://localhost:${workload.port}/mcp`
+      // Use the AI SDK's transport config form (not a transport instance).
+      // `@ai-sdk/mcp` >=1.0.42 assigns to `transport.protocolVersion` after
+      // `initialize`, but `StreamableHTTPClientTransport` from
+      // `@modelcontextprotocol/sdk` exposes `protocolVersion` as a
+      // getter-only property and throws TypeError on assignment in strict
+      // mode, breaking tool discovery for every streamable-http server.
       return {
         name: workload.name,
-        transport: new StreamableHTTPClientTransport(new URL(urlString)),
+        transport: {
+          type: 'http' as const,
+          url: urlString,
+        },
       }
     },
     sse: () => ({
@@ -111,17 +120,25 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
 export function buildRawTransport(workload: CoreWorkload): Transport {
   const config = createTransport(workload)
   const { transport } = config
-  if (transport instanceof StreamableHTTPClientTransport) {
-    return transport
+  // `createTransport` returns AI SDK config shapes (`{ type: 'http' | 'sse',
+  // url }`) for HTTP-based transports. Materialize them into the raw SDK
+  // transport instances expected by `Client.connect()`.
+  const cfgTransport = transport as {
+    type?: string
+    url?: string | URL
   }
-  // For SSE, createTransport returns { type: 'sse', url }. Build a real
-  // SSEClientTransport from the resolved URL to stay consistent.
-  const sseTransport = transport as { type?: string; url?: string | URL }
-  if (sseTransport.type === 'sse' && sseTransport.url) {
+  if (cfgTransport.type === 'http' && cfgTransport.url) {
     const url =
-      sseTransport.url instanceof URL
-        ? sseTransport.url
-        : new URL(sseTransport.url)
+      cfgTransport.url instanceof URL
+        ? cfgTransport.url
+        : new URL(cfgTransport.url)
+    return new StreamableHTTPClientTransport(url)
+  }
+  if (cfgTransport.type === 'sse' && cfgTransport.url) {
+    const url =
+      cfgTransport.url instanceof URL
+        ? cfgTransport.url
+        : new URL(cfgTransport.url)
     return new SSEClientTransport(url)
   }
   throw new Error(

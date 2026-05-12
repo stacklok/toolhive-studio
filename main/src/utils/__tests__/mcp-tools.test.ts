@@ -1,7 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createTransport } from '../mcp-tools'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
 
 vi.mock('../../logger', () => ({
@@ -32,7 +31,10 @@ describe('createTransport', () => {
       const config = createTransport(workload)
 
       expect(config.name).toBe('vercel')
-      expect(config.transport).toBeInstanceOf(StreamableHTTPClientTransport)
+      expect(config.transport).toEqual({
+        type: 'http',
+        url: 'http://127.0.0.1:21454',
+      })
     })
 
     it('should use workload.url when provided for remote servers (GitHub)', () => {
@@ -48,7 +50,10 @@ describe('createTransport', () => {
       const config = createTransport(workload)
 
       expect(config.name).toBe('github-remote')
-      expect(config.transport).toBeInstanceOf(StreamableHTTPClientTransport)
+      expect(config.transport).toEqual({
+        type: 'http',
+        url: 'http://127.0.0.1:21153/mcp',
+      })
     })
 
     it('should use workload.url when provided for remote servers (Notion)', () => {
@@ -64,7 +69,10 @@ describe('createTransport', () => {
       const config = createTransport(workload)
 
       expect(config.name).toBe('notion-remote')
-      expect(config.transport).toBeInstanceOf(StreamableHTTPClientTransport)
+      expect(config.transport).toEqual({
+        type: 'http',
+        url: 'http://127.0.0.1:48750/mcp',
+      })
     })
 
     it('should fallback to /mcp path for local containers when url is missing', () => {
@@ -79,7 +87,10 @@ describe('createTransport', () => {
       const config = createTransport(workload)
 
       expect(config.name).toBe('local-server')
-      expect(config.transport).toBeInstanceOf(StreamableHTTPClientTransport)
+      expect(config.transport).toEqual({
+        type: 'http',
+        url: 'http://localhost:36548/mcp',
+      })
     })
 
     it('should use correct path for local containers with url provided', () => {
@@ -95,7 +106,10 @@ describe('createTransport', () => {
       const config = createTransport(workload)
 
       expect(config.name).toBe('github')
-      expect(config.transport).toBeInstanceOf(StreamableHTTPClientTransport)
+      expect(config.transport).toEqual({
+        type: 'http',
+        url: 'http://127.0.0.1:36548/mcp',
+      })
     })
   })
 
@@ -134,7 +148,10 @@ describe('createTransport', () => {
       const config = createTransport(workload)
 
       expect(config.name).toBe('stdio-server')
-      expect(config.transport).toBeInstanceOf(StreamableHTTPClientTransport)
+      expect(config.transport).toEqual({
+        type: 'http',
+        url: 'http://127.0.0.1:40281/mcp',
+      })
     })
 
     it('should use SSE when proxy_mode is sse', () => {
