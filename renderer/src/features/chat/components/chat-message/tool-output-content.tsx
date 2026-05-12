@@ -2,6 +2,7 @@ import { memo, useMemo, useState } from 'react'
 import { Streamdown } from 'streamdown'
 import { code } from '@streamdown/code'
 import { cjk } from '@streamdown/cjk'
+import { toast } from 'sonner'
 import type { ChatStatus } from 'ai'
 
 // Module-scope for stable prop identity. Mermaid omitted: heavy runtime,
@@ -20,8 +21,13 @@ interface ToolOutputContentProps {
   status: ChatStatus
 }
 
-// Pretty-print if `text` parses as JSON object/array, else null.
-function tryFormatAsJson(text: string): string | null {
+// Pretty-print if `text` parses as JSON object/array, else null. Bails on
+// streaming (partial JSON would fail-parse on every chunk → O(n²) over the
+// stream) and on oversized payloads (the parse + stringify cost is itself a
+// freeze risk and the raw <pre> branch already handles these correctly).
+function tryFormatAsJson(text: string, isStreaming: boolean): string | null {
+  if (isStreaming) return null
+  if (text.length > RAW_RENDER_THRESHOLD) return null
   const trimmed = text.trimStart()
   const first = trimmed[0]
   if (first !== '{' && first !== '[') return null
@@ -39,7 +45,10 @@ function TextItem({
   text: string
   isStreaming: boolean
 }) {
-  const formattedJson = useMemo(() => tryFormatAsJson(text), [text])
+  const formattedJson = useMemo(
+    () => tryFormatAsJson(text, isStreaming),
+    [text, isStreaming]
+  )
   const [forceMarkdown, setForceMarkdown] = useState(false)
 
   if (formattedJson !== null) {
@@ -95,6 +104,15 @@ function RawBlock({
     ? `${text.slice(0, RAW_RENDER_TRUNCATE_AT)}\n\n… (truncated, ${(text.length - RAW_RENDER_TRUNCATE_AT).toLocaleString()} more characters — use Copy to get the full payload)`
     : text
 
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(copyText)
+      toast.success('Copied to clipboard')
+    } catch {
+      toast.error('Failed to copy to clipboard')
+    }
+  }
+
   return (
     <div className="bg-background rounded border p-2">
       <div
@@ -109,9 +127,7 @@ function RawBlock({
           {action}
           <button
             type="button"
-            onClick={() => {
-              void navigator.clipboard.writeText(copyText)
-            }}
+            onClick={handleCopy}
             className="text-muted-foreground hover:text-foreground text-xs
               underline underline-offset-2"
           >
