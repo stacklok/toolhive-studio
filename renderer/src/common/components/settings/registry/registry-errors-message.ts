@@ -101,7 +101,7 @@ export function getRegistryUnavailableUrl(error: unknown): string | undefined {
 
 /** Shown in the registry error page when the source serves legacy ToolHive JSON. */
 export const REGISTRY_LEGACY_FORMAT_UI_MESSAGE =
-  'The configured registry is using an outdated format that is no longer supported. Please update the registry source to use the upstream MCP format, or reset to the default registry.'
+  'The configured registry is using an outdated format that is no longer supported. Update the registry source or reset to the default registry to continue.'
 
 /**
  * Message under the registry source field when GET /api/v1beta/registry failed.
