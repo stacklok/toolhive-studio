@@ -23,10 +23,19 @@ and keep its rules in mind throughout the session.
 
 ## Operating principles
 
-- **Drive only via `bash scripts/agent.sh` subcommands** (`shot`, `xdo`,
+- **Drive only via `bash .claude/skills/devcontainer-dev/scripts/agent.sh` subcommands** (`shot`, `xdo`,
   `tail`, `health`). These are pre-approved on a narrow surface. Use
   raw `docker exec` only if a task genuinely needs something the
   wrappers don't cover, and expect a permission prompt.
+- **Never prepend `cd ...` to the wrapper invocation.** The script uses
+  `git rev-parse --show-toplevel` to locate the repo root from any cwd
+  inside the repo, so a `cd` adds nothing. It also breaks pre-approval:
+  `Bash(bash .claude/...)` is a literal-prefix match against the
+  *whole* command string, and the form `cd ... && bash ...` doesn't
+  start with `bash`. Additionally, the compound `cd /x 2>/dev/null && ...`
+  shape trips a hardcoded Claude Code security guard ("path resolution
+  bypass") that no allowlist can override. Just call the script with
+  its full path: `bash .claude/skills/devcontainer-dev/scripts/agent.sh <verb>`.
 - **Always start with a health check.** If the devcontainer isn't up,
   launch it via `pnpm devContainer:dev` (long-running — run in
   background). Don't try to drive a non-running stack.

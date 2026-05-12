@@ -5,18 +5,21 @@
 # only the documented commands — so the allowlist can target this single
 # script instead of broad `Bash(docker exec *)`.
 #
-# Usage (run from the repo root, or any cwd — paths resolve from the
-# script's own location):
+# Usage (run from anywhere inside the repo — uses `git rev-parse` to
+# locate the repo root):
 #
-#   scripts/agent.sh shot [--crop WxH+X+Y] [PATH]   # screenshot to host
-#   scripts/agent.sh xdo  <args...>                  # xdotool passthrough
-#   scripts/agent.sh tail LOG [N]                    # tail one of /tmp/*.log
-#   scripts/agent.sh health                          # readiness check
+#   bash .claude/skills/devcontainer-dev/scripts/agent.sh shot [--crop WxH+X+Y] [PATH]
+#   bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo  <args...>
+#   bash .claude/skills/devcontainer-dev/scripts/agent.sh tail LOG [N]
+#   bash .claude/skills/devcontainer-dev/scripts/agent.sh health
 
 set -euo pipefail
 
-SCRIPT_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &> /dev/null && pwd)"
-REPO_ROOT="$(dirname "$SCRIPT_DIR")"
+REPO_ROOT="$(git rev-parse --show-toplevel 2>/dev/null || true)"
+if [ -z "$REPO_ROOT" ]; then
+  echo "agent.sh: must be run from inside the repo (git rev-parse failed)" >&2
+  exit 1
+fi
 
 DISPLAY_NAME=":99"
 URL_CACHE_FILE="$HOME/.cache/toolhive-studio-url"

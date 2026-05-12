@@ -1,7 +1,7 @@
 ---
 name: devcontainer-dev
 description: Spin up and interact with ToolHive Studio's containerized dev environment (Xvfb + noVNC + DinD). Use when running, testing, or debugging the app in isolation — locally, in a git worktree, or in GitHub Codespaces; when touching `.devcontainer/*`, `scripts/devcontainer-*.sh`, or the `devContainer:dev` npm script; or when debugging "blank white window", "Docker daemon failed to start", or "Missing X server" errors in the devcontainer. The container is fully isolated: no host pnpm install, no host Docker socket, no host X11/GPU — experiment freely without contaminating the host.
-allowed-tools: Read, Grep, Glob, Bash(bash scripts/agent.sh:*), Bash(pnpm devContainer:dev)
+allowed-tools: Read, Grep, Glob, Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*), Bash(pnpm devContainer:dev)
 ---
 
 # Containerized Dev Environment
@@ -142,20 +142,20 @@ docker exec "$CONTAINER" bash -c '
 
 The container has enough tools for an AI agent to both **see** and **interact with** the running Electron window without going through the browser / noVNC. Useful for headless testing, reproducing user-reported UI bugs, or validating a feature end-to-end.
 
-The recipes below are wrapped in `scripts/agent.sh`, which finds the devcontainer for *this* worktree by label, validates inputs, and execs only the documented commands. Pre-approving `Bash(bash scripts/agent.sh:*)` gives an agent the full driving surface without granting broad `Bash(docker exec *)` (which would let it run arbitrary commands in any container on the host). The raw `docker exec` recipes still work and are listed below as the explicit-approval fallback for ad-hoc cases the wrapper doesn't cover.
+The recipes below are wrapped in `.claude/skills/devcontainer-dev/scripts/agent.sh`, which finds the devcontainer for *this* worktree by label, validates inputs, and execs only the documented commands. Pre-approving `Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)` gives an agent the full driving surface without granting broad `Bash(docker exec *)` (which would let it run arbitrary commands in any container on the host). The raw `docker exec` recipes still work and are listed below as the explicit-approval fallback for ad-hoc cases the wrapper doesn't cover.
 
 ### See the screen (screenshots)
 
 ```bash
 # Wrapped (recommended): screenshot to /tmp/shot.png on the host
-bash scripts/agent.sh shot
+bash .claude/skills/devcontainer-dev/scripts/agent.sh shot
 
 # With an output path
-bash scripts/agent.sh shot ./shot.png
+bash .claude/skills/devcontainer-dev/scripts/agent.sh shot ./shot.png
 
 # Cropped — vision models perform much better on a focused region than on
 # the full 1920×1200 framebuffer. Format is ImageMagick's WxH+X+Y.
-bash scripts/agent.sh shot --crop 800x600+560+300 ./dialog.png
+bash .claude/skills/devcontainer-dev/scripts/agent.sh shot --crop 800x600+560+300 ./dialog.png
 ```
 
 Fallback (raw docker exec):
@@ -171,8 +171,8 @@ docker cp "$CONTAINER:/tmp/shot.png" /tmp/shot.png
 
 ```bash
 # Wrapped: xdotool passthrough
-bash scripts/agent.sh xdo search --class ToolHive
-bash scripts/agent.sh xdo getactivewindow getwindowname
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo search --class ToolHive
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo getactivewindow getwindowname
 ```
 
 Fallback (raw docker exec):
@@ -191,16 +191,16 @@ The main app window has `WM_CLASS=ToolHive` (see gotcha below). Its geometry is 
 
 ```bash
 # Click at coordinates
-bash scripts/agent.sh xdo mousemove --sync 400 300 click 1
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo mousemove --sync 400 300 click 1
 
 # Type into whatever has focus
-bash scripts/agent.sh xdo type --delay 20 'hello world'
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo type --delay 20 'hello world'
 
 # Send a keystroke (DevTools)
-bash scripts/agent.sh xdo key ctrl+shift+i
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo key ctrl+shift+i
 
 # Focus the main window by class
-bash scripts/agent.sh xdo search --class ToolHive windowactivate
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo search --class ToolHive windowactivate
 ```
 
 Fallback (raw docker exec):
@@ -217,10 +217,10 @@ The dev-stack writes canonical logs under `/tmp/*.log` (see [Log files](#log-fil
 
 ```bash
 # Last 50 lines (default)
-bash scripts/agent.sh tail entrypoint
+bash .claude/skills/devcontainer-dev/scripts/agent.sh tail entrypoint
 
 # Last N lines
-bash scripts/agent.sh tail xvfb 200
+bash .claude/skills/devcontainer-dev/scripts/agent.sh tail xvfb 200
 ```
 
 Allowed log names: `xvfb`, `fluxbox`, `x11vnc`, `websockify`, `keyring`, `entrypoint`.
@@ -230,7 +230,7 @@ Allowed log names: `xvfb`, `fluxbox`, `x11vnc`, `websockify`, `keyring`, `entryp
 One-call readiness check — Electron running, `thv serve` running, the ToolHive X window mapped, and noVNC reachable. Exits non-zero if anything is down.
 
 ```bash
-bash scripts/agent.sh health
+bash .claude/skills/devcontainer-dev/scripts/agent.sh health
 ```
 
 ### Typical agent loop

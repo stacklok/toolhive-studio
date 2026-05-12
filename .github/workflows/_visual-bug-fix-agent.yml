@@ -2,12 +2,12 @@ name: Visual Bug Fix Agent
 
 # Mirror of `_bug-fix-agent.yml` with one key difference: a live ToolHive
 # Studio is booted inside the project's devcontainer (Xvfb + Electron + thv)
-# alongside the agent, and the agent drives it through `scripts/agent.sh`
+# alongside the agent, and the agent drives it through `.claude/skills/devcontainer-dev/scripts/agent.sh`
 # (xdotool, screenshots, log tails, readiness check). Aimed at bugs that
 # resist a pure unit-test reproduction — UI/routing side-effects, async
 # backend lifecycle, real IPC.
 #
-# The agent's allowlist scopes `Bash(bash scripts/agent.sh:*)` rather than
+# The agent's allowlist scopes `Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)` rather than
 # raw `docker exec`, so the driving surface stays narrow. See
 # .claude/skills/devcontainer-dev/SKILL.md for the full wrapper recipe.
 #
@@ -198,7 +198,7 @@ jobs:
 
             LIVE APP AVAILABLE:
             A running ToolHive Studio is available inside the project's devcontainer.
-            All driving goes through `bash scripts/agent.sh` — a tightly-scoped
+            All driving goes through `bash .claude/skills/devcontainer-dev/scripts/agent.sh` — a tightly-scoped
             wrapper that finds the worktree's container by label and execs only
             the documented commands. See .claude/skills/devcontainer-dev/SKILL.md
             for the full surface. The workspace is bind-mounted at
@@ -218,21 +218,21 @@ jobs:
 
             Useful commands:
               # Capture screen to a runner-side path, then Read it:
-              bash scripts/agent.sh shot ./shot.png
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh shot ./shot.png
               # Cropped screenshot for vision-model focus (WxH+X+Y):
-              bash scripts/agent.sh shot --crop 800x600+560+300 ./dialog.png
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh shot --crop 800x600+560+300 ./dialog.png
               # Tail one of the in-container logs (xvfb, fluxbox, x11vnc,
               # websockify, keyring, entrypoint):
-              bash scripts/agent.sh tail entrypoint
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh tail entrypoint
               # Find the main window — its WM_CLASS is ToolHive:
-              bash scripts/agent.sh xdo search --class ToolHive
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo search --class ToolHive
               # Drive input — keyboard is more reliable than mouse-coordinate clicks:
-              bash scripts/agent.sh xdo key Tab
-              bash scripts/agent.sh xdo key Return
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo key Tab
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo key Return
               # Mouse coordinates are fragile (modals shift the layout); use sparingly:
-              bash scripts/agent.sh xdo mousemove X Y click 1
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo mousemove X Y click 1
               # One-call readiness check (electron, thv serve, window, noVNC):
-              bash scripts/agent.sh health
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh health
 
             WHEN TO USE THE LIVE APP:
             Default to a unit-test reproduction. Reach for the live app only when
@@ -261,7 +261,7 @@ jobs:
           claude_args: >-
             --model opus
             --max-turns 75
-            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash scripts/agent.sh:*)"
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)"
 
       - name: 'Hard gate — Verify test fails'
         id: gate
@@ -324,7 +324,7 @@ jobs:
           claude_args: >-
             --model sonnet
             --max-turns 150
-            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash scripts/agent.sh:*)"
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)"
 
       - name: 'Phase 2b — Direct Fix without TDD (Sonnet)'
         id: phase2b
@@ -365,7 +365,7 @@ jobs:
           claude_args: >-
             --model sonnet
             --max-turns 150
-            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash scripts/agent.sh:*)"
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)"
 
       - name: 'Hard gate — Verify all checks pass'
         id: verify
