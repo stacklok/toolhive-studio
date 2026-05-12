@@ -106,7 +106,18 @@ Rules for overrides (follow strictly):
    This would force every consumer onto v2, breaking those that depend on v1.
 
 5. **Only override actually vulnerable versions** — if `pnpm why` shows multiple major lines but only one is in the advisory's vulnerable range, override only that version's path. Do not add overrides for versions that are not vulnerable.
-6. **Use only `package` or `parent>package` as override keys** — do not use version-range selectors like `pkg@>=1.0.0 <2.0.0` in keys. Scope via parent instead.
+6. **Three valid override-key forms** — pick the most surgical one that resolves the advisory:
+   1. `package: '>=fixed'` — top-level, only when a single major line exists in the tree (see Rule 3).
+   2. `'parent>package': '>=fixed'` — parent-scoped, when multiple majors coexist and a specific parent pulls in the vulnerable major (see Rule 4).
+   3. `'package@versionRange': fixedVersion` — version-range-keyed, when **multiple vulnerable major lines coexist** and each needs its own targeted bump regardless of importer. The range lives in the key; the value is a fixed target version (no `>=` prefix). Example from this repo (`pnpm-workspace.yaml`):
+
+      ```yaml
+      'brace-expansion@>=4.0.0 <5.0.5': 5.0.5
+      'brace-expansion@>=2.0.0 <2.0.3': 2.0.3
+      'brace-expansion@<1.1.13': 1.1.14
+      ```
+
+      Prefer this form over many parent-scoped entries when the advisory spans multiple majors. Avoid it when a single-major top-level (form 1) or one `parent>package` (form 2) would do — those are easier to read.
 
 After the change:
 
