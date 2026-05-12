@@ -74,13 +74,37 @@ export function getCachedUiMetadata(): Record<string, ToolUiMetadataEntry> {
 // Private helpers
 // ---------------------------------------------------------------------------
 
-/** Returns a transport for the ToolHive-internal MCP server. */
-function createToolhiveMcpTransport(): StreamableHTTPClientTransport {
+/**
+ * Returns the ToolHive-internal MCP URL.
+ * Centralizes the port lookup + URL shape used by both AI SDK and raw
+ * MCP SDK consumers.
+ */
+function getToolhiveMcpUrl(): string {
   const port = getToolhiveMcpPort()
   if (!port) throw new Error('Toolhive MCP port not available')
-  return new StreamableHTTPClientTransport(
-    new URL(`http://localhost:${port}/mcp`)
-  )
+  return `http://localhost:${port}/mcp`
+}
+
+/**
+ * Returns a `MCPClientConfig.transport` for the ToolHive-internal MCP server,
+ * suitable for `@ai-sdk/mcp`'s `createMCPClient`.
+ *
+ * We pass the AI SDK's transport config form (not a transport instance)
+ * because `@ai-sdk/mcp` >=1.0.42 assigns to `transport.protocolVersion`
+ * after `initialize`, and `StreamableHTTPClientTransport` from
+ * `@modelcontextprotocol/sdk` exposes that as a getter-only property
+ * which throws on assignment in strict mode.
+ */
+function createToolhiveAiSdkTransportConfig(): {
+  type: 'http'
+  url: string
+} {
+  return { type: 'http', url: getToolhiveMcpUrl() }
+}
+
+/** Returns a raw SDK transport for the ToolHive-internal MCP server. */
+function createToolhiveRawMcpTransport(): StreamableHTTPClientTransport {
+  return new StreamableHTTPClientTransport(new URL(getToolhiveMcpUrl()))
 }
 
 /** Fetches all workloads from the ToolHive API. */
@@ -116,7 +140,7 @@ async function createRawMcpClientForServer(
 
   if (serverName === TOOLHIVE_MCP_SERVER_NAME) {
     const client = new Client(clientInfo, clientOptions)
-    await client.connect(createToolhiveMcpTransport())
+    await client.connect(createToolhiveRawMcpTransport())
     return { client, close: () => client.close() }
   }
 
@@ -215,7 +239,7 @@ export async function getToolhiveMcpInfo(
   try {
     const toolhiveMcpClient = await createMCPClient({
       name: 'mcp_toolhive',
-      transport: createToolhiveMcpTransport(),
+      transport: createToolhiveAiSdkTransportConfig(),
       capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
     })
     const toolhiveMcpTools = await toolhiveMcpClient.tools()
@@ -353,7 +377,7 @@ export async function createMcpTools(): Promise<{
     try {
       const toolhiveMcpClient = await createMCPClient({
         name: 'toolhive-mcp',
-        transport: createToolhiveMcpTransport(),
+        transport: createToolhiveAiSdkTransportConfig(),
         capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
       })
       mcpClients.push(toolhiveMcpClient)

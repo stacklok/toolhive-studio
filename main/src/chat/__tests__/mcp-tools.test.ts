@@ -336,7 +336,7 @@ describe('fetchUiResource', () => {
     expect(mockSdkClient.close).toHaveBeenCalledOnce()
   })
 
-  it('uses createToolhiveMcpTransport for the internal ToolHive server', async () => {
+  it('uses the raw ToolHive MCP transport for the internal ToolHive server', async () => {
     mockSdkClient.request.mockResolvedValue({
       contents: [{ text: '<html>thv</html>' }],
     })
@@ -345,7 +345,8 @@ describe('fetchUiResource', () => {
 
     // buildRawTransport should NOT be called for the internal server
     expect(mockBuildRawTransport).not.toHaveBeenCalled()
-    // StreamableHTTPClientTransport is newed up inside createToolhiveMcpTransport
+    // StreamableHTTPClientTransport is newed up inside
+    // createToolhiveRawMcpTransport
     expect(mockSdkClient.connect).toHaveBeenCalledOnce()
   })
 
