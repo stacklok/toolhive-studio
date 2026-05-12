@@ -76,12 +76,20 @@ describe('<ThemeProvider />', () => {
       </ThemeProvider>
     )
 
-    await waitFor(() =>
-      expect(screen.getByTestId('seed')).toHaveTextContent('dark')
+    // The Electron promise resolves asynchronously and triggers a state update
+    // outside of any `act()` boundary, so the DOM-class `useEffect` is flushed
+    // as a passive effect on a later tick. Wait specifically for the class to
+    // settle — that is the last signal in the chain and the one the test
+    // ultimately cares about.
+    await waitFor(
+      () => {
+        expect(document.documentElement).toHaveClass('dark')
+      },
+      { timeout: 3000 }
     )
 
+    expect(screen.getByTestId('seed')).toHaveTextContent('dark')
     expect(localStorage.getItem('toolhive-ui-theme')).toBe('dark')
-    expect(document.documentElement).toHaveClass('dark')
   })
 
   it('setTheme(light) updates everything consistently', async () => {
