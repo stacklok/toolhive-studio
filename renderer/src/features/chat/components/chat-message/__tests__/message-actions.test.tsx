@@ -59,4 +59,15 @@ describe('MessageActions', () => {
       screen.queryByRole('button', { name: /edit/i })
     ).not.toBeInTheDocument()
   })
+
+  it('is non-interactive while hidden — pointer-events disabled by default, re-enabled on hover/focus', () => {
+    // The wrapper relies on `pointer-events-none` to prevent accidental
+    // clicks on the invisible button before it's revealed. The reveal
+    // selectors must re-enable interaction.
+    const { container } = render(<MessageActions copyText="hello" />)
+    const wrapper = container.firstChild as HTMLElement
+    expect(wrapper.className).toMatch(/\bpointer-events-none\b/)
+    expect(wrapper.className).toMatch(/group-hover:pointer-events-auto/)
+    expect(wrapper.className).toMatch(/focus-within:pointer-events-auto/)
+  })
 })

@@ -22,8 +22,10 @@ export function MessageActions({ copyText, className }: MessageActionsProps) {
   return (
     <div
       className={cn(
-        'flex items-center gap-1 opacity-0 transition-opacity',
-        'group-hover:opacity-100 focus-within:opacity-100',
+        `pointer-events-none flex items-center gap-1 opacity-0
+        transition-opacity`,
+        'group-hover:pointer-events-auto group-hover:opacity-100',
+        'focus-within:pointer-events-auto focus-within:opacity-100',
         className
       )}
     >
