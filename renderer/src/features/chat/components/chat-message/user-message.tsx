@@ -6,6 +6,8 @@ import { mermaid } from '@streamdown/mermaid'
 import { cjk } from '@streamdown/cjk'
 import type { ChatStatus } from 'ai'
 import { AttachmentPreview } from './attachment-preview'
+import { MessageActions } from './message-actions'
+import { getMessageCopyText } from '../../lib/message-copy-text'
 import type { ChatUIMessage } from '../../types'
 
 interface UserMessageProps {
@@ -31,8 +33,10 @@ function UserAttachments({ parts }: { parts: ChatUIMessage['parts'] }) {
 }
 
 export function UserMessage({ message, status }: UserMessageProps) {
+  const copyText = getMessageCopyText(message)
+
   return (
-    <div className="flex justify-end">
+    <div className="group flex justify-end">
       <div className="flex max-w-[80%] items-start gap-3">
         <div className="space-y-2">
           <div
@@ -54,13 +58,16 @@ export function UserMessage({ message, status }: UserMessageProps) {
             <UserAttachments parts={message.parts} />
           </div>
 
-          <div className="text-muted-foreground text-right text-xs">
-            {formatDistanceToNow(
-              message.metadata?.createdAt
-                ? new Date(message.metadata.createdAt)
-                : new Date(),
-              { addSuffix: true }
-            )}
+          <div className="flex items-center justify-end gap-2">
+            {copyText && <MessageActions copyText={copyText} />}
+            <div className="text-muted-foreground text-right text-xs">
+              {formatDistanceToNow(
+                message.metadata?.createdAt
+                  ? new Date(message.metadata.createdAt)
+                  : new Date(),
+                { addSuffix: true }
+              )}
+            </div>
           </div>
         </div>
 

@@ -2,8 +2,8 @@ import { memo, useMemo, useState } from 'react'
 import { Streamdown } from 'streamdown'
 import { code } from '@streamdown/code'
 import { cjk } from '@streamdown/cjk'
-import { toast } from 'sonner'
 import type { ChatStatus } from 'ai'
+import { useCopyToClipboard } from '@/common/hooks/use-copy-to-clipboard'
 
 // Module-scope for stable prop identity. Mermaid omitted: heavy runtime,
 // no realistic tool output uses it.
@@ -104,13 +104,9 @@ function RawBlock({
     ? `${text.slice(0, RAW_RENDER_TRUNCATE_AT)}\n\n… (truncated, ${(text.length - RAW_RENDER_TRUNCATE_AT).toLocaleString()} more characters — use Copy to get the full payload)`
     : text
 
-  const handleCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(copyText)
-      toast.success('Copied to clipboard')
-    } catch {
-      toast.error('Failed to copy to clipboard')
-    }
+  const { copy } = useCopyToClipboard()
+  const handleCopy = () => {
+    void copy(copyText)
   }
 
   return (

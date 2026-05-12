@@ -1,0 +1,62 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { render, screen, waitFor } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
+import { MessageActions } from '../message-actions'
+
+const mockToastSuccess = vi.fn()
+const mockToastError = vi.fn()
+vi.mock('sonner', () => ({
+  toast: {
+    success: (...args: unknown[]) => mockToastSuccess(...args),
+    error: (...args: unknown[]) => mockToastError(...args),
+  },
+}))
+
+const writeText = vi.fn()
+Object.defineProperty(navigator, 'clipboard', {
+  value: { writeText },
+  writable: true,
+  configurable: true,
+})
+
+describe('MessageActions', () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    writeText.mockResolvedValue(undefined)
+  })
+
+  it('renders a Copy message button when copyText is non-empty', () => {
+    render(<MessageActions copyText="hello world" />)
+    expect(
+      screen.getByRole('button', { name: 'Copy message' })
+    ).toBeInTheDocument()
+  })
+
+  it('copies the provided text to the clipboard and toasts on click', async () => {
+    render(<MessageActions copyText="hello world" />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copy message' }))
+
+    await waitFor(() => expect(writeText).toHaveBeenCalledWith('hello world'))
+    expect(mockToastSuccess).toHaveBeenCalledWith('Copied to clipboard')
+  })
+
+  it('surfaces an error toast when the clipboard write fails', async () => {
+    writeText.mockRejectedValueOnce(new Error('denied'))
+    render(<MessageActions copyText="hello world" />)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Copy message' }))
+
+    await waitFor(() =>
+      expect(mockToastError).toHaveBeenCalledWith('Failed to copy to clipboard')
+    )
+  })
+
+  it('does not render an Edit button in this PR even when onEdit is supplied', () => {
+    render(<MessageActions copyText="hello" onEdit={() => {}} />)
+    // PR 1 is Copy-only; Edit is intentionally deferred.
+    expect(
+      screen.queryByRole('button', { name: /edit/i })
+    ).not.toBeInTheDocument()
+  })
+})
