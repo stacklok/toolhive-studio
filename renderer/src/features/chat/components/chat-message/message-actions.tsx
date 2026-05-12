@@ -1,22 +1,31 @@
-import { Copy } from 'lucide-react'
+import { Copy, Pencil } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { cn } from '@/common/lib/utils'
 import { useCopyToClipboard } from '@/common/hooks/use-copy-to-clipboard'
 
 interface MessageActionsProps {
   copyText: string
-  // Reserved for a future PR (edit/resend). Intentionally NOT rendered yet —
-  // PR 1 is strictly the Copy affordance.
+  /**
+   * When provided, an Edit button is rendered alongside Copy. Used today for
+   * user messages: clicking pre-fills the composer with the message text and
+   * focuses the textarea so the user can tweak and resend. Assistant messages
+   * omit this prop.
+   */
   onEdit?: () => void
   className?: string
 }
 
 /**
  * Hover-revealed action slot for a chat message row. Sits at the bottom of
- * the row and currently exposes a Copy button only. The parent row must use
- * a `group` className so the opacity transition reveals on hover.
+ * the row and exposes Copy (always) plus an optional Edit button. The parent
+ * row must use a `group` className so the opacity transition reveals on
+ * hover.
  */
-export function MessageActions({ copyText, className }: MessageActionsProps) {
+export function MessageActions({
+  copyText,
+  onEdit,
+  className,
+}: MessageActionsProps) {
   const { copy } = useCopyToClipboard()
 
   return (
@@ -29,6 +38,18 @@ export function MessageActions({ copyText, className }: MessageActionsProps) {
         className
       )}
     >
+      {onEdit && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          aria-label="Edit message"
+          onClick={onEdit}
+          className="text-muted-foreground hover:text-foreground size-7"
+        >
+          <Pencil className="size-3.5" />
+        </Button>
+      )}
       <Button
         type="button"
         variant="ghost"

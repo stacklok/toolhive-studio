@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type RefObject } from 'react'
 import type { ChatStatus, FileUIPart } from 'ai'
 import log from 'electron-log/renderer'
 import {
@@ -52,6 +52,20 @@ const errorToastConfig = {
   },
 } as const
 
+/**
+ * Imperative handle the composer exposes to its parent so siblings (e.g.
+ * message rows wanting to "Edit & resend") can drive the draft state and
+ * focus the textarea without prop-drilling through the entire tree.
+ *
+ * Populated on mount, cleared on unmount. Callers should null-check before
+ * use — both empty and bottom composers register the same ref slot, but
+ * neither is mounted in the "no thread selected" empty-state.
+ */
+export interface ChatComposerHandle {
+  setText: (text: string) => void
+  focusTextarea: () => void
+}
+
 interface ChatInputProps {
   status: ChatStatus
   settings: ChatSettings
@@ -66,11 +80,18 @@ interface ChatInputProps {
   hasProviderAndModel: boolean
   hasMessages: boolean
   threadId?: string | null
+  /**
+   * Optional ref the composer populates with imperative controls on mount.
+   * Used by parents to power features that need to drive the composer from
+   * outside the React subtree (e.g. clicking Edit on a past user message).
+   */
+  composerHandleRef?: RefObject<ChatComposerHandle | null>
 }
 
 function InputWithAttachments({
   text,
   setText,
+  textareaRef,
   status,
   settings,
   updateSettings,
@@ -80,9 +101,10 @@ function InputWithAttachments({
   hasProviderAndModel,
   hasMessages,
   threadId,
-}: Omit<ChatInputProps, 'onSendMessage'> & {
+}: Omit<ChatInputProps, 'onSendMessage' | 'composerHandleRef'> & {
   text: string
   setText: (text: string) => void
+  textareaRef: RefObject<HTMLTextAreaElement | null>
 }) {
   const attachments = usePromptInputAttachments()
   const prevTextRef = useRef(text)
@@ -137,6 +159,7 @@ function InputWithAttachments({
           )}
         </PromptInputAttachments>
         <PromptInputTextarea
+          ref={textareaRef}
           onChange={(e) => setText(e.target.value)}
           value={text}
           placeholder={getPlaceholder()}
@@ -188,8 +211,39 @@ export function ChatInputPrompt({
   hasProviderAndModel,
   hasMessages,
   threadId,
+  composerHandleRef,
 }: ChatInputProps) {
   const [text, setText] = useThreadDraft(threadId)
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  // Expose imperative controls so siblings outside this subtree (e.g. the
+  // message list's "Edit message" button) can pre-fill and focus the
+  // composer. The ref is populated on mount and cleared on unmount so the
+  // context can tell whether a composer is currently mounted.
+  useEffect(() => {
+    if (!composerHandleRef) return
+    composerHandleRef.current = {
+      setText,
+      focusTextarea: () => {
+        const el = textareaRef.current
+        if (!el) return
+        el.focus()
+        const end = el.value.length
+        try {
+          el.setSelectionRange(end, end)
+        } catch {
+          // Some textarea types (e.g. <input type="number">) throw on
+          // setSelectionRange. Plain text textareas never do — guard anyway
+          // so a stray DOM shape can't break the edit flow.
+        }
+      },
+    }
+    return () => {
+      if (composerHandleRef.current) {
+        composerHandleRef.current = null
+      }
+    }
+  }, [composerHandleRef, setText])
 
   const handleSubmit = (message: PromptInputMessage) => {
     const hasText = Boolean(message.text)
@@ -254,6 +308,7 @@ export function ChatInputPrompt({
         threadId={threadId}
         text={text}
         setText={setText}
+        textareaRef={textareaRef}
       />
     </PromptInput>
   )
