@@ -173,7 +173,6 @@
   "pnpm": {
     "overrides": {
       "@hono/node-server": ">=1.19.14",
-      "@tanstack/history": "1.161.6",
       "@xmldom/xmldom": ">=0.9.10",
       "fast-uri": ">=3.1.2",
       "fast-xml-builder": ">=1.1.7",
@@ -191,6 +190,11 @@
       "brace-expansion@>=4.0.0 <5.0.5": "5.0.5",
       "brace-expansion@>=2.0.0 <2.0.3": "2.0.3",
       "brace-expansion@<1.1.13": "1.1.14"
+    },
+    "auditConfig": {
+      "ignoreGhsas": [
+        "GHSA-rmmr-r34h-pfm5"
+      ]
     },
     "patchedDependencies": {
       "electron-installer-redhat@3.4.0": "patches/electron-installer-redhat@3.4.0.patch",
