@@ -46,3 +46,19 @@ ignore:
       type: npm
     reason: >-
       Same advisory as GHSA-gh4j-gqv2-49f6. See note above.
+  # Scoped to 1.161.6 (the last legitimate release before the maintainer account
+  # was hijacked). Malicious 1.161.9 / 1.161.12 have been unpublished from npm.
+  # The advisory keeps an open-ended ">=0" range to cover any future malicious
+  # publishes; pnpm.overrides pins us to 1.161.6 so neither Renovate nor a
+  # transitive bump can pull a poisoned release. Drop this once TanStack issues
+  # a clean follow-up and the advisory is narrowed.
+  - vulnerability: GHSA-rmmr-r34h-pfm5
+    package:
+      name: '@tanstack/history'
+      version: 1.161.6
+      type: npm
+    reason: >-
+      Pinned to 1.161.6 via pnpm.overrides. The malicious 1.161.9 and 1.161.12
+      releases have been unpublished from the npm registry; 1.161.6 is the last
+      clean version and predates the compromise. Revisit once upstream ships a
+      clean follow-up and the advisory range is narrowed.
