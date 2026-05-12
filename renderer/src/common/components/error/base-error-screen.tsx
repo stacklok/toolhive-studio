@@ -42,7 +42,7 @@ export function BaseErrorScreen({
           justify-center px-8"
       >
         <Card
-          className="mt-10 flex max-h-[min(600px,_100%)] w-full max-w-md
+          className="mt-10 flex max-h-[min(600px,_100%)] w-full max-w-lg
             flex-col"
         >
           <CardHeader className="text-center">
