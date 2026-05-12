@@ -102,3 +102,7 @@ bin/
 /blob-report/
 /playwright/.cache/
 /test-videos/
+
+
+#claude
+.claude/worktrees/
