@@ -19,6 +19,7 @@ export const REGISTRY_AUTH_TOAST_ID = 'registry-auth-required'
 
 const REGISTRY_AUTH_REQUIRED_CODE = 'registry_auth_required'
 const REGISTRY_UNAVAILABLE_CODE = 'registry_unavailable'
+const REGISTRY_LEGACY_FORMAT_CODE = 'registry_legacy_format'
 
 /** Shown when GET /api/v1beta/registry fails with `code: registry_auth_required` (Registry Server API + OAuth). */
 export const REGISTRY_AUTH_REQUIRED_UI_MESSAGE =
@@ -32,6 +33,10 @@ export const REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE =
 export const REGISTRY_UNAVAILABLE_TOAST_MESSAGE =
   'The configured registry is unreachable. The app will not work correctly until the registry URL is fixed or reset to default.'
 
+/** Persistent toast shown when the app detects the registry serves data in the legacy ToolHive format. */
+export const REGISTRY_LEGACY_FORMAT_TOAST_MESSAGE =
+  'The configured registry is using an outdated format that is no longer supported. The app will not work correctly until the registry is updated or reset to default.'
+
 /** Returns the appropriate toast message for a registry config error. */
 export function getRegistryErrorToastMessage(
   error: unknown
@@ -40,6 +45,8 @@ export function getRegistryErrorToastMessage(
     return REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE
   if (isRegistryUnavailableError(error))
     return REGISTRY_UNAVAILABLE_TOAST_MESSAGE
+  if (isRegistryLegacyFormatError(error))
+    return REGISTRY_LEGACY_FORMAT_TOAST_MESSAGE
   return undefined
 }
 
@@ -58,6 +65,10 @@ export function isRegistryAuthRequiredError(error: unknown): boolean {
 
 export function isRegistryUnavailableError(error: unknown): boolean {
   return getErrorField(error, 'code') === REGISTRY_UNAVAILABLE_CODE
+}
+
+export function isRegistryLegacyFormatError(error: unknown): boolean {
+  return getErrorField(error, 'code') === REGISTRY_LEGACY_FORMAT_CODE
 }
 
 /**
@@ -87,6 +98,10 @@ export function getRegistryUnavailableUrl(error: unknown): string | undefined {
   const match = raw.match(/upstream registry at (\S+) is unavailable/)
   return match?.[1]
 }
+
+/** Shown in the registry error page when the source serves legacy ToolHive JSON. */
+export const REGISTRY_LEGACY_FORMAT_UI_MESSAGE =
+  'The configured registry is using an outdated format that is no longer supported. Please update the registry source to use the upstream MCP format, or reset to the default registry.'
 
 /**
  * Message under the registry source field when GET /api/v1beta/registry failed.

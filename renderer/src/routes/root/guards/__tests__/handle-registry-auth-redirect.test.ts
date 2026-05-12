@@ -6,6 +6,7 @@ import {
 } from '@common/types/toolhive-status'
 import {
   REGISTRY_AUTH_REQUIRED_TOAST_MESSAGE,
+  REGISTRY_LEGACY_FORMAT_TOAST_MESSAGE,
   REGISTRY_UNAVAILABLE_TOAST_MESSAGE,
 } from '@/common/components/settings/registry/registry-errors-message'
 
@@ -142,6 +143,22 @@ describe('handleRegistryAuthRedirect', () => {
 
       expect(queryClient.getQueryData(REGISTRY_PENDING_TOAST_KEY)).toBe(
         REGISTRY_UNAVAILABLE_TOAST_MESSAGE
+      )
+    })
+
+    it('redirects when GET /registry returns registry_legacy_format', async () => {
+      mockGetRegistry.mockRejectedValue({
+        code: 'registry_legacy_format',
+        message:
+          'registry at https://example.com/registry.json: registry file appears to be in the legacy ToolHive format',
+      })
+
+      await expect(
+        handleRegistryAuthRedirect(queryClient, '/')
+      ).rejects.toMatchObject(REDIRECT_MATCH)
+
+      expect(queryClient.getQueryData(REGISTRY_PENDING_TOAST_KEY)).toBe(
+        REGISTRY_LEGACY_FORMAT_TOAST_MESSAGE
       )
     })
 

@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { RegistryError } from '../registry-error'
 import {
   REGISTRY_AUTH_REQUIRED_UI_MESSAGE,
+  REGISTRY_LEGACY_FORMAT_UI_MESSAGE,
   REGISTRY_UNAVAILABLE_UI_MESSAGE,
 } from '../../settings/registry/registry-errors-message'
 import { createTestRouter } from '@/common/test/create-test-router'
@@ -85,6 +86,45 @@ describe('RegistryError', () => {
         screen.queryByText(/something went wrong while loading the registry/i)
       ).not.toBeInTheDocument()
       expect(screen.queryByText('Discord')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('registry_legacy_format error', () => {
+    const legacyError = {
+      code: 'registry_legacy_format',
+      message:
+        'registry at https://example.com/registry.json: registry file appears to be in the legacy ToolHive format; run `thv registry convert --in <path> --in-place` to migrate to the upstream MCP format',
+    }
+
+    it('shows unsupported format title and user-friendly message', async () => {
+      renderRegistryError(legacyError)
+
+      await waitFor(() => {
+        expect(screen.getByText('Unsupported registry format')).toBeVisible()
+      })
+      expect(screen.getByText(REGISTRY_LEGACY_FORMAT_UI_MESSAGE)).toBeVisible()
+    })
+
+    it('renders Resolve issues button', async () => {
+      renderRegistryError(legacyError)
+
+      await waitFor(() => {
+        expect(screen.getByText('Unsupported registry format')).toBeVisible()
+      })
+      expect(screen.getByText('Resolve issues')).toBeVisible()
+    })
+
+    it('does not leak the raw CLI migration hint into the visible UI', async () => {
+      renderRegistryError(legacyError)
+
+      await waitFor(() => {
+        expect(screen.getByText('Unsupported registry format')).toBeVisible()
+      })
+      // The raw API message contains a CLI command — desktop users should not
+      // see it. The UI copy must come from REGISTRY_LEGACY_FORMAT_UI_MESSAGE.
+      expect(screen.queryByText(/thv registry convert/)).not.toBeInTheDocument()
+      expect(screen.queryByText('Authentication error')).not.toBeInTheDocument()
+      expect(screen.queryByText('Registry unavailable')).not.toBeInTheDocument()
     })
   })
 
