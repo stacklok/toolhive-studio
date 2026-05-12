@@ -14,6 +14,8 @@ import { ReasoningComponent } from './reasoning-component'
 import { StepStartComponent } from './step-start-component'
 import { ToolCallComponent } from './tool-call-component'
 import { JoinedAssistantText } from './joined-assistant-text'
+import { MessageActions } from './message-actions'
+import { getMessageCopyText } from '../../lib/message-copy-text'
 
 interface AssistantMessageProps {
   message: ChatUIMessage
@@ -29,9 +31,10 @@ export function AssistantMessage({
   const providerIcon =
     message.metadata?.model &&
     getProviderIconByModel(message.metadata.model, message.metadata.providerId)
+  const copyText = getMessageCopyText(message)
 
   return (
-    <div className="flex items-start gap-4">
+    <div className="group flex items-start gap-4">
       <div
         className="bg-card flex h-8 w-8 shrink-0 items-center justify-center
           rounded-lg"
@@ -202,18 +205,21 @@ export function AssistantMessage({
         </div>
 
         <div className="mt-2 flex items-center justify-between">
-          <div className="text-muted-foreground text-xs">
-            {formatDistanceToNow(
-              message.metadata?.createdAt
-                ? new Date(message.metadata.createdAt)
-                : new Date(),
-              { addSuffix: true }
-            )}
-            {message.metadata?.model && (
-              <span className="text-muted-foreground/70 ml-2">
-                • {message.metadata.model}
-              </span>
-            )}
+          <div className="flex items-center gap-2">
+            <div className="text-muted-foreground text-xs">
+              {formatDistanceToNow(
+                message.metadata?.createdAt
+                  ? new Date(message.metadata.createdAt)
+                  : new Date(),
+                { addSuffix: true }
+              )}
+              {message.metadata?.model && (
+                <span className="text-muted-foreground/70 ml-2">
+                  • {message.metadata.model}
+                </span>
+              )}
+            </div>
+            {copyText && <MessageActions copyText={copyText} />}
           </div>
 
           {message.role === 'assistant' && (
