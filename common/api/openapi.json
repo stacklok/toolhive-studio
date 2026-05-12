@@ -348,48 +348,6 @@
         },
         "type": "object"
       },
-      "github_com_stacklok_toolhive_pkg_auth_tokenexchange.Config": {
-        "description": "TokenExchangeConfig contains token exchange configuration for external authentication",
-        "properties": {
-          "audience": {
-            "description": "Audience is the target audience for the exchanged token",
-            "type": "string"
-          },
-          "client_id": {
-            "description": "ClientID is the OAuth 2.0 client identifier",
-            "type": "string"
-          },
-          "client_secret": {
-            "description": "ClientSecret is the OAuth 2.0 client secret",
-            "type": "string"
-          },
-          "external_token_header_name": {
-            "description": "ExternalTokenHeaderName is the name of the custom header to use when HeaderStrategy is \"custom\"",
-            "type": "string"
-          },
-          "header_strategy": {
-            "description": "HeaderStrategy determines how to inject the token\nValid values: HeaderStrategyReplace (default), HeaderStrategyCustom",
-            "type": "string"
-          },
-          "scopes": {
-            "description": "Scopes is the list of scopes to request for the exchanged token",
-            "items": {
-              "type": "string"
-            },
-            "type": "array",
-            "uniqueItems": false
-          },
-          "subject_token_type": {
-            "description": "SubjectTokenType specifies the type of the subject token being exchanged.\nCommon values: oauthproto.TokenTypeAccessToken (default), oauthproto.TokenTypeIDToken, oauthproto.TokenTypeJWT.\nIf empty, defaults to oauthproto.TokenTypeAccessToken.",
-            "type": "string"
-          },
-          "token_url": {
-            "description": "TokenURL is the OAuth 2.0 token endpoint URL",
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
       "github_com_stacklok_toolhive_pkg_auth_upstreamswap.Config": {
         "description": "UpstreamSwapConfig contains configuration for upstream token swap middleware.\nWhen set along with EmbeddedAuthServerConfig, this middleware exchanges ToolHive JWTs\nfor upstream IdP tokens before forwarding requests to the MCP server.",
         "properties": {
@@ -550,6 +508,14 @@
           "authorization_endpoint_base_url": {
             "description": "AuthorizationEndpointBaseURL overrides the base URL used for the authorization_endpoint\nin the OAuth discovery document. When set, the discovery document will advertise\n`{authorization_endpoint_base_url}/oauth/authorize` instead of `{issuer}/oauth/authorize`.\nAll other endpoints remain derived from the issuer.",
             "type": "string"
+          },
+          "baseline_client_scopes": {
+            "description": "BaselineClientScopes is a baseline set of OAuth 2.0 scopes unioned into every\nDCR registration. All values must appear in ScopesSupported; the auth server\nrejects this RunConfig at startup otherwise. Empty means current behavior is\npreserved (registered scope = client-requested, or DefaultScopes if empty).\nWhen ScopesSupported is empty, the subset check uses registration.DefaultScopes\n(the same set applyDefaults would substitute at startup) — so\nBaselineClientScopes containing standard OIDC scopes works without enumerating\nScopesSupported explicitly.",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
           },
           "hmac_secret_files": {
             "description": "HMACSecretFiles contains file paths to HMAC secrets for signing authorization codes\nand refresh tokens (opaque tokens).\nFirst file is the current secret (must be at least 32 bytes), subsequent files\nare for rotation/verification of existing tokens.\nIf empty, an ephemeral secret will be auto-generated (development only).",
@@ -1126,6 +1092,48 @@
         },
         "type": "object"
       },
+      "github_com_stacklok_toolhive_pkg_oauthproto_tokenexchange.Config": {
+        "description": "TokenExchangeConfig contains token exchange configuration for external authentication",
+        "properties": {
+          "audience": {
+            "description": "Audience is the target audience for the exchanged token",
+            "type": "string"
+          },
+          "client_id": {
+            "description": "ClientID is the OAuth 2.0 client identifier",
+            "type": "string"
+          },
+          "client_secret": {
+            "description": "ClientSecret is the OAuth 2.0 client secret",
+            "type": "string"
+          },
+          "external_token_header_name": {
+            "description": "ExternalTokenHeaderName is the name of the custom header to use when HeaderStrategy is \"custom\"",
+            "type": "string"
+          },
+          "header_strategy": {
+            "description": "HeaderStrategy determines how to inject the token\nValid values: HeaderStrategyReplace (default), HeaderStrategyCustom",
+            "type": "string"
+          },
+          "scopes": {
+            "description": "Scopes is the list of scopes to request for the exchanged token",
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": false
+          },
+          "subject_token_type": {
+            "description": "SubjectTokenType specifies the type of the subject token being exchanged.\nCommon values: oauthproto.TokenTypeAccessToken (default), oauthproto.TokenTypeIDToken, oauthproto.TokenTypeJWT.\nIf empty, defaults to oauthproto.TokenTypeAccessToken.",
+            "type": "string"
+          },
+          "token_url": {
+            "description": "TokenURL is the OAuth 2.0 token endpoint URL",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "github_com_stacklok_toolhive_pkg_registry.OAuthPublicConfig": {
         "description": "AuthConfig contains the non-secret OAuth configuration when auth is configured.\nNil when auth_status is \"none\".",
         "properties": {
@@ -1376,7 +1384,7 @@
             "type": "string"
           },
           "token_exchange_config": {
-            "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_auth_tokenexchange.Config"
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_oauthproto_tokenexchange.Config"
           },
           "tools_filter": {
             "description": "DEPRECATED: Middleware configuration.\nToolsFilter is the list of tools to filter",

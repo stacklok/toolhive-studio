@@ -345,47 +345,6 @@ export type GithubComStacklokToolhivePkgAuthRemoteConfig = {
 }
 
 /**
- * TokenExchangeConfig contains token exchange configuration for external authentication
- */
-export type GithubComStacklokToolhivePkgAuthTokenexchangeConfig = {
-  /**
-   * Audience is the target audience for the exchanged token
-   */
-  audience?: string
-  /**
-   * ClientID is the OAuth 2.0 client identifier
-   */
-  client_id?: string
-  /**
-   * ClientSecret is the OAuth 2.0 client secret
-   */
-  client_secret?: string
-  /**
-   * ExternalTokenHeaderName is the name of the custom header to use when HeaderStrategy is "custom"
-   */
-  external_token_header_name?: string
-  /**
-   * HeaderStrategy determines how to inject the token
-   * Valid values: HeaderStrategyReplace (default), HeaderStrategyCustom
-   */
-  header_strategy?: string
-  /**
-   * Scopes is the list of scopes to request for the exchanged token
-   */
-  scopes?: Array<string>
-  /**
-   * SubjectTokenType specifies the type of the subject token being exchanged.
-   * Common values: oauthproto.TokenTypeAccessToken (default), oauthproto.TokenTypeIDToken, oauthproto.TokenTypeJWT.
-   * If empty, defaults to oauthproto.TokenTypeAccessToken.
-   */
-  subject_token_type?: string
-  /**
-   * TokenURL is the OAuth 2.0 token endpoint URL
-   */
-  token_url?: string
-}
-
-/**
  * UpstreamSwapConfig contains configuration for upstream token swap middleware.
  * When set along with EmbeddedAuthServerConfig, this middleware exchanges ToolHive JWTs
  * for upstream IdP tokens before forwarding requests to the MCP server.
@@ -589,6 +548,17 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    * All other endpoints remain derived from the issuer.
    */
   authorization_endpoint_base_url?: string
+  /**
+   * BaselineClientScopes is a baseline set of OAuth 2.0 scopes unioned into every
+   * DCR registration. All values must appear in ScopesSupported; the auth server
+   * rejects this RunConfig at startup otherwise. Empty means current behavior is
+   * preserved (registered scope = client-requested, or DefaultScopes if empty).
+   * When ScopesSupported is empty, the subset check uses registration.DefaultScopes
+   * (the same set applyDefaults would substitute at startup) — so
+   * BaselineClientScopes containing standard OIDC scopes works without enumerating
+   * ScopesSupported explicitly.
+   */
+  baseline_client_scopes?: Array<string>
   /**
    * HMACSecretFiles contains file paths to HMAC secrets for signing authorization codes
    * and refresh tokens (opaque tokens).
@@ -1068,6 +1038,47 @@ export type GithubComStacklokToolhivePkgIgnoreConfig = {
 }
 
 /**
+ * TokenExchangeConfig contains token exchange configuration for external authentication
+ */
+export type GithubComStacklokToolhivePkgOauthprotoTokenexchangeConfig = {
+  /**
+   * Audience is the target audience for the exchanged token
+   */
+  audience?: string
+  /**
+   * ClientID is the OAuth 2.0 client identifier
+   */
+  client_id?: string
+  /**
+   * ClientSecret is the OAuth 2.0 client secret
+   */
+  client_secret?: string
+  /**
+   * ExternalTokenHeaderName is the name of the custom header to use when HeaderStrategy is "custom"
+   */
+  external_token_header_name?: string
+  /**
+   * HeaderStrategy determines how to inject the token
+   * Valid values: HeaderStrategyReplace (default), HeaderStrategyCustom
+   */
+  header_strategy?: string
+  /**
+   * Scopes is the list of scopes to request for the exchanged token
+   */
+  scopes?: Array<string>
+  /**
+   * SubjectTokenType specifies the type of the subject token being exchanged.
+   * Common values: oauthproto.TokenTypeAccessToken (default), oauthproto.TokenTypeIDToken, oauthproto.TokenTypeJWT.
+   * If empty, defaults to oauthproto.TokenTypeAccessToken.
+   */
+  subject_token_type?: string
+  /**
+   * TokenURL is the OAuth 2.0 token endpoint URL
+   */
+  token_url?: string
+}
+
+/**
  * AuthConfig contains the non-secret OAuth configuration when auth is configured.
  * Nil when auth_status is "none".
  */
@@ -1281,7 +1292,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * ThvCABundle is the path to the CA certificate bundle for ToolHive HTTP operations
    */
   thv_ca_bundle?: string
-  token_exchange_config?: GithubComStacklokToolhivePkgAuthTokenexchangeConfig
+  token_exchange_config?: GithubComStacklokToolhivePkgOauthprotoTokenexchangeConfig
   /**
    * DEPRECATED: Middleware configuration.
    * ToolsFilter is the list of tools to filter
