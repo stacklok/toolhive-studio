@@ -761,5 +761,75 @@ describe('useChatStreaming', () => {
         expect(mockUseChat.setMessages).toHaveBeenCalledWith(snapshotMessages)
       })
     })
+
+    it('re-hydrates with the finalized snapshot when the stream finishes between peek and resume', async () => {
+      // Pre-recovery state: snapshot has a stale trailing assistant that
+      // the hook will drop on the assumption a replay is coming.
+      const finalAssistant: ChatUIMessage = {
+        id: 'a1-final',
+        role: 'assistant',
+        parts: [{ type: 'text' as const, text: 'Complete answer' }],
+      }
+      const finalizedMessages: ChatUIMessage[] = [
+        snapshotMessages[0]!,
+        finalAssistant,
+      ]
+
+      // The query refetches on invalidation; serve the stale snapshot
+      // first, then the finalized one.
+      mockChatAPI.getThread
+        .mockResolvedValueOnce({
+          id: 'toolhive-chat',
+          messages: snapshotMessages,
+          lastEditTimestamp: 0,
+          createdAt: 0,
+        })
+        .mockResolvedValue({
+          id: 'toolhive-chat',
+          messages: finalizedMessages,
+          lastEditTimestamp: 1,
+          createdAt: 0,
+        })
+      mockChatAPI.getThreadMessagesForTransport
+        .mockResolvedValueOnce(snapshotMessages)
+        .mockResolvedValue(finalizedMessages)
+
+      // First peek: a stream looks live, so the trailing assistant is
+      // dropped. Second peek (post-resume): the stream finished while we
+      // were resuming, so the hook must invalidate + re-hydrate.
+      mockChatAPI.getActiveStreamId
+        .mockResolvedValueOnce('stream-A')
+        .mockResolvedValueOnce(null)
+
+      mockUseChat.resumeStream.mockResolvedValue(undefined)
+
+      const { Wrapper } = createTestUtils()
+      renderHook(() => useChatStreaming(), { wrapper: Wrapper })
+
+      // First pass: trimmed list (stale assistant dropped because the
+      // initial peek said a stream was live).
+      await waitFor(() => {
+        expect(mockUseChat.setMessages).toHaveBeenCalledWith([
+          snapshotMessages[0],
+        ])
+      })
+
+      // Recovery pass: ref must be cleared so the effect re-runs on the
+      // refetched data and seeds the full finalized list. Without the
+      // fix, this assertion would time out and the UI would be stuck
+      // missing the final assistant turn until reload.
+      await waitFor(() => {
+        expect(mockUseChat.setMessages).toHaveBeenCalledWith(finalizedMessages)
+      })
+
+      // Sanity: the initial peek + the post-resume re-peek both fired
+      // (the second hydration pass adds one more peek on the refetched
+      // data, so >= 2 covers both the pre-recovery and post-recovery
+      // peeks reliably).
+      expect(
+        mockChatAPI.getActiveStreamId.mock.calls.length
+      ).toBeGreaterThanOrEqual(2)
+      expect(mockUseChat.resumeStream).toHaveBeenCalled()
+    })
   })
 })

@@ -142,6 +142,12 @@ export function useChatStreaming(externalThreadId?: string | null) {
           stillActive = null
         }
         if (!stillActive) {
+          // Allow re-hydration when the refetch lands — we trimmed the
+          // trailing assistant assuming a live replay, but the stream is
+          // gone. Without clearing the ref, the guard at the top of this
+          // effect would skip the next run and the UI would stay missing
+          // the final assistant turn until reload.
+          hydratedThreadRef.current = null
           try {
             void queryClient.invalidateQueries({
               queryKey: chatThreadQueryOptions(threadIdAtResume).queryKey,
