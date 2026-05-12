@@ -1,8 +1,13 @@
 import { AlertCircle } from 'lucide-react'
 import { LinkErrorDiscord } from '../workloads/link-error-discord'
 import { BaseErrorScreen } from './base-error-screen'
+import { TechnicalDetails } from './technical-details'
 
-export function GenericError() {
+interface GenericErrorProps {
+  error?: Error
+}
+
+export function GenericError({ error }: GenericErrorProps) {
   return (
     <BaseErrorScreen
       title="Oops, something went wrong"
@@ -15,6 +20,11 @@ export function GenericError() {
       <p>
         If issues persist, contact the ToolHive team via <LinkErrorDiscord />
       </p>
+      {error && (
+        <div className="-mt-2 pb-4">
+          <TechnicalDetails error={error} />
+        </div>
+      )}
     </BaseErrorScreen>
   )
 }

@@ -29,5 +29,5 @@ export function Error({ error }: ErrorProps = {}) {
     return <ConnectionRefusedError />
   }
 
-  return <GenericError />
+  return <GenericError error={error} />
 }
