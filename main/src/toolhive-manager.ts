@@ -55,7 +55,13 @@ export function isToolhiveRunning(): boolean {
   // so renderer guards (e.g. setupSecretProvider) and tray UI behave the
   // same as in the bundled-binary case.
   if (isUsingCustomSocket()) return true
-  const isRunning = !!toolhiveProcess && !toolhiveProcess.killed && !isStopping
+  // .killed only signals "kill() was called", not "process has exited" - use
+  // exitCode/signalCode for true liveness.
+  const isRunning =
+    !!toolhiveProcess &&
+    toolhiveProcess.exitCode === null &&
+    toolhiveProcess.signalCode === null &&
+    !isStopping
   return isRunning
 }
 
@@ -283,6 +289,12 @@ export async function startToolhive(): Promise<void> {
         toolhiveSocketPath = undefined
         toolhiveMcpPort = undefined
         isStopping = false
+        // Drop the pending SIGKILL timer - the child is already gone and a
+        // live setTimeout would keep the event loop alive during shutdown.
+        if (killTimer) {
+          clearTimeout(killTimer)
+          killTimer = undefined
+        }
       }
       if (!isRestarting && !getQuittingState()) {
         updateTrayStatus(false)
@@ -368,16 +380,19 @@ export function stopToolhive(options?: { force?: boolean }): void {
   // flight and the caller isn't asking us to escalate to SIGKILL. The
   // reference must stay alive until the child's 'exit' event fires so the
   // synchronous parent-exit handler can still SIGKILL an orphaned child.
-  if (!toolhiveProcess || toolhiveProcess.killed || (isStopping && !force)) {
+  // .killed is not a liveness check (it's true after any successful kill()
+  // call, including the SIGTERM we want to escalate from) - use
+  // exitCode/signalCode to detect a process that has actually exited.
+  const hasExited =
+    !!toolhiveProcess &&
+    (toolhiveProcess.exitCode !== null || toolhiveProcess.signalCode !== null)
+  if (!toolhiveProcess || hasExited || (isStopping && !force)) {
     log.info(
-      `[stopToolhive] No process to stop (process=${!!toolhiveProcess}, killed=${toolhiveProcess?.killed}, isStopping=${isStopping})`
+      `[stopToolhive] No process to stop (process=${!!toolhiveProcess}, hasExited=${hasExited}, isStopping=${isStopping})`
     )
     // Drop stale managed socket path (e.g. after crash) without touching external
     // THV_SOCKET — that path is not owned by this process and must stay visible.
-    if (
-      (!toolhiveProcess || toolhiveProcess.killed) &&
-      !isUsingCustomSocket()
-    ) {
+    if ((!toolhiveProcess || hasExited) && !isUsingCustomSocket()) {
       toolhiveSocketPath = undefined
       toolhiveMcpPort = undefined
     }

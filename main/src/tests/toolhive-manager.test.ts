@@ -112,6 +112,8 @@ const mockGetQuittingState = vi.mocked(getQuittingState)
 class MockProcess extends EventEmitter {
   pid = 12345
   killed = false
+  exitCode: number | null = null
+  signalCode: NodeJS.Signals | null = null
   stderr = new EventEmitter()
   kill() {
     // Don't automatically set killed - let tests control this
@@ -820,10 +822,15 @@ describe('toolhive-manager', () => {
 
       stopToolhive()
       expect(killSpy).toHaveBeenCalledWith('SIGTERM')
+      // Mirror real Node: a successful kill() sets .killed=true even though
+      // the child has not exited yet. exitCode/signalCode stay null until the
+      // process actually terminates. This is the production state the
+      // parent-exit force kill must escalate from.
+      mockProcess.killed = true
       killSpy.mockClear()
 
-      // Simulate process.on('exit') firing synchronously before the
-      // scheduled 2s SIGKILL timer can run.
+      // Parent-exit handler fires synchronously before the scheduled 2s
+      // SIGKILL timer can run; force=true must bypass the in-flight stop.
       stopToolhive({ force: true })
 
       expect(killSpy).toHaveBeenCalledWith('SIGKILL')
