@@ -153,3 +153,20 @@ describe('Promo Card', () => {
     ).not.toBeInTheDocument()
   })
 })
+
+describe('Refresh button (custom registry)', () => {
+  it('renders a Refresh button when a non-default registry is configured', async () => {
+    mockedGetApiV1BetaRegistryByName.override((data) => ({
+      ...data,
+      type: 'url',
+    }))
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.queryByText('dev-toolkit')).toBeVisible()
+    })
+
+    expect(screen.getByRole('button', { name: /refresh/i })).toBeVisible()
+  })
+})
