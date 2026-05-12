@@ -8,8 +8,9 @@ import {
   recreateMainWindowForShutdown,
   sendToMainWindowRenderer,
 } from '../main-window'
-import { getToolhivePort, stopToolhive, binPath } from '../toolhive-manager'
+import { stopToolhive, binPath } from '../toolhive-manager'
 import { stopAllServers } from '../graceful-exit'
+import { createMainProcessFetch } from '../unix-socket-fetch'
 import { safeTrayDestroy } from '../system-tray'
 import { delay } from '../../../utils/delay'
 import log from '../logger'
@@ -39,10 +40,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
   }
 
   try {
-    const port = getToolhivePort()
-    if (port) {
-      await stopAllServers(binPath, port)
-    }
+    await stopAllServers(binPath, { createFetch: createMainProcessFetch })
   } catch (err) {
     log.error('Teardown failed: ', err)
   } finally {

@@ -1,3 +1,4 @@
+import http from 'node:http'
 import path from 'path'
 import {
   _electron as electron,
@@ -29,7 +30,7 @@ function getExecutablePath(): string {
 export interface LaunchedApp {
   app: ElectronApplication
   window: Page
-  baseUrl: string
+  socketPath: string
   /**
    * Terminate the app without waiting on the renderer's before-quit teardown.
    *
@@ -74,18 +75,20 @@ export async function launchApp(userDataDir: string): Promise<LaunchedApp> {
 
   await window.getByRole('link', { name: /mcp servers/i }).waitFor()
 
-  const port = await window.evaluate(async () => {
+  const socketPath = await window.evaluate(async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (await (globalThis as any).electronAPI.getToolhivePort()) as number
+    return (await (globalThis as any).electronAPI.getToolhiveSocketPath()) as
+      | string
+      | undefined
   })
 
-  if (!port) {
-    throw new Error('Failed to resolve ToolHive port from the launched app')
+  if (!socketPath) {
+    throw new Error(
+      'Failed to resolve ToolHive socket path from the launched app'
+    )
   }
 
-  const baseUrl = `http://127.0.0.1:${port}`
-
-  await waitForThvReady(baseUrl)
+  await waitForThvReady(socketPath)
 
   const close = async () => {
     // Force an immediate exit via Electron's app.exit(), bypassing before-quit
@@ -113,35 +116,71 @@ export async function launchApp(userDataDir: string): Promise<LaunchedApp> {
     }
   }
 
-  return { app, window, baseUrl, close }
+  return { app, window, socketPath, close }
 }
 
 /**
- * Thin wrapper around `fetch` that raises on non-2xx/4xx responses the caller
- * wants to treat as failures, optionally returning parsed JSON.
+ * Performs an HTTP request against the thv server over its UNIX socket. Used
+ * by e2e helpers to seed/inspect state out-of-band from the app UI, mirroring
+ * the transport the production renderer uses (via the IPC bridge).
+ */
+function socketRequest(
+  socketPath: string,
+  apiPath: string,
+  init?: { method?: string; headers?: Record<string, string>; body?: string }
+): Promise<{ status: number; text: string }> {
+  return new Promise((resolve, reject) => {
+    const req = http.request(
+      {
+        socketPath,
+        path: apiPath,
+        method: init?.method ?? 'GET',
+        headers: {
+          'content-type': 'application/json',
+          ...(init?.headers ?? {}),
+        },
+      },
+      (res) => {
+        const chunks: Buffer[] = []
+        res.on('data', (chunk: Buffer) => chunks.push(chunk))
+        res.on('end', () =>
+          resolve({
+            status: res.statusCode ?? 500,
+            text: Buffer.concat(chunks).toString('utf-8'),
+          })
+        )
+        res.on('error', reject)
+      }
+    )
+    req.on('error', reject)
+    if (init?.body) req.write(init.body)
+    req.end()
+  })
+}
+
+/**
+ * Thin wrapper around the thv UNIX socket transport that raises on unexpected
+ * statuses and parses JSON when present.
  */
 export async function thvFetch<T = unknown>(
-  baseUrl: string,
+  socketPath: string,
   apiPath: string,
-  init?: RequestInit & { expectStatus?: number[] }
+  init?: {
+    method?: string
+    headers?: Record<string, string>
+    body?: string
+    expectStatus?: number[]
+  }
 ): Promise<{ status: number; json: T | null }> {
   const { expectStatus, ...rest } = init ?? {}
-  const res = await fetch(`${baseUrl}${apiPath}`, {
-    ...rest,
-    headers: {
-      'content-type': 'application/json',
-      ...(rest.headers ?? {}),
-    },
-  })
+  const { status, text } = await socketRequest(socketPath, apiPath, rest)
 
-  if (expectStatus && !expectStatus.includes(res.status)) {
-    const body = await res.text()
+  if (expectStatus && !expectStatus.includes(status)) {
     throw new Error(
-      `thvFetch ${apiPath} expected status in [${expectStatus.join(',')}], got ${res.status}: ${body}`
+      `thvFetch ${apiPath} expected status in [${expectStatus.join(',')}], got ${status}: ${text}`
     )
   }
 
-  const text = await res.text()
   let json: T | null = null
   if (text) {
     try {
@@ -150,24 +189,24 @@ export async function thvFetch<T = unknown>(
       json = null
     }
   }
-  return { status: res.status, json }
+  return { status, json }
 }
 
 async function waitForThvReady(
-  baseUrl: string,
+  socketPath: string,
   { timeoutMs = 30_000 } = {}
 ): Promise<void> {
   const deadline = Date.now() + timeoutMs
   while (Date.now() < deadline) {
     try {
-      const res = await fetch(`${baseUrl}/api/v1beta/groups`)
-      if (res.ok) return
+      const { status } = await socketRequest(socketPath, '/api/v1beta/groups')
+      if (status >= 200 && status < 300) return
     } catch {
       // keep polling
     }
     await new Promise((resolve) => setTimeout(resolve, 250))
   }
   throw new Error(
-    `ToolHive API at ${baseUrl} did not become ready within ${timeoutMs}ms`
+    `ToolHive API at socket ${socketPath} did not become ready within ${timeoutMs}ms`
   )
 }

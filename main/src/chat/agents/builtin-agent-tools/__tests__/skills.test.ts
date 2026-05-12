@@ -6,11 +6,10 @@ import { Buffer } from 'node:buffer'
 import { nanoid } from 'nanoid'
 
 const mockGetApiV1BetaSkills = vi.hoisted(() => vi.fn())
-const mockCreateClient = vi.hoisted(() =>
+const mockCreateMainProcessApiClient = vi.hoisted(() =>
   vi.fn(() => ({}) as { __fake__: true })
 )
-const mockGetToolhivePort = vi.hoisted(() => vi.fn())
-const mockGetHeaders = vi.hoisted(() => vi.fn(() => ({})))
+const mockHasToolhiveConnection = vi.hoisted(() => vi.fn(() => true))
 const mockLog = vi.hoisted(() => ({
   debug: vi.fn(),
   info: vi.fn(),
@@ -31,14 +30,9 @@ vi.mock('@common/api/generated/sdk.gen', () => ({
   postApiV1BetaSkillsBuild: mockPostApiV1BetaSkillsBuild,
   getApiV1BetaSkillsBuilds: mockGetApiV1BetaSkillsBuilds,
 }))
-vi.mock('@common/api/generated/client', () => ({
-  createClient: mockCreateClient,
-}))
-vi.mock('../../../../toolhive-manager', () => ({
-  getToolhivePort: mockGetToolhivePort,
-}))
-vi.mock('../../../../headers', () => ({
-  getHeaders: mockGetHeaders,
+vi.mock('../../../../unix-socket-fetch', () => ({
+  createMainProcessApiClient: mockCreateMainProcessApiClient,
+  hasToolhiveConnection: mockHasToolhiveConnection,
 }))
 vi.mock('../../../../logger', () => ({ default: mockLog }))
 vi.mock('../../../settings-storage', () => ({
@@ -73,7 +67,8 @@ async function ensureClientSkill(
 
 beforeEach(async () => {
   mockGetApiV1BetaSkills.mockReset()
-  mockGetToolhivePort.mockReset()
+  mockHasToolhiveConnection.mockReset()
+  mockHasToolhiveConnection.mockReturnValue(true)
   mockGetEnabledSkills.mockReset()
   mockGetEnabledSkills.mockImplementation(() => [])
   mockPruneEnabledSkillsTo.mockReset()
@@ -133,7 +128,7 @@ async function buildHandle(options: BuildOptions = {}) {
 
 describe('skills bundle — list_skills', () => {
   it('reports a friendly error when ToolHive is not running', async () => {
-    mockGetToolhivePort.mockReturnValue(null)
+    mockHasToolhiveConnection.mockReturnValue(false)
     const handle = await createSkillsAgentTools({
       buildClient: () => null,
       homeDir: homeRoot,

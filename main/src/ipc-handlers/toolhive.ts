@@ -1,22 +1,23 @@
 import { ipcMain } from 'electron'
 import {
   restartToolhive,
-  getToolhivePort,
+  getToolhiveSocketPath,
   isToolhiveRunning,
   getToolhiveStatus,
   getToolhiveMcpPort,
-  isUsingCustomPort,
+  isUsingCustomSocket,
 } from '../toolhive-manager'
 import { checkContainerEngine } from '../container-engine'
 import { getLastShutdownServers, clearShutdownHistory } from '../graceful-exit'
+import { registerApiFetchHandlers } from '../unix-socket-fetch'
 import log from '../logger'
 
 export function register() {
-  ipcMain.handle('get-toolhive-port', () => getToolhivePort())
   ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
+  ipcMain.handle('get-toolhive-socket-path', () => getToolhiveSocketPath())
   ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
   ipcMain.handle('get-toolhive-status', () => getToolhiveStatus())
-  ipcMain.handle('is-using-custom-port', () => isUsingCustomPort())
+  ipcMain.handle('is-using-custom-socket', () => isUsingCustomSocket())
 
   ipcMain.handle('check-container-engine', async () => {
     return await checkContainerEngine()
@@ -43,4 +44,6 @@ export function register() {
     clearShutdownHistory()
     return { success: true }
   })
+
+  registerApiFetchHandlers()
 }

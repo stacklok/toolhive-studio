@@ -10,10 +10,10 @@ import { initTray, safeTrayDestroy } from '../system-tray'
 import { createApplicationMenu } from '../menu'
 import {
   startToolhive,
-  getToolhivePort,
   isToolhiveRunning,
   stopToolhive,
 } from '../toolhive-manager'
+import { registerApiFetchHandlers } from '../unix-socket-fetch'
 import { getMainWindow, createMainWindow, hideMainWindow } from '../main-window'
 import { extractDeepLinkFromArgs, handleDeepLink } from '../deep-links'
 import { getCspString } from '../csp'
@@ -70,6 +70,9 @@ export function register() {
 
     // Start ToolHive with tray reference
     await startToolhive()
+
+    // Register IPC handlers for renderer -> main -> thv API bridge
+    registerApiFetchHandlers()
 
     // Create main window
     try {
@@ -128,20 +131,15 @@ export function register() {
       }
     }
 
-    // Setup CSP headers
     session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
       if (process.env.NODE_ENV === 'development') {
         return callback({ responseHeaders: details.responseHeaders })
-      }
-      const port = getToolhivePort()
-      if (port == null) {
-        throw new Error('[content-security-policy] ToolHive port is not set')
       }
       return callback({
         responseHeaders: {
           ...details.responseHeaders,
           'Content-Security-Policy': [
-            getCspString(port, import.meta.env.VITE_SENTRY_DSN),
+            getCspString(import.meta.env.VITE_SENTRY_DSN),
           ],
         },
       })

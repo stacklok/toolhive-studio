@@ -4,10 +4,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Hoisted mock factories — must be defined before vi.mock() calls
 // ---------------------------------------------------------------------------
 
-const mockGetToolhivePort = vi.hoisted(() => vi.fn().mockReturnValue(3000))
 const mockGetToolhiveMcpPort = vi.hoisted(() => vi.fn().mockReturnValue(3001))
-const mockGetHeaders = vi.hoisted(() => vi.fn().mockReturnValue({}))
-const mockCreateApiClient = vi.hoisted(() => vi.fn().mockReturnValue({}))
+const mockCreateMainProcessApiClient = vi.hoisted(() =>
+  vi.fn().mockReturnValue({})
+)
 const mockGetApiV1BetaWorkloads = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ data: { workloads: [] } })
 )
@@ -49,16 +49,11 @@ const mockReplaceAllMcpAppUiMetadata = vi.hoisted(() => vi.fn())
 // ---------------------------------------------------------------------------
 
 vi.mock('../../toolhive-manager', () => ({
-  getToolhivePort: mockGetToolhivePort,
   getToolhiveMcpPort: mockGetToolhiveMcpPort,
 }))
 
-vi.mock('../../headers', () => ({
-  getHeaders: mockGetHeaders,
-}))
-
-vi.mock('@common/api/generated/client', () => ({
-  createClient: mockCreateApiClient,
+vi.mock('../../unix-socket-fetch', () => ({
+  createMainProcessApiClient: mockCreateMainProcessApiClient,
 }))
 
 vi.mock('@common/api/generated/sdk.gen', () => ({
@@ -168,13 +163,11 @@ const makeToolDef = (overrides: Record<string, unknown> = {}) => ({
 beforeEach(() => {
   vi.clearAllMocks()
 
-  // Ports
-  mockGetToolhivePort.mockReturnValue(3000)
+  // MCP backend port (still TCP)
   mockGetToolhiveMcpPort.mockReturnValue(3001)
 
   // API client chain (fetchWorkloads)
-  mockGetHeaders.mockReturnValue({})
-  mockCreateApiClient.mockReturnValue({})
+  mockCreateMainProcessApiClient.mockReturnValue({})
   mockGetApiV1BetaWorkloads.mockResolvedValue({ data: { workloads: [] } })
 
   // Settings

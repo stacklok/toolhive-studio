@@ -117,7 +117,7 @@ describe('graceful-exit', () => {
         createMockWorkloadsResponse([])
       )
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockLog.info).toHaveBeenCalledWith(
         'No running servers – teardown complete'
@@ -140,7 +140,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledTimes(1)
       expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledWith({
@@ -165,7 +165,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockLog.info).toHaveBeenCalledWith(
         'All servers have reached final state'
@@ -182,7 +182,9 @@ describe('graceful-exit', () => {
         new Error('Stop failed')
       )
 
-      await expect(stopAllServers('', 3000)).rejects.toThrow('Stop failed')
+      await expect(stopAllServers('', { port: 3000 })).rejects.toThrow(
+        'Stop failed'
+      )
     })
 
     it('handles timeout when servers do not stop', async () => {
@@ -201,7 +203,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await expect(stopAllServers('', 3000)).rejects.toThrow(
+      await expect(stopAllServers('', { port: 3000 })).rejects.toThrow(
         'Some servers failed to stop within timeout'
       )
     })
@@ -213,7 +215,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockWriteShutdownServers).toHaveBeenCalledWith(mockRunningServers)
     })
@@ -234,7 +236,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       // Should only include the server with a name in the batch call
       expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledTimes(1)
@@ -300,7 +302,7 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       expect(mockLog.info).toHaveBeenCalledWith(
         'Still waiting for 1 servers to reach final state: server1(stopping)'
@@ -326,10 +328,106 @@ describe('graceful-exit', () => {
 
       mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
 
-      await stopAllServers('', 3000)
+      await stopAllServers('', { port: 3000 })
 
       // Should call delay between polling attempts (not on first attempt)
       expect(mockDelay).toHaveBeenCalledWith(2000)
+    })
+  })
+
+  // The new socket transport calls stopAllServers with a `createFetch` factory
+  // instead of a `port`. The client's baseUrl becomes the sentinel
+  // 'http://localhost' and the custom fetch handles routing to the UNIX socket.
+  describe('socket transport (createFetch branch)', () => {
+    const mockRunningServers: CoreWorkload[] = [
+      { name: 'server1', status: 'running', port: 3001 },
+    ]
+    const mockStoppedServers: CoreWorkload[] = [
+      { name: 'server1', status: 'stopped', port: 3001 },
+    ]
+
+    it('passes a sentinel baseUrl (no port) and the produced custom fetch to createClient', async () => {
+      mockGetApiV1BetaWorkloads.mockResolvedValue(
+        createMockWorkloadsResponse([])
+      )
+
+      const customFetch = vi.fn() as unknown as typeof fetch
+      const createFetch = vi.fn(() => customFetch)
+
+      await stopAllServers('', { createFetch })
+
+      expect(createFetch).toHaveBeenCalledTimes(1)
+      expect(mockCreateClient).toHaveBeenCalledWith({
+        baseUrl: 'http://localhost',
+        headers: mockHeaders,
+        fetch: customFetch,
+      })
+    })
+
+    it('falls back to http://localhost (no port, no fetch) when neither is provided', async () => {
+      mockGetApiV1BetaWorkloads.mockResolvedValue(
+        createMockWorkloadsResponse([])
+      )
+
+      await stopAllServers('', {})
+
+      const cfg = mockCreateClient.mock.calls.at(-1)?.[0] as {
+        baseUrl: string
+        fetch?: unknown
+      }
+      expect(cfg.baseUrl).toBe('http://localhost')
+      expect(cfg.fetch).toBeUndefined()
+    })
+
+    it('uses the port baseUrl when both port and createFetch are provided, but the custom fetch overrides transport', async () => {
+      mockGetApiV1BetaWorkloads.mockResolvedValue(
+        createMockWorkloadsResponse([])
+      )
+
+      const customFetch = vi.fn() as unknown as typeof fetch
+      const createFetch = vi.fn(() => customFetch)
+
+      await stopAllServers('', { port: 3000, createFetch })
+
+      const cfg = mockCreateClient.mock.calls.at(-1)?.[0] as {
+        baseUrl: string
+        fetch?: unknown
+      }
+      expect(cfg.baseUrl).toBe('http://localhost:3000')
+      expect(cfg.fetch).toBe(customFetch)
+    })
+
+    it('completes the no-running-servers fast path when using createFetch', async () => {
+      mockGetApiV1BetaWorkloads.mockResolvedValue(
+        createMockWorkloadsResponse([])
+      )
+
+      const customFetch = vi.fn() as unknown as typeof fetch
+      await expect(
+        stopAllServers('', { createFetch: () => customFetch })
+      ).resolves.toBeUndefined()
+
+      expect(mockPostApiV1BetaWorkloadsStop).not.toHaveBeenCalled()
+      expect(mockLog.info).toHaveBeenCalledWith(
+        'No running servers – teardown complete'
+      )
+    })
+
+    it('completes the polling loop when using createFetch', async () => {
+      mockGetApiV1BetaWorkloads
+        .mockResolvedValueOnce(createMockWorkloadsResponse(mockRunningServers))
+        .mockResolvedValueOnce(createMockWorkloadsResponse(mockStoppedServers))
+      mockPostApiV1BetaWorkloadsStop.mockResolvedValue(createMockStopResponse())
+
+      const customFetch = vi.fn() as unknown as typeof fetch
+      await stopAllServers('', { createFetch: () => customFetch })
+
+      expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledTimes(1)
+      expect(mockPostApiV1BetaWorkloadsStop).toHaveBeenCalledWith({
+        client: mockClient,
+        body: { names: ['server1'] },
+      })
+      expect(mockLog.info).toHaveBeenCalledWith('All servers stopped cleanly')
     })
   })
 })

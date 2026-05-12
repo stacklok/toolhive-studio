@@ -119,9 +119,12 @@ vi.mock('../graceful-exit', () => ({
 
 vi.mock('../toolhive-manager', () => ({
   stopToolhive: vi.fn(),
-  getToolhivePort: vi.fn(() => 3000),
   isToolhiveRunning: vi.fn(() => true),
   binPath: '/mock/bin/path',
+}))
+
+vi.mock('../unix-socket-fetch', () => ({
+  createMainProcessFetch: vi.fn(() => vi.fn()),
 }))
 
 vi.mock('../system-tray', () => ({
@@ -156,7 +159,7 @@ vi.mock('../app-state', () => ({
 }))
 
 import { stopAllServers } from '../graceful-exit'
-import { stopToolhive, getToolhivePort } from '../toolhive-manager'
+import { stopToolhive } from '../toolhive-manager'
 import { safeTrayDestroy } from '../system-tray'
 import { pollWindowReady } from '../util'
 import { delay } from '../../../utils/delay'
@@ -199,7 +202,6 @@ describe('auto-update', () => {
       // Setup default mocks
       vi.mocked(stopAllServers).mockResolvedValue(undefined)
       vi.mocked(stopToolhive).mockReturnValue(undefined)
-      vi.mocked(getToolhivePort).mockReturnValue(3000)
       vi.mocked(pollWindowReady).mockResolvedValue(undefined)
       vi.mocked(delay).mockResolvedValue(undefined)
       vi.mocked(dialog.showMessageBox).mockResolvedValue({
@@ -803,8 +805,7 @@ describe('auto-update', () => {
         expect(vi.mocked(autoUpdater).quitAndInstall).toHaveBeenCalled()
       })
 
-      it('integrates with toolhive manager port detection', async () => {
-        vi.mocked(getToolhivePort).mockReturnValue(undefined)
+      it('always attempts server shutdown via IPC fetch bridge', async () => {
         vi.mocked(dialog.showMessageBox).mockResolvedValue({
           response: 0,
           checkboxChecked: false,
@@ -823,13 +824,14 @@ describe('auto-update', () => {
 
         await updatePromise
 
-        // Should skip server shutdown when no port is available
-        expect(vi.mocked(getToolhivePort)).toHaveBeenCalled()
-        expect(vi.mocked(stopAllServers)).not.toHaveBeenCalled()
+        // Always attempts server shutdown (connection errors handled internally)
+        expect(vi.mocked(stopAllServers)).toHaveBeenCalled()
       })
 
-      it('handles missing toolhive port gracefully', async () => {
-        vi.mocked(getToolhivePort).mockReturnValue(undefined)
+      it('handles server shutdown failure gracefully', async () => {
+        vi.mocked(stopAllServers).mockRejectedValueOnce(
+          new Error('No ToolHive connection available')
+        )
         vi.mocked(dialog.showMessageBox).mockResolvedValue({
           response: 0,
           checkboxChecked: false,
@@ -848,8 +850,9 @@ describe('auto-update', () => {
 
         await updatePromise
 
-        expect(vi.mocked(log).info).toHaveBeenCalledWith(
-          '[update] No ToolHive port available, skipping server shutdown'
+        expect(vi.mocked(log).error).toHaveBeenCalledWith(
+          expect.stringContaining('[update] Server shutdown failed'),
+          expect.anything()
         )
       })
 

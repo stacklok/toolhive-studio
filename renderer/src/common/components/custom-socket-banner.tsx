@@ -4,33 +4,31 @@ import { Alert, AlertDescription } from './ui/alert'
 import log from 'electron-log/renderer'
 
 /**
- * Banner that displays a warning when using a custom ToolHive port in development mode.
- * Only visible when THV_PORT environment variable is set.
+ * Banner that warns the developer when the studio is talking to an
+ * externally-managed `thv` over a custom UNIX socket / Windows named pipe
+ * (THV_SOCKET env var). Visible in development only.
  */
-export function CustomPortBanner() {
-  const [isCustomPort, setIsCustomPort] = useState(false)
-  const [port, setPort] = useState<number | undefined>(undefined)
+export function CustomSocketBanner() {
+  const [isCustomSocket, setIsCustomSocket] = useState(false)
+  const [socketPath, setSocketPath] = useState<string | undefined>(undefined)
 
   useEffect(() => {
     Promise.all([
-      window.electronAPI.isUsingCustomPort(),
-      window.electronAPI.getToolhivePort(),
+      window.electronAPI.isUsingCustomSocket(),
+      window.electronAPI.getToolhiveSocketPath(),
     ])
-      .then(([usingCustom, toolhivePort]) => {
-        setIsCustomPort(usingCustom)
-        setPort(toolhivePort)
+      .then(([usingCustom, path]) => {
+        setIsCustomSocket(usingCustom)
+        setSocketPath(path)
       })
       .catch((error: unknown) => {
-        log.error('Failed to get custom port info:', error)
+        log.error('Failed to get custom socket info:', error)
       })
   }, [])
 
-  // Don't render if not using custom port or port is not available
-  if (!isCustomPort || !port) {
+  if (!isCustomSocket || !socketPath) {
     return null
   }
-
-  const httpAddress = `http://127.0.0.1:${port}`
 
   return (
     <Alert
@@ -45,9 +43,9 @@ export function CustomPortBanner() {
           <span
             className="rounded bg-yellow-100 px-1 py-0.5 font-mono text-xs
               dark:bg-yellow-900"
-            title={httpAddress}
+            title={socketPath}
           >
-            {httpAddress}
+            {socketPath}
           </span>
         </div>
       </AlertDescription>

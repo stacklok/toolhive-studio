@@ -20,8 +20,8 @@ import './common/lib/os-design'
 
 initSentry()
 
-if (!window.electronAPI || !window.electronAPI.getToolhivePort) {
-  log.error('ToolHive port API not available in renderer')
+if (!window.electronAPI || !window.electronAPI.apiFetch) {
+  log.error('ToolHive API bridge not available in renderer')
 }
 
 ;(async () => {

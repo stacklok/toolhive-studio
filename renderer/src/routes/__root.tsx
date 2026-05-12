@@ -20,7 +20,7 @@ import '@fontsource/atkinson-hyperlegible/700-italic.css'
 import '@fontsource-variable/inter/wght.css'
 import '@fontsource-variable/merriweather/wght.css'
 import log from 'electron-log/renderer'
-import { CustomPortBanner } from '@/common/components/custom-port-banner'
+import { CustomSocketBanner } from '@/common/components/custom-socket-banner'
 import { NewsletterModal } from '@/common/components/newsletter-modal'
 import { NewsletterModalProvider } from '@/common/contexts/newsletter-modal-provider'
 import { ExpertConsultationBanner } from '@/common/components/expert-consultation-banner'
@@ -47,7 +47,7 @@ function RootComponent() {
   return (
     <NewsletterModalProvider>
       {!hideNav && <TopNav />}
-      {!hideNav && import.meta.env.DEV && <CustomPortBanner />}
+      {!hideNav && import.meta.env.DEV && <CustomSocketBanner />}
       <Main>
         <Outlet />
         <Toaster

@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process'
-import { existsSync } from 'node:fs'
+import { existsSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
 import net from 'node:net'
 import { app } from 'electron'
@@ -34,21 +34,26 @@ const binPath = app.isPackaged
     )
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
-let toolhivePort: number | undefined
 let toolhiveMcpPort: number | undefined
+let toolhiveSocketPath: string | undefined
 let isRestarting = false
 let killTimer: NodeJS.Timeout | undefined
 let processError: ToolhiveProcessError | undefined
-
-export function getToolhivePort(): number | undefined {
-  return toolhivePort
-}
 
 export function getToolhiveMcpPort(): number | undefined {
   return toolhiveMcpPort
 }
 
+export function getToolhiveSocketPath(): string | undefined {
+  return toolhiveSocketPath
+}
+
 export function isToolhiveRunning(): boolean {
+  // When THV_SOCKET points at an externally managed thv we never spawn a
+  // child process, but the API is still reachable. Treat that as "running"
+  // so renderer guards (e.g. setupSecretProvider) and tray UI behave the
+  // same as in the bundled-binary case.
+  if (isUsingCustomSocket()) return true
   const isRunning = !!toolhiveProcess && !toolhiveProcess.killed
   return isRunning
 }
@@ -61,10 +66,28 @@ export function getToolhiveStatus(): ToolhiveStatus {
 }
 
 /**
- * Returns whether the app is using a custom ToolHive port (externally managed thv).
+ * Returns whether the app is using an externally managed thv reachable over
+ * a custom UNIX socket / Windows named pipe (THV_SOCKET env var).
  */
-export function isUsingCustomPort(): boolean {
-  return !app.isPackaged && !!process.env.THV_PORT
+export function isUsingCustomSocket(): boolean {
+  return !app.isPackaged && !!process.env.THV_SOCKET
+}
+
+/**
+ * Parses THV_MCP_PORT into a positive integer. Returns `undefined` for
+ * unset / blank / non-numeric / out-of-range values and logs a warning so
+ * a typo doesn't silently turn into NaN being treated as a real port.
+ */
+function parseMcpPortEnv(raw: string | undefined): number | undefined {
+  if (!raw) return undefined
+  const port = Number(raw)
+  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
+    log.warn(
+      `Ignoring invalid THV_MCP_PORT=${raw}; expected an integer in 1..65535`
+    )
+    return undefined
+  }
+  return port
 }
 
 async function findFreePort(
@@ -124,21 +147,37 @@ async function findFreePort(
   return await getRandomPort()
 }
 
+function generateSocketPath(): string {
+  // Windows AF_UNIX sockets created in %TEMP% hit EACCES on connect due to
+  // DACL handling. Named pipes are the canonical Windows IPC and are
+  // supported natively by Node's http.request({ socketPath }) and Go's
+  // Microsoft/go-winio.
+  if (process.platform === 'win32') {
+    return `\\\\.\\pipe\\toolhive-${process.pid}`
+  }
+  const socketName = `toolhive-${process.pid}.sock`
+  return path.join(app.getPath('temp'), socketName)
+}
+
+function cleanupSocketFile(socketPath: string): void {
+  // Named pipes are released by the kernel when the listener exits; there's
+  // no filesystem entry to remove.
+  if (process.platform === 'win32') return
+  try {
+    if (existsSync(socketPath)) {
+      unlinkSync(socketPath)
+    }
+  } catch {
+    // Ignore cleanup errors
+  }
+}
+
 export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
-    if (isUsingCustomPort()) {
-      const customPort = parseInt(process.env.THV_PORT!, 10)
-      if (isNaN(customPort)) {
-        log.error(
-          `Invalid THV_PORT environment variable: ${process.env.THV_PORT}`
-        )
-        return
-      }
-      toolhivePort = customPort
-      toolhiveMcpPort = process.env.THV_MCP_PORT
-        ? parseInt(process.env.THV_MCP_PORT!, 10)
-        : undefined
-      log.info(`Using external ToolHive on port ${toolhivePort}`)
+    if (isUsingCustomSocket()) {
+      toolhiveSocketPath = process.env.THV_SOCKET!
+      toolhiveMcpPort = parseMcpPortEnv(process.env.THV_MCP_PORT)
+      log.info(`Using external ToolHive on socket ${toolhiveSocketPath}`)
       return
     }
 
@@ -149,9 +188,11 @@ export async function startToolhive(): Promise<void> {
 
     processError = undefined
     toolhiveMcpPort = await findFreePort()
-    toolhivePort = await findFreePort(50000, 50100)
+    toolhiveSocketPath = generateSocketPath()
+    cleanupSocketFile(toolhiveSocketPath)
+
     log.info(
-      `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}`
+      `Starting ToolHive from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}`
     )
 
     const serveArgs = [
@@ -160,8 +201,7 @@ export async function startToolhive(): Promise<void> {
       '--experimental-mcp',
       '--experimental-mcp-host=127.0.0.1',
       `--experimental-mcp-port=${toolhiveMcpPort}`,
-      '--host=127.0.0.1',
-      `--port=${toolhivePort}`,
+      `--socket=${toolhiveSocketPath}`,
     ]
 
     const isE2E = process.env.TOOLHIVE_E2E === 'true'
@@ -175,7 +215,7 @@ export async function startToolhive(): Promise<void> {
       )
     }
 
-    toolhiveProcess = spawn(binPath, serveArgs, {
+    const child = spawn(binPath, serveArgs, {
       stdio: ['ignore', 'ignore', 'pipe'],
       detached: false,
       // Ensure child process is killed when parent exits
@@ -187,19 +227,21 @@ export async function startToolhive(): Promise<void> {
         TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
       },
     })
-    log.info(`[startToolhive] Process spawned with PID: ${toolhiveProcess.pid}`)
+    toolhiveProcess = child
+
+    log.info(`[startToolhive] Process spawned with PID: ${child.pid}`)
 
     scope.addBreadcrumb({
       category: 'debug',
-      message: `Starting ToolHive from: ${binPath} on port ${toolhivePort}, MCP on port ${toolhiveMcpPort}, PID: ${toolhiveProcess.pid}`,
+      message: `Starting ToolHive from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}, PID: ${child.pid}`,
     })
 
-    updateTrayStatus(!!toolhiveProcess)
+    updateTrayStatus(!!child)
 
     // Capture and log stderr
-    if (toolhiveProcess.stderr) {
+    if (child.stderr) {
       log.info(`[ToolHive] Capturing stderr enabled`)
-      toolhiveProcess.stderr.on('data', (data) => {
+      child.stderr.on('data', (data) => {
         const output = data.toString().trim()
         if (!output) return
         if (output.includes('A new version of ToolHive is available')) {
@@ -220,7 +262,7 @@ export async function startToolhive(): Promise<void> {
       })
     }
 
-    toolhiveProcess.on('error', (error) => {
+    child.on('error', (error) => {
       log.error('Failed to start ToolHive: ', error)
       Sentry.captureMessage(
         `Failed to start ToolHive: ${JSON.stringify(error)}`,
@@ -229,9 +271,16 @@ export async function startToolhive(): Promise<void> {
       updateTrayStatus(false)
     })
 
-    toolhiveProcess.on('exit', (code) => {
+    child.on('exit', (code) => {
       log.warn(`ToolHive process exited with code: ${code}`)
-      toolhiveProcess = undefined
+      // Only clear globals if this exit is for the currently tracked child.
+      // Otherwise a prior child's exit can run after restart has spawned a
+      // replacement and would wipe the new socket path / process reference.
+      if (toolhiveProcess === child) {
+        toolhiveProcess = undefined
+        toolhiveSocketPath = undefined
+        toolhiveMcpPort = undefined
+      }
       if (!isRestarting && !getQuittingState()) {
         updateTrayStatus(false)
         Sentry.captureMessage(
@@ -323,6 +372,12 @@ export function stopToolhive(options?: { force?: boolean }): void {
     log.info(
       `[stopToolhive] No process to stop (process=${!!toolhiveProcess}, killed=${toolhiveProcess?.killed})`
     )
+    // Drop stale managed socket path (e.g. after crash) without touching external
+    // THV_SOCKET — that path is not owned by this process and must stay visible.
+    if (!isUsingCustomSocket()) {
+      toolhiveSocketPath = undefined
+      toolhiveMcpPort = undefined
+    }
     return
   }
 
@@ -340,6 +395,12 @@ export function stopToolhive(options?: { force?: boolean }): void {
   // If graceful shutdown failed, try force kill immediately
   if (!killed) {
     tryKillProcess(processToKill, 'SIGKILL', '[stopToolhive]')
+    // Child is going away; avoid keeping a socket path that will 404 the API
+    // bridge until the real `exit` handler runs (mock tests may not emit exit).
+    if (!isUsingCustomSocket()) {
+      toolhiveSocketPath = undefined
+      toolhiveMcpPort = undefined
+    }
     log.info(`[stopToolhive] Process cleanup completed`)
     return
   }
@@ -348,6 +409,12 @@ export function stopToolhive(options?: { force?: boolean }): void {
   if (!force && pidToKill !== undefined) {
     scheduleForceKill(processToKill, pidToKill)
   }
+
+  if (toolhiveSocketPath) {
+    cleanupSocketFile(toolhiveSocketPath)
+  }
+  toolhiveSocketPath = undefined
+  toolhiveMcpPort = undefined
 
   log.info(`[stopToolhive] Process cleanup completed`)
 }

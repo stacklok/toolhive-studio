@@ -6,7 +6,7 @@ import { nanoid } from 'nanoid'
 import { z } from 'zod'
 import { tool, type ToolSet } from 'ai'
 import log from '../../../logger'
-import { createClient, type Client } from '@common/api/generated/client'
+import { type Client } from '@common/api/generated/client'
 import {
   getApiV1BetaSkills,
   getApiV1BetaSkillsBuilds,
@@ -16,8 +16,10 @@ import type {
   GithubComStacklokToolhivePkgSkillsInstalledSkill as InstalledSkill,
   GithubComStacklokToolhivePkgSkillsLocalBuild as LocalBuild,
 } from '@common/api/generated/types.gen'
-import { getToolhivePort } from '../../../toolhive-manager'
-import { getHeaders } from '../../../headers'
+import {
+  createMainProcessApiClient,
+  hasToolhiveConnection,
+} from '../../../unix-socket-fetch'
 import {
   getEnabledSkills as defaultGetEnabledSkills,
   pruneEnabledSkillsTo as defaultPruneEnabledSkillsTo,
@@ -395,12 +397,8 @@ function renderInstructionsSuffix(
 }
 
 function defaultBuildClient(): Client | null {
-  const port = getToolhivePort()
-  if (!port) return null
-  return createClient({
-    baseUrl: `http://localhost:${port}`,
-    headers: getHeaders(),
-  })
+  if (!hasToolhiveConnection()) return null
+  return createMainProcessApiClient()
 }
 
 export interface SkillsAgentToolsHandle {

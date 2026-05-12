@@ -178,34 +178,51 @@ paths, networking flags, etc.) — only the visual layout.
 
 ## Developer notes: Using a custom thv binary (dev only)
 
-During development, you can test the UI with a custom `thv` binary by running it
-manually:
+The studio talks to its managed `thv` over a UNIX domain socket on macOS/Linux
+and a Windows named pipe on Windows. To test the UI with a custom `thv` binary,
+run it manually with the same `--socket` flag the studio uses internally and
+point the studio at it via `THV_SOCKET`:
 
 1. Start your custom `thv` binary with the serve command:
+
+   **macOS / Linux**
 
    ```bash
    thv serve \
      --openapi \
-     --host=127.0.0.1 --port=50000 \
+     --socket=/tmp/thv-dev.sock \
      --experimental-mcp \
      --experimental-mcp-host=127.0.0.1 \
      --experimental-mcp-port=50001
    ```
 
-2. Set the `THV_PORT` and `THV_MCP_PORT` environment variables and start the dev
-   server.
+   **Windows (PowerShell)**
 
-   ```bash
-   THV_PORT=50000 THV_MCP_PORT=50001 pnpm start
+   ```powershell
+   thv.exe serve `
+     --openapi `
+     --socket='\\.\pipe\thv-dev' `
+     --experimental-mcp `
+     --experimental-mcp-host=127.0.0.1 `
+     --experimental-mcp-port=50001
    ```
 
-The UI displays a banner with the HTTP address when using a custom port. This
-works in development mode only; packaged builds use the embedded binary.
+2. Set `THV_SOCKET` (and `THV_MCP_PORT` if you also need the experimental MCP
+   backend) and start the dev server:
 
-> Note on MCP Optimizer If you plan to use the MCP Optimizer with an external
-> `thv`, ensure `THV_PORT` is within the range `50000-50100`. The app starts its
-> embedded server in this range, and the optimizer expects the ToolHive API to
-> be reachable there.
+   ```bash
+   THV_SOCKET=/tmp/thv-dev.sock THV_MCP_PORT=50001 pnpm start
+   ```
+
+   On Windows:
+
+   ```powershell
+   $env:THV_SOCKET = '\\.\pipe\thv-dev'; $env:THV_MCP_PORT = '50001'; pnpm start
+   ```
+
+The UI displays a banner with the socket / pipe path when `THV_SOCKET` is set.
+This works in development mode only; packaged builds use the embedded binary and
+an auto-generated per-process socket path.
 
 ## Code signing
 

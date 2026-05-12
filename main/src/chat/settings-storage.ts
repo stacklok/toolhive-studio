@@ -1,10 +1,9 @@
 import Store from 'electron-store'
 import log from '../logger'
-import { getToolhivePort, isToolhiveRunning } from '../toolhive-manager'
-import { createClient } from '@common/api/generated/client'
+import { isToolhiveRunning } from '../toolhive-manager'
 import { getApiV1BetaWorkloads } from '@common/api/generated/sdk.gen'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
-import { getHeaders } from '../headers'
+import { createMainProcessApiClient } from '../unix-socket-fetch'
 import { getTearingDownState } from '../app-state'
 import { getToolhiveMcpInfo } from './mcp-tools'
 import { TOOLHIVE_MCP_SERVER_NAME } from '../utils/constants'
@@ -252,12 +251,8 @@ export async function getEnabledMcpTools(): Promise<
     }
 
     // Get running servers to filter out tools from stopped servers
-    const port = getToolhivePort()
     try {
-      const client = createClient({
-        baseUrl: `http://localhost:${port}`,
-        headers: getHeaders(),
-      })
+      const client = createMainProcessApiClient()
 
       const { data } = await getApiV1BetaWorkloads({
         client,
