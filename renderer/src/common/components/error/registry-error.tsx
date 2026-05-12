@@ -4,8 +4,10 @@ import { EmptyState } from '../empty-state'
 import { Link } from '@tanstack/react-router'
 import {
   isRegistryAuthRequiredError,
+  isRegistryLegacyFormatError,
   isRegistryUnavailableError,
   REGISTRY_AUTH_REQUIRED_UI_MESSAGE,
+  REGISTRY_LEGACY_FORMAT_UI_MESSAGE,
   REGISTRY_UNAVAILABLE_UI_MESSAGE,
 } from '../settings/registry/registry-errors-message'
 import { IllustrationLock } from '../illustrations/illustration-lock'
@@ -14,6 +16,7 @@ import { IllustrationError } from '../illustrations/illustration-error'
 export function RegistryError({ error }: { error: unknown }) {
   const isAuthRequired = isRegistryAuthRequiredError(error)
   const isUnavailable = isRegistryUnavailableError(error)
+  const isLegacyFormat = isRegistryLegacyFormatError(error)
 
   const registrySettingsButton = (
     <Button asChild variant="secondary" className="mt-6 rounded-full" size="lg">
@@ -45,6 +48,14 @@ export function RegistryError({ error }: { error: unknown }) {
           illustration={IllustrationError}
           title="Registry unavailable"
           body={REGISTRY_UNAVAILABLE_UI_MESSAGE}
+        >
+          {registrySettingsButton}
+        </EmptyState>
+      ) : isLegacyFormat ? (
+        <EmptyState
+          illustration={IllustrationError}
+          title="Unsupported registry format"
+          body={REGISTRY_LEGACY_FORMAT_UI_MESSAGE}
         >
           {registrySettingsButton}
         </EmptyState>
