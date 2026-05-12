@@ -34,7 +34,7 @@ jobs:
       - name: Compute dependency fingerprint
         id: fingerprint
         run: |
-          HASH=$(sha256sum package.json pnpm-lock.yaml .grype.yaml 2>/dev/null | sha256sum | cut -d' ' -f1)
+          HASH=$(sha256sum package.json pnpm-workspace.yaml pnpm-lock.yaml .grype.yaml 2>/dev/null | sha256sum | cut -d' ' -f1)
           echo "hash=$HASH" >> $GITHUB_OUTPUT
 
       - name: Check for existing remediation PR
@@ -93,7 +93,7 @@ jobs:
             Read .claude/skills/security-vuln-remediation/SKILL.md and remediation-plan.md.
             Implement every fix described in the remediation plan:
             - Upgrade packages where a patch/minor fix is available.
-            - Add pnpm overrides in package.json where an upgrade is not feasible.
+            - Add pnpm overrides in pnpm-workspace.yaml where an upgrade is not feasible.
             - Add grype ignores in .grype.yaml only for dev-only packages with no fix.
             Run pnpm install after changes to regenerate the lockfile.
             Re-run grype . --config .grype.yaml to verify each fix.
@@ -110,7 +110,7 @@ jobs:
         if: steps.existing.outputs.skip != 'true' && steps.phase2.outcome == 'success'
         id: changes
         run: |
-          if git diff --quiet -- package.json pnpm-lock.yaml .grype.yaml; then
+          if git diff --quiet -- package.json pnpm-workspace.yaml pnpm-lock.yaml .grype.yaml; then
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
             echo "has_changes=true" >> $GITHUB_OUTPUT
@@ -125,7 +125,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
           TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
-          git add package.json pnpm-lock.yaml .grype.yaml
+          git add package.json pnpm-workspace.yaml pnpm-lock.yaml .grype.yaml
           git diff --cached --quiet && exit 0
           git commit -m "$TITLE"
           git push --force -u origin "$BRANCH"

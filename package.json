@@ -171,37 +171,5 @@
       "eslint --max-warnings 0 --no-warn-ignored"
     ]
   },
-  "pnpm": {
-    "overrides": {
-      "@electron/rebuild": "^4.0.4",
-      "@electron/node-gyp": "10.2.0-electron.2",
-      "@hono/node-server": ">=1.19.14",
-      "@xmldom/xmldom": ">=0.9.10",
-      "fast-uri": ">=3.1.2",
-      "fast-xml-builder": ">=1.1.7",
-      "fast-xml-parser": "5.5.8",
-      "hono": ">=4.12.16",
-      "ip-address": ">=10.1.1",
-      "lodash-es": ">=4.18.0",
-      "mermaid": ">=11.15.0",
-      "tar": ">=7.5.13",
-      "picomatch": ">=4.0.4",
-      "tmp": ">=0.2.5",
-      "@tootallnate/once": ">=3.0.1",
-      "serialize-javascript": ">=7.0.5",
-      "uuid": ">=14.0.0",
-      "brace-expansion@>=4.0.0 <5.0.5": "5.0.5",
-      "brace-expansion@>=2.0.0 <2.0.3": "2.0.3",
-      "brace-expansion@<1.1.13": "1.1.14"
-    },
-    "auditConfig": {
-      "ignoreGhsas": [
-        "GHSA-rmmr-r34h-pfm5"
-      ]
-    },
-    "patchedDependencies": {
-      "electron-installer-redhat@3.4.0": "patches/electron-installer-redhat@3.4.0.patch",
-      "plist@3.1.0": "patches/plist@3.1.0.patch"
-    }
-  }
+  "packageManager": "pnpm@11.1.1"
 }
