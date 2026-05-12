@@ -173,6 +173,7 @@
   },
   "pnpm": {
     "overrides": {
+      "@electron/rebuild": "^4.0.4",
       "@hono/node-server": ">=1.19.14",
       "@xmldom/xmldom": ">=0.9.10",
       "fast-uri": ">=3.1.2",
