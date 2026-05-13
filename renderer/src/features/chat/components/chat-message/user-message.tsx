@@ -8,6 +8,7 @@ import type { ChatStatus } from 'ai'
 import { AttachmentPreview } from './attachment-preview'
 import { MessageActions } from './message-actions'
 import { getMessageCopyText } from '../../lib/message-copy-text'
+import { useChatComposer } from '../chat-composer-context'
 import type { ChatUIMessage } from '../../types'
 
 interface UserMessageProps {
@@ -34,6 +35,18 @@ function UserAttachments({ parts }: { parts: ChatUIMessage['parts'] }) {
 
 export function UserMessage({ message, status }: UserMessageProps) {
   const copyText = getMessageCopyText(message)
+  const composer = useChatComposer()
+
+  // Edit only makes sense when we have a composer to drive AND there's text
+  // to edit. Attachment-only messages (text empty after trimming) skip the
+  // affordance — there's nothing to pre-fill, and editing the file list
+  // isn't supported in V1.
+  const onEdit =
+    composer && copyText
+      ? () => {
+          composer.beginEdit(message.id, copyText)
+        }
+      : undefined
 
   return (
     <div className="group flex justify-end">
@@ -59,7 +72,7 @@ export function UserMessage({ message, status }: UserMessageProps) {
           </div>
 
           <div className="flex items-center justify-end gap-2">
-            {copyText && <MessageActions copyText={copyText} />}
+            {copyText && <MessageActions copyText={copyText} onEdit={onEdit} />}
             <div className="text-muted-foreground text-right text-xs">
               {formatDistanceToNow(
                 message.metadata?.createdAt

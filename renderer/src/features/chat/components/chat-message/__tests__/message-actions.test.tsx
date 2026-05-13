@@ -52,9 +52,19 @@ describe('MessageActions', () => {
     )
   })
 
-  it('does not render an Edit button in this PR even when onEdit is supplied', () => {
-    render(<MessageActions copyText="hello" onEdit={() => {}} />)
-    // PR 1 is Copy-only; Edit is intentionally deferred.
+  it('renders an Edit button when onEdit is supplied and fires it on click', async () => {
+    const onEdit = vi.fn()
+    render(<MessageActions copyText="hello" onEdit={onEdit} />)
+
+    const editButton = screen.getByRole('button', { name: 'Edit message' })
+    expect(editButton).toBeInTheDocument()
+
+    await userEvent.click(editButton)
+    expect(onEdit).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not render an Edit button when onEdit is not supplied', () => {
+    render(<MessageActions copyText="hello" />)
     expect(
       screen.queryByRole('button', { name: /edit/i })
     ).not.toBeInTheDocument()
