@@ -14,7 +14,7 @@ const mockUseChat = {
   id: 'test-chat',
   messages: [] as ChatUIMessage[],
   sendMessage: vi.fn(),
-  status: 'idle' as 'idle' | 'submitted' | 'streaming',
+  status: 'idle' as 'idle' | 'submitted' | 'streaming' | 'ready' | 'error',
   error: undefined as unknown,
   stop: vi.fn(),
   setMessages: vi.fn(),
@@ -624,6 +624,273 @@ describe('useChatStreaming', () => {
       ).rejects.toThrow('Please configure your AI provider settings first')
 
       expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('queue while streaming', () => {
+    it('queues the message instead of calling sendMessage when status is streaming', async () => {
+      mockUseChat.status = 'streaming'
+
+      const { Wrapper } = createTestUtils()
+      const { result, rerender } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.settings.provider).toBe('openai')
+      })
+
+      await act(async () => {
+        await result.current.sendMessage({ text: 'x' })
+      })
+      rerender()
+
+      expect(result.current.queuedMessage).toEqual({ text: 'x' })
+      expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+      // Queue path must also skip the thread-promote IPC — that already
+      // ran when the in-flight message started.
+      expect(mockChatAPI.ensureThreadExists).not.toHaveBeenCalled()
+    })
+
+    it('also queues when status is submitted', async () => {
+      mockUseChat.status = 'submitted'
+
+      const { Wrapper } = createTestUtils()
+      const { result, rerender } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.settings.provider).toBe('openai')
+      })
+
+      await act(async () => {
+        await result.current.sendMessage('queued during submit')
+      })
+      rerender()
+
+      expect(result.current.queuedMessage).toEqual({
+        text: 'queued during submit',
+      })
+      expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+    })
+
+    it('auto-fires the queued message when status transitions out of streaming to ready', async () => {
+      mockUseChat.status = 'streaming'
+
+      const { Wrapper } = createTestUtils()
+      const { result, rerender } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.settings.provider).toBe('openai')
+      })
+
+      await act(async () => {
+        await result.current.sendMessage({ text: 'auto-flush me' })
+      })
+
+      // Simulate the stream completing. The hook's prev-status ref
+      // captures `streaming`, then re-renders with `ready` — the effect
+      // should fire `sendMessage` with the queued payload and clear the
+      // queue.
+      mockUseChat.status = 'ready'
+      await act(async () => {
+        rerender()
+      })
+
+      await waitFor(() => {
+        expect(mockUseChat.sendMessage).toHaveBeenCalledWith({
+          text: 'auto-flush me',
+        })
+      })
+      expect(result.current.queuedMessage).toBeNull()
+    })
+
+    it('does NOT auto-fire when status transitions to error — the queue stays', async () => {
+      mockUseChat.status = 'streaming'
+
+      const { Wrapper } = createTestUtils()
+      const { result, rerender } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.settings.provider).toBe('openai')
+      })
+
+      await act(async () => {
+        await result.current.sendMessage({ text: 'keep me' })
+      })
+
+      mockUseChat.status = 'error'
+      await act(async () => {
+        rerender()
+      })
+
+      // Queue stays so the user can cancel or retry once the error clears.
+      expect(result.current.queuedMessage).toEqual({ text: 'keep me' })
+      expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+    })
+
+    it('replaces an existing queued message when a second submit comes in', async () => {
+      mockUseChat.status = 'streaming'
+
+      const { Wrapper } = createTestUtils()
+      const { result, rerender } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.settings.provider).toBe('openai')
+      })
+
+      await act(async () => {
+        await result.current.sendMessage({ text: 'first' })
+      })
+      rerender()
+      expect(result.current.queuedMessage).toEqual({ text: 'first' })
+
+      await act(async () => {
+        await result.current.sendMessage({ text: 'second' })
+      })
+      rerender()
+      expect(result.current.queuedMessage).toEqual({ text: 'second' })
+      expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+    })
+
+    it('cancelQueuedMessage clears the queue without sending', async () => {
+      mockUseChat.status = 'streaming'
+
+      const { Wrapper } = createTestUtils()
+      const { result, rerender } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.settings.provider).toBe('openai')
+      })
+
+      await act(async () => {
+        await result.current.sendMessage({ text: 'cancel me' })
+      })
+      rerender()
+      expect(result.current.queuedMessage).toEqual({ text: 'cancel me' })
+
+      act(() => {
+        result.current.cancelQueuedMessage()
+      })
+
+      expect(result.current.queuedMessage).toBeNull()
+      // Even on later stream completion, nothing fires.
+      mockUseChat.status = 'ready'
+      await act(async () => {
+        rerender()
+      })
+      expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+    })
+
+    it('clears the queue on thread switch', async () => {
+      // useThreadManagement is mocked to always return 'toolhive-chat'.
+      // Force its return value to change between renders so the
+      // queue-clearing effect can observe a thread switch. Save the
+      // original implementation so we can restore it at the end — other
+      // tests in the file expect `'toolhive-chat'`.
+      const { useThreadManagement } = await import('../use-thread-management')
+      const mockedThreadMgmt = vi.mocked(useThreadManagement)
+      const defaultImpl = mockedThreadMgmt.getMockImplementation()
+      try {
+        mockedThreadMgmt.mockImplementation(() => ({
+          currentThreadId: 'thread-A',
+          isLoading: false,
+          error: null,
+          clearMessages: vi.fn().mockResolvedValue(undefined),
+        }))
+        mockUseChat.status = 'streaming'
+
+        const { Wrapper } = createTestUtils()
+        const { result, rerender } = renderHook(
+          (props: { id?: string }) => useChatStreaming(props.id),
+          {
+            wrapper: Wrapper,
+            initialProps: { id: 'thread-A' },
+          }
+        )
+
+        await waitFor(() => {
+          expect(result.current.settings.provider).toBe('openai')
+        })
+
+        await act(async () => {
+          await result.current.sendMessage({ text: 'on thread A' })
+        })
+        rerender({ id: 'thread-A' })
+        expect(result.current.queuedMessage).toEqual({ text: 'on thread A' })
+
+        // Flip the mock so the next render resolves a different thread.
+        mockedThreadMgmt.mockImplementation(() => ({
+          currentThreadId: 'thread-B',
+          isLoading: false,
+          error: null,
+          clearMessages: vi.fn().mockResolvedValue(undefined),
+        }))
+
+        await act(async () => {
+          rerender({ id: 'thread-B' })
+        })
+
+        expect(result.current.queuedMessage).toBeNull()
+      } finally {
+        // Restore so subsequent tests see `'toolhive-chat'` again.
+        if (defaultImpl) mockedThreadMgmt.mockImplementation(defaultImpl)
+      }
+    })
+
+    it('rewindAndResend bypasses the queue: the edited send fires immediately even with streaming status', async () => {
+      const userMsg = (id: string, text: string): ChatUIMessage =>
+        ({
+          id,
+          role: 'user',
+          parts: [{ type: 'text' as const, text }],
+        }) as unknown as ChatUIMessage
+      const assistantMsg = (id: string, text: string): ChatUIMessage =>
+        ({
+          id,
+          role: 'assistant',
+          parts: [{ type: 'text' as const, text }],
+        }) as unknown as ChatUIMessage
+
+      mockUseChat.messages = [
+        userMsg('u1', 'first'),
+        assistantMsg('a1', 'partial'),
+      ]
+      mockUseChat.status = 'streaming'
+
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.settings.provider).toBe('openai')
+        expect(result.current.lastUserMessageId).toBe('u1')
+      })
+
+      await act(async () => {
+        await result.current.rewindAndResend({
+          text: 'edited',
+          editingMessageId: 'u1',
+        })
+      })
+
+      // The rewind path goes through `dispatchSend`, not the queue, so
+      // the AI SDK's sendMessage IS called and the queue stays empty.
+      expect(mockUseChat.sendMessage).toHaveBeenCalledWith({
+        text: 'edited',
+        files: undefined,
+      })
+      expect(result.current.queuedMessage).toBeNull()
     })
   })
 
