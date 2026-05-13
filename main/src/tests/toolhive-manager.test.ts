@@ -112,6 +112,8 @@ const mockGetQuittingState = vi.mocked(getQuittingState)
 class MockProcess extends EventEmitter {
   pid = 12345
   killed = false
+  exitCode: number | null = null
+  signalCode: NodeJS.Signals | null = null
   stderr = new EventEmitter()
   kill() {
     // Don't automatically set killed - let tests control this
@@ -798,6 +800,40 @@ describe('toolhive-manager', () => {
 
       expect(killSpy).toHaveBeenCalledWith('SIGKILL')
       expect(capturedProcess.killed).toBe(false) // Our mock doesn't auto-set this
+    })
+  })
+
+  // Regression: orphaned thv after Cmd+Q.
+  // Graceful stop sent SIGTERM and scheduled SIGKILL via setTimeout, then
+  // nulled the module-level reference. When Electron's parent exited before
+  // the 2s timer fired, the synchronous `process.on('exit')` handler called
+  // stopToolhive({ force: true }) but it short-circuited on `!toolhiveProcess`
+  // - leaving the child alive and blocking the next launch's port.
+  describe('Bug: orphaned thv after parent exits before SIGKILL timer fires', () => {
+    beforeEach(async () => {
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+      vi.clearAllMocks()
+    })
+
+    it('stopToolhive({ force: true }) sends SIGKILL after a graceful stopToolhive() initiated shutdown', () => {
+      const killSpy = vi.spyOn(mockProcess, 'kill')
+
+      stopToolhive()
+      expect(killSpy).toHaveBeenCalledWith('SIGTERM')
+      // Mirror real Node: a successful kill() sets .killed=true even though
+      // the child has not exited yet. exitCode/signalCode stay null until the
+      // process actually terminates. This is the production state the
+      // parent-exit force kill must escalate from.
+      mockProcess.killed = true
+      killSpy.mockClear()
+
+      // Parent-exit handler fires synchronously before the scheduled 2s
+      // SIGKILL timer can run; force=true must bypass the in-flight stop.
+      stopToolhive({ force: true })
+
+      expect(killSpy).toHaveBeenCalledWith('SIGKILL')
     })
   })
 
