@@ -301,7 +301,7 @@ importers:
         specifier: ^1.0.2
         version: 1.0.2
       '@types/node':
-        specifier: ^24.12.2
+        specifier: ^24.12.3
         version: 24.12.3
       '@types/react':
         specifier: ^19.2.14
