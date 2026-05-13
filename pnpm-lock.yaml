@@ -210,7 +210,7 @@ importers:
         specifier: ^2.5.0
         version: 2.5.0(react-dom@19.2.6(react@19.2.6))(react@19.2.6)
       tailwind-merge:
-        specifier: ^3.5.0
+        specifier: ^3.6.0
         version: 3.6.0
       tailwindcss:
         specifier: ^4.2.4
