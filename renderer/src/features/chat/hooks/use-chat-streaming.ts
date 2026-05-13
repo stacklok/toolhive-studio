@@ -408,7 +408,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
       text: string
       files?: FileUIPart[]
       editingMessageId: string
-    }) => {
+    }): Promise<void> => {
       if (
         !settings.provider ||
         !settings.model ||
@@ -427,7 +427,8 @@ export function useChatStreaming(externalThreadId?: string | null) {
       const idx = messages.findIndex((m) => m.id === editingMessageId)
       if (idx === -1) {
         // Defensive fallback — UI shouldn't let us get here.
-        return validatedSendMessage({ text, files })
+        await validatedSendMessage({ text, files })
+        return
       }
 
       // 1. Stop the active main-process stream first so it doesn't keep
@@ -467,8 +468,9 @@ export function useChatStreaming(externalThreadId?: string | null) {
       }
 
       // 4. Start the new stream. `validatedSendMessage` re-validates
-      // settings and ensures the thread row exists.
-      return validatedSendMessage({ text, files })
+      // settings and ensures the thread row exists. We discard the AI
+      // SDK's sendMessage return — no caller reads it.
+      await validatedSendMessage({ text, files })
     },
     [
       settings,

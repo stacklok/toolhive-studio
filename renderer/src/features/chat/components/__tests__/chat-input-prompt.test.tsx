@@ -53,7 +53,7 @@ interface RenderArgs {
     text: string
     files?: FileUIPart[]
     editingMessageId: string
-  }) => Promise<unknown>
+  }) => Promise<void>
   onStopGeneration?: () => void
   onClearEdit?: () => void
 }

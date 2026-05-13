@@ -33,6 +33,7 @@ import type { ChatSettings } from '../types'
 import { toast } from 'sonner'
 import { toastVariants } from '@/common/lib/toast'
 import { useThreadDraft } from '../hooks/use-thread-draft'
+import { useComposerHandle } from '../hooks/use-composer-handle'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '@utils/feature-flags'
 
@@ -86,7 +87,7 @@ interface ChatInputProps {
     text: string
     files?: FileUIPart[]
     editingMessageId: string
-  }) => Promise<unknown>
+  }) => Promise<void>
   onStopGeneration: () => void
   onSettingsOpen: (isOpen: boolean) => void
   handleProviderChange: (providerId: string) => void
@@ -306,34 +307,7 @@ export function ChatInputPrompt({
     }
   }, [text, editingMessageId, onClearEdit])
 
-  // Expose imperative controls so siblings outside this subtree (e.g. the
-  // message list's "Edit message" button) can pre-fill and focus the
-  // composer. The ref is populated on mount and cleared on unmount so the
-  // context can tell whether a composer is currently mounted.
-  useEffect(() => {
-    if (!composerHandleRef) return
-    composerHandleRef.current = {
-      setText,
-      focusTextarea: () => {
-        const el = textareaRef.current
-        if (!el) return
-        el.focus()
-        const end = el.value.length
-        try {
-          el.setSelectionRange(end, end)
-        } catch {
-          // Some textarea types (e.g. <input type="number">) throw on
-          // setSelectionRange. Plain text textareas never do — guard anyway
-          // so a stray DOM shape can't break the edit flow.
-        }
-      },
-    }
-    return () => {
-      if (composerHandleRef.current) {
-        composerHandleRef.current = null
-      }
-    }
-  }, [composerHandleRef, setText])
+  useComposerHandle(composerHandleRef, setText, textareaRef)
 
   const handleCancelEdit = () => {
     onClearEdit?.()
