@@ -197,13 +197,22 @@ export function useChatStreaming(externalThreadId?: string | null) {
     }
   }, [currentThreadId])
 
-  useEffect(() => {
+  const prevQueueStatusRef = useRef(status)
+
+  // Clear the queue when the user switches threads — done in render (not an
+  // effect) so the auto-flush below sees the null synchronously. An effect
+  // would race the auto-flush in the same render and leak A's message into B.
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [queueOwnerThreadId, setQueueOwnerThreadId] =
+    useState<typeof currentThreadId>(currentThreadId)
+  if (currentThreadId !== queueOwnerThreadId) {
+    setQueueOwnerThreadId(currentThreadId)
     setQueuedMessage(null)
-  }, [currentThreadId])
+    prevQueueStatusRef.current = status
+  }
 
   // Auto-flush on streaming→ready only (not →error: would re-fail on a broken
   // provider). Calls `sendMessage` directly to skip re-validation/re-queuing.
-  const prevQueueStatusRef = useRef(status)
   useEffect(() => {
     const prev = prevQueueStatusRef.current
     prevQueueStatusRef.current = status

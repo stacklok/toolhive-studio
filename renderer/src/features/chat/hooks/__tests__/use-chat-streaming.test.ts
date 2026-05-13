@@ -847,6 +847,68 @@ describe('useChatStreaming', () => {
       }
     })
 
+    it('does NOT auto-flush A`s queued message into thread B on thread switch', async () => {
+      // Regression: with the thread-clear in a `useEffect`, the auto-flush
+      // effect could fire on the same render that the thread changed (status
+      // resets to 'ready' for the new thread, prev-status ref still holds
+      // 'streaming' from the old one, and `queuedMessage` state hadn't yet
+      // been cleared). The fix is the in-render adjustment — see the hook.
+      const { useThreadManagement } = await import('../use-thread-management')
+      const mockedThreadMgmt = vi.mocked(useThreadManagement)
+      const defaultImpl = mockedThreadMgmt.getMockImplementation()
+      try {
+        mockedThreadMgmt.mockImplementation(() => ({
+          currentThreadId: 'thread-A',
+          isLoading: false,
+          error: null,
+          clearMessages: vi.fn().mockResolvedValue(undefined),
+        }))
+        mockUseChat.status = 'streaming'
+
+        const { Wrapper } = createTestUtils()
+        const { result, rerender } = renderHook(
+          (props: { id?: string }) => useChatStreaming(props.id),
+          {
+            wrapper: Wrapper,
+            initialProps: { id: 'thread-A' },
+          }
+        )
+
+        await waitFor(() => {
+          expect(result.current.settings.provider).toBe('openai')
+        })
+
+        await act(async () => {
+          await result.current.sendMessage({ text: 'meant for A' })
+        })
+        expect(result.current.queuedMessage).toEqual({ text: 'meant for A' })
+        // The send hasn't fired yet — it's in the queue.
+        expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+
+        // Simulate thread switch: a fresh useChat instance for B initializes
+        // with status='ready' (no in-flight stream there). This is the exact
+        // shape that used to trigger the race.
+        mockedThreadMgmt.mockImplementation(() => ({
+          currentThreadId: 'thread-B',
+          isLoading: false,
+          error: null,
+          clearMessages: vi.fn().mockResolvedValue(undefined),
+        }))
+        mockUseChat.status = 'ready'
+
+        await act(async () => {
+          rerender({ id: 'thread-B' })
+        })
+
+        // The queue must be cleared AND sendMessage must NOT have fired —
+        // otherwise A's queued message would have leaked into B's stream.
+        expect(result.current.queuedMessage).toBeNull()
+        expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+      } finally {
+        if (defaultImpl) mockedThreadMgmt.mockImplementation(defaultImpl)
+      }
+    })
+
     it('rewindAndResend bypasses the queue: the edited send fires immediately even with streaming status', async () => {
       const userMsg = (id: string, text: string): ChatUIMessage =>
         ({
