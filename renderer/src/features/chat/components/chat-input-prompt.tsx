@@ -372,24 +372,23 @@ export function ChatInputPrompt({
       return
     }
 
-    try {
+    // Optimistically clear edit mode + composer text; restore the text if
+    // the send rejects. `onSendMessage` returns a Promise, so a synchronous
+    // try/catch wouldn't catch async rejections — mirror the rewind path's
+    // `.catch()` pattern.
+    setText('')
+    onClearEdit?.()
+    Promise.resolve(
       onSendMessage({
         text: submitText,
         files: message.files,
       })
-      // Successful submit also leaves edit mode — the original user
-      // message is no longer "the one being edited", and the new message
-      // is now its own row in the thread.
-      onClearEdit?.()
-      // Only clear text after successful send
-      setText('')
-    } catch (error) {
-      console.error('Failed to send message:', error)
+    ).catch((error) => {
+      log.error('Failed to send message:', error)
       if (message.text) {
         setText(message.text)
       }
-      // Don't clear on error so user can retry
-    }
+    })
   }
 
   return (

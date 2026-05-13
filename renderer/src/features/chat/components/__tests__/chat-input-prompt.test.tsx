@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { act, render, screen, fireEvent } from '@testing-library/react'
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { ChatStatus, FileUIPart } from 'ai'
 import { createRef } from 'react'
@@ -326,6 +326,37 @@ describe('ChatInputPrompt', () => {
 
       expect(onSendMessage).toHaveBeenCalled()
       expect(onClearEdit).toHaveBeenCalled()
+    })
+  })
+
+  describe('send failure handling', () => {
+    it('restores the composer text when the async send rejects', async () => {
+      // Async rejections used to escape an old `try/catch` (which only
+      // catches sync throws), causing the composer to clear without the
+      // message actually being sent. Verify the rejection is caught and
+      // the text is restored so the user can retry.
+      const onSendMessage = vi.fn().mockRejectedValue(new Error('boom'))
+      const { composerHandleRef } = renderPrompt({
+        status: 'ready',
+        onSendMessage,
+      })
+
+      await act(async () => {
+        composerHandleRef.current?.setText('please send me')
+      })
+
+      const allButtons = screen.getAllByRole('button')
+      const realSubmit = allButtons.find(
+        (b) => (b as HTMLButtonElement).type === 'submit'
+      )!
+      await userEvent.click(realSubmit)
+
+      // Let the rejected promise settle.
+      await waitFor(() => expect(onSendMessage).toHaveBeenCalled())
+      await waitFor(() => {
+        const textarea = screen.getByRole('textbox') as HTMLTextAreaElement
+        expect(textarea.value).toBe('please send me')
+      })
     })
   })
 })
