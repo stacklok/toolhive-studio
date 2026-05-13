@@ -9,10 +9,10 @@ Playbook for analyzing and remediating security vulnerabilities in this Electron
 
 ## Project Context
 
-- **Package manager**: pnpm (lockfile: `pnpm-lock.yaml`)
+- **Package manager**: pnpm 11 (lockfile: `pnpm-lock.yaml`)
 - **Scanner**: Grype with config at `.grype.yaml` (only reports vulnerabilities with a fix available)
 - **Audit**: `pnpm audit --prod --audit-level=moderate`
-- **Existing overrides**: `pnpm.overrides` in `package.json` — used to pin transitive dependencies to patched versions
+- **Existing overrides**: `overrides` block in `pnpm-workspace.yaml` — used to pin transitive dependencies to patched versions (pnpm 11 no longer reads the `pnpm` field from `package.json`)
 - **Production deps**: listed under `dependencies` in `package.json`
 - **Dev-only deps**: listed under `devDependencies` in `package.json` — not shipped to users
 
@@ -72,46 +72,52 @@ If the upgrade resolves it, this step is complete. Move to the next vulnerabilit
 
 If no non-breaking upgrade is available, or the fix requires a major version bump of a transitive dependency that is safe to force:
 
-Add or update an entry in `pnpm.overrides` inside `package.json`. You MUST follow the existing override style used in the project. Current overrides look like this:
+Add or update an entry in the `overrides` block inside `pnpm-workspace.yaml`. You MUST follow the existing override style used in the project. Current overrides look like this:
 
-```json
-{
-  "pnpm": {
-    "overrides": {
-      "fast-xml-parser": ">=5.5.9",
-      "lodash-es": ">=4.17.23",
-      "tar": ">=7.5.7"
-    }
-  }
-}
+```yaml
+overrides:
+  fast-xml-parser: '>=5.5.9'
+  lodash-es: '>=4.17.23'
+  tar: '>=7.5.7'
 ```
 
 Rules for overrides (follow strictly):
 
-1. **Always use the `>=` prefix for values** — this allows future patches. Example: `">=1.2.3"`.
+1. **Always use the `>=` prefix for values** — this allows future patches. Example: `'>=1.2.3'`.
 2. **BEFORE writing any override, check `pnpm why <package>` for multiple major versions.** This is mandatory. If the tree contains more than one major line, an unscoped override would force ALL consumers onto the overridden version, breaking packages that expect a different major.
-3. **Use a simple top-level override ONLY when one major line exists** — if every installation of the package is on the same major, a single `"package": ">=fixed"` entry is safe:
-   ```json
-   { "some-package": ">=1.2.3" }
+3. **Use a simple top-level override ONLY when one major line exists** — if every installation of the package is on the same major, a single `package: '>=fixed'` entry is safe:
+   ```yaml
+   some-package: '>=1.2.3'
    ```
-4. **Use parent-scoped overrides when multiple majors coexist** — scope the override to the dependency path that pulls in the vulnerable version using `"parent>package"` syntax:
+4. **Use parent-scoped overrides when multiple majors coexist** — scope the override to the dependency path that pulls in the vulnerable version using `'parent>package'` syntax:
 
-   ```json
-   { "parent-pkg>vulnerable-pkg": ">=2.0.1" }
+   ```yaml
+   'parent-pkg>vulnerable-pkg': '>=2.0.1'
    ```
 
    This only overrides `vulnerable-pkg` when required by `parent-pkg`, leaving other consumers on their compatible major. Pick the nearest direct parent that exclusively uses the vulnerable major line.
 
    **WRONG** — never use an unscoped override when multiple majors exist:
 
-   ```json
-   { "vulnerable-pkg": ">=2.0.1" }
+   ```yaml
+   vulnerable-pkg: '>=2.0.1'
    ```
 
    This would force every consumer onto v2, breaking those that depend on v1.
 
 5. **Only override actually vulnerable versions** — if `pnpm why` shows multiple major lines but only one is in the advisory's vulnerable range, override only that version's path. Do not add overrides for versions that are not vulnerable.
-6. **Use only `"package"` or `"parent>package"` as override keys** — do not use version-range selectors like `@>=1.0.0 <2.0.0` in keys. Scope via parent instead.
+6. **Three valid override-key forms** — pick the most surgical one that resolves the advisory:
+   1. `package: '>=fixed'` — top-level, only when a single major line exists in the tree (see Rule 3).
+   2. `'parent>package': '>=fixed'` — parent-scoped, when multiple majors coexist and a specific parent pulls in the vulnerable major (see Rule 4).
+   3. `'package@versionRange': fixedVersion` — version-range-keyed, when **multiple vulnerable major lines coexist** and each needs its own targeted bump regardless of importer. The range lives in the key; the value is a fixed target version (no `>=` prefix). Example from this repo (`pnpm-workspace.yaml`):
+
+      ```yaml
+      'brace-expansion@>=4.0.0 <5.0.5': 5.0.5
+      'brace-expansion@>=2.0.0 <2.0.3': 2.0.3
+      'brace-expansion@<1.1.13': 1.1.14
+      ```
+
+      Prefer this form over many parent-scoped entries when the advisory spans multiple majors. Avoid it when a single-major top-level (form 1) or one `parent>package` (form 2) would do — those are easier to read.
 
 After the change:
 
@@ -161,7 +167,7 @@ For each vulnerability processed, write a summary containing:
 
 When running in **plan mode** (Phase 1): write all findings and proposed actions to `remediation-plan.md` in the repository root. Do not modify project files.
 
-When running in **implementation mode** (Phase 2): read `remediation-plan.md`, apply the changes to `package.json`, `pnpm-lock.yaml`, and `.grype.yaml` as needed, then verify with grype. Update `remediation-plan.md` with verification results.
+When running in **implementation mode** (Phase 2): read `remediation-plan.md`, apply the changes to `pnpm-workspace.yaml` (overrides / audit ignores), `package.json` (direct dep upgrades), `pnpm-lock.yaml`, and `.grype.yaml` as needed, then verify with grype. Update `remediation-plan.md` with verification results.
 
 Also write a concise `pr-body.md` for the pull request description using this exact structure:
 
@@ -178,7 +184,8 @@ Also write a concise `pr-body.md` for the pull request description using this ex
 
 ## Files Modified
 
-- `package.json`: <what changed>
+- `pnpm-workspace.yaml`: <what changed, e.g. added override / ignoreGhsas entry>
+- `package.json`: <what changed, e.g. bumped direct dep>
 - `.grype.yaml`: <what changed, if applicable>
 
 ## Verification
@@ -202,6 +209,6 @@ Keep it under 72 characters. Mention the key packages and CVEs, not a generic de
 - Do NOT run `git` commands — git operations are handled by the CI workflow
 - Do NOT run `gh` commands — PR creation is handled by the CI workflow
 - Do NOT modify `.env` files
-- Always run `pnpm install` after modifying `package.json` to regenerate the lockfile
+- Always run `pnpm install` after modifying `package.json` or `pnpm-workspace.yaml` to regenerate the lockfile
 - Always re-run `grype . --config .grype.yaml` after each remediation to verify
 - Prefer the least invasive fix: upgrade > override > ignore
