@@ -44,6 +44,8 @@ export function ChatInterface({
     settings,
     updateSettings,
     sendMessage,
+    rewindAndResend,
+    lastUserMessageId,
     cancelRequest,
     loadPersistedSettings,
   } = useChatStreaming(threadId)
@@ -76,6 +78,43 @@ export function ChatInterface({
   // tree right now (empty-state vs bottom).
   const composerHandleRef = useRef<ChatComposerHandle | null>(null)
 
+  // Tracks which user message the composer is currently editing. Owned
+  // here (not in `ChatInputPrompt`) so it survives the empty-state ⇄
+  // bottom composer swap that happens when the first message lands.
+  //
+  // We pair the id with a snapshot of `threadId` so a thread switch
+  // implicitly invalidates the edit context — see the comparison below.
+  // This is the "adjust some state when a prop changes" pattern from the
+  // React docs, expressed without `useEffect` so the lint rule
+  // `react-hooks/set-state-in-effect` stays clean.
+  const [editingState, setEditingState] = useState<{
+    threadId: string | null | undefined
+    messageId: string | null
+  }>({ threadId, messageId: null })
+
+  // If the prop changed since the last commit, throw away the stale
+  // editing snapshot during render. Cheap — only fires on thread switch.
+  const editingMessageId =
+    editingState.threadId === threadId ? editingState.messageId : null
+  if (editingState.threadId !== threadId && editingState.messageId !== null) {
+    setEditingState({ threadId, messageId: null })
+  }
+
+  const beginEdit = useCallback(
+    (messageId: string, text: string) => {
+      setEditingState({ threadId, messageId })
+      composerHandleRef.current?.setText(text)
+      composerHandleRef.current?.focusTextarea()
+    },
+    [threadId]
+  )
+
+  const clearEdit = useCallback(() => {
+    setEditingState((prev) =>
+      prev.messageId === null ? prev : { ...prev, messageId: null }
+    )
+  }, [])
+
   const composerValue = useMemo<ChatComposerContextValue>(
     () => ({
       setDraftText: (text: string) => {
@@ -84,8 +123,11 @@ export function ChatInterface({
       focusComposer: () => {
         composerHandleRef.current?.focusTextarea()
       },
+      editingMessageId,
+      beginEdit,
+      clearEdit,
     }),
-    []
+    [editingMessageId, beginEdit, clearEdit]
   )
 
   return (
@@ -173,6 +215,7 @@ export function ChatInterface({
                       <ChatInputPrompt
                         key={threadId ?? 'no-thread'}
                         onSendMessage={sendMessage}
+                        onRewindAndResend={rewindAndResend}
                         onStopGeneration={cancelRequest}
                         onSettingsOpen={setIsSettingsOpen}
                         status={status}
@@ -183,6 +226,9 @@ export function ChatInterface({
                         hasMessages={hasMessages}
                         threadId={threadId}
                         composerHandleRef={composerHandleRef}
+                        editingMessageId={editingMessageId}
+                        lastUserMessageId={lastUserMessageId}
+                        onClearEdit={clearEdit}
                       />
                     </div>
                   )}
@@ -221,6 +267,7 @@ export function ChatInterface({
               <ChatInputPrompt
                 key={threadId ?? 'no-thread'}
                 onSendMessage={sendMessage}
+                onRewindAndResend={rewindAndResend}
                 onStopGeneration={cancelRequest}
                 onSettingsOpen={setIsSettingsOpen}
                 status={status}
@@ -231,6 +278,9 @@ export function ChatInterface({
                 hasMessages={hasMessages}
                 threadId={threadId}
                 composerHandleRef={composerHandleRef}
+                editingMessageId={editingMessageId}
+                lastUserMessageId={lastUserMessageId}
+                onClearEdit={clearEdit}
               />
             </div>
           )}

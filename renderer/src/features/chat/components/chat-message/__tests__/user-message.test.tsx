@@ -47,9 +47,14 @@ describe('UserMessage', () => {
   })
 
   it('shows an Edit button that drives the composer via the provider', async () => {
-    const setDraftText = vi.fn()
-    const focusComposer = vi.fn()
-    const value: ChatComposerContextValue = { setDraftText, focusComposer }
+    const beginEdit = vi.fn()
+    const value: ChatComposerContextValue = {
+      setDraftText: vi.fn(),
+      focusComposer: vi.fn(),
+      editingMessageId: null,
+      beginEdit,
+      clearEdit: vi.fn(),
+    }
 
     render(
       <ChatComposerProvider value={value}>
@@ -60,9 +65,8 @@ describe('UserMessage', () => {
     const editButton = screen.getByRole('button', { name: 'Edit message' })
     await userEvent.click(editButton)
 
-    expect(setDraftText).toHaveBeenCalledTimes(1)
-    expect(setDraftText).toHaveBeenCalledWith('hello world')
-    expect(focusComposer).toHaveBeenCalledTimes(1)
+    expect(beginEdit).toHaveBeenCalledTimes(1)
+    expect(beginEdit).toHaveBeenCalledWith('m-1', 'hello world')
   })
 
   it('does not render an Edit button when no composer provider is in the tree', () => {
@@ -86,6 +90,9 @@ describe('UserMessage', () => {
     const value: ChatComposerContextValue = {
       setDraftText: vi.fn(),
       focusComposer: vi.fn(),
+      editingMessageId: null,
+      beginEdit: vi.fn(),
+      clearEdit: vi.fn(),
     }
 
     render(

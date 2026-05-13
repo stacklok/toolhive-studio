@@ -1,8 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen } from '@testing-library/react'
+import { act, render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import React, { createRef } from 'react'
 import { ChatInterface } from '../chat-interface'
 import type { ChatUIMessage } from '../../types'
+import { useChatComposer } from '../chat-composer-context'
 
 // ---------------------------------------------------------------------------
 // Module mocks
@@ -42,8 +44,40 @@ vi.mock('../chat-message', () => ({
   ),
 }))
 
+// The mock surfaces the composer-context value so tests can exercise the
+// `beginEdit` / `clearEdit` flow without mounting the real prompt subtree.
+function ComposerProbe() {
+  const composer = useChatComposer()
+  if (!composer) return null
+  return (
+    <div
+      data-testid="composer-probe"
+      data-editing-id={composer.editingMessageId ?? ''}
+    >
+      <button
+        type="button"
+        onClick={() => composer.beginEdit('u1', 'hello')}
+        aria-label="probe-begin"
+      >
+        begin
+      </button>
+      <button
+        type="button"
+        onClick={() => composer.clearEdit()}
+        aria-label="probe-clear"
+      >
+        clear
+      </button>
+    </div>
+  )
+}
+
 vi.mock('../chat-input-prompt', () => ({
-  ChatInputPrompt: () => <div data-testid="chat-input-prompt" />,
+  ChatInputPrompt: () => (
+    <div data-testid="chat-input-prompt">
+      <ComposerProbe />
+    </div>
+  ),
 }))
 
 vi.mock('../dialog-provider-settings', () => ({
@@ -77,6 +111,8 @@ const mockStreamingReturn = {
   settings: { provider: '', model: '' } as Record<string, unknown>,
   updateSettings: vi.fn(),
   sendMessage: vi.fn(),
+  rewindAndResend: vi.fn(),
+  lastUserMessageId: null as string | null,
   cancelRequest: vi.fn(),
   loadPersistedSettings: vi.fn(),
   clearMessages: vi.fn(),
@@ -116,6 +152,8 @@ function resetMock() {
   mockStreamingReturn.isLoading = false
   mockStreamingReturn.error = null
   mockStreamingReturn.settings = { provider: '', model: '' }
+  mockStreamingReturn.lastUserMessageId = null
+  mockStreamingReturn.rewindAndResend.mockReset()
   mockShowScrollToBottom = false
 }
 
@@ -240,6 +278,54 @@ describe('ChatInterface', () => {
       mockStreamingReturn.isLoading = false
       renderInterface()
       expect(screen.queryByText('Thinking...')).not.toBeInTheDocument()
+    })
+  })
+
+  describe('composer context — editingMessageId lifecycle', () => {
+    beforeEach(() => {
+      mockStreamingReturn.settings = {
+        provider: 'openai',
+        model: 'gpt-4',
+        apiKey: 'sk-test',
+      }
+    })
+
+    it('sets editingMessageId via beginEdit and clears it via clearEdit', async () => {
+      renderInterface({ threadId: 'thread-1' })
+      // Probe initially renders with editing-id="" (null).
+      const probe = await screen.findByTestId('composer-probe')
+      expect(probe).toHaveAttribute('data-editing-id', '')
+
+      await userEvent.click(screen.getByRole('button', { name: 'probe-begin' }))
+      expect(screen.getByTestId('composer-probe')).toHaveAttribute(
+        'data-editing-id',
+        'u1'
+      )
+
+      await userEvent.click(screen.getByRole('button', { name: 'probe-clear' }))
+      expect(screen.getByTestId('composer-probe')).toHaveAttribute(
+        'data-editing-id',
+        ''
+      )
+    })
+
+    it('clears editingMessageId when the thread switches', async () => {
+      const { rerender } = render(<ChatInterface threadId="thread-1" />)
+      await userEvent.click(screen.getByRole('button', { name: 'probe-begin' }))
+      expect(screen.getByTestId('composer-probe')).toHaveAttribute(
+        'data-editing-id',
+        'u1'
+      )
+
+      // Flip the thread — the effect on `threadId` change should clear edit.
+      await act(async () => {
+        rerender(<ChatInterface threadId="thread-2" />)
+      })
+
+      expect(screen.getByTestId('composer-probe')).toHaveAttribute(
+        'data-editing-id',
+        ''
+      )
     })
   })
 

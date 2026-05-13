@@ -44,8 +44,7 @@ export function UserMessage({ message, status }: UserMessageProps) {
   const onEdit =
     composer && copyText
       ? () => {
-          composer.setDraftText(copyText)
-          composer.focusComposer()
+          composer.beginEdit(message.id, copyText)
         }
       : undefined
 

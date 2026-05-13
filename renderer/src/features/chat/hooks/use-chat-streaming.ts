@@ -375,6 +375,113 @@ export function useChatStreaming(externalThreadId?: string | null) {
     [settings, sendMessage, currentThreadId]
   )
 
+  /**
+   * Id of the most recent user message in the thread, or `null` if no user
+   * message exists yet. Drives the "rewind & retry" affordance in the
+   * composer — only the LAST user message can be rewound during streaming.
+   */
+  const lastUserMessageId = useMemo(() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      const m = messages[i]
+      if (m && m.role === 'user') return m.id
+    }
+    return null
+  }, [messages])
+
+  /**
+   * Cancel the in-flight stream, drop the user message being edited AND the
+   * partial assistant response that was being generated for it, then send
+   * the new text as a fresh message — replacing the in-flight turn with the
+   * edited one.
+   *
+   * Caller MUST guard that `editingMessageId === lastUserMessageId` and a
+   * stream is active. If `editingMessageId` doesn't match anything in
+   * `messages` we fall back to a normal `sendMessage` (defensive — this
+   * shouldn't happen given the UI guard).
+   */
+  const rewindAndResend = useCallback(
+    async ({
+      text,
+      files,
+      editingMessageId,
+    }: {
+      text: string
+      files?: FileUIPart[]
+      editingMessageId: string
+    }) => {
+      if (
+        !settings.provider ||
+        !settings.model ||
+        !hasValidCredentials(settings)
+      ) {
+        throw new Error('Please configure your AI provider settings first')
+      }
+
+      if (editingMessageId !== lastUserMessageId) {
+        throw new Error(
+          'rewindAndResend only supports the last user message; got id ' +
+            `${editingMessageId} (last is ${lastUserMessageId ?? 'none'})`
+        )
+      }
+
+      const idx = messages.findIndex((m) => m.id === editingMessageId)
+      if (idx === -1) {
+        // Defensive fallback — UI shouldn't let us get here.
+        return validatedSendMessage({ text, files })
+      }
+
+      // 1. Stop the active main-process stream first so it doesn't keep
+      // pushing chunks (and persisting partial snapshots) while we trim.
+      if (currentThreadId) {
+        try {
+          await window.electronAPI.chat.cancelStream(currentThreadId)
+        } catch {
+          // best effort — we still tear down the renderer-side state below
+        }
+      }
+      await stop()
+      clearError()
+
+      // 2. Drop the edited user message AND everything after it (the
+      // partial assistant response). `setMessages` updates the renderer's
+      // local view immediately.
+      const trimmed = messages.slice(0, idx)
+      setMessages(trimmed)
+
+      // 3. Overwrite the SQLite snapshot so a mid-flight navigation can't
+      // resurrect the partial state. The active stream's `finalizeError`
+      // path may have raced a snapshot write through `flushPersist`; this
+      // overwrite is the source of truth from the user's perspective.
+      if (currentThreadId) {
+        try {
+          await window.electronAPI.chat.updateThreadMessages(
+            currentThreadId,
+            trimmed
+          )
+        } catch (err) {
+          log.error(
+            '[useChatStreaming] Failed to persist trimmed messages:',
+            err
+          )
+        }
+      }
+
+      // 4. Start the new stream. `validatedSendMessage` re-validates
+      // settings and ensures the thread row exists.
+      return validatedSendMessage({ text, files })
+    },
+    [
+      settings,
+      lastUserMessageId,
+      messages,
+      currentThreadId,
+      stop,
+      clearError,
+      setMessages,
+      validatedSendMessage,
+    ]
+  )
+
   // Memoize the processed error to avoid recalculating on every render
   const processedError = useMemo(() => {
     return persistentError || threadError || processError(error)
@@ -388,6 +495,8 @@ export function useChatStreaming(externalThreadId?: string | null) {
       error: processedError,
       settings,
       sendMessage: validatedSendMessage,
+      rewindAndResend,
+      lastUserMessageId,
       clearMessages,
       cancelRequest: async () => {
         if (currentThreadId) {
@@ -413,6 +522,8 @@ export function useChatStreaming(externalThreadId?: string | null) {
     processedError,
     settings,
     validatedSendMessage,
+    rewindAndResend,
+    lastUserMessageId,
     clearMessages,
     updateSettings,
     updateEnabledTools,

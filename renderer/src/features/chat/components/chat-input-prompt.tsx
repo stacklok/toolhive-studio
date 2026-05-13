@@ -1,6 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import type { ChatStatus, FileUIPart } from 'ai'
 import log from 'electron-log/renderer'
+import { RefreshCw, X } from 'lucide-react'
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -17,6 +18,7 @@ import {
   usePromptInputAttachments,
   type PromptInputMessage,
 } from '@/common/components/ai-elements/prompt-input'
+import { Button } from '@/common/components/ui/button'
 import { trackEvent } from '@/common/lib/analytics'
 import {
   Tooltip,
@@ -74,6 +76,17 @@ interface ChatInputProps {
     text: string
     files?: FileUIPart[]
   }) => Promise<void>
+  /**
+   * Cancel the active stream, drop the partial assistant response, drop the
+   * original user message being edited, and send the new text as a fresh
+   * message. Only invoked when `editingMessageId === lastUserMessageId` and
+   * the assistant is currently streaming.
+   */
+  onRewindAndResend?: (args: {
+    text: string
+    files?: FileUIPart[]
+    editingMessageId: string
+  }) => Promise<unknown>
   onStopGeneration: () => void
   onSettingsOpen: (isOpen: boolean) => void
   handleProviderChange: (providerId: string) => void
@@ -86,6 +99,12 @@ interface ChatInputProps {
    * outside the React subtree (e.g. clicking Edit on a past user message).
    */
   composerHandleRef?: RefObject<ChatComposerHandle | null>
+  /** Id of the user message currently being edited, or `null` when idle. */
+  editingMessageId?: string | null
+  /** Id of the most recent user message in the thread, or `null` if none. */
+  lastUserMessageId?: string | null
+  /** Exit edit mode (called from the chip's cancel button and on auto-clear). */
+  onClearEdit?: () => void
 }
 
 function InputWithAttachments({
@@ -101,10 +120,22 @@ function InputWithAttachments({
   hasProviderAndModel,
   hasMessages,
   threadId,
-}: Omit<ChatInputProps, 'onSendMessage' | 'composerHandleRef'> & {
+  isEditingStreaming,
+  onCancelEdit,
+}: Omit<
+  ChatInputProps,
+  | 'onSendMessage'
+  | 'onRewindAndResend'
+  | 'composerHandleRef'
+  | 'editingMessageId'
+  | 'lastUserMessageId'
+  | 'onClearEdit'
+> & {
   text: string
   setText: (text: string) => void
   textareaRef: RefObject<HTMLTextAreaElement | null>
+  isEditingStreaming: boolean
+  onCancelEdit: () => void
 }) {
   const attachments = usePromptInputAttachments()
   const prevTextRef = useRef(text)
@@ -135,6 +166,10 @@ function InputWithAttachments({
 
   const handleSubmit = () => {
     trackEvent(`Playground: submit`, { 'playground.status': status })
+    // In "editing the streaming message" mode the form's onSubmit owns the
+    // rewind-and-resend flow — don't fire the stop handler here, the parent
+    // will cancel as part of that path.
+    if (isEditingStreaming) return
     const isStoppable = ['streaming', 'error', 'submitted'].includes(status)
     if (isStoppable) {
       onStopGeneration()
@@ -147,6 +182,27 @@ function InputWithAttachments({
 
   return (
     <>
+      {isEditingStreaming && (
+        <div
+          data-testid="edit-streaming-chip"
+          className="bg-card text-muted-foreground flex items-center
+            justify-between gap-2 rounded-md border px-3 py-1.5 text-xs"
+        >
+          <span>Editing last message — submit to rewind and retry</span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            aria-label="Cancel edit"
+            onClick={onCancelEdit}
+            className="text-muted-foreground hover:text-foreground -mr-2 h-6
+              gap-1 px-2 text-xs"
+          >
+            <X className="size-3" />
+            cancel
+          </Button>
+        </div>
+      )}
       <PromptInputBody>
         <PromptInputAttachments>
           {(attachment) => (
@@ -189,12 +245,27 @@ function InputWithAttachments({
             </>
           )}
         </PromptInputTools>
-        <PromptInputSubmit
-          onClick={handleSubmit}
-          disabled={!text && !hasMessages}
-          status={status}
-          variant="action"
-        />
+        {isEditingStreaming ? (
+          // Override the status-driven icon so the user sees this submit is
+          // a "resend", not the usual stop-the-stream square. The form's
+          // onSubmit (set by the parent) decides what actually happens.
+          <PromptInputSubmit
+            onClick={handleSubmit}
+            disabled={!text && !hasMessages}
+            status={status}
+            variant="action"
+            aria-label="Resend edited message"
+          >
+            <RefreshCw className="size-4" />
+          </PromptInputSubmit>
+        ) : (
+          <PromptInputSubmit
+            onClick={handleSubmit}
+            disabled={!text && !hasMessages}
+            status={status}
+            variant="action"
+          />
+        )}
       </PromptInputToolbar>
     </>
   )
@@ -205,6 +276,7 @@ export function ChatInputPrompt({
   settings,
   updateSettings,
   onSendMessage,
+  onRewindAndResend,
   onStopGeneration,
   onSettingsOpen,
   handleProviderChange,
@@ -212,9 +284,27 @@ export function ChatInputPrompt({
   hasMessages,
   threadId,
   composerHandleRef,
+  editingMessageId,
+  lastUserMessageId,
+  onClearEdit,
 }: ChatInputProps) {
   const [text, setText] = useThreadDraft(threadId)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
+
+  const isEditingStreaming =
+    !!editingMessageId &&
+    !!onRewindAndResend &&
+    editingMessageId === lastUserMessageId &&
+    (status === 'streaming' || status === 'submitted')
+
+  // Auto-clear edit mode when the user empties the composer (they cleared
+  // the prefilled text manually). Keeping the edit context attached to an
+  // empty draft would let a blank "resend" sneak through.
+  useEffect(() => {
+    if (editingMessageId && text === '') {
+      onClearEdit?.()
+    }
+  }, [text, editingMessageId, onClearEdit])
 
   // Expose imperative controls so siblings outside this subtree (e.g. the
   // message list's "Edit message" button) can pre-fill and focus the
@@ -245,6 +335,11 @@ export function ChatInputPrompt({
     }
   }, [composerHandleRef, setText])
 
+  const handleCancelEdit = () => {
+    onClearEdit?.()
+    setText('')
+  }
+
   const handleSubmit = (message: PromptInputMessage) => {
     const hasText = Boolean(message.text)
     const hasAttachments = Boolean(message.files?.length)
@@ -253,11 +348,39 @@ export function ChatInputPrompt({
       return
     }
 
+    const submitText = message.text || 'Sent with attachments'
+
+    if (isEditingStreaming && onRewindAndResend && editingMessageId) {
+      // Rewind & retry path: cancel the active stream, drop the partial
+      // assistant + original user message, and send the edited text as a
+      // fresh message. We optimistically clear the composer; if the rewind
+      // throws we restore the text so the user can retry.
+      setText('')
+      onClearEdit?.()
+      Promise.resolve(
+        onRewindAndResend({
+          text: submitText,
+          files: message.files,
+          editingMessageId,
+        })
+      ).catch((error) => {
+        log.error('Failed to rewind and resend:', error)
+        if (message.text) {
+          setText(message.text)
+        }
+      })
+      return
+    }
+
     try {
       onSendMessage({
-        text: message.text || 'Sent with attachments',
+        text: submitText,
         files: message.files,
       })
+      // Successful submit also leaves edit mode — the original user
+      // message is no longer "the one being edited", and the new message
+      // is now its own row in the thread.
+      onClearEdit?.()
       // Only clear text after successful send
       setText('')
     } catch (error) {
@@ -309,6 +432,8 @@ export function ChatInputPrompt({
         text={text}
         setText={setText}
         textareaRef={textareaRef}
+        isEditingStreaming={isEditingStreaming}
+        onCancelEdit={handleCancelEdit}
       />
     </PromptInput>
   )

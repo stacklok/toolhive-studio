@@ -456,6 +456,177 @@ describe('useChatStreaming', () => {
     })
   })
 
+  describe('rewindAndResend', () => {
+    const userMsg = (id: string, text: string): ChatUIMessage =>
+      ({
+        id,
+        role: 'user',
+        parts: [{ type: 'text' as const, text }],
+      }) as unknown as ChatUIMessage
+
+    const assistantMsg = (id: string, text: string): ChatUIMessage =>
+      ({
+        id,
+        role: 'assistant',
+        parts: [{ type: 'text' as const, text }],
+      }) as unknown as ChatUIMessage
+
+    it('exposes lastUserMessageId derived from messages', async () => {
+      mockUseChat.messages = [
+        userMsg('u1', 'first'),
+        assistantMsg('a1', 'first answer'),
+        userMsg('u2', 'second'),
+        assistantMsg('a2', 'partial second answer'),
+      ]
+
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.lastUserMessageId).toBe('u2')
+      })
+    })
+
+    it('returns null lastUserMessageId when no user messages exist', async () => {
+      mockUseChat.messages = [assistantMsg('a1', 'hello?')]
+
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.lastUserMessageId).toBeNull()
+      })
+    })
+
+    it('cancels stream, trims messages, persists, then sends the edited text', async () => {
+      mockUseChat.messages = [
+        userMsg('u1', 'first'),
+        assistantMsg('a1', 'first answer'),
+        userMsg('u2', 'second'),
+        assistantMsg('a2', 'partial second answer'),
+      ]
+      mockUseChat.status = 'streaming'
+
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      // Wait for settings query AND lastUserMessageId to settle. The hook's
+      // validation reads `settings.provider/apiKey` synchronously inside
+      // `rewindAndResend`, so we need settings loaded before invoking.
+      await waitFor(() => {
+        expect(result.current.settings.provider).toBe('openai')
+        expect(result.current.lastUserMessageId).toBe('u2')
+      })
+      // Forget the hydration-driven setMessages([]) call so the ordering
+      // assertions below see only the rewindAndResend invocation.
+      mockUseChat.setMessages.mockClear()
+
+      await act(async () => {
+        await result.current.rewindAndResend({
+          text: 'edited second',
+          editingMessageId: 'u2',
+        })
+      })
+
+      // 1. Main-process stream cancelled
+      expect(mockChatAPI.cancelStream).toHaveBeenCalledWith('toolhive-chat')
+      // 2. Renderer-side stop()
+      expect(mockUseChat.stop).toHaveBeenCalled()
+      // 3. Trim drops u2 + a2
+      expect(mockUseChat.setMessages).toHaveBeenCalledWith([
+        mockUseChat.messages[0],
+        mockUseChat.messages[1],
+      ])
+      // 4. Persist the trimmed list to SQLite
+      expect(mockChatAPI.updateThreadMessages).toHaveBeenCalledWith(
+        'toolhive-chat',
+        [mockUseChat.messages[0], mockUseChat.messages[1]]
+      )
+      // 5. Send the new message
+      expect(mockUseChat.sendMessage).toHaveBeenCalledWith({
+        text: 'edited second',
+        files: undefined,
+      })
+
+      // Ordering: cancel → stop → setMessages → updateThreadMessages → send
+      const cancelOrder = mockChatAPI.cancelStream.mock.invocationCallOrder[0]!
+      const stopOrder = mockUseChat.stop.mock.invocationCallOrder[0]!
+      const setOrder = mockUseChat.setMessages.mock.invocationCallOrder[0]!
+      const persistOrder =
+        mockChatAPI.updateThreadMessages.mock.invocationCallOrder[0]!
+      const sendOrder = mockUseChat.sendMessage.mock.invocationCallOrder[0]!
+      expect(cancelOrder).toBeLessThan(stopOrder)
+      expect(stopOrder).toBeLessThan(setOrder)
+      expect(setOrder).toBeLessThan(persistOrder)
+      expect(persistOrder).toBeLessThan(sendOrder)
+    })
+
+    it('throws when editingMessageId is not the last user message', async () => {
+      mockUseChat.messages = [userMsg('u1', 'first'), userMsg('u2', 'second')]
+
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.settings.provider).toBe('openai')
+        expect(result.current.lastUserMessageId).toBe('u2')
+      })
+      // Drop hydration `setMessages([])` so the assertion below covers only
+      // the rewind path.
+      mockUseChat.setMessages.mockClear()
+
+      await expect(
+        result.current.rewindAndResend({
+          text: 'edited first',
+          editingMessageId: 'u1',
+        })
+      ).rejects.toThrow(/only supports the last user message/)
+
+      expect(mockChatAPI.cancelStream).not.toHaveBeenCalled()
+      expect(mockUseChat.stop).not.toHaveBeenCalled()
+      expect(mockUseChat.setMessages).not.toHaveBeenCalled()
+      expect(mockChatAPI.updateThreadMessages).not.toHaveBeenCalled()
+      expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+    })
+
+    it('throws when settings are invalid', async () => {
+      mockChatAPI.getSettings.mockResolvedValue({
+        apiKey: '',
+        enabledTools: [],
+      })
+      mockUseChat.messages = [userMsg('u1', 'first')]
+
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.lastUserMessageId).toBe('u1')
+        // Wait for settings query to settle so we know we're testing the
+        // intended invalid state (not just an unresolved promise).
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      await expect(
+        result.current.rewindAndResend({
+          text: 'edited',
+          editingMessageId: 'u1',
+        })
+      ).rejects.toThrow('Please configure your AI provider settings first')
+
+      expect(mockUseChat.sendMessage).not.toHaveBeenCalled()
+    })
+  })
+
   describe('error processing', () => {
     it('processes string errors', async () => {
       mockUseChat.error = 'String error message'

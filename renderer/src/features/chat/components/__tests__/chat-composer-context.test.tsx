@@ -29,7 +29,13 @@ describe('ChatComposerContext', () => {
   it('calls provider setters when the consumer invokes them', async () => {
     const setDraftText = vi.fn()
     const focusComposer = vi.fn()
-    const value: ChatComposerContextValue = { setDraftText, focusComposer }
+    const value: ChatComposerContextValue = {
+      setDraftText,
+      focusComposer,
+      editingMessageId: null,
+      beginEdit: vi.fn(),
+      clearEdit: vi.fn(),
+    }
 
     render(
       <ChatComposerProvider value={value}>
