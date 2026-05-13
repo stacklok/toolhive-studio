@@ -107,14 +107,8 @@ interface ChatInputProps {
   lastUserMessageId?: string | null
   /** Exit edit mode (called from the chip's cancel button and on auto-clear). */
   onClearEdit?: () => void
-  /**
-   * A message the user submitted while a stream was still active. The hook
-   * auto-fires it when the current response finishes; the composer surfaces
-   * it as a chip so the user can cancel before that happens. Mutually
-   * exclusive with `isEditingStreaming` — the rewind chip wins.
-   */
+  /** Mutually exclusive with `isEditingStreaming` — the rewind chip wins. */
   queuedMessage?: { text: string; files?: FileUIPart[] } | null
-  /** Cancel the queued message without sending it. */
   onCancelQueuedMessage?: () => void
 }
 
@@ -177,25 +171,16 @@ function InputWithAttachments({
     onSettingsOpen(true)
   }
 
-  // Streaming + composer has text + NOT editing = "queue this message" mode.
-  // The form's onSubmit owns the queueing flow (it routes through
-  // `validatedSendMessage`, which intercepts and queues internally when
-  // status is streaming/submitted). We just need to show the right icon
-  // and skip the stop-the-stream side-effect that the default submit click
-  // would otherwise trigger.
+  // Streaming + text + not editing: form's onSubmit queues via
+  // `validatedSendMessage`. Skip the stop side-effect below.
   const isStreamingStatus = status === 'streaming' || status === 'submitted'
   const isQueueableSubmit =
     !isEditingStreaming && isStreamingStatus && Boolean(text)
 
   const handleSubmit = () => {
     trackEvent(`Playground: submit`, { 'playground.status': status })
-    // In "editing the streaming message" mode the form's onSubmit owns the
-    // rewind-and-resend flow — don't fire the stop handler here, the parent
-    // will cancel as part of that path.
+    // Rewind / queue paths: form's onSubmit handles the action — don't stop.
     if (isEditingStreaming) return
-    // In queue mode the form's onSubmit owns the queueing flow — same
-    // reasoning. The composer is non-empty so we want the message to land
-    // in the queue, NOT stop the active stream.
     if (isQueueableSubmit) return
     const isStoppable = ['streaming', 'error', 'submitted'].includes(status)
     if (isStoppable) {
@@ -230,9 +215,7 @@ function InputWithAttachments({
           </Button>
         </div>
       )}
-      {/* Queue chip is mutually exclusive with the rewind chip — when the
-          user is editing the last user message during streaming, that flow
-          wins and the queue is suppressed. */}
+      {/* Hidden while editing — rewind chip wins. */}
       {!isEditingStreaming && queuedMessage && onCancelQueuedMessage && (
         <QueuedMessageChip
           queuedMessage={queuedMessage}
@@ -282,9 +265,7 @@ function InputWithAttachments({
           )}
         </PromptInputTools>
         {isEditingStreaming ? (
-          // Override the status-driven icon so the user sees this submit is
-          // a "resend", not the usual stop-the-stream square. The form's
-          // onSubmit (set by the parent) decides what actually happens.
+          // Override the stop-square icon — this submit is a resend.
           <PromptInputSubmit
             onClick={handleSubmit}
             disabled={!text && !hasMessages}
@@ -295,10 +276,7 @@ function InputWithAttachments({
             <RefreshCw className="size-4" />
           </PromptInputSubmit>
         ) : isQueueableSubmit ? (
-          // Queue mode: composer is non-empty while streaming. Override the
-          // stop-square icon so the user sees this submit is "send when the
-          // current response finishes", not a stop action. The form's
-          // onSubmit routes through `validatedSendMessage` which queues.
+          // Override the stop-square icon — this submit queues.
           <Tooltip>
             <TooltipTrigger asChild>
               <PromptInputSubmit

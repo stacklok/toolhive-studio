@@ -1,17 +1,8 @@
 import { useEffect, type RefObject } from 'react'
 import type { ChatComposerHandle } from '../components/chat-input-prompt'
 
-/**
- * Registers an imperative handle on `composerHandleRef` so callers outside
- * this subtree (e.g. the message list's "Edit message" button) can pre-fill
- * the composer's text and focus the textarea without prop-drilling through
- * the entire tree.
- *
- * The handle is populated on mount and cleared on unmount — both the
- * empty-state and bottom composers share the same ref slot, so the parent
- * can tell whether a composer is currently mounted by checking
- * `composerHandleRef.current`.
- */
+// Lets callers outside this subtree drive the composer (e.g. "Edit message").
+// Ref is null when no composer is mounted.
 export function useComposerHandle(
   composerHandleRef: RefObject<ChatComposerHandle | null> | undefined,
   setText: (text: string) => void,
@@ -29,9 +20,7 @@ export function useComposerHandle(
         try {
           el.setSelectionRange(end, end)
         } catch {
-          // Some textarea types (e.g. <input type="number">) throw on
-          // setSelectionRange. Plain text textareas never do — guard anyway
-          // so a stray DOM shape can't break the edit flow.
+          // Non-text input types throw on setSelectionRange.
         }
       },
     }

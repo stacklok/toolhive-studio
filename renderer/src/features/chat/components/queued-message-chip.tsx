@@ -25,16 +25,6 @@ function formatPreview(message: {
   return base ? `${base} · ${fileSuffix}` : fileSuffix
 }
 
-/**
- * Surfaces a message the user submitted while a stream was still active.
- * The hook holds it in a single-slot per-thread queue and auto-fires it
- * when the current stream completes. The chip lets the user cancel before
- * that happens.
- *
- * Styled to match the rewind chip from {@link ChatInputPrompt} so they
- * read as siblings — but the two chips are mutually exclusive: when the
- * rewind chip is showing, the queue chip is hidden.
- */
 export function QueuedMessageChip({
   queuedMessage,
   onCancel,

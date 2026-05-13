@@ -23,14 +23,7 @@ function dropTrailingAssistant(messages: ChatUIMessage[]): ChatUIMessage[] {
   return messages.slice(0, -1)
 }
 
-/**
- * A message the user submitted while a stream was active, held in renderer
- * memory until the current stream finishes (or until the user cancels).
- *
- * Single slot per thread — submitting a new message while one is already
- * queued replaces it, matching a "draft" mental model. Lost on app restart
- * (in-memory only; no SQLite persistence in V1).
- */
+// Single-slot, per-thread, in-memory queue. Submitting again replaces the slot.
 type QueuedMessage = { text: string; files?: FileUIPart[] }
 
 export function useChatStreaming(externalThreadId?: string | null) {
@@ -204,42 +197,21 @@ export function useChatStreaming(externalThreadId?: string | null) {
     }
   }, [currentThreadId])
 
-  // Drop any queued message when the user switches threads — the queue is
-  // per-thread and we never auto-send across threads. Done in an effect so
-  // both `externalThreadId` (prop-driven) and the resolved `currentThreadId`
-  // changes are honored — `currentThreadId` is the source of truth.
   useEffect(() => {
     setQueuedMessage(null)
   }, [currentThreadId])
 
-  // Auto-fire the queued message when the active stream finishes.
-  //
-  // We watch the `streaming`/`submitted` → other-state transition rather
-  // than just "status is idle". Without that, mounting with `status='ready'`
-  // and a stale queue would flush immediately, and resume-from-snapshot
-  // races could fire twice.
-  //
-  // Important: we deliberately call the AI SDK's `sendMessage` directly
-  // here (NOT `validatedSendMessage`) — re-running validation on the auto-
-  // flush path would re-queue the message into oblivion. The settings were
-  // already valid when the user submitted (otherwise the validation in
-  // `validatedSendMessage` would have thrown), so re-validation is moot.
-  //
-  // If status flips to `error` (not `ready`), we leave the queue intact so
-  // the user can cancel or retry once the error is resolved. Auto-firing
-  // onto a broken provider would just produce a second error.
+  // Auto-flush on streaming→ready only (not →error: would re-fail on a broken
+  // provider). Calls `sendMessage` directly to skip re-validation/re-queuing.
   const prevQueueStatusRef = useRef(status)
   useEffect(() => {
     const prev = prevQueueStatusRef.current
     prevQueueStatusRef.current = status
     const wasStreaming = prev === 'streaming' || prev === 'submitted'
-    const nowIdle = status === 'ready'
-    if (!wasStreaming || !nowIdle) return
+    if (!wasStreaming || status !== 'ready') return
     if (!queuedMessage) return
     const toSend = queuedMessage
     setQueuedMessage(null)
-    // Fire-and-forget — `sendMessage` returns a Promise, but the AI SDK
-    // surfaces failures via `error` which we already render in `ErrorAlert`.
     Promise.resolve(sendMessage(toSend)).catch((err) => {
       log.error('[useChatStreaming] Auto-flush of queued message failed:', err)
     })
@@ -394,13 +366,8 @@ export function useChatStreaming(externalThreadId?: string | null) {
     return 'An unknown error occurred'
   }
 
-  /**
-   * Validate settings, promote the draft thread to a DB row if needed,
-   * then call the AI SDK's `sendMessage` directly. Used by both the
-   * normal-send path (after queue check) and the rewind path. Does NOT
-   * touch the queue — callers that need queue-while-streaming behavior
-   * go through {@link validatedSendMessage}.
-   */
+  // Send path used by both `validatedSendMessage` (after queue check) and
+  // `rewindAndResend`. Skips the queue intercept by design.
   const dispatchSend = useCallback(
     async (
       messageOrText:
@@ -447,14 +414,8 @@ export function useChatStreaming(externalThreadId?: string | null) {
             files?: FileUIPart[]
           }
     ) => {
-      // Queue-while-streaming: hold the message in renderer memory and
-      // auto-fire it when the current stream finishes. Validation still
-      // runs first (via `dispatchSend` below for the immediate path; we
-      // mirror its settings check here so a misconfigured queue submit
-      // surfaces the error to the user immediately).
-      //
-      // The rewind-and-retry path bypasses this entirely by calling
-      // `dispatchSend` directly — see `rewindAndResend`.
+      // Queue while streaming — auto-flushed when the active stream ends.
+      // Validate up front so a misconfigured submit fails immediately.
       if (status === 'streaming' || status === 'submitted') {
         if (
           !settings.provider ||
@@ -476,11 +437,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
     [dispatchSend, settings, status]
   )
 
-  /**
-   * Id of the most recent user message in the thread, or `null` if no user
-   * message exists yet. Drives the "rewind & retry" affordance in the
-   * composer — only the LAST user message can be rewound during streaming.
-   */
+  // Id of the most recent user message; drives the rewind & retry affordance.
   const lastUserMessageId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const m = messages[i]
@@ -489,17 +446,9 @@ export function useChatStreaming(externalThreadId?: string | null) {
     return null
   }, [messages])
 
-  /**
-   * Cancel the in-flight stream, drop the user message being edited AND the
-   * partial assistant response that was being generated for it, then send
-   * the new text as a fresh message — replacing the in-flight turn with the
-   * edited one.
-   *
-   * Caller MUST guard that `editingMessageId === lastUserMessageId` and a
-   * stream is active. If `editingMessageId` doesn't match anything in
-   * `messages` we fall back to a normal `sendMessage` (defensive — this
-   * shouldn't happen given the UI guard).
-   */
+  // Cancel the in-flight stream, drop the edited user message + partial
+  // assistant response, then send the new text. Caller must guard
+  // `editingMessageId === lastUserMessageId` and an active stream.
   const rewindAndResend = useCallback(
     async ({
       text,
@@ -527,36 +476,26 @@ export function useChatStreaming(externalThreadId?: string | null) {
 
       const idx = messages.findIndex((m) => m.id === editingMessageId)
       if (idx === -1) {
-        // Defensive fallback — UI shouldn't let us get here. Bypass the
-        // queue intercept by going through `dispatchSend` directly; the
-        // rewind path is exclusive of the queue path and should never
-        // land a "send" in the queued slot.
+        // Defensive — UI shouldn't let us get here.
         await dispatchSend({ text, files })
         return
       }
 
-      // 1. Stop the active main-process stream first so it doesn't keep
-      // pushing chunks (and persisting partial snapshots) while we trim.
       if (currentThreadId) {
         try {
           await window.electronAPI.chat.cancelStream(currentThreadId)
         } catch {
-          // best effort — we still tear down the renderer-side state below
+          // best effort
         }
       }
       await stop()
       clearError()
 
-      // 2. Drop the edited user message AND everything after it (the
-      // partial assistant response). `setMessages` updates the renderer's
-      // local view immediately.
       const trimmed = messages.slice(0, idx)
       setMessages(trimmed)
 
-      // 3. Overwrite the SQLite snapshot so a mid-flight navigation can't
-      // resurrect the partial state. The active stream's `finalizeError`
-      // path may have raced a snapshot write through `flushPersist`; this
-      // overwrite is the source of truth from the user's perspective.
+      // Overwrite the SQLite snapshot so a navigation mid-rewind can't
+      // resurrect the partial state left by `finalizeError`'s flushPersist.
       if (currentThreadId) {
         try {
           await window.electronAPI.chat.updateThreadMessages(
@@ -571,15 +510,9 @@ export function useChatStreaming(externalThreadId?: string | null) {
         }
       }
 
-      // 4. Start the new stream. Use `dispatchSend` (not
-      // `validatedSendMessage`) so the in-flight `status === 'streaming'`
-      // closure value doesn't route this send into the queue. The
-      // captured `status` won't update synchronously after `stop()` —
-      // routing the rewind through `validatedSendMessage` here would
-      // queue the edited message and then auto-flush it on the next
-      // tick, which is observably the same outcome but adds an extra
-      // round-trip and a misleading "Queued" chip flash for the user.
-      // We discard the AI SDK's sendMessage return — no caller reads it.
+      // `dispatchSend` (not `validatedSendMessage`): the in-flight
+      // `status === 'streaming'` is closed over and would route us into
+      // the queue, flashing a misleading "Queued" chip before auto-flush.
       await dispatchSend({ text, files })
     },
     [
