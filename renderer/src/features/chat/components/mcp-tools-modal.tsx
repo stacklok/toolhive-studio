@@ -87,7 +87,9 @@ export function McpToolsModal({
 
   // Save tools mutation — dual-writes when a threadId is in scope so the
   // per-thread row owns this thread's selection and the global write keeps
-  // "last used" up to date for new threads.
+  // "last used" up to date for new threads. Skip the global write when
+  // per-thread silently failed — otherwise the seed for new threads would
+  // mutate even though the active thread's save didn't persist.
   const saveToolsMutation = useMutation({
     mutationFn: async (enabledTools: string[]) => {
       if (threadId) {
@@ -97,6 +99,7 @@ export function McpToolsModal({
             serverName,
             enabledTools
           )
+        if (!perThread.success) return perThread
         try {
           await window.electronAPI.chat.saveEnabledMcpTools(
             serverName,

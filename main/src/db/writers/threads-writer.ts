@@ -1,5 +1,10 @@
 import { getDb, isDbWritable } from '../database'
 import { withDbSpan } from '../telemetry'
+import {
+  readSelectedModel,
+  readEnabledMcpTools,
+  readEnabledSkills,
+} from '../readers/chat-settings-reader'
 import type { ChatSettingsThread } from '../../chat/threads-storage'
 
 interface ExistingThreadColumns {
@@ -33,6 +38,19 @@ export function writeThread(thread: ChatSettingsThread): void {
           )
           .get(thread.id) as ExistingThreadColumns | undefined
 
+        // For brand-new rows where the caller didn't supply per-thread
+        // settings, snapshot the current globals so the thread inherits the
+        // last-used selection and stays isolated when globals later change.
+        // For existing rows we just preserve what's already there.
+        const isNewRow = !previous
+        const globalSnapshot = isNewRow
+          ? {
+              selectedModel: readSelectedModel(),
+              enabledMcpTools: readEnabledMcpTools(),
+              enabledSkills: readEnabledSkills(),
+            }
+          : null
+
         const nextAgentId =
           thread.agentId !== undefined
             ? thread.agentId
@@ -41,26 +59,34 @@ export function writeThread(thread: ChatSettingsThread): void {
         const nextSelectedProvider =
           thread.selectedProvider !== undefined
             ? thread.selectedProvider
-            : (previous?.selected_provider ?? null)
+            : previous
+              ? (previous.selected_provider ?? null)
+              : globalSnapshot!.selectedModel.provider || null
 
         const nextSelectedModel =
           thread.selectedModel !== undefined
             ? thread.selectedModel
-            : (previous?.selected_model ?? null)
+            : previous
+              ? (previous.selected_model ?? null)
+              : globalSnapshot!.selectedModel.model || null
 
         const nextEnabledMcpTools =
           thread.enabledMcpTools !== undefined
             ? thread.enabledMcpTools === null
               ? null
               : JSON.stringify(thread.enabledMcpTools)
-            : (previous?.enabled_mcp_tools ?? null)
+            : previous
+              ? (previous.enabled_mcp_tools ?? null)
+              : JSON.stringify(globalSnapshot!.enabledMcpTools)
 
         const nextEnabledSkills =
           thread.enabledSkills !== undefined
             ? thread.enabledSkills === null
               ? null
               : JSON.stringify(thread.enabledSkills)
-            : (previous?.enabled_skills ?? null)
+            : previous
+              ? (previous.enabled_skills ?? null)
+              : JSON.stringify(globalSnapshot!.enabledSkills)
 
         db.prepare(
           `INSERT OR REPLACE INTO threads (

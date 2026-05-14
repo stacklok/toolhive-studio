@@ -265,15 +265,23 @@ export function useChatSettings(threadId?: string | null) {
       model: string
     }) => {
       if (threadId) {
-        await window.electronAPI.chat.threadSettings.setSelectedModel(
-          threadId,
-          provider,
-          model
-        )
+        const perThread =
+          await window.electronAPI.chat.threadSettings.setSelectedModel(
+            threadId,
+            provider,
+            model
+          )
+        // If the per-thread write silently failed, don't touch the global
+        // "last used" default — that would mutate the seed for new threads
+        // even though the user's current selection didn't persist.
+        if (!perThread.success) return perThread
       }
       return window.electronAPI.chat.saveSelectedModel(provider, model)
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
+      // Only seed caches when the write actually persisted — otherwise the
+      // UI would show a selection that's about to disappear on refetch.
+      if (!result.success) return
       const next = { provider: variables.provider, model: variables.model }
       queryClient.setQueryData(CHAT_SETTINGS_KEYS.selectedModel, next)
       queryClient.invalidateQueries({

@@ -68,13 +68,16 @@ export function SkillSelector({ threadId }: SkillSelectorProps) {
     if (threadId) {
       // Dual-write: per-thread row is the source of truth for this thread,
       // global write keeps "last used" so the next new thread inherits it.
+      // Skip the global write when per-thread silently failed — otherwise
+      // we'd mutate the seed for new threads even though the current one
+      // didn't persist.
       const perThread =
         await window.electronAPI.chat.threadSettings.setEnabledSkill(
           threadId,
           name,
           enabled
         )
-      // Best-effort global write; failure shouldn't roll back the per-thread one.
+      if (!perThread.success) return perThread
       try {
         await window.electronAPI.chat.setEnabledSkill(name, enabled)
       } catch (err) {

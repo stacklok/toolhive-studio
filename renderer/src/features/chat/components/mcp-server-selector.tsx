@@ -52,12 +52,16 @@ export function McpServerSelector({ threadId }: McpServerSelectorProps) {
     if (threadId) {
       // Dual-write: per-thread row owns this thread's selection; global
       // write keeps "last used" so new threads inherit the latest pick.
+      // Skip the global write when per-thread silently failed — otherwise
+      // we mutate the seed for new threads even though the current one
+      // didn't persist.
       const perThread =
         await window.electronAPI.chat.threadSettings.setEnabledMcpTools(
           threadId,
           serverName,
           toolNames
         )
+      if (!perThread.success) return perThread
       try {
         await window.electronAPI.chat.saveEnabledMcpTools(serverName, toolNames)
       } catch (err) {
