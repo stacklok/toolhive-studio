@@ -233,6 +233,7 @@ export function AssistantMessage({
               }
               responseTime={message.metadata?.responseTime}
               providerId={message.metadata?.providerId}
+              model={message.metadata?.model}
               isStreaming={status === 'streaming' || status === 'submitted'}
             />
           )}

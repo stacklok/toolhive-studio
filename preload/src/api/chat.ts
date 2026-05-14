@@ -52,6 +52,21 @@ export const chatApi = {
     clearSettings: (providerId?: string) =>
       ipcRenderer.invoke('chat:clear-settings', providerId),
     discoverModels: () => ipcRenderer.invoke('chat:discover-models'),
+    getModelPricing: () =>
+      ipcRenderer.invoke('chat:get-model-pricing') as Promise<
+        Record<
+          string,
+          Record<
+            string,
+            {
+              input: number
+              output: number
+              cache_read?: number
+              cache_write?: number
+            }
+          >
+        >
+      >,
     getSelectedModel: () => ipcRenderer.invoke('chat:get-selected-model'),
     saveSelectedModel: (provider: string, model: string) =>
       ipcRenderer.invoke('chat:save-selected-model', provider, model),
@@ -221,6 +236,20 @@ export interface ChatAPI {
       }>
       discoveredAt: string
     }>
+    getModelPricing: () => Promise<
+      Record<
+        string,
+        Record<
+          string,
+          {
+            input: number
+            output: number
+            cache_read?: number
+            cache_write?: number
+          }
+        >
+      >
+    >
     getSelectedModel: () => Promise<{ provider: string; model: string }>
     saveSelectedModel: (
       provider: string,
