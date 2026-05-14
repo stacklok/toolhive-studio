@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import { Button } from '@/common/components/ui/button'
@@ -97,19 +97,40 @@ export function DialogProviderSettings({
     refetchProviders,
   } = useChatSettings()
 
-  // Update local state when hook data changes
-  useEffect(() => {
-    if (isOpen && allProvidersWithSettings.length > 0) {
-      setProviderKeys(allProvidersWithSettings)
+  // Sync local state with hook data on dialog open and on provider list
+  // changes (refresh). Using the "adjusting state on prop change" pattern
+  // recommended by React instead of a setState-in-effect.
+  // `useChatSettings` doesn't return a referentially-stable
+  // `allProvidersWithSettings` array, so we compare by a content
+  // fingerprint (string) — strings compare by value with `!==`.
+  const providersFingerprint = allProvidersWithSettings
+    .map(
+      (p) =>
+        `${p.provider.id}:${p.provider.models.join(',')}:${p.hasKey ? 1 : 0}`
+    )
+    .join('|')
 
-      // Start with all providers collapsed
-      const expandedState: Record<string, boolean> = {}
-      allProvidersWithSettings.forEach((pk) => {
-        expandedState[pk.provider.id] = false
-      })
-      setExpandedProviders(expandedState)
-    }
-  }, [isOpen, allProvidersWithSettings])
+  const [prevIsOpen, setPrevIsOpen] = useState(false)
+  const [prevFingerprint, setPrevFingerprint] = useState('')
+
+  const isOpenChanged = prevIsOpen !== isOpen
+  const providersChanged = prevFingerprint !== providersFingerprint
+
+  if (isOpenChanged) setPrevIsOpen(isOpen)
+  if (providersChanged) setPrevFingerprint(providersFingerprint)
+
+  if (
+    (isOpenChanged || providersChanged) &&
+    isOpen &&
+    allProvidersWithSettings.length > 0
+  ) {
+    setProviderKeys(allProvidersWithSettings)
+    const expandedState: Record<string, boolean> = {}
+    allProvidersWithSettings.forEach((pk) => {
+      expandedState[pk.provider.id] = false
+    })
+    setExpandedProviders(expandedState)
+  }
 
   const handleApiKeyChange = (providerId: string, value: string) => {
     trackEvent(`Playground: change provider credentials for ${providerId}`)
