@@ -45,9 +45,8 @@ function Tooltip({
   const handleOpenChange = React.useCallback(
     (nextOpen: boolean) => {
       if (onlyWhenTruncated) {
-        const resolvedOpen = nextOpen && isTruncated
-        setInternalOpen(resolvedOpen)
-        onOpenChange?.(resolvedOpen)
+        setInternalOpen(nextOpen)
+        onOpenChange?.(nextOpen && isTruncated)
         return
       }
       onOpenChange?.(nextOpen)
@@ -55,15 +54,10 @@ function Tooltip({
     [onlyWhenTruncated, isTruncated, onOpenChange]
   )
 
-  // Close the tooltip if truncation state changes while open
-  React.useEffect(() => {
-    if (onlyWhenTruncated && !isTruncated) {
-      setInternalOpen(false)
-    }
-  }, [onlyWhenTruncated, isTruncated])
-
-  // When onlyWhenTruncated is active, always stay controlled
-  const resolvedOpen = onlyWhenTruncated ? internalOpen : open
+  // When onlyWhenTruncated is active, always stay controlled. The
+  // tooltip stays closed unless the trigger is currently truncated —
+  // derived from `isTruncated` so a width change auto-closes it.
+  const resolvedOpen = onlyWhenTruncated ? internalOpen && isTruncated : open
   const resolvedOnOpenChange = onlyWhenTruncated
     ? handleOpenChange
     : onOpenChange

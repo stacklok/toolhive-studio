@@ -55,14 +55,10 @@ export function useChatStreaming(externalThreadId?: string | null) {
     error: threadDataError,
   } = useQuery(chatThreadQueryOptions(currentThreadId))
 
-  // Surface query failures via `persistentError` so they reach `processedError` below.
+  // Log query failures. The error message itself is derived into
+  // `processedError` below, so no mirroring into state is needed.
   useEffect(() => {
     if (!threadDataError) return
-    const message =
-      threadDataError instanceof Error
-        ? threadDataError.message
-        : 'Failed to load chat history'
-    setPersistentError(message)
     log.error('Failed to load persistent chat messages:', threadDataError)
   }, [threadDataError])
 
@@ -538,8 +534,18 @@ export function useChatStreaming(externalThreadId?: string | null) {
 
   // Memoize the processed error to avoid recalculating on every render
   const processedError = useMemo(() => {
-    return persistentError || threadError || processError(error)
-  }, [error, persistentError, threadError])
+    const threadDataErrorMessage = threadDataError
+      ? threadDataError instanceof Error
+        ? threadDataError.message
+        : 'Failed to load chat history'
+      : null
+    return (
+      persistentError ||
+      threadDataErrorMessage ||
+      threadError ||
+      processError(error)
+    )
+  }, [error, persistentError, threadError, threadDataError])
 
   return useMemo(() => {
     return {

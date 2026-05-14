@@ -21,11 +21,17 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
   const queryClient = useQueryClient()
   const [threads, setThreads] = useState<PlaygroundThread[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  // Mirror the latest values into refs via effects so callbacks/effects
+  // can read them without re-binding on every change.
   const threadsRef = useRef(threads)
-  threadsRef.current = threads
+  useEffect(() => {
+    threadsRef.current = threads
+  })
   // Read by the load effect without becoming a dep (would refetch on URL change).
   const activeThreadIdRef = useRef(activeThreadId)
-  activeThreadIdRef.current = activeThreadId
+  useEffect(() => {
+    activeThreadIdRef.current = activeThreadId
+  })
 
   useEffect(() => {
     async function loadThreads() {
@@ -89,9 +95,11 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
 
   // Seed unknown ids that arrive post-load (deep link, manual URL edit).
   // Initial mount is handled atomically inside the loader above.
-  useEffect(() => {
-    if (isLoading) return
-    if (!activeThreadId) return
+  // Using the "adjusting state on prop change" pattern: setState during
+  // render when the tracked id flips, instead of a setState-in-effect.
+  const [seededActiveId, setSeededActiveId] = useState<string | null>(null)
+  if (!isLoading && activeThreadId && seededActiveId !== activeThreadId) {
+    setSeededActiveId(activeThreadId)
     setThreads((prev) => {
       if (prev.some((t) => t.id === activeThreadId)) return prev
       const now = Date.now()
@@ -104,7 +112,7 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
       }
       return [seed, ...prev]
     })
-  }, [activeThreadId, isLoading])
+  }
 
   /** Reuses an existing pending draft to avoid piling up empty entries. */
   const findReusableDraftId = useCallback((): string | null => {
