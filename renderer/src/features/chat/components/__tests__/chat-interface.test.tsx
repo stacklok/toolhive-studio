@@ -5,6 +5,8 @@ import React, { createRef } from 'react'
 import { ChatInterface } from '../chat-interface'
 import type { ChatUIMessage } from '../../types'
 import { useChatComposer } from '../chat-composer-context'
+import type { AgentConfig } from '@common/types/agents'
+import { BUILTIN_AGENT_IDS } from '@common/types/agents'
 
 // ---------------------------------------------------------------------------
 // Module mocks
@@ -132,6 +134,49 @@ vi.mock('../../lib/utils', () => ({
     !!settings.apiKey || !!settings.endpointURL,
 }))
 
+const now = Date.now()
+const TOOLHIVE_ASSISTANT_AGENT: AgentConfig = {
+  id: BUILTIN_AGENT_IDS.toolhiveAssistant,
+  kind: 'builtin',
+  name: 'ToolHive Assistant',
+  description:
+    'General-purpose assistant with access to all enabled MCP tools.',
+  instructions: '',
+  builtinToolsKey: null,
+  createdAt: now,
+  updatedAt: now,
+}
+const SKILLS_AGENT: AgentConfig = {
+  id: BUILTIN_AGENT_IDS.skills,
+  kind: 'builtin',
+  name: 'Skill Engineer',
+  description: 'Designs and builds new skills.',
+  instructions: '',
+  builtinToolsKey: 'skills',
+  createdAt: now,
+  updatedAt: now,
+}
+const CUSTOM_AGENT: AgentConfig = {
+  id: 'custom.my-bot',
+  kind: 'custom',
+  name: 'MyBot',
+  description: 'A custom agent.',
+  instructions: '',
+  builtinToolsKey: null,
+  createdAt: now,
+  updatedAt: now,
+}
+
+const mockAgents = {
+  list: [TOOLHIVE_ASSISTANT_AGENT, SKILLS_AGENT, CUSTOM_AGENT] as AgentConfig[],
+  threadAgentId: null as string | null,
+}
+
+vi.mock('../../../agents/hooks/use-agents', () => ({
+  useAgents: () => ({ data: mockAgents.list, isLoading: false }),
+  useThreadAgentId: () => ({ data: mockAgents.threadAgentId }),
+}))
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
@@ -155,6 +200,7 @@ function resetMock() {
   mockStreamingReturn.lastUserMessageId = null
   mockStreamingReturn.rewindAndResend.mockReset()
   mockShowScrollToBottom = false
+  mockAgents.threadAgentId = null
 }
 
 // ---------------------------------------------------------------------------
@@ -246,6 +292,44 @@ describe('ChatInterface', () => {
       expect(
         screen.queryByRole('button', { name: /configure your providers/i })
       ).not.toBeInTheDocument()
+    })
+
+    describe('per-agent empty-state copy', () => {
+      it('shows ToolHive Assistant copy when no thread agent is set (default)', () => {
+        renderInterface({ threadId: 'thread-1' })
+        expect(
+          screen.getByText('Test & evaluate your MCP Servers')
+        ).toBeInTheDocument()
+        expect(
+          screen.getByText(
+            /configure an ai service provider to use to test the responses from your mcp servers/i
+          )
+        ).toBeInTheDocument()
+      })
+
+      it('shows Skill Engineer copy when the Skills agent is selected', () => {
+        mockAgents.threadAgentId = BUILTIN_AGENT_IDS.skills
+        renderInterface({ threadId: 'thread-1' })
+        expect(
+          screen.getByText('Build & audit your Skills')
+        ).toBeInTheDocument()
+        expect(
+          screen.getByText(
+            /configure an ai service provider to design, build, and audit skills/i
+          )
+        ).toBeInTheDocument()
+      })
+
+      it('shows "Chat with {name}" when a custom agent is selected', () => {
+        mockAgents.threadAgentId = CUSTOM_AGENT.id
+        renderInterface({ threadId: 'thread-1' })
+        expect(screen.getByText('Chat with MyBot')).toBeInTheDocument()
+        expect(
+          screen.getByText(
+            /configure an ai service provider to chat with your agent/i
+          )
+        ).toBeInTheDocument()
+      })
     })
   })
 

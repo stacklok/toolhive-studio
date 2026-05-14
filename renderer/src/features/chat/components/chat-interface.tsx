@@ -18,6 +18,9 @@ import {
 import { Separator } from '@/common/components/ui/separator'
 import { ThreadTitleBar } from './thread-title-bar'
 import { hasCredentials } from '../lib/utils'
+import { getEmptyStateCopy } from '../lib/empty-state-copy'
+import { useAgents, useThreadAgentId } from '../../agents/hooks/use-agents'
+import { DEFAULT_AGENT_ID } from '@common/types/agents'
 
 interface ChatInterfaceProps {
   threadId?: string | null
@@ -130,6 +133,12 @@ export function ChatInterface({
     [editingMessageId, beginEdit, clearEdit]
   )
 
+  const { data: agents = [] } = useAgents()
+  const { data: threadAgentId } = useThreadAgentId(threadId ?? undefined)
+  const selectedAgentId = threadAgentId || DEFAULT_AGENT_ID
+  const selectedAgent = agents.find((a) => a.id === selectedAgentId)
+  const emptyStateCopy = getEmptyStateCopy(selectedAgent)
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       {threadId && (
@@ -187,7 +196,7 @@ export function ChatInterface({
                           className="mx-auto mb-2 scale-x-[-1] font-light"
                         />
                       )}
-                      Test & evaluate your MCP Servers
+                      {emptyStateCopy.heading}
                     </div>
                     {!hasProviderAndModel && (
                       <>
@@ -195,8 +204,7 @@ export function ChatInterface({
                           className="text-muted-foreground mt-4 font-sans
                             text-base"
                         >
-                          Configure an AI service provider to use to test the
-                          responses from your MCP servers
+                          {emptyStateCopy.subtext}
                         </p>
                         <Button
                           variant="action"
