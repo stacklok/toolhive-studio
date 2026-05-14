@@ -138,6 +138,13 @@ describe('ChatInputPrompt', () => {
     }
   })
 
+  describe('toolbar selectors', () => {
+    it('renders the AgentSelector unconditionally when provider and model are configured', () => {
+      renderPrompt({ status: 'ready' })
+      expect(screen.getByTestId('agent-selector')).toBeInTheDocument()
+    })
+  })
+
   describe('submit decision', () => {
     it('calls onRewindAndResend when editingMessageId matches lastUserMessageId and streaming', async () => {
       const {
