@@ -1,4 +1,4 @@
-import { Zap, ArrowRight, Hash, Info } from 'lucide-react'
+import { Zap, ArrowRight, Hash, Info, DollarSign } from 'lucide-react'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import {
   Tooltip,
@@ -6,11 +6,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/common/components/ui/tooltip'
+import { useModelPricing } from '../../hooks/use-model-pricing'
+import { calculateCost, formatUsd } from '../../lib/calculate-cost'
 
 interface TokenUsageProps {
   usage: LanguageModelV2Usage
   responseTime?: number
   providerId?: string
+  model?: string
   /** When true, the assistant message this usage belongs to is still
    * streaming. Most providers only report token counts at step
    * boundaries, so we render a subtle in-flight indicator instead of
@@ -22,8 +25,11 @@ export function TokenUsage({
   usage,
   responseTime,
   providerId,
+  model,
   isStreaming = false,
 }: TokenUsageProps) {
+  const { getPricing } = useModelPricing()
+
   const safeNumber = (value: number | undefined | null): number => {
     if (
       value === undefined ||
@@ -51,6 +57,9 @@ export function TokenUsage({
   const hasUsageData = totalTokens > 0 || inputTokens > 0 || outputTokens > 0
   const isLMStudio = providerId === 'lmstudio'
   const showStreamingPlaceholder = isStreaming && !hasUsageData
+
+  const pricing = getPricing(providerId, model)
+  const cost = hasUsageData && pricing ? calculateCost(usage, pricing) : null
 
   return (
     <TooltipProvider>
@@ -103,6 +112,15 @@ export function TokenUsage({
                 <span className="text-foreground font-medium">
                   = {totalTokens}
                 </span>
+                {cost && (
+                  <>
+                    <span className="mx-1">•</span>
+                    <DollarSign className="h-3 w-3" />
+                    <span className="text-foreground font-medium">
+                      {formatUsd(cost.totalCost).replace('$', '')}
+                    </span>
+                  </>
+                )}
               </div>
             </TooltipTrigger>
             <TooltipContent side="top" className="max-w-xs">
@@ -120,7 +138,8 @@ export function TokenUsage({
                   {reasoningTokens > 0 && (
                     <div>
                       <strong>Reasoning tokens:</strong>{' '}
-                      {reasoningTokens.toLocaleString()} (internal reasoning)
+                      {reasoningTokens.toLocaleString()} (internal reasoning,
+                      counted in output)
                     </div>
                   )}
                   {cachedInputTokens > 0 && (
@@ -135,9 +154,30 @@ export function TokenUsage({
                     {totalTokens.toLocaleString()}
                   </div>
                 </div>
+                {cost && (
+                  <div className="space-y-0.5 border-t pt-1 text-xs">
+                    <div className="font-medium">Cost</div>
+                    <div>
+                      <strong>Input cost:</strong> {formatUsd(cost.inputCost)}
+                    </div>
+                    {cost.cachedCost > 0 && (
+                      <div>
+                        <strong>Cached cost:</strong>{' '}
+                        {formatUsd(cost.cachedCost)}
+                      </div>
+                    )}
+                    <div>
+                      <strong>Output cost:</strong> {formatUsd(cost.outputCost)}
+                    </div>
+                    <div className="border-t pt-1">
+                      <strong>Total cost:</strong> {formatUsd(cost.totalCost)}
+                    </div>
+                  </div>
+                )}
                 <div className="text-muted-foreground border-t pt-1 text-xs">
-                  Tokens are units of text that AI models process. More tokens =
-                  higher cost.
+                  {cost
+                    ? 'Pricing data from models.dev'
+                    : 'Tokens are units of text that AI models process. More tokens = higher cost.'}
                 </div>
               </div>
             </TooltipContent>
