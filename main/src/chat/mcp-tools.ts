@@ -17,6 +17,7 @@ import { createMainProcessApiClient } from '../unix-socket-fetch'
 import log from '../logger'
 import type { AvailableServer } from './types'
 import { getEnabledMcpTools } from './settings-storage'
+import { getThreadEnabledMcpTools } from './thread-settings-storage'
 import {
   type McpToolDefinition,
   buildRawTransport,
@@ -278,7 +279,8 @@ export async function getToolhiveMcpInfo(
 
 // Get MCP server tools information
 export async function getMcpServerTools(
-  serverName: string
+  serverName: string,
+  threadId?: string
 ): Promise<AvailableServer | null> {
   if (!serverName) {
     log.error('getMcpServerTools: serverName is not passed')
@@ -287,8 +289,11 @@ export async function getMcpServerTools(
   const workloads = await fetchWorkloads()
   const workload = workloads.find((w) => w.name === serverName)
 
-  // Get enabled tools for this server
-  const enabledTools = await getEnabledMcpTools()
+  // Get enabled tools for this server (per-thread when threadId is given,
+  // otherwise fall back to the global defaults used by settings UIs).
+  const enabledTools = threadId
+    ? getThreadEnabledMcpTools(threadId)
+    : await getEnabledMcpTools()
   const enabledToolNames = enabledTools[serverName] || []
 
   if (!workload && serverName === TOOLHIVE_MCP_SERVER_NAME) {
@@ -337,7 +342,7 @@ export async function getMcpServerTools(
 }
 
 // Create MCP tools for AI SDK
-export async function createMcpTools(): Promise<{
+export async function createMcpTools(threadId?: string): Promise<{
   tools: ToolSet
   clients: Awaited<ReturnType<typeof createMCPClient>>[]
   enabledTools: Record<string, string[]>
@@ -393,7 +398,9 @@ export async function createMcpTools(): Promise<{
   try {
     const [workloads, resolvedEnabledTools] = await Promise.all([
       fetchWorkloads(),
-      getEnabledMcpTools(),
+      threadId
+        ? Promise.resolve(getThreadEnabledMcpTools(threadId))
+        : getEnabledMcpTools(),
     ])
     enabledTools = resolvedEnabledTools
     // Flag is set here, AFTER the two required calls resolved, so any

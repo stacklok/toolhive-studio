@@ -70,8 +70,8 @@ export const chatApi = {
     getSelectedModel: () => ipcRenderer.invoke('chat:get-selected-model'),
     saveSelectedModel: (provider: string, model: string) =>
       ipcRenderer.invoke('chat:save-selected-model', provider, model),
-    getMcpServerTools: (serverName: string) =>
-      ipcRenderer.invoke('chat:get-mcp-server-tools', serverName),
+    getMcpServerTools: (serverName: string, threadId?: string) =>
+      ipcRenderer.invoke('chat:get-mcp-server-tools', serverName, threadId),
     getEnabledMcpTools: () => ipcRenderer.invoke('chat:get-enabled-mcp-tools'),
     getEnabledMcpServersFromTools: () =>
       ipcRenderer.invoke('chat:get-enabled-mcp-servers-from-tools'),
@@ -164,6 +164,55 @@ export const chatApi = {
       getThreadAgentId: (threadId: string): Promise<string | null> =>
         ipcRenderer.invoke('chat:agents:get-thread-agent-id', threadId),
     },
+
+    threadSettings: {
+      getSelectedModel: (
+        threadId: string
+      ): Promise<{ provider: string; model: string } | null> =>
+        ipcRenderer.invoke('chat:thread-settings:get-selected-model', threadId),
+      setSelectedModel: (
+        threadId: string,
+        provider: string,
+        model: string
+      ): Promise<{ success: boolean; error?: string }> =>
+        ipcRenderer.invoke(
+          'chat:thread-settings:set-selected-model',
+          threadId,
+          provider,
+          model
+        ),
+      getEnabledMcpTools: (
+        threadId: string
+      ): Promise<Record<string, string[]>> =>
+        ipcRenderer.invoke(
+          'chat:thread-settings:get-enabled-mcp-tools',
+          threadId
+        ),
+      setEnabledMcpTools: (
+        threadId: string,
+        serverName: string,
+        toolNames: string[]
+      ): Promise<{ success: boolean; error?: string }> =>
+        ipcRenderer.invoke(
+          'chat:thread-settings:set-enabled-mcp-tools',
+          threadId,
+          serverName,
+          toolNames
+        ),
+      getEnabledSkills: (threadId: string): Promise<string[]> =>
+        ipcRenderer.invoke('chat:thread-settings:get-enabled-skills', threadId),
+      setEnabledSkill: (
+        threadId: string,
+        name: string,
+        enabled: boolean
+      ): Promise<{ success: boolean; error?: string }> =>
+        ipcRenderer.invoke(
+          'chat:thread-settings:set-enabled-skill',
+          threadId,
+          name,
+          enabled
+        ),
+    },
   },
 }
 
@@ -255,7 +304,10 @@ export interface ChatAPI {
       provider: string,
       model: string
     ) => Promise<{ success: boolean; error?: string }>
-    getMcpServerTools: (serverId: string) => Promise<AvailableServer>
+    getMcpServerTools: (
+      serverId: string,
+      threadId?: string
+    ) => Promise<AvailableServer>
     getEnabledMcpTools: () => Promise<Record<string, string[]>>
     getEnabledMcpServersFromTools: () => Promise<string[]>
     saveEnabledMcpTools: (
@@ -429,6 +481,31 @@ export interface ChatAPI {
         agentId: string | null
       ) => Promise<void>
       getThreadAgentId: (threadId: string) => Promise<string | null>
+    }
+
+    threadSettings: {
+      getSelectedModel: (
+        threadId: string
+      ) => Promise<{ provider: string; model: string } | null>
+      setSelectedModel: (
+        threadId: string,
+        provider: string,
+        model: string
+      ) => Promise<{ success: boolean; error?: string }>
+      getEnabledMcpTools: (
+        threadId: string
+      ) => Promise<Record<string, string[]>>
+      setEnabledMcpTools: (
+        threadId: string,
+        serverName: string,
+        toolNames: string[]
+      ) => Promise<{ success: boolean; error?: string }>
+      getEnabledSkills: (threadId: string) => Promise<string[]>
+      setEnabledSkill: (
+        threadId: string,
+        name: string,
+        enabled: boolean
+      ) => Promise<{ success: boolean; error?: string }>
     }
   }
 }

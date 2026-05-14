@@ -23,7 +23,7 @@ interface AttachOptions {
 export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
   constructor(private config: ElectronIPCChatTransportConfig) {}
 
-  private async getSettingsFromQuery(): Promise<
+  private async getSettingsFromQuery(chatId?: string): Promise<
     | {
         provider: 'ollama' | 'lmstudio'
         model: string
@@ -37,11 +37,24 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
         enabledTools: string[]
       }
   > {
-    // Get selected model from cache
-    const selectedModel = this.config.queryClient.getQueryData<{
+    // Prefer the per-thread selection so a stream picks up the model that
+    // is actually shown in the active thread's picker. Fall back to the
+    // global "last used" default when the thread has no override yet.
+    const perThreadSelectedModel = chatId
+      ? this.config.queryClient.getQueryData<{
+          provider: string
+          model: string
+        } | null>(['chat', 'thread', chatId, 'selectedModel'])
+      : null
+    const globalSelectedModel = this.config.queryClient.getQueryData<{
       provider: string
       model: string
     }>(['chat', 'selectedModel'])
+
+    const selectedModel =
+      perThreadSelectedModel?.provider && perThreadSelectedModel?.model
+        ? perThreadSelectedModel
+        : globalSelectedModel
 
     if (!selectedModel?.provider) {
       return { provider: '', model: '', apiKey: '', enabledTools: [] }
@@ -257,7 +270,7 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       abortSignal: AbortSignal | undefined
     } & ChatRequestOptions
   ): Promise<ReadableStream<UIMessageChunk>> {
-    const settings = await this.getSettingsFromQuery()
+    const settings = await this.getSettingsFromQuery(options.chatId)
 
     // Validate settings based on provider type
     if (!settings.provider || !settings.model) {

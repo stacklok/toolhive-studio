@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 import { Button } from '@/common/components/ui/button'
@@ -25,7 +25,11 @@ import {
 } from '@/common/components/ui/tooltip'
 import { trackEvent } from '@/common/lib/analytics'
 
-export function McpServerSelector() {
+interface McpServerSelectorProps {
+  threadId?: string | null
+}
+
+export function McpServerSelector({ threadId }: McpServerSelectorProps) {
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -33,15 +37,45 @@ export function McpServerSelector() {
     null
   )
   const [serverToggling, setServerToggling] = useState<string | null>(null)
-  const { allAvailableMcpServer, enabledMcpServers, backendEnabledTools } =
-    useAvailableServers()
+  const {
+    allAvailableMcpServer,
+    enabledMcpServers,
+    backendEnabledTools,
+    enabledMcpTools,
+  } = useAvailableServers(threadId)
 
-  const { data: enabledMcpTools } = useQuery({
-    queryKey: ['enabled-mcp-tools'],
-    queryFn: async () => await window.electronAPI.chat.getEnabledMcpTools(),
-    refetchInterval: 5000, // Refresh every 5 seconds
-    refetchOnMount: true,
-  })
+  const enabledMcpToolsQueryKey = threadId
+    ? (['chat', 'thread', threadId, 'enabledMcpTools'] as const)
+    : (['chat', 'enabled-mcp-tools'] as const)
+
+  const saveServerTools = async (serverName: string, toolNames: string[]) => {
+    if (threadId) {
+      // Dual-write: per-thread row owns this thread's selection; global
+      // write keeps "last used" so new threads inherit the latest pick.
+      const perThread =
+        await window.electronAPI.chat.threadSettings.setEnabledMcpTools(
+          threadId,
+          serverName,
+          toolNames
+        )
+      try {
+        await window.electronAPI.chat.saveEnabledMcpTools(serverName, toolNames)
+      } catch (err) {
+        log.warn('Failed to update global MCP tools default:', err)
+      }
+      return perThread
+    }
+    return window.electronAPI.chat.saveEnabledMcpTools(serverName, toolNames)
+  }
+
+  const invalidateEnabledTools = () => {
+    queryClient.invalidateQueries({ queryKey: enabledMcpToolsQueryKey })
+    if (threadId) {
+      queryClient.invalidateQueries({
+        queryKey: ['chat', 'enabled-mcp-tools'],
+      })
+    }
+  }
 
   const handleToggleTool = async (serverName: string) => {
     if (backendEnabledTools.includes(serverName)) {
@@ -50,11 +84,8 @@ export function McpServerSelector() {
       })
       // Disable all tools for this server
       try {
-        await window.electronAPI.chat.saveEnabledMcpTools(serverName, [])
-        // Invalidate query to refetch latest state
-        queryClient.invalidateQueries({
-          queryKey: ['chat', 'enabledMcpServers'],
-        })
+        await saveServerTools(serverName, [])
+        invalidateEnabledTools()
       } catch (error) {
         console.error('Failed to disable server tools:', error)
       }
@@ -66,22 +97,15 @@ export function McpServerSelector() {
       // Enable all tools for this server by default
       try {
         // First get the server's available tools
-        const serverTools =
-          await window.electronAPI.chat.getMcpServerTools(serverName)
+        const serverTools = await window.electronAPI.chat.getMcpServerTools(
+          serverName,
+          threadId ?? undefined
+        )
         if (serverTools?.tools && serverTools.tools.length > 0) {
           const allToolNames = serverTools.tools.map((tool) => tool.name)
-          const response = await window.electronAPI.chat.saveEnabledMcpTools(
-            serverName,
-            allToolNames
-          )
+          const response = await saveServerTools(serverName, allToolNames)
           if (response.success) {
-            // Invalidate query to refetch latest state
-            queryClient.invalidateQueries({
-              queryKey: ['chat', 'enabledMcpServers'],
-            })
-            queryClient.invalidateQueries({
-              queryKey: ['enabled-mcp-tools'],
-            })
+            invalidateEnabledTools()
           } else {
             toast.error(`Failed to enable server tools for ${serverName}`)
           }
@@ -100,19 +124,9 @@ export function McpServerSelector() {
         server_count: backendEnabledTools?.length,
       })
       await Promise.allSettled(
-        backendEnabledTools.map((serverName) => {
-          if (backendEnabledTools.includes(serverName)) {
-            return window.electronAPI.chat.saveEnabledMcpTools(serverName, [])
-          }
-          return Promise.resolve()
-        })
+        backendEnabledTools.map((serverName) => saveServerTools(serverName, []))
       )
-      queryClient.invalidateQueries({
-        queryKey: ['chat', 'enabledMcpServers'],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['enabled-mcp-tools'],
-      })
+      invalidateEnabledTools()
     } catch (error) {
       log.error('Failed to clear enabled servers:', error)
       toast.error('Failed to clear enabled servers')
@@ -130,9 +144,7 @@ export function McpServerSelector() {
   }
 
   const handleToolsChange = () => {
-    queryClient.invalidateQueries({
-      queryKey: ['chat', 'enabledMcpServers'],
-    })
+    invalidateEnabledTools()
   }
 
   const handleOpenSettings = (open: boolean) => {
@@ -254,6 +266,7 @@ export function McpServerSelector() {
         open={!!serverNameSelected && modalOpen}
         onOpenChange={setModalOpen}
         serverName={serverNameSelected ?? ''}
+        threadId={threadId}
         onToolsChange={handleToolsChange}
       />
     </>

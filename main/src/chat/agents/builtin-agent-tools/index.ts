@@ -1,6 +1,7 @@
 import type { ToolSet } from 'ai'
 import type { BuiltinToolsKey } from '@common/types/agents'
 import { createSkillsAgentTools, type SkillsAgentToolsHandle } from './skills'
+import { getThreadEnabledSkills } from '../../thread-settings-storage'
 
 interface BuiltinToolsHandle {
   tools: ToolSet
@@ -19,13 +20,20 @@ const EMPTY_HANDLE: BuiltinToolsHandle = {
 }
 
 export async function createBuiltinAgentTools(
-  key: BuiltinToolsKey | null | undefined
+  key: BuiltinToolsKey | null | undefined,
+  options: { threadId?: string } = {}
 ): Promise<BuiltinToolsHandle> {
   if (!key) return EMPTY_HANDLE
 
   switch (key) {
     case 'skills': {
-      const handle: SkillsAgentToolsHandle = await createSkillsAgentTools()
+      const handle: SkillsAgentToolsHandle = await createSkillsAgentTools(
+        options.threadId
+          ? {
+              getEnabledSkills: () => getThreadEnabledSkills(options.threadId!),
+            }
+          : undefined
+      )
       return handle
     }
     default:

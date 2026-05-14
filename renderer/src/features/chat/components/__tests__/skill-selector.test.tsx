@@ -52,6 +52,18 @@ const mockChatApi = {
     >(),
 }
 
+const mockThreadSettingsApi = {
+  getEnabledSkills: vi.fn<(threadId: string) => Promise<string[]>>(),
+  setEnabledSkill:
+    vi.fn<
+      (
+        threadId: string,
+        name: string,
+        enabled: boolean
+      ) => Promise<{ success: boolean; error?: string }>
+    >(),
+}
+
 const builtinToolhive: AgentConfig = {
   id: 'builtin.toolhive-assistant',
   kind: 'builtin',
@@ -94,6 +106,7 @@ describe('SkillSelector', () => {
       chat: {
         ...(window.electronAPI?.chat ?? {}),
         agents: mockAgentsApi,
+        threadSettings: mockThreadSettingsApi,
         getEnabledSkills: mockChatApi.getEnabledSkills,
         setEnabledSkill: mockChatApi.setEnabledSkill,
       },
@@ -103,6 +116,8 @@ describe('SkillSelector', () => {
     mockAgentsApi.getThreadAgentId.mockResolvedValue('builtin.skills')
     mockChatApi.getEnabledSkills.mockResolvedValue([])
     mockChatApi.setEnabledSkill.mockResolvedValue({ success: true })
+    mockThreadSettingsApi.getEnabledSkills.mockResolvedValue([])
+    mockThreadSettingsApi.setEnabledSkill.mockResolvedValue({ success: true })
 
     // Default installed-skills response: one user-scope, one with no install
     // sites (so it still appears in the picker but renders no badges).
@@ -147,6 +162,9 @@ describe('SkillSelector', () => {
 
   it('shows the live enabled count on the trigger', async () => {
     mockChatApi.getEnabledSkills.mockResolvedValue(['algorithmic-art'])
+    mockThreadSettingsApi.getEnabledSkills.mockResolvedValue([
+      'algorithmic-art',
+    ])
 
     render(<SkillSelector threadId="thread-1" />, {
       wrapper: createWrapper(),
@@ -190,12 +208,19 @@ describe('SkillSelector', () => {
     })
     await user.click(algorithmicArt)
 
+    // Dual-write: per-thread row is the source of truth, global write keeps
+    // the "last used" default in sync so new threads inherit it.
     await waitFor(() => {
-      expect(mockChatApi.setEnabledSkill).toHaveBeenCalledWith(
+      expect(mockThreadSettingsApi.setEnabledSkill).toHaveBeenCalledWith(
+        'thread-1',
         'algorithmic-art',
         true
       )
     })
+    expect(mockChatApi.setEnabledSkill).toHaveBeenCalledWith(
+      'algorithmic-art',
+      true
+    )
   })
 
   it('clear-all wipes every entry in the raw enabled-skills list, including stale rows', async () => {
@@ -203,6 +228,10 @@ describe('SkillSelector', () => {
     // carries `uninstalled` from a previous install. Clear-all must wipe BOTH
     // — defense in depth alongside the server-side prune.
     mockChatApi.getEnabledSkills.mockResolvedValue([
+      'algorithmic-art',
+      'uninstalled',
+    ])
+    mockThreadSettingsApi.getEnabledSkills.mockResolvedValue([
       'algorithmic-art',
       'uninstalled',
     ])
@@ -226,12 +255,14 @@ describe('SkillSelector', () => {
     await user.click(clearButton)
 
     await waitFor(() => {
-      expect(mockChatApi.setEnabledSkill).toHaveBeenCalledWith(
+      expect(mockThreadSettingsApi.setEnabledSkill).toHaveBeenCalledWith(
+        'thread-1',
         'algorithmic-art',
         false
       )
     })
-    expect(mockChatApi.setEnabledSkill).toHaveBeenCalledWith(
+    expect(mockThreadSettingsApi.setEnabledSkill).toHaveBeenCalledWith(
+      'thread-1',
       'uninstalled',
       false
     )

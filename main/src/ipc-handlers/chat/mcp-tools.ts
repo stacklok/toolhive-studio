@@ -7,8 +7,10 @@ import {
 } from '../../chat/settings-storage'
 
 export function register() {
-  ipcMain.handle('chat:get-mcp-server-tools', (_, serverName: string) =>
-    getMcpServerTools(serverName)
+  ipcMain.handle(
+    'chat:get-mcp-server-tools',
+    (_, serverName: string, threadId?: string) =>
+      getMcpServerTools(serverName, threadId)
   )
   ipcMain.handle('chat:get-enabled-mcp-tools', () => getEnabledMcpTools())
   ipcMain.handle('chat:get-enabled-mcp-servers-from-tools', () =>

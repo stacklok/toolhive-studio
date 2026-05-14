@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import log from 'electron-log/renderer'
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ interface McpToolsModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   serverName: string
+  threadId?: string | null
   onToolsChange?: (serverName: string, enabledTools: string[]) => void
 }
 
@@ -44,6 +46,7 @@ export function McpToolsModal({
   open,
   onOpenChange,
   serverName,
+  threadId,
   onToolsChange,
 }: McpToolsModalProps) {
   const [searchQuery, setSearchQuery] = useState('')
@@ -53,15 +56,19 @@ export function McpToolsModal({
   >(null)
   const queryClient = useQueryClient()
 
-  // Fetch tools for the specific server
+  // Fetch tools for the specific server (per-thread enabled flags when
+  // threadId is provided)
   const {
     data: serverTools,
     isLoading,
     error,
   } = useQuery({
-    queryKey: ['mcp-server-tools', serverName],
+    queryKey: ['mcp-server-tools', serverName, threadId ?? null],
     queryFn: async (): Promise<McpServerToolsResponse | null> => {
-      return window.electronAPI.chat.getMcpServerTools(serverName)
+      return window.electronAPI.chat.getMcpServerTools(
+        serverName,
+        threadId ?? undefined
+      )
     },
     enabled: open && !!serverName,
     refetchOnWindowFocus: false,
@@ -78,9 +85,28 @@ export function McpToolsModal({
     setLastInitializedServer(serverName)
   }
 
-  // Save tools mutation
+  // Save tools mutation — dual-writes when a threadId is in scope so the
+  // per-thread row owns this thread's selection and the global write keeps
+  // "last used" up to date for new threads.
   const saveToolsMutation = useMutation({
     mutationFn: async (enabledTools: string[]) => {
+      if (threadId) {
+        const perThread =
+          await window.electronAPI.chat.threadSettings.setEnabledMcpTools(
+            threadId,
+            serverName,
+            enabledTools
+          )
+        try {
+          await window.electronAPI.chat.saveEnabledMcpTools(
+            serverName,
+            enabledTools
+          )
+        } catch (err) {
+          log.warn('Failed to update global MCP tools default:', err)
+        }
+        return perThread
+      }
       return window.electronAPI.chat.saveEnabledMcpTools(
         serverName,
         enabledTools
@@ -88,14 +114,13 @@ export function McpToolsModal({
     },
     onSuccess: (result) => {
       if (result.success) {
-        // Invalidate the specific server's tools query
-        queryClient.invalidateQueries({
-          queryKey: ['mcp-server-tools', serverName],
-        })
-        // Also invalidate all mcp-server-tools queries to ensure consistency
         queryClient.invalidateQueries({ queryKey: ['mcp-server-tools'] })
-        // Invalidate the global enabled MCP tools query
         queryClient.invalidateQueries({ queryKey: ['enabled-mcp-tools'] })
+        if (threadId) {
+          queryClient.invalidateQueries({
+            queryKey: ['chat', 'thread', threadId, 'enabledMcpTools'],
+          })
+        }
         onToolsChange?.(serverName, localEnabledTools)
         onOpenChange(false)
       }
