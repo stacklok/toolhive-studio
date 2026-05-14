@@ -51,6 +51,8 @@ export function ChatInterface({
     lastUserMessageId,
     cancelRequest,
     loadPersistedSettings,
+    queuedMessage,
+    cancelQueuedMessage,
   } = useChatStreaming(threadId)
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
@@ -237,6 +239,8 @@ export function ChatInterface({
                         editingMessageId={editingMessageId}
                         lastUserMessageId={lastUserMessageId}
                         onClearEdit={clearEdit}
+                        queuedMessage={queuedMessage}
+                        onCancelQueuedMessage={cancelQueuedMessage}
                       />
                     </div>
                   )}
@@ -289,6 +293,8 @@ export function ChatInterface({
                 editingMessageId={editingMessageId}
                 lastUserMessageId={lastUserMessageId}
                 onClearEdit={clearEdit}
+                queuedMessage={queuedMessage}
+                onCancelQueuedMessage={cancelQueuedMessage}
               />
             </div>
           )}

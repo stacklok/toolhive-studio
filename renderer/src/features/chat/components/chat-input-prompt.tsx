@@ -1,7 +1,7 @@
 import { useEffect, useRef, type RefObject } from 'react'
 import type { ChatStatus, FileUIPart } from 'ai'
 import log from 'electron-log/renderer'
-import { RefreshCw, X } from 'lucide-react'
+import { RefreshCw, SendHorizontal, X } from 'lucide-react'
 import {
   PromptInput,
   PromptInputActionAddAttachments,
@@ -33,6 +33,8 @@ import type { ChatSettings } from '../types'
 import { toast } from 'sonner'
 import { toastVariants } from '@/common/lib/toast'
 import { useThreadDraft } from '../hooks/use-thread-draft'
+import { useComposerHandle } from '../hooks/use-composer-handle'
+import { QueuedMessageChip } from './queued-message-chip'
 import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
 import { featureFlagKeys } from '@utils/feature-flags'
 
@@ -86,7 +88,7 @@ interface ChatInputProps {
     text: string
     files?: FileUIPart[]
     editingMessageId: string
-  }) => Promise<unknown>
+  }) => Promise<void>
   onStopGeneration: () => void
   onSettingsOpen: (isOpen: boolean) => void
   handleProviderChange: (providerId: string) => void
@@ -105,6 +107,9 @@ interface ChatInputProps {
   lastUserMessageId?: string | null
   /** Exit edit mode (called from the chip's cancel button and on auto-clear). */
   onClearEdit?: () => void
+  /** Mutually exclusive with `isEditingStreaming` — the rewind chip wins. */
+  queuedMessage?: { text: string; files?: FileUIPart[] } | null
+  onCancelQueuedMessage?: () => void
 }
 
 function InputWithAttachments({
@@ -122,6 +127,8 @@ function InputWithAttachments({
   threadId,
   isEditingStreaming,
   onCancelEdit,
+  queuedMessage,
+  onCancelQueuedMessage,
 }: Omit<
   ChatInputProps,
   | 'onSendMessage'
@@ -164,12 +171,17 @@ function InputWithAttachments({
     onSettingsOpen(true)
   }
 
+  // Streaming + text + not editing: form's onSubmit queues via
+  // `validatedSendMessage`. Skip the stop side-effect below.
+  const isStreamingStatus = status === 'streaming' || status === 'submitted'
+  const isQueueableSubmit =
+    !isEditingStreaming && isStreamingStatus && Boolean(text)
+
   const handleSubmit = () => {
     trackEvent(`Playground: submit`, { 'playground.status': status })
-    // In "editing the streaming message" mode the form's onSubmit owns the
-    // rewind-and-resend flow — don't fire the stop handler here, the parent
-    // will cancel as part of that path.
+    // Rewind / queue paths: form's onSubmit handles the action — don't stop.
     if (isEditingStreaming) return
+    if (isQueueableSubmit) return
     const isStoppable = ['streaming', 'error', 'submitted'].includes(status)
     if (isStoppable) {
       onStopGeneration()
@@ -202,6 +214,13 @@ function InputWithAttachments({
             cancel
           </Button>
         </div>
+      )}
+      {/* Hidden while editing — rewind chip wins. */}
+      {!isEditingStreaming && queuedMessage && onCancelQueuedMessage && (
+        <QueuedMessageChip
+          queuedMessage={queuedMessage}
+          onCancel={onCancelQueuedMessage}
+        />
       )}
       <PromptInputBody>
         <PromptInputAttachments>
@@ -246,9 +265,7 @@ function InputWithAttachments({
           )}
         </PromptInputTools>
         {isEditingStreaming ? (
-          // Override the status-driven icon so the user sees this submit is
-          // a "resend", not the usual stop-the-stream square. The form's
-          // onSubmit (set by the parent) decides what actually happens.
+          // Override the stop-square icon — this submit is a resend.
           <PromptInputSubmit
             onClick={handleSubmit}
             disabled={!text && !hasMessages}
@@ -258,6 +275,24 @@ function InputWithAttachments({
           >
             <RefreshCw className="size-4" />
           </PromptInputSubmit>
+        ) : isQueueableSubmit ? (
+          // Override the stop-square icon — this submit queues.
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <PromptInputSubmit
+                onClick={handleSubmit}
+                disabled={!text && !hasMessages}
+                status={status}
+                variant="action"
+                aria-label="Queue message"
+              >
+                <SendHorizontal className="size-4" />
+              </PromptInputSubmit>
+            </TooltipTrigger>
+            <TooltipContent>
+              Queue message — sends when the current response finishes
+            </TooltipContent>
+          </Tooltip>
         ) : (
           <PromptInputSubmit
             onClick={handleSubmit}
@@ -287,6 +322,8 @@ export function ChatInputPrompt({
   editingMessageId,
   lastUserMessageId,
   onClearEdit,
+  queuedMessage,
+  onCancelQueuedMessage,
 }: ChatInputProps) {
   const [text, setText] = useThreadDraft(threadId)
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
@@ -306,34 +343,7 @@ export function ChatInputPrompt({
     }
   }, [text, editingMessageId, onClearEdit])
 
-  // Expose imperative controls so siblings outside this subtree (e.g. the
-  // message list's "Edit message" button) can pre-fill and focus the
-  // composer. The ref is populated on mount and cleared on unmount so the
-  // context can tell whether a composer is currently mounted.
-  useEffect(() => {
-    if (!composerHandleRef) return
-    composerHandleRef.current = {
-      setText,
-      focusTextarea: () => {
-        const el = textareaRef.current
-        if (!el) return
-        el.focus()
-        const end = el.value.length
-        try {
-          el.setSelectionRange(end, end)
-        } catch {
-          // Some textarea types (e.g. <input type="number">) throw on
-          // setSelectionRange. Plain text textareas never do — guard anyway
-          // so a stray DOM shape can't break the edit flow.
-        }
-      },
-    }
-    return () => {
-      if (composerHandleRef.current) {
-        composerHandleRef.current = null
-      }
-    }
-  }, [composerHandleRef, setText])
+  useComposerHandle(composerHandleRef, setText, textareaRef)
 
   const handleCancelEdit = () => {
     onClearEdit?.()
@@ -433,6 +443,8 @@ export function ChatInputPrompt({
         textareaRef={textareaRef}
         isEditingStreaming={isEditingStreaming}
         onCancelEdit={handleCancelEdit}
+        queuedMessage={queuedMessage}
+        onCancelQueuedMessage={onCancelQueuedMessage}
       />
     </PromptInput>
   )

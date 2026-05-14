@@ -53,9 +53,11 @@ interface RenderArgs {
     text: string
     files?: FileUIPart[]
     editingMessageId: string
-  }) => Promise<unknown>
+  }) => Promise<void>
   onStopGeneration?: () => void
   onClearEdit?: () => void
+  queuedMessage?: { text: string; files?: FileUIPart[] } | null
+  onCancelQueuedMessage?: () => void
 }
 
 /**
@@ -85,6 +87,7 @@ function renderPrompt(args: RenderArgs = {}) {
     args.onRewindAndResend ?? vi.fn().mockResolvedValue(undefined)
   const onStopGeneration = args.onStopGeneration ?? vi.fn()
   const onClearEdit = args.onClearEdit ?? vi.fn()
+  const onCancelQueuedMessage = args.onCancelQueuedMessage ?? vi.fn()
   const composerHandleRef = createRef<ChatComposerHandle | null>()
 
   const { container } = render(
@@ -111,6 +114,8 @@ function renderPrompt(args: RenderArgs = {}) {
       editingMessageId={args.editingMessageId ?? null}
       lastUserMessageId={args.lastUserMessageId ?? null}
       onClearEdit={onClearEdit}
+      queuedMessage={args.queuedMessage ?? null}
+      onCancelQueuedMessage={onCancelQueuedMessage}
     />
   )
 
@@ -122,6 +127,7 @@ function renderPrompt(args: RenderArgs = {}) {
     onRewindAndResend,
     onStopGeneration,
     onClearEdit,
+    onCancelQueuedMessage,
     composerHandleRef,
   }
 }
@@ -326,6 +332,118 @@ describe('ChatInputPrompt', () => {
 
       expect(onSendMessage).toHaveBeenCalled()
       expect(onClearEdit).toHaveBeenCalled()
+    })
+  })
+
+  describe('queue chip', () => {
+    it('renders the queue chip when queuedMessage is set and not editing', () => {
+      renderPrompt({
+        status: 'streaming',
+        queuedMessage: { text: 'pending question' },
+      })
+      expect(screen.getByTestId('queued-message-chip')).toBeInTheDocument()
+      expect(screen.getByText('pending question')).toBeInTheDocument()
+    })
+
+    it('hides the queue chip when isEditingStreaming wins (rewind chip exclusive)', () => {
+      renderPrompt({
+        status: 'streaming',
+        editingMessageId: 'u2',
+        lastUserMessageId: 'u2',
+        queuedMessage: { text: 'should be hidden' },
+      })
+      // Rewind chip wins.
+      expect(screen.getByTestId('edit-streaming-chip')).toBeInTheDocument()
+      expect(
+        screen.queryByTestId('queued-message-chip')
+      ).not.toBeInTheDocument()
+    })
+
+    it('cancel button on the queue chip calls onCancelQueuedMessage', async () => {
+      const { onCancelQueuedMessage } = renderPrompt({
+        status: 'streaming',
+        queuedMessage: { text: 'cancel this' },
+      })
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Cancel queued message' })
+      )
+      expect(onCancelQueuedMessage).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not render the queue chip when queuedMessage is null', () => {
+      renderPrompt({ status: 'streaming' })
+      expect(
+        screen.queryByTestId('queued-message-chip')
+      ).not.toBeInTheDocument()
+    })
+  })
+
+  describe('queueable submit', () => {
+    it('shows the queue submit button (not stop) when streaming with composer text', async () => {
+      const { composerHandleRef } = renderPrompt({ status: 'streaming' })
+
+      await act(async () => {
+        composerHandleRef.current?.setText('queue this')
+      })
+
+      // The queue submit button has aria-label="Queue message".
+      expect(
+        screen.getByRole('button', { name: 'Queue message' })
+      ).toBeInTheDocument()
+    })
+
+    it('keeps the stop button (no queue submit) when streaming with empty composer', () => {
+      renderPrompt({ status: 'streaming' })
+      expect(
+        screen.queryByRole('button', { name: 'Queue message' })
+      ).not.toBeInTheDocument()
+    })
+
+    it('queueable submit fires onSendMessage (not onStopGeneration)', async () => {
+      const {
+        onSendMessage,
+        onStopGeneration,
+        onRewindAndResend,
+        composerHandleRef,
+      } = renderPrompt({ status: 'streaming' })
+
+      await act(async () => {
+        composerHandleRef.current?.setText('queue me')
+      })
+
+      await userEvent.click(
+        screen.getByRole('button', { name: 'Queue message' })
+      )
+
+      // The composer's form routes through onSendMessage. The hook will
+      // intercept and queue internally — from the composer's perspective
+      // this is a normal "submit".
+      expect(onSendMessage).toHaveBeenCalledWith({
+        text: 'queue me',
+        files: [],
+      })
+      expect(onStopGeneration).not.toHaveBeenCalled()
+      expect(onRewindAndResend).not.toHaveBeenCalled()
+    })
+
+    it('does not show the queue submit when editingMessageId matches lastUserMessageId (rewind wins)', async () => {
+      const { composerHandleRef } = renderPrompt({
+        status: 'streaming',
+        editingMessageId: 'u2',
+        lastUserMessageId: 'u2',
+      })
+
+      await act(async () => {
+        composerHandleRef.current?.setText('editing')
+      })
+
+      // Rewind button wins; no "Queue message" button.
+      expect(
+        screen.queryByRole('button', { name: 'Queue message' })
+      ).not.toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: 'Resend edited message' })
+      ).toBeInTheDocument()
     })
   })
 

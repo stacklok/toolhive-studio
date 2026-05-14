@@ -23,9 +23,13 @@ function dropTrailingAssistant(messages: ChatUIMessage[]): ChatUIMessage[] {
   return messages.slice(0, -1)
 }
 
+// Single-slot, per-thread, in-memory queue. Submitting again replaces the slot.
+type QueuedMessage = { text: string; files?: FileUIPart[] }
+
 export function useChatStreaming(externalThreadId?: string | null) {
   const queryClient = useQueryClient()
   const [persistentError, setPersistentError] = useState<string | null>(null)
+  const [queuedMessage, setQueuedMessage] = useState<QueuedMessage | null>(null)
 
   const {
     settings,
@@ -193,6 +197,39 @@ export function useChatStreaming(externalThreadId?: string | null) {
     }
   }, [currentThreadId])
 
+  const prevQueueStatusRef = useRef(status)
+
+  // Clear the queue when the user switches threads — done in render (not an
+  // effect) so the auto-flush below sees the null synchronously. An effect
+  // would race the auto-flush in the same render and leak A's message into B.
+  // https://react.dev/learn/you-might-not-need-an-effect#adjusting-some-state-when-a-prop-changes
+  const [queueOwnerThreadId, setQueueOwnerThreadId] =
+    useState<typeof currentThreadId>(currentThreadId)
+  if (currentThreadId !== queueOwnerThreadId) {
+    setQueueOwnerThreadId(currentThreadId)
+    setQueuedMessage(null)
+    prevQueueStatusRef.current = status
+  }
+
+  // Auto-flush on streaming→ready only (not →error: would re-fail on a broken
+  // provider). Calls `sendMessage` directly to skip re-validation/re-queuing.
+  useEffect(() => {
+    const prev = prevQueueStatusRef.current
+    prevQueueStatusRef.current = status
+    const wasStreaming = prev === 'streaming' || prev === 'submitted'
+    if (!wasStreaming || status !== 'ready') return
+    if (!queuedMessage) return
+    const toSend = queuedMessage
+    setQueuedMessage(null)
+    Promise.resolve(sendMessage(toSend)).catch((err) => {
+      log.error('[useChatStreaming] Auto-flush of queued message failed:', err)
+    })
+  }, [status, queuedMessage, sendMessage])
+
+  const cancelQueuedMessage = useCallback(() => {
+    setQueuedMessage(null)
+  }, [])
+
   const isPersistentLoading = !!currentThreadId && isThreadDataPending
 
   const isLoading =
@@ -338,7 +375,9 @@ export function useChatStreaming(externalThreadId?: string | null) {
     return 'An unknown error occurred'
   }
 
-  const validatedSendMessage = useCallback(
+  // Send path used by both `validatedSendMessage` (after queue check) and
+  // `rewindAndResend`. Skips the queue intercept by design.
+  const dispatchSend = useCallback(
     async (
       messageOrText:
         | string
@@ -375,11 +414,39 @@ export function useChatStreaming(externalThreadId?: string | null) {
     [settings, sendMessage, currentThreadId]
   )
 
-  /**
-   * Id of the most recent user message in the thread, or `null` if no user
-   * message exists yet. Drives the "rewind & retry" affordance in the
-   * composer — only the LAST user message can be rewound during streaming.
-   */
+  const validatedSendMessage = useCallback(
+    async (
+      messageOrText:
+        | string
+        | {
+            text: string
+            files?: FileUIPart[]
+          }
+    ) => {
+      // Queue while streaming — auto-flushed when the active stream ends.
+      // Validate up front so a misconfigured submit fails immediately.
+      if (status === 'streaming' || status === 'submitted') {
+        if (
+          !settings.provider ||
+          !settings.model ||
+          !hasValidCredentials(settings)
+        ) {
+          throw new Error('Please configure your AI provider settings first')
+        }
+        const queued: QueuedMessage =
+          typeof messageOrText === 'string'
+            ? { text: messageOrText }
+            : messageOrText
+        setQueuedMessage(queued)
+        return
+      }
+
+      return dispatchSend(messageOrText)
+    },
+    [dispatchSend, settings, status]
+  )
+
+  // Id of the most recent user message; drives the rewind & retry affordance.
   const lastUserMessageId = useMemo(() => {
     for (let i = messages.length - 1; i >= 0; i -= 1) {
       const m = messages[i]
@@ -388,17 +455,9 @@ export function useChatStreaming(externalThreadId?: string | null) {
     return null
   }, [messages])
 
-  /**
-   * Cancel the in-flight stream, drop the user message being edited AND the
-   * partial assistant response that was being generated for it, then send
-   * the new text as a fresh message — replacing the in-flight turn with the
-   * edited one.
-   *
-   * Caller MUST guard that `editingMessageId === lastUserMessageId` and a
-   * stream is active. If `editingMessageId` doesn't match anything in
-   * `messages` we fall back to a normal `sendMessage` (defensive — this
-   * shouldn't happen given the UI guard).
-   */
+  // Cancel the in-flight stream, drop the edited user message + partial
+  // assistant response, then send the new text. Caller must guard
+  // `editingMessageId === lastUserMessageId` and an active stream.
   const rewindAndResend = useCallback(
     async ({
       text,
@@ -408,7 +467,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
       text: string
       files?: FileUIPart[]
       editingMessageId: string
-    }) => {
+    }): Promise<void> => {
       if (
         !settings.provider ||
         !settings.model ||
@@ -426,32 +485,26 @@ export function useChatStreaming(externalThreadId?: string | null) {
 
       const idx = messages.findIndex((m) => m.id === editingMessageId)
       if (idx === -1) {
-        // Defensive fallback — UI shouldn't let us get here.
-        return validatedSendMessage({ text, files })
+        // Defensive — UI shouldn't let us get here.
+        await dispatchSend({ text, files })
+        return
       }
 
-      // 1. Stop the active main-process stream first so it doesn't keep
-      // pushing chunks (and persisting partial snapshots) while we trim.
       if (currentThreadId) {
         try {
           await window.electronAPI.chat.cancelStream(currentThreadId)
         } catch {
-          // best effort — we still tear down the renderer-side state below
+          // best effort
         }
       }
       await stop()
       clearError()
 
-      // 2. Drop the edited user message AND everything after it (the
-      // partial assistant response). `setMessages` updates the renderer's
-      // local view immediately.
       const trimmed = messages.slice(0, idx)
       setMessages(trimmed)
 
-      // 3. Overwrite the SQLite snapshot so a mid-flight navigation can't
-      // resurrect the partial state. The active stream's `finalizeError`
-      // path may have raced a snapshot write through `flushPersist`; this
-      // overwrite is the source of truth from the user's perspective.
+      // Overwrite the SQLite snapshot so a navigation mid-rewind can't
+      // resurrect the partial state left by `finalizeError`'s flushPersist.
       if (currentThreadId) {
         try {
           await window.electronAPI.chat.updateThreadMessages(
@@ -466,9 +519,10 @@ export function useChatStreaming(externalThreadId?: string | null) {
         }
       }
 
-      // 4. Start the new stream. `validatedSendMessage` re-validates
-      // settings and ensures the thread row exists.
-      return validatedSendMessage({ text, files })
+      // `dispatchSend` (not `validatedSendMessage`): the in-flight
+      // `status === 'streaming'` is closed over and would route us into
+      // the queue, flashing a misleading "Queued" chip before auto-flush.
+      await dispatchSend({ text, files })
     },
     [
       settings,
@@ -478,7 +532,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
       stop,
       clearError,
       setMessages,
-      validatedSendMessage,
+      dispatchSend,
     ]
   )
 
@@ -514,6 +568,8 @@ export function useChatStreaming(externalThreadId?: string | null) {
       loadPersistedSettings,
       isPersistentLoading,
       currentThreadId,
+      queuedMessage,
+      cancelQueuedMessage,
     }
   }, [
     status,
@@ -532,5 +588,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
     clearError,
     stop,
     currentThreadId,
+    queuedMessage,
+    cancelQueuedMessage,
   ])
 }
