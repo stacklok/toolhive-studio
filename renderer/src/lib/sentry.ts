@@ -18,12 +18,12 @@ export function initSentry() {
     // Learn more at
     // https://docs.sentry.io/platforms/javascript/configuration/options/#traces-sample-rate
     tracesSampleRate: 1.0,
-    // Capture Replay for 10% of all sessions,
-    // plus for 100% of sessions with an error
+    // Disable random session replays and capture 10% of sessions with an
+    // error to keep replay volume low.
     // Learn more at
     // https://docs.sentry.io/platforms/javascript/session-replay/configuration/#general-integration-configuration
-    replaysSessionSampleRate: 0.1,
-    replaysOnErrorSampleRate: 1.0,
+    replaysSessionSampleRate: 0,
+    replaysOnErrorSampleRate: 0.1,
     // It will send errors, exceptions and captured messages to Sentry only if the user has enabled telemetry
     beforeSend: async (event) =>
       (await window.electronAPI.sentry.isEnabled()) ? event : null,
