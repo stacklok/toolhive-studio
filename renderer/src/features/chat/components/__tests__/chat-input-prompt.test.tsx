@@ -31,10 +31,6 @@ vi.mock('@/common/lib/analytics', () => ({
   trackEvent: vi.fn(),
 }))
 
-vi.mock('@/common/hooks/use-feature-flag', () => ({
-  useFeatureFlag: () => false,
-}))
-
 vi.mock('electron-log/renderer', () => ({
   default: {
     error: vi.fn(),

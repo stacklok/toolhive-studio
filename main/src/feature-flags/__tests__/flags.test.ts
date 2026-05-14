@@ -68,29 +68,6 @@ describe('Feature Flags', () => {
       }
     )
 
-    it('should return value from SQLite when available', () => {
-      vi.mocked(readFeatureFlag).mockReturnValueOnce(true)
-
-      const result = getFeatureFlag(featureFlagKeys.AGENTS)
-      expect(result).toBe(true)
-    })
-
-    it('should return false (default) when SQLite returns undefined', () => {
-      vi.mocked(readFeatureFlag).mockReturnValueOnce(undefined)
-
-      const result = getFeatureFlag(featureFlagKeys.AGENTS)
-      expect(result).toBe(false)
-    })
-
-    it('should return false (default) when SQLite read throws', () => {
-      vi.mocked(readFeatureFlag).mockImplementationOnce(() => {
-        throw new Error('DB error')
-      })
-
-      const result = getFeatureFlag(featureFlagKeys.AGENTS)
-      expect(result).toBe(false)
-    })
-
     it('should always return false for disabled flags regardless of SQLite', () => {
       vi.mocked(readFeatureFlag).mockReturnValueOnce(true)
 
@@ -135,15 +112,6 @@ describe('Feature Flags', () => {
   })
 
   describe('enableFeatureFlag', () => {
-    it('should write true to SQLite for enabled flags', () => {
-      enableFeatureFlag(featureFlagKeys.AGENTS)
-
-      expect(writeFeatureFlag).toHaveBeenCalledWith(
-        `feature_flag_${featureFlagKeys.AGENTS}`,
-        true
-      )
-    })
-
     it('should not write to SQLite for disabled flags', () => {
       // META_OPTIMIZER is disabled (isDisabled: true)
       enableFeatureFlag(featureFlagKeys.META_OPTIMIZER)

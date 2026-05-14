@@ -10,11 +10,6 @@ vi.mock('@/common/hooks/use-confirm', () => ({
   useConfirm: () => mockConfirm,
 }))
 
-const mockUseFeatureFlag = vi.fn()
-vi.mock('@/common/hooks/use-feature-flag', () => ({
-  useFeatureFlag: (key: string) => mockUseFeatureFlag(key),
-}))
-
 vi.mock('@tanstack/react-router', () => ({
   Link: ({
     children,
@@ -64,8 +59,6 @@ function renderSidebar(props: Partial<typeof defaultProps> = {}) {
 describe('PlaygroundSidebar', () => {
   beforeEach(() => {
     mockConfirm.mockResolvedValue(true)
-    mockUseFeatureFlag.mockReset()
-    mockUseFeatureFlag.mockReturnValue(false)
     // Reset all callback mocks
     Object.assign(defaultProps, {
       onSelectThread: vi.fn(),
@@ -76,21 +69,8 @@ describe('PlaygroundSidebar', () => {
     })
   })
 
-  describe('agents feature flag', () => {
-    it('hides the Agents link when the agents feature flag is off', () => {
-      mockUseFeatureFlag.mockImplementation((key: string) =>
-        key === 'agents' ? false : false
-      )
-      renderSidebar()
-      expect(
-        screen.queryByRole('link', { name: /agents/i })
-      ).not.toBeInTheDocument()
-    })
-
-    it('shows the Agents link when the agents feature flag is on', () => {
-      mockUseFeatureFlag.mockImplementation((key: string) =>
-        key === 'agents' ? true : false
-      )
+  describe('agents link', () => {
+    it('renders the Agents link pointing to /playground/agents', () => {
       renderSidebar()
       const link = screen.getByRole('link', { name: /agents/i })
       expect(link).toBeInTheDocument()
