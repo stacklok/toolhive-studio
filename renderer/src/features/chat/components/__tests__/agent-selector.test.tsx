@@ -45,6 +45,10 @@ const mockAgentsApi = {
   getThreadAgentId: vi.fn(),
 }
 
+const mockChatApi = {
+  ensureThreadExists: vi.fn(),
+}
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -96,6 +100,7 @@ describe('AgentSelector', () => {
       ...(window.electronAPI ?? {}),
       chat: {
         ...(window.electronAPI?.chat ?? {}),
+        ensureThreadExists: mockChatApi.ensureThreadExists,
         agents: mockAgentsApi,
       },
     } as unknown as typeof window.electronAPI
@@ -107,6 +112,11 @@ describe('AgentSelector', () => {
     ])
     mockAgentsApi.getThreadAgentId.mockResolvedValue(null)
     mockAgentsApi.setThreadAgent.mockResolvedValue({ success: true })
+    mockChatApi.ensureThreadExists.mockResolvedValue({
+      success: true,
+      threadId: 'thread-1',
+      isNew: false,
+    })
   })
 
   it('renders the default agent name when no thread agent is set', async () => {
