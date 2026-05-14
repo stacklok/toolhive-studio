@@ -223,6 +223,43 @@ describe('SkillSelector', () => {
     )
   })
 
+  it('skips the global "last used" write when the per-thread toggle fails', async () => {
+    // When the per-thread write returns { success: false } (e.g. the row
+    // failed to materialise) the global default must stay untouched —
+    // otherwise the seed for new threads mutates even though the active
+    // thread's selection did not persist.
+    mockThreadSettingsApi.setEnabledSkill.mockResolvedValue({
+      success: false,
+      error: 'failed to materialise',
+    })
+
+    const user = userEvent.setup()
+
+    render(<SkillSelector threadId="thread-1" />, {
+      wrapper: createWrapper(),
+    })
+
+    await waitFor(() => {
+      expect(screen.getByTestId('skill-selector-trigger')).not.toBeDisabled()
+    })
+
+    await user.click(screen.getByTestId('skill-selector-trigger'))
+
+    const algorithmicArt = await screen.findByRole('menuitemcheckbox', {
+      name: /algorithmic-art/i,
+    })
+    await user.click(algorithmicArt)
+
+    await waitFor(() => {
+      expect(mockThreadSettingsApi.setEnabledSkill).toHaveBeenCalledWith(
+        'thread-1',
+        'algorithmic-art',
+        true
+      )
+    })
+    expect(mockChatApi.setEnabledSkill).not.toHaveBeenCalled()
+  })
+
   it('clear-all wipes every entry in the raw enabled-skills list, including stale rows', async () => {
     // Backend reports `algorithmic-art` is installed; the allow-list still
     // carries `uninstalled` from a previous install. Clear-all must wipe BOTH
