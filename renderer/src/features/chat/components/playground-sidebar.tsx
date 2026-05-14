@@ -26,8 +26,6 @@ import {
 } from '@/common/components/ui/dropdown-menu'
 import { cn } from '@/common/lib/utils'
 import { useConfirm } from '@/common/hooks/use-confirm'
-import { useFeatureFlag } from '@/common/hooks/use-feature-flag'
-import { featureFlagKeys } from '@utils/feature-flags'
 import type { PlaygroundThread } from '../hooks/use-playground-threads'
 
 interface PlaygroundSidebarProps {
@@ -284,10 +282,8 @@ export function PlaygroundSidebar({
   const starredThreads = threads.filter((t) => t.starred)
   const recentThreads = threads.filter((t) => !t.starred)
   const hasStarred = starredThreads.length > 0
-  const isAgentsEnabled = useFeatureFlag(featureFlagKeys.AGENTS)
   const pathname = useRouterState({ select: (s) => s.location.pathname })
-  const isAgentsActive =
-    isAgentsEnabled && pathname.startsWith('/playground/agents')
+  const isAgentsActive = pathname.startsWith('/playground/agents')
 
   const renderItem = (thread: PlaygroundThread) => (
     <ThreadItem
@@ -308,24 +304,22 @@ export function PlaygroundSidebar({
         shrink-0 flex-col border-r"
     >
       <div className="flex flex-col gap-0.5 px-2 pt-2 pb-1">
-        {isAgentsEnabled && (
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className={cn(
-              'w-full justify-start gap-2 px-2',
-              isAgentsActive
-                ? 'bg-accent text-accent-foreground'
-                : 'text-muted-foreground'
-            )}
-          >
-            <Link to="/playground/agents" aria-label="Agents">
-              <Bot className="h-4 w-4 shrink-0" />
-              Agents
-            </Link>
-          </Button>
-        )}
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className={cn(
+            'w-full justify-start gap-2 px-2',
+            isAgentsActive
+              ? 'bg-accent text-accent-foreground'
+              : 'text-muted-foreground'
+          )}
+        >
+          <Link to="/playground/agents" aria-label="Agents">
+            <Bot className="h-4 w-4 shrink-0" />
+            Agents
+          </Link>
+        </Button>
         <Button
           variant="ghost"
           size="sm"
