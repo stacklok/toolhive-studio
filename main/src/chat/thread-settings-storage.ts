@@ -1,27 +1,41 @@
 import log from '../logger'
 import {
+  readThread,
   readThreadSelectedModel,
   readThreadEnabledMcpTools,
   readThreadEnabledSkills,
 } from '../db/readers/threads-reader'
 import {
+  writeThread,
   writeThreadSelectedModel,
   writeThreadEnabledMcpTools,
   writeThreadEnabledSkills,
 } from '../db/writers/threads-writer'
-import { ensureThreadExists } from './thread-integration'
 
 type Result = { success: boolean; error?: string }
 
+// Materialise a draft thread row before per-thread settings are written. Done
+// directly via DB primitives (rather than `thread-integration`) so this module
+// avoids a hard import on `threads-storage`, whose top-level `new ElectronStore`
+// blows up in tests that don't mock electron.
 function ensureRow(threadId: string): Result {
-  const res = ensureThreadExists(threadId)
-  if (!res.success) {
+  try {
+    const existing = readThread(threadId)
+    if (existing) return { success: true }
+    const now = Date.now()
+    writeThread({
+      id: threadId,
+      messages: [],
+      lastEditTimestamp: now,
+      createdAt: now,
+    })
+    return { success: true }
+  } catch (error) {
     return {
       success: false,
-      error: res.error ?? 'Failed to materialise thread',
+      error: error instanceof Error ? error.message : 'Failed to ensure thread',
     }
   }
-  return { success: true }
 }
 
 export function getThreadSelectedModel(

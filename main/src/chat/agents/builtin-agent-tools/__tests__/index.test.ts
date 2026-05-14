@@ -17,6 +17,10 @@ vi.mock('../skills', () => ({
   createSkillsAgentTools: vi.fn(() => Promise.resolve(mockSkillsHandle)),
 }))
 
+vi.mock('../../../thread-settings-storage', () => ({
+  getThreadEnabledSkills: vi.fn().mockReturnValue([]),
+}))
+
 import { createBuiltinAgentTools } from '../index'
 import { createSkillsAgentTools } from '../skills'
 

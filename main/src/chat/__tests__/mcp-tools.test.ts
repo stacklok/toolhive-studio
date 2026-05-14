@@ -64,6 +64,15 @@ vi.mock('../settings-storage', () => ({
   getEnabledMcpTools: mockGetEnabledMcpTools,
 }))
 
+vi.mock('../thread-settings-storage', () => ({
+  getThreadEnabledMcpTools: vi.fn().mockReturnValue({}),
+  getThreadEnabledSkills: vi.fn().mockReturnValue([]),
+  getThreadSelectedModel: vi.fn().mockReturnValue(null),
+  setThreadEnabledMcpTools: vi.fn().mockReturnValue({ success: true }),
+  setThreadEnabledSkill: vi.fn().mockReturnValue({ success: true }),
+  setThreadSelectedModel: vi.fn().mockReturnValue({ success: true }),
+}))
+
 vi.mock('../../utils/mcp-tools', async (importOriginal) => {
   const original =
     await importOriginal<typeof import('../../utils/mcp-tools')>()

@@ -230,7 +230,9 @@ describe('handleChatStreamRealtime — agent resolution', () => {
       fakeSender
     )
 
-    expect(mockCreateBuiltinAgentTools).toHaveBeenCalledWith('skills')
+    expect(mockCreateBuiltinAgentTools).toHaveBeenCalledWith('skills', {
+      threadId: 'thread-1',
+    })
     expect(mockToolLoopAgentCtor).toHaveBeenCalledWith(
       expect.objectContaining({
         tools: expect.objectContaining({ build_skill: expect.anything() }),
@@ -255,7 +257,9 @@ describe('handleChatStreamRealtime — agent resolution', () => {
       fakeSender
     )
 
-    expect(mockCreateBuiltinAgentTools).toHaveBeenCalledWith('skills')
+    expect(mockCreateBuiltinAgentTools).toHaveBeenCalledWith('skills', {
+      threadId: 'thread-1',
+    })
     expect(mockToolLoopAgentCtor).toHaveBeenCalledWith(
       expect.objectContaining({
         instructions:
