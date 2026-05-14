@@ -29,6 +29,10 @@ const mockAgentsApi = {
   getThreadAgentId: vi.fn(),
 }
 
+const mockChatApi = {
+  ensureThreadExists: vi.fn(),
+}
+
 const sampleAgent: AgentConfig = {
   id: 'custom.my-agent',
   kind: 'custom',
@@ -50,11 +54,17 @@ beforeEach(() => {
   mockAgentsApi.delete.mockResolvedValue({ success: true })
   mockAgentsApi.duplicate.mockResolvedValue(sampleAgent)
   mockAgentsApi.getThreadAgentId.mockResolvedValue(null)
+  mockChatApi.ensureThreadExists.mockResolvedValue({
+    success: true,
+    threadId: 'thread-1',
+    isNew: false,
+  })
 
   window.electronAPI = {
     ...(window.electronAPI ?? {}),
     chat: {
       ...(window.electronAPI?.chat ?? {}),
+      ensureThreadExists: mockChatApi.ensureThreadExists,
       agents: mockAgentsApi,
     },
   } as unknown as typeof window.electronAPI
@@ -238,5 +248,107 @@ describe('useSetThreadAgent', () => {
         null
       )
     })
+  })
+
+  it('promotes a draft thread via ensureThreadExists before writing the agent assignment', async () => {
+    mockChatApi.ensureThreadExists.mockResolvedValueOnce({
+      success: true,
+      threadId: 'thread-draft',
+      isNew: true,
+    })
+    const { result } = renderSetThreadAgent()
+
+    result.current.mutate({
+      threadId: 'thread-draft',
+      agentId: 'builtin.skills',
+    })
+
+    await waitFor(() => {
+      expect(mockChatApi.ensureThreadExists).toHaveBeenCalledWith(
+        'thread-draft'
+      )
+      expect(mockAgentsApi.setThreadAgent).toHaveBeenCalledWith(
+        'thread-draft',
+        'builtin.skills'
+      )
+    })
+
+    // ensureThreadExists must run BEFORE setThreadAgent — otherwise the
+    // UPDATE on the threads row matches 0 rows and the selection is lost.
+    const ensureOrder = mockChatApi.ensureThreadExists.mock.invocationCallOrder
+    const setOrder = mockAgentsApi.setThreadAgent.mock.invocationCallOrder
+    expect(ensureOrder[0]!).toBeLessThan(setOrder[0]!)
+  })
+
+  it('signals threadStarted when ensureThreadExists promoted a draft', async () => {
+    mockChatApi.ensureThreadExists.mockResolvedValueOnce({
+      success: true,
+      threadId: 'thread-draft',
+      isNew: true,
+    })
+    const { result, queryClient } = renderSetThreadAgent()
+
+    result.current.mutate({
+      threadId: 'thread-draft',
+      agentId: 'builtin.skills',
+    })
+
+    await waitFor(() => {
+      const data = queryClient.getQueryData(['chat', 'threadStarted']) as
+        | { threadId: string }
+        | undefined
+      expect(data?.threadId).toBe('thread-draft')
+    })
+  })
+
+  it('does not signal threadStarted when the thread already existed', async () => {
+    mockChatApi.ensureThreadExists.mockResolvedValueOnce({
+      success: true,
+      threadId: 'thread-existing',
+      isNew: false,
+    })
+    const { result, queryClient } = renderSetThreadAgent()
+
+    result.current.mutate({
+      threadId: 'thread-existing',
+      agentId: 'builtin.skills',
+    })
+
+    await waitFor(() => {
+      expect(mockAgentsApi.setThreadAgent).toHaveBeenCalled()
+    })
+    expect(queryClient.getQueryData(['chat', 'threadStarted'])).toBeUndefined()
+  })
+
+  it('skips ensureThreadExists when clearing the agent (agentId: null)', async () => {
+    const { result } = renderSetThreadAgent()
+
+    result.current.mutate({ threadId: 'thread-9', agentId: null })
+
+    await waitFor(() => {
+      expect(mockAgentsApi.setThreadAgent).toHaveBeenCalledWith(
+        'thread-9',
+        null
+      )
+    })
+    expect(mockChatApi.ensureThreadExists).not.toHaveBeenCalled()
+  })
+
+  it('does not call setThreadAgent when ensureThreadExists fails', async () => {
+    mockChatApi.ensureThreadExists.mockResolvedValueOnce({
+      success: false,
+      error: 'boom',
+    })
+    const { result } = renderSetThreadAgent()
+
+    result.current.mutate({
+      threadId: 'thread-draft',
+      agentId: 'builtin.skills',
+    })
+
+    await waitFor(() => {
+      expect(result.current.isError).toBe(true)
+    })
+    expect(mockAgentsApi.setThreadAgent).not.toHaveBeenCalled()
   })
 })

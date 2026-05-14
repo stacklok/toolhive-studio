@@ -90,20 +90,45 @@ export function useDuplicateAgent() {
 export function useSetThreadAgent() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       threadId,
       agentId,
     }: {
       threadId: string
       agentId: string | null
-    }) => window.electronAPI.chat.agents.setThreadAgent(threadId, agentId),
-    onSuccess: (_data, variables) => {
+    }) => {
+      // For a renderer-only draft thread the threads row doesn't exist yet,
+      // so the backend's `UPDATE threads SET agent_id = ...` would silently
+      // match 0 rows. Promote the draft first so the assignment persists.
+      // Skip when clearing (agentId === null): nothing to persist, and we
+      // don't want to materialise an empty row.
+      let isNew = false
+      if (agentId !== null) {
+        const ensured =
+          await window.electronAPI.chat.ensureThreadExists(threadId)
+        if (!ensured.success) {
+          throw new Error(ensured.error ?? 'Failed to create chat thread')
+        }
+        isNew = ensured.isNew ?? false
+      }
+      await window.electronAPI.chat.agents.setThreadAgent(threadId, agentId)
+      return { isNew }
+    },
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({
         queryKey: AGENT_QUERY_KEYS.threadAgent(variables.threadId),
       })
       queryClient.invalidateQueries({
         queryKey: ['chat', 'thread', variables.threadId],
       })
+      if (data.isNew) {
+        // Signal the sidebar (usePlaygroundThreads subscribes) so it flips
+        // `pending: false` for the newly promoted draft.
+        queryClient.setQueryData(['chat', 'threadStarted'], {
+          threadId: variables.threadId,
+          timestamp: Date.now(),
+        })
+      }
     },
   })
 }
