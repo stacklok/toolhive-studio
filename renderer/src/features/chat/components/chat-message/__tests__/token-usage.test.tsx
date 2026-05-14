@@ -4,25 +4,31 @@ import userEvent from '@testing-library/user-event'
 import { TokenUsage } from '../token-usage'
 import type { ModelCost } from '../../../hooks/use-model-pricing'
 
-const getPricingMock =
+const useModelPricingMock =
   vi.fn<
     (
       providerId: string | undefined,
       model: string | undefined
-    ) => ModelCost | undefined
+    ) => { pricing: ModelCost | undefined }
   >()
 
 vi.mock('../../../hooks/use-model-pricing', () => ({
-  useModelPricing: () => ({ getPricing: getPricingMock }),
+  useModelPricing: (
+    providerId: string | undefined,
+    model: string | undefined
+  ) => useModelPricingMock(providerId, model),
 }))
 
 describe('TokenUsage', () => {
   beforeEach(() => {
-    getPricingMock.mockReset()
+    useModelPricingMock.mockReset()
+    useModelPricingMock.mockReturnValue({ pricing: undefined })
   })
 
   it('renders inline cost when pricing is available', () => {
-    getPricingMock.mockReturnValue({ input: 2.5, output: 10 })
+    useModelPricingMock.mockReturnValue({
+      pricing: { input: 2.5, output: 10 },
+    })
     render(
       <TokenUsage
         usage={{
@@ -34,12 +40,12 @@ describe('TokenUsage', () => {
         model="gpt-4o"
       />
     )
-    // total cost = $2.5 + $10 = $12.50
-    expect(screen.getAllByText('12.50').length).toBeGreaterThan(0)
+    // total cost = $2.5 + $10 = $12.50, rendered as "$12.50"
+    expect(screen.getAllByText('$12.50').length).toBeGreaterThan(0)
   })
 
   it('does not render cost when pricing is missing', () => {
-    getPricingMock.mockReturnValue(undefined)
+    useModelPricingMock.mockReturnValue({ pricing: undefined })
     const { container } = render(
       <TokenUsage
         usage={{ inputTokens: 100, outputTokens: 50, totalTokens: 150 }}
@@ -51,7 +57,9 @@ describe('TokenUsage', () => {
   })
 
   it('shows the cost breakdown section in the tooltip when pricing is available', async () => {
-    getPricingMock.mockReturnValue({ input: 3, output: 15, cache_read: 0.3 })
+    useModelPricingMock.mockReturnValue({
+      pricing: { input: 3, output: 15, cache_read: 0.3 },
+    })
     render(
       <TokenUsage
         usage={{
@@ -78,7 +86,7 @@ describe('TokenUsage', () => {
   })
 
   it('keeps the existing token breakdown tooltip when pricing is missing', async () => {
-    getPricingMock.mockReturnValue(undefined)
+    useModelPricingMock.mockReturnValue({ pricing: undefined })
     render(
       <TokenUsage
         usage={{ inputTokens: 100, outputTokens: 50, totalTokens: 150 }}

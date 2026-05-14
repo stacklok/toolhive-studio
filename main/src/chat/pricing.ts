@@ -119,3 +119,9 @@ export async function getPricingMap(): Promise<PricingMap> {
   await ensureLoaded()
   return inMemory?.pricing ?? {}
 }
+
+/** Test-only: clear cached state so each test starts fresh. */
+export function _resetPricingStateForTests(): void {
+  inMemory = null
+  inflightFetch = null
+}

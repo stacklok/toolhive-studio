@@ -1,4 +1,4 @@
-import { Zap, ArrowRight, Hash, Info, DollarSign } from 'lucide-react'
+import { Zap, ArrowRight, Hash, Info } from 'lucide-react'
 import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import {
   Tooltip,
@@ -28,7 +28,7 @@ export function TokenUsage({
   model,
   isStreaming = false,
 }: TokenUsageProps) {
-  const { getPricing } = useModelPricing()
+  const { pricing } = useModelPricing(providerId, model)
 
   const safeNumber = (value: number | undefined | null): number => {
     if (
@@ -58,7 +58,6 @@ export function TokenUsage({
   const isLMStudio = providerId === 'lmstudio'
   const showStreamingPlaceholder = isStreaming && !hasUsageData
 
-  const pricing = getPricing(providerId, model)
   const cost = hasUsageData && pricing ? calculateCost(usage, pricing) : null
 
   return (
@@ -115,9 +114,8 @@ export function TokenUsage({
                 {cost && (
                   <>
                     <span className="mx-1">•</span>
-                    <DollarSign className="h-3 w-3" />
                     <span className="text-foreground font-medium">
-                      {formatUsd(cost.totalCost).replace('$', '')}
+                      {formatUsd(cost.totalCost)}
                     </span>
                   </>
                 )}
