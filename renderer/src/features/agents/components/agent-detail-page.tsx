@@ -185,7 +185,7 @@ export function AgentDetailPage({ agent }: { agent: AgentConfig }) {
             System prompt
           </h4>
           <div
-            className="border-border mb-8 rounded-2xl border bg-white p-6
+            className="border-border bg-card mb-8 rounded-2xl border p-6
               dark:bg-transparent"
           >
             {agent.instructions.trim().length > 0 ? (

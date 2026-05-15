@@ -6,7 +6,7 @@ export function LinkErrorDiscord() {
       href={DISCORD_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="text-red-300 underline hover:text-red-200"
+      className="text-destructive hover:text-destructive/80 underline"
     >
       Discord
     </a>

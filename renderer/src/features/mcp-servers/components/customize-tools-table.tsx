@@ -204,7 +204,7 @@ export function CustomizeToolsTable({
                                 toolsOverride,
                                 overrideTools
                               )
-                                ? 'text-orange-500'
+                                ? 'text-warning'
                                 : 'text-primary'
                               }`}
                           />
@@ -285,7 +285,7 @@ export function CustomizeToolsTable({
 
     return (
       <Alert>
-        <TriangleAlert className="size-4 stroke-orange-500" />
+        <TriangleAlert className="stroke-warning size-4" />
         <AlertTitle className="flex items-center justify-between">
           <b>{alertConfig.title}</b>
         </AlertTitle>

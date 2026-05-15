@@ -189,7 +189,7 @@ function ExpertConsultationDialog({
               className="flex flex-col gap-3"
             >
               {errors.form && (
-                <p className="text-sm text-red-600">
+                <p className="text-destructive text-sm">
                   Something went wrong. Please try submitting via{' '}
                   <a
                     href={DEMO_URL}
@@ -219,7 +219,9 @@ function ExpertConsultationDialog({
                       text-foreground placeholder:text-brand-blue-dark/40"
                   />
                   {errors.firstname && (
-                    <p className="text-sm text-red-600">{errors.firstname}</p>
+                    <p className="text-destructive text-sm">
+                      {errors.firstname}
+                    </p>
                   )}
                 </div>
                 <div className="flex flex-col gap-1">
@@ -237,7 +239,9 @@ function ExpertConsultationDialog({
                       text-foreground placeholder:text-brand-blue-dark/40"
                   />
                   {errors.lastname && (
-                    <p className="text-sm text-red-600">{errors.lastname}</p>
+                    <p className="text-destructive text-sm">
+                      {errors.lastname}
+                    </p>
                   )}
                 </div>
               </div>
@@ -269,7 +273,7 @@ function ExpertConsultationDialog({
                     text-foreground placeholder:text-brand-blue-dark/40"
                 />
                 {errors.email && (
-                  <p className="text-sm text-red-600">{errors.email}</p>
+                  <p className="text-destructive text-sm">{errors.email}</p>
                 )}
               </div>
 

@@ -16,8 +16,8 @@ export function NavIconButton({
       variant="ghost"
       size="icon"
       className={cn(
-        `rounded-full text-white/90 hover:bg-white/10 hover:text-white
-        dark:hover:bg-white/10`,
+        `text-nav-foreground/90 hover:bg-nav-foreground/10
+        hover:text-nav-foreground dark:hover:bg-nav-foreground/10 rounded-full`,
         isActive && 'bg-nav-button-active-bg text-nav-button-active-text',
         className
       )}

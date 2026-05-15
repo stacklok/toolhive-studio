@@ -31,8 +31,7 @@ export function ViewToggle({
       }}
       aria-label={ariaLabel}
       className={cn(
-        `inline-flex h-auto items-center gap-1 rounded-full bg-zinc-200 p-1
-        dark:bg-zinc-800`,
+        'bg-muted inline-flex h-auto items-center gap-1 rounded-full p-1',
         className
       )}
     >

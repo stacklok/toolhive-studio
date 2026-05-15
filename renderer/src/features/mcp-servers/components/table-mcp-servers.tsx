@@ -65,7 +65,7 @@ function UpdateVersionButton({
           disabled={disabled || !isReady}
           aria-label={`Update to ${drift.registryTag}`}
         >
-          <ArrowUpCircle className="size-5 text-amber-500" />
+          <ArrowUpCircle className="text-warning size-5" />
         </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs">

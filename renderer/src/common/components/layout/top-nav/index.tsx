@@ -50,7 +50,8 @@ function NavButton({ to, icon: Icon, children, isActive }: NavButtonProps) {
         'text-sm font-medium transition-colors',
         isActive
           ? 'bg-nav-button-active-bg text-nav-button-active-text'
-          : 'bg-transparent text-white/90 hover:bg-white/10 hover:text-white'
+          : `text-nav-foreground/90 hover:bg-nav-foreground/10
+            hover:text-nav-foreground bg-transparent`
       )}
     >
       <Icon className="size-4" />
@@ -208,7 +209,7 @@ export function TopNav({ isEnterprise = false, ...props }: TopNavProps) {
               <SettingsIcon className="size-5" />
               {showUpdateBadge && (
                 <span className="absolute -top-0.5 -right-0.5">
-                  <ArrowUpCircle className="size-3 fill-blue-500" />
+                  <ArrowUpCircle className="fill-info size-3" />
                 </span>
               )}
             </LinkViewTransition>
