@@ -62,7 +62,40 @@ export function SkillSelector({ threadId }: SkillSelectorProps) {
     enabledNames,
     enabledCount,
     isLoading: skillsLoading,
-  } = useAvailableSkills()
+  } = useAvailableSkills(threadId)
+
+  const setSkillEnabled = async (name: string, enabled: boolean) => {
+    if (threadId) {
+      // Dual-write: per-thread row is the source of truth for this thread,
+      // global write keeps "last used" so the next new thread inherits it.
+      // Skip the global write when per-thread silently failed — otherwise
+      // we'd mutate the seed for new threads even though the current one
+      // didn't persist.
+      const perThread =
+        await window.electronAPI.chat.threadSettings.setEnabledSkill(
+          threadId,
+          name,
+          enabled
+        )
+      if (!perThread.success) return perThread
+      try {
+        await window.electronAPI.chat.setEnabledSkill(name, enabled)
+      } catch (err) {
+        log.warn('Failed to update global skill default:', err)
+      }
+      return perThread
+    }
+    return window.electronAPI.chat.setEnabledSkill(name, enabled)
+  }
+
+  const invalidateEnabledSkills = () => {
+    if (threadId) {
+      queryClient.invalidateQueries({
+        queryKey: ['chat', 'thread', threadId, 'enabledSkills'],
+      })
+    }
+    queryClient.invalidateQueries({ queryKey: ['enabled-skills'] })
+  }
 
   const handleToggleSkill = async (name: string) => {
     const wasEnabled = enabledSet.has(name)
@@ -73,16 +106,13 @@ export function SkillSelector({ threadId }: SkillSelectorProps) {
     )
     setToggling(name)
     try {
-      const response = await window.electronAPI.chat.setEnabledSkill(
-        name,
-        !wasEnabled
-      )
+      const response = await setSkillEnabled(name, !wasEnabled)
       if (!response.success) {
         toast.error(`Failed to toggle skill "${name}"`, {
           description: response.error,
         })
       }
-      queryClient.invalidateQueries({ queryKey: ['enabled-skills'] })
+      invalidateEnabledSkills()
     } catch (error) {
       log.error('Failed to toggle skill:', error)
       toast.error(`Failed to toggle skill "${name}"`)
@@ -100,11 +130,9 @@ export function SkillSelector({ threadId }: SkillSelectorProps) {
       // button still wipes rows whose underlying skill is no longer
       // installed — defense in depth alongside the server-side prune.
       await Promise.allSettled(
-        enabledNames.map((name) =>
-          window.electronAPI.chat.setEnabledSkill(name, false)
-        )
+        enabledNames.map((name) => setSkillEnabled(name, false))
       )
-      queryClient.invalidateQueries({ queryKey: ['enabled-skills'] })
+      invalidateEnabledSkills()
     } catch (error) {
       log.error('Failed to clear enabled skills:', error)
       toast.error('Failed to clear enabled skills')

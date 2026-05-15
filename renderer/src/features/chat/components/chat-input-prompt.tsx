@@ -256,7 +256,7 @@ function InputWithAttachments({
                 onOpenSettings={handleOpenSettings}
                 onProviderChange={handleProviderChange}
               />
-              <McpServerSelector />
+              <McpServerSelector threadId={threadId} />
               <SkillSelector threadId={threadId} />
             </>
           )}

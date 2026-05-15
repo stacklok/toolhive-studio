@@ -30,6 +30,14 @@ export interface ChatSettingsThread {
    * main process falls back to the default built-in agent.
    */
   agentId?: string | null
+  /** Per-thread selected provider id (e.g. "openai"). NULL falls back to global. */
+  selectedProvider?: string | null
+  /** Per-thread selected model id. NULL falls back to global. */
+  selectedModel?: string | null
+  /** Per-thread enabled MCP tools, keyed by server name. NULL falls back to global. */
+  enabledMcpTools?: Record<string, string[]> | null
+  /** Per-thread enabled skill names. NULL falls back to global. */
+  enabledSkills?: string[] | null
 }
 
 interface ChatSettingsThreads {

@@ -39,19 +39,19 @@ export function useChatStreaming(externalThreadId?: string | null) {
   const [queuedMessage, setQueuedMessage] = useState<QueuedMessage | null>(null)
 
   const {
-    settings,
-    updateSettings,
-    updateEnabledTools,
-    loadPersistedSettings,
-    isLoading: isSettingsLoading,
-  } = useChatSettings()
-
-  const {
     currentThreadId,
     isLoading: isThreadLoading,
     error: threadError,
     clearMessages: clearThreadMessages,
   } = useThreadManagement(externalThreadId)
+
+  const {
+    settings,
+    updateSettings,
+    updateEnabledTools,
+    loadPersistedSettings,
+    isLoading: isSettingsLoading,
+  } = useChatSettings(currentThreadId)
 
   // Primed by the route loader via `ensureQueryData`, so available
   // synchronously on thread switch. Invalidated on streaming completion

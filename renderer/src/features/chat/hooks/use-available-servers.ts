@@ -1,10 +1,15 @@
 import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import type { ChatMcpServer } from '../types'
 import { TOOLHIVE_MCP_SERVER_NAME } from '../lib/constants'
 
-export function useAvailableServers() {
+/**
+ * Pass `threadId` to scope the enabled-servers view to that thread; omit it
+ * to read the global default (used by surfaces outside a chat thread).
+ */
+export function useAvailableServers(threadId?: string | null) {
   const queryClient = useQueryClient()
 
   const { data: workloadsData } = useQuery({
@@ -12,11 +17,26 @@ export function useAvailableServers() {
     refetchInterval: 30000,
   })
 
-  const { data: backendEnabledTools = [] } = useQuery({
-    queryKey: ['chat', 'enabledMcpServers'],
-    queryFn: () => window.electronAPI.chat.getEnabledMcpServersFromTools(),
+  const enabledMcpToolsQueryKey = threadId
+    ? (['chat', 'thread', threadId, 'enabledMcpTools'] as const)
+    : (['chat', 'enabled-mcp-tools'] as const)
+
+  const { data: enabledMcpTools = {} } = useQuery({
+    queryKey: enabledMcpToolsQueryKey,
+    queryFn: () =>
+      threadId
+        ? window.electronAPI.chat.threadSettings.getEnabledMcpTools(threadId)
+        : window.electronAPI.chat.getEnabledMcpTools(),
     refetchInterval: 30000,
   })
+
+  const backendEnabledTools = useMemo(
+    () =>
+      Object.entries(enabledMcpTools)
+        .filter(([, tools]) => Array.isArray(tools) && tools.length > 0)
+        .map(([name]) => name),
+    [enabledMcpTools]
+  )
 
   const { data: toolhiveMcpInfo } = useQuery({
     queryKey: ['toolhive-mcp-info'],
@@ -59,13 +79,14 @@ export function useAvailableServers() {
   const handleToolsChange = async () => {
     // Individual tool changes are already saved by the modal,
     // invalidate query to refetch latest state
-    queryClient.invalidateQueries({ queryKey: ['chat', 'enabledMcpServers'] })
+    queryClient.invalidateQueries({ queryKey: enabledMcpToolsQueryKey })
   }
 
   return {
     allAvailableMcpServer,
     backendEnabledTools,
     enabledMcpServers,
+    enabledMcpTools,
     handleToolsChange,
   }
 }

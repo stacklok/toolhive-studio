@@ -99,16 +99,17 @@ export function groupInstalledSkills(
 
 /**
  * Fetches installed skills (all scopes), dedups them by name, and joins with
- * the local `enabled_skills` allow-list so the selector can render a single
- * row per name with enabled state and a live count.
+ * the per-thread `enabled_skills` allow-list so the selector can render a
+ * single row per name with enabled state and a live count.
  *
- * The two queries are chained: the enabled-skills query passes the live set
- * of installed names to the main process, which prunes stale `enabled_skills`
- * rows in the same round-trip. This way, uninstalling a skill removes its
- * row the next time the picker resyncs — without needing the Skill Engineer
- * agent to fire its own `list_skills` first.
+ * Two parallel queries:
+ * - Installed-skills query also prunes the global `enabled_skills` allow-list
+ *   server-side in the same round-trip so stale rows from uninstalled
+ *   skills disappear (matters because the global table seeds new threads).
+ * - Enabled-skills query is scoped to `threadId` when given; without one we
+ *   fall back to the global allow-list (used by surfaces outside a thread).
  */
-export function useAvailableSkills() {
+export function useAvailableSkills(threadId?: string | null) {
   const { data: skillsPayload, isLoading } = useQuery({
     // Installed skills are static artifacts on disk with no runtime status to
     // track, so a long poll is fine. We refetch on mount to catch anything
@@ -127,14 +128,25 @@ export function useAvailableSkills() {
         .sort()
     : undefined
 
-  const { data: enabledNames = [] } = useQuery({
-    // Including the install-name list in the key means this query
-    // automatically refetches (and re-prunes server-side) whenever the
-    // installed set changes — install, uninstall, scope change, all flow
-    // through here without an explicit invalidation.
-    queryKey: ['enabled-skills', installedSkillNames ?? null],
+  // Fire-and-forget prune of the global allow-list whenever the installed
+  // names change. The global table seeds new threads, so keeping it tidy
+  // matters even when we're reading per-thread enablement.
+  useQuery({
+    queryKey: ['enabled-skills-global-prune', installedSkillNames ?? null],
     queryFn: async () =>
       await window.electronAPI.chat.getEnabledSkills(installedSkillNames),
+    refetchInterval: SKILLS_REFRESH_MS,
+    refetchOnMount: true,
+  })
+
+  const { data: enabledNames = [] } = useQuery({
+    queryKey: threadId
+      ? (['chat', 'thread', threadId, 'enabledSkills'] as const)
+      : (['enabled-skills', installedSkillNames ?? null] as const),
+    queryFn: () =>
+      threadId
+        ? window.electronAPI.chat.threadSettings.getEnabledSkills(threadId)
+        : window.electronAPI.chat.getEnabledSkills(installedSkillNames),
     refetchInterval: SKILLS_REFRESH_MS,
     refetchOnMount: true,
   })

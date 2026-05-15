@@ -86,16 +86,18 @@ export async function handleChatStreamRealtime(
           ? (getAgent(request.agentId) ?? resolveAgentForThread(request.chatId))
           : resolveAgentForThread(request.chatId)
 
-        // Get MCP tools if enabled
+        // Get MCP tools if enabled (per-thread when chatId is given)
         const {
           tools: mcpTools,
           clients: mcpClients,
           enabledTools,
-        } = await createMcpTools()
+        } = await createMcpTools(request.chatId)
 
-        // Agent-specific built-in tools (e.g. Skills Builder, Skill Tester)
+        // Agent-specific built-in tools (e.g. Skills Builder, Skill Tester).
+        // Pass the threadId so per-thread skill enablement is honoured.
         const builtinToolsHandle = await createBuiltinAgentTools(
-          agentConfig.builtinToolsKey ?? null
+          agentConfig.builtinToolsKey ?? null,
+          { threadId: request.chatId }
         )
         const builtinTools = builtinToolsHandle.tools
 

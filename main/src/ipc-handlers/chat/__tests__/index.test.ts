@@ -10,6 +10,7 @@ const mocks = vi.hoisted(() => ({
   registerStreaming: vi.fn(),
   registerThreads: vi.fn(),
   registerAgents: vi.fn(),
+  registerThreadSettings: vi.fn(),
 }))
 
 vi.mock('../mcp-tools', () => ({ register: mocks.registerMcpTools }))
@@ -21,6 +22,9 @@ vi.mock('../skills', () => ({ register: mocks.registerSkills }))
 vi.mock('../streaming', () => ({ register: mocks.registerStreaming }))
 vi.mock('../threads', () => ({ register: mocks.registerThreads }))
 vi.mock('../agents', () => ({ register: mocks.registerAgents }))
+vi.mock('../thread-settings', () => ({
+  register: mocks.registerThreadSettings,
+}))
 
 import { register } from '../index'
 
@@ -41,5 +45,6 @@ describe('chat register', () => {
     expect(mocks.registerAgents).toHaveBeenCalledOnce()
     expect(mocks.registerSkills).toHaveBeenCalledOnce()
     expect(mocks.registerPricing).toHaveBeenCalledOnce()
+    expect(mocks.registerThreadSettings).toHaveBeenCalledOnce()
   })
 })

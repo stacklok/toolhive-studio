@@ -4,6 +4,7 @@ import { up as applyInitialSchema } from '../migrations/001-initial-schema'
 import { up as applyMigration002 } from '../migrations/002-thread-title-flag'
 import { up as applyMigration003 } from '../migrations/003-thread-starred'
 import { up as applyMigration006 } from '../migrations/006-enabled-skills'
+import { up as applyMigration007 } from '../migrations/007-per-thread-settings'
 
 vi.mock('electron', () => ({
   app: { getPath: vi.fn(() => ':memory:') },
@@ -277,6 +278,132 @@ describe('006-enabled-skills migration', () => {
     }[]
     expect(rows).toHaveLength(1)
     expect(rows[0]!.name).toBe('foo')
+  })
+})
+
+describe('007-per-thread-settings migration', () => {
+  let db: Database.Database
+
+  beforeEach(() => {
+    db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    applyInitialSchema(db)
+    applyMigration006(db)
+  })
+
+  afterEach(() => {
+    db.close()
+  })
+
+  it('adds the per-thread settings columns to threads', () => {
+    applyMigration007(db)
+    const cols = db.prepare("PRAGMA table_info('threads')").all() as {
+      name: string
+    }[]
+    const names = cols.map((c) => c.name)
+    expect(names).toContain('selected_provider')
+    expect(names).toContain('selected_model')
+    expect(names).toContain('enabled_mcp_tools')
+    expect(names).toContain('enabled_skills')
+  })
+
+  it('snapshots current globals into every existing thread row', () => {
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp) VALUES ('t1', 'A', 1000, 1000)"
+    ).run()
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp) VALUES ('t2', 'B', 2000, 2000)"
+    ).run()
+    db.prepare(
+      "INSERT INTO selected_model (id, provider, model) VALUES (1, 'openai', 'gpt-4o')"
+    ).run()
+    db.prepare(
+      "INSERT INTO enabled_mcp_tools (server_name, tool_names) VALUES ('alpha', ?)"
+    ).run(JSON.stringify(['t1', 't2']))
+    db.prepare("INSERT INTO enabled_skills (name) VALUES ('skill-a')").run()
+    db.prepare("INSERT INTO enabled_skills (name) VALUES ('skill-b')").run()
+
+    applyMigration007(db)
+
+    const rows = db
+      .prepare(
+        `SELECT id, selected_provider, selected_model,
+                enabled_mcp_tools, enabled_skills
+         FROM threads ORDER BY id`
+      )
+      .all() as {
+      id: string
+      selected_provider: string | null
+      selected_model: string | null
+      enabled_mcp_tools: string | null
+      enabled_skills: string | null
+    }[]
+    expect(rows).toHaveLength(2)
+    for (const row of rows) {
+      expect(row.selected_provider).toBe('openai')
+      expect(row.selected_model).toBe('gpt-4o')
+      expect(JSON.parse(row.enabled_mcp_tools!)).toEqual({
+        alpha: ['t1', 't2'],
+      })
+      expect(JSON.parse(row.enabled_skills!)).toEqual(['skill-a', 'skill-b'])
+    }
+  })
+
+  it('writes NULL provider/model when no global selected_model row exists', () => {
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp) VALUES ('t1', 'A', 1000, 1000)"
+    ).run()
+
+    applyMigration007(db)
+
+    const row = db
+      .prepare(
+        `SELECT selected_provider, selected_model,
+                enabled_mcp_tools, enabled_skills
+         FROM threads WHERE id = 't1'`
+      )
+      .get() as {
+      selected_provider: string | null
+      selected_model: string | null
+      enabled_mcp_tools: string | null
+      enabled_skills: string | null
+    }
+    expect(row.selected_provider).toBeNull()
+    expect(row.selected_model).toBeNull()
+    // Tools and skills always snapshot as a JSON value, never NULL.
+    expect(JSON.parse(row.enabled_mcp_tools!)).toEqual({})
+    expect(JSON.parse(row.enabled_skills!)).toEqual([])
+  })
+
+  it('writes NULL provider/model when global row has empty strings', () => {
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp) VALUES ('t1', 'A', 1000, 1000)"
+    ).run()
+    db.prepare(
+      "INSERT INTO selected_model (id, provider, model) VALUES (1, '', '')"
+    ).run()
+
+    applyMigration007(db)
+
+    const row = db
+      .prepare(
+        `SELECT selected_provider, selected_model
+         FROM threads WHERE id = 't1'`
+      )
+      .get() as {
+      selected_provider: string | null
+      selected_model: string | null
+    }
+    expect(row.selected_provider).toBeNull()
+    expect(row.selected_model).toBeNull()
+  })
+
+  it('snapshots empty defaults when no threads exist', () => {
+    applyMigration007(db)
+    const count = db.prepare('SELECT COUNT(*) AS c FROM threads').get() as {
+      c: number
+    }
+    expect(count.c).toBe(0)
   })
 })
 

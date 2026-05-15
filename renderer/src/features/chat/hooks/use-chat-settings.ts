@@ -45,19 +45,52 @@ function isChatProviderLocalServer(
 // Query keys
 const CHAT_SETTINGS_KEYS = {
   selectedModel: ['chat', 'selectedModel'] as const,
+  threadSelectedModel: (threadId: string) =>
+    ['chat', 'thread', threadId, 'selectedModel'] as const,
+  threadEnabledMcpTools: (threadId: string) =>
+    ['chat', 'thread', threadId, 'enabledMcpTools'] as const,
   settings: (provider: ChatProvider | string) =>
     ['chat', 'settings', provider] as const,
   allSettings: ['chat', 'settings'] as const,
   allProvidersWithSettings: ['chat', 'allProvidersWithSettings'] as const,
 }
 
-function useSelectedModel() {
-  return useQuery({
+type ProviderModel = { provider: string; model: string }
+
+function useEffectiveSelectedModel(threadId?: string | null) {
+  const globalQuery = useQuery({
     queryKey: CHAT_SETTINGS_KEYS.selectedModel,
     queryFn: () => window.electronAPI.chat.getSelectedModel(),
     refetchOnMount: true,
     refetchOnWindowFocus: false,
   })
+
+  const threadQuery = useQuery({
+    queryKey: threadId
+      ? CHAT_SETTINGS_KEYS.threadSelectedModel(threadId)
+      : ['chat', 'thread', '__none__', 'selectedModel'],
+    queryFn: () =>
+      window.electronAPI.chat.threadSettings.getSelectedModel(threadId!),
+    enabled: !!threadId,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+  })
+
+  if (threadId) {
+    const threadModel = threadQuery.data
+    // Per-thread NULL means "fall back to global"; only override when the
+    // thread has both fields set.
+    const effective: ProviderModel | undefined =
+      threadModel && threadModel.provider && threadModel.model
+        ? threadModel
+        : globalQuery.data
+    return {
+      data: effective,
+      isLoading: threadQuery.isLoading || globalQuery.isLoading,
+    }
+  }
+
+  return { data: globalQuery.data, isLoading: globalQuery.isLoading }
 }
 
 function useProviderSettings(provider: string) {
@@ -128,11 +161,15 @@ function useAllProvidersWithSettings() {
   })
 }
 
-// Hook for combined chat settings (selected model + provider settings)
-export function useChatSettings() {
+// Hook for combined chat settings (selected model + provider settings).
+// When `threadId` is provided the selection is per-thread (with global as
+// the default for new threads); writes dual-write so the next new thread
+// inherits the last-used choice. Without `threadId` (e.g. the provider
+// settings dialog) the hook operates purely on globals.
+export function useChatSettings(threadId?: string | null) {
   const queryClient = useQueryClient()
   const { data: selectedModel, isLoading: isSelectedModelLoading } =
-    useSelectedModel()
+    useEffectiveSelectedModel(threadId)
   const { data: providerSettings, isLoading: isProviderSettingsLoading } =
     useProviderSettings(selectedModel?.provider || '')
   const {
@@ -141,28 +178,33 @@ export function useChatSettings() {
     refetch: refetchProviders,
   } = useAllProvidersWithSettings()
 
-  // Query for enabled MCP servers (this is what the UI uses)
-  const { data: enabledMcpServers = [], isLoading: isMcpServersLoading } =
-    useQuery({
-      queryKey: ['chat', 'enabledMcpServers'],
-      queryFn: () => window.electronAPI.chat.getEnabledMcpServersFromTools(),
-      refetchOnWindowFocus: false,
-    })
-
-  // Query for enabled MCP tools (now automatically filters out stopped servers)
+  // Per-thread enabled MCP tools when a threadId is in scope, falling back
+  // to global. Derive enabled servers from the tools blob locally.
   const { data: enabledMcpTools = {}, isLoading: isMcpToolsLoading } = useQuery(
     {
-      queryKey: ['chat', 'enabled-mcp-tools'],
-      queryFn: () => window.electronAPI.chat.getEnabledMcpTools(),
+      queryKey: threadId
+        ? CHAT_SETTINGS_KEYS.threadEnabledMcpTools(threadId)
+        : ['chat', 'enabled-mcp-tools'],
+      queryFn: () =>
+        threadId
+          ? window.electronAPI.chat.threadSettings.getEnabledMcpTools(threadId)
+          : window.electronAPI.chat.getEnabledMcpTools(),
       refetchOnWindowFocus: false,
     }
+  )
+
+  const enabledMcpServers = useMemo(
+    () =>
+      Object.entries(enabledMcpTools)
+        .filter(([, tools]) => Array.isArray(tools) && tools.length > 0)
+        .map(([name]) => name),
+    [enabledMcpTools]
   )
 
   const isLoading =
     isSelectedModelLoading ||
     (selectedModel?.provider && isProviderSettingsLoading) ||
-    isMcpToolsLoading ||
-    isMcpServersLoading
+    isMcpToolsLoading
 
   // Combine the data into a single ChatSettings object
   const settings: ChatSettings = useMemo(() => {
@@ -209,14 +251,51 @@ export function useChatSettings() {
     }
   }, [selectedModel, providerSettings, enabledMcpTools, enabledMcpServers])
 
-  // Mutation to update selected model
+  // Mutation to update selected model. Dual-write when threadId is given:
+  // the per-thread row owns this thread's selection; the global write keeps
+  // "last used" up to date so new threads inherit it. The cache is updated
+  // synchronously via setQueryData so a Send right after the click sees the
+  // new selection — invalidate alone leaves stale data until the refetch.
   const updateSelectedModelMutation = useMutation({
-    mutationFn: ({ provider, model }: { provider: string; model: string }) =>
-      window.electronAPI.chat.saveSelectedModel(provider, model),
-    onSuccess: () => {
+    mutationFn: async ({
+      provider,
+      model,
+    }: {
+      provider: string
+      model: string
+    }) => {
+      if (threadId) {
+        const perThread =
+          await window.electronAPI.chat.threadSettings.setSelectedModel(
+            threadId,
+            provider,
+            model
+          )
+        // If the per-thread write silently failed, don't touch the global
+        // "last used" default — that would mutate the seed for new threads
+        // even though the user's current selection didn't persist.
+        if (!perThread.success) return perThread
+      }
+      return window.electronAPI.chat.saveSelectedModel(provider, model)
+    },
+    onSuccess: (result, variables) => {
+      // Only seed caches when the write actually persisted — otherwise the
+      // UI would show a selection that's about to disappear on refetch.
+      if (!result.success) return
+      const next = { provider: variables.provider, model: variables.model }
+      queryClient.setQueryData(CHAT_SETTINGS_KEYS.selectedModel, next)
       queryClient.invalidateQueries({
         queryKey: CHAT_SETTINGS_KEYS.selectedModel,
       })
+      if (threadId) {
+        queryClient.setQueryData(
+          CHAT_SETTINGS_KEYS.threadSelectedModel(threadId),
+          next
+        )
+        queryClient.invalidateQueries({
+          queryKey: CHAT_SETTINGS_KEYS.threadSelectedModel(threadId),
+        })
+      }
     },
   })
 
@@ -313,7 +392,10 @@ export function useChatSettings() {
     [selectedModel, updateProviderSettingsMutation]
   )
 
-  // Load persisted settings for a provider
+  // Load persisted settings for a provider. Always single-writes to the
+  // global default — this is invoked from the provider-settings dialog
+  // when a new API key is added and must not retroactively mutate any
+  // existing thread's stored selection.
   const loadPersistedSettings = useCallback(
     async (providerId: string) => {
       if (!providerId) return
@@ -326,9 +408,12 @@ export function useChatSettings() {
         if (provider && provider.models.length > 0) {
           const firstModel = provider.models[0]
           if (firstModel) {
-            await updateSelectedModelMutation.mutateAsync({
-              provider: providerId,
-              model: firstModel,
+            await window.electronAPI.chat.saveSelectedModel(
+              providerId,
+              firstModel
+            )
+            queryClient.invalidateQueries({
+              queryKey: CHAT_SETTINGS_KEYS.selectedModel,
             })
           }
         }
@@ -337,7 +422,7 @@ export function useChatSettings() {
         throw error
       }
     },
-    [updateSelectedModelMutation]
+    [queryClient]
   )
 
   // Create a stable isLoading value
