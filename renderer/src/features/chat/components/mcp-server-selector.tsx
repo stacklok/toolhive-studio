@@ -86,12 +86,19 @@ export function McpServerSelector({ threadId }: McpServerSelectorProps) {
       trackEvent(`Playground: disable server ${serverName}`, {
         tools_count: enabledMcpTools?.[serverName]?.length,
       })
-      // Disable all tools for this server
+      // Disable all tools for this server. Only invalidate the cache when
+      // the write actually persisted — otherwise the UI would show the
+      // server as disabled while the DB still has the old enabled tools.
       try {
-        await saveServerTools(serverName, [])
-        invalidateEnabledTools()
+        const response = await saveServerTools(serverName, [])
+        if (response.success) {
+          invalidateEnabledTools()
+        } else {
+          toast.error(`Failed to disable server tools for ${serverName}`)
+        }
       } catch (error) {
-        console.error('Failed to disable server tools:', error)
+        log.error('Failed to disable server tools:', error)
+        toast.error(`Failed to disable server tools for ${serverName}`)
       }
     } else {
       trackEvent(`Playground: enable server ${serverName}`, {
