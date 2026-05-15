@@ -51,22 +51,22 @@ function ToolCallComponentImpl({
   return (
     <div className="bg-card mb-3 rounded-lg border p-3">
       <div className="mb-2 flex items-center gap-2">
-        <Wrench className="h-4 w-4 text-blue-500" />
+        <Wrench className="text-info h-4 w-4" />
         <span className="text-foreground text-sm font-medium">
           Tool: {toolName}
         </span>
 
         {state === 'output-available' && (
-          <CheckCircle className="h-4 w-4 text-green-500" />
+          <CheckCircle className="text-success h-4 w-4" />
         )}
         {state === 'output-error' && (
-          <AlertCircle className="h-4 w-4 text-red-500" />
+          <AlertCircle className="text-destructive h-4 w-4" />
         )}
         {state === 'input-streaming' && (
           <div className="flex items-center gap-1">
             <div
-              className="h-3 w-3 animate-spin rounded-full border
-                border-blue-500 border-t-transparent"
+              className="border-info h-3 w-3 animate-spin rounded-full border
+                border-t-transparent"
             />
             <span className="text-muted-foreground text-xs">Streaming...</span>
           </div>
@@ -136,7 +136,7 @@ function ToolCallComponentImpl({
             )}
             <span>Input Parameters</span>
             {state === 'input-streaming' && (
-              <span className="text-blue-500">(Streaming...)</span>
+              <span className="text-info">(Streaming...)</span>
             )}
           </button>
           {isInputOpen && (
@@ -165,7 +165,7 @@ function ToolCallComponentImpl({
               <ChevronRight className="h-3 w-3" />
             )}
             <span>Tool Result</span>
-            <CheckCircle className="h-3 w-3 text-green-500" />
+            <CheckCircle className="text-success h-3 w-3" />
           </button>
           {isOutputOpen && (
             <div className="mt-2">
@@ -177,17 +177,14 @@ function ToolCallComponentImpl({
 
       {state === 'output-error' && (
         <div
-          className="mt-2 rounded border border-red-200 bg-red-50 p-2
-            dark:border-red-800 dark:bg-red-950/20"
+          className="border-destructive/20 bg-destructive/10 mt-2 rounded border
+            p-2"
         >
-          <div
-            className="flex items-center gap-2 text-sm text-red-600
-              dark:text-red-400"
-          >
+          <div className="text-destructive flex items-center gap-2 text-sm">
             <AlertCircle className="h-4 w-4" />
             <strong>Tool Execution Error</strong>
           </div>
-          <div className="mt-1 text-xs text-red-700 dark:text-red-300">
+          <div className="text-destructive mt-1 text-xs">
             {'errorText' in part ? part.errorText : 'Tool execution failed'}
           </div>
         </div>
@@ -206,17 +203,13 @@ function ToolCallComponentImpl({
             part.input !== undefined &&
             'output' in part &&
             part.output !== undefined && (
-              <span className="text-green-600 dark:text-green-400">
-                ✓ Completed
-              </span>
+              <span className="text-success">✓ Completed</span>
             )}
           {state === 'input-streaming' && (
-            <span className="text-blue-600 dark:text-blue-400">
-              ⏳ Processing...
-            </span>
+            <span className="text-info">⏳ Processing...</span>
           )}
           {state === 'output-error' && (
-            <span className="text-red-600 dark:text-red-400">✗ Failed</span>
+            <span className="text-destructive">✗ Failed</span>
           )}
         </div>
       </div>

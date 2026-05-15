@@ -35,7 +35,7 @@ function ReasoningComponentImpl({
   return (
     <div className="bg-card mb-3 rounded-lg border p-3">
       <div className="mb-2 flex items-center gap-2">
-        <Brain className="h-4 w-4 text-purple-500" />
+        <Brain className="text-info h-4 w-4" />
         <span className="text-foreground text-sm font-medium">
           AI Reasoning
         </span>

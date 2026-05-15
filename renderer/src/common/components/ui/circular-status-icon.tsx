@@ -7,10 +7,10 @@ const circularStatusIconVariants = cva(
   {
     variants: {
       variant: {
-        default: 'border-gray-100 bg-gray-500',
-        destructive: 'border-red-100 bg-red-500',
-        success: 'border-green-100 bg-green-500',
-        warning: 'border-yellow-100 bg-yellow-500',
+        default: 'bg-muted-foreground border-muted',
+        destructive: 'bg-destructive border-destructive/20',
+        success: 'bg-success border-success/20',
+        warning: 'bg-warning border-warning/20',
       },
     },
     defaultVariants: {

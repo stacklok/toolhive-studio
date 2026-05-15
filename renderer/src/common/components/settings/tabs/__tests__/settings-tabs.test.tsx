@@ -196,7 +196,7 @@ describe('SettingsTabs', () => {
     const versionTab = screen.getByRole('tab', { name: /Version/i })
     expect(versionTab).toBeVisible()
 
-    const updateIcon = versionTab.querySelector('svg.text-blue-500')
+    const updateIcon = versionTab.querySelector('svg.text-info')
     expect(updateIcon).toBeInTheDocument()
   })
 
@@ -219,7 +219,7 @@ describe('SettingsTabs', () => {
     const versionTab = screen.getByRole('tab', { name: /Version/i })
     expect(versionTab).toBeVisible()
 
-    const updateIcon = versionTab.querySelector('svg.text-blue-500')
+    const updateIcon = versionTab.querySelector('svg.text-info')
     expect(updateIcon).not.toBeInTheDocument()
   })
 
@@ -242,7 +242,7 @@ describe('SettingsTabs', () => {
     const versionTab = screen.getByRole('tab', { name: /Version/i })
     expect(versionTab).toBeVisible()
 
-    const updateIcon = versionTab.querySelector('svg.text-blue-500')
+    const updateIcon = versionTab.querySelector('svg.text-info')
     expect(updateIcon).not.toBeInTheDocument()
   })
 
@@ -287,9 +287,7 @@ describe('SettingsTabs', () => {
     const generalTab = screen.getByRole('tab', { name: 'General' })
     const logsTab = screen.getByRole('tab', { name: 'Logs' })
 
-    expect(
-      generalTab.querySelector('svg.text-blue-500')
-    ).not.toBeInTheDocument()
-    expect(logsTab.querySelector('svg.text-blue-500')).not.toBeInTheDocument()
+    expect(generalTab.querySelector('svg.text-info')).not.toBeInTheDocument()
+    expect(logsTab.querySelector('svg.text-info')).not.toBeInTheDocument()
   })
 })

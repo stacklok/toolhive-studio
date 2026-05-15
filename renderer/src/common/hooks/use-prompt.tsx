@@ -92,7 +92,7 @@ export function generateSimplePrompt({
             />
           )}
           {form.formState.errors.value && (
-            <p className="mt-1 text-sm text-red-500">
+            <p className="text-destructive mt-1 text-sm">
               {form.formState.errors.value.message}
             </p>
           )}
