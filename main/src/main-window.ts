@@ -4,6 +4,8 @@ import log from './logger'
 import { hideWindow } from './dock-utils'
 import { getQuittingState, getTray } from './app-state'
 import { pollWindowReady } from './util'
+import { getBrandingCss } from './branding/load'
+import { getBrandingConfigPath } from './branding/paths'
 
 // Forge environment variables
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
@@ -155,6 +157,13 @@ export async function createMainWindow(
   try {
     log.info('Creating main window...')
 
+    // SEP#725 — load the operator-supplied branding CSS (if any) and pass it
+    // to the renderer via additionalArguments. Preload reads it from
+    // process.argv synchronously; renderer injects before React mounts so
+    // there's no FOUC. See preload/src/api/branding.ts.
+    const brandingCss = await getBrandingCss(getBrandingConfigPath())
+    const brandingArg = `--branding-css=${Buffer.from(brandingCss, 'utf-8').toString('base64')}`
+
     const windowOptions = {
       width: options.width || DEFAULT_WINDOW_WIDTH,
       height: options.height || DEFAULT_WINDOW_HEIGHT,
@@ -164,6 +173,7 @@ export async function createMainWindow(
         contextIsolation: true,
         preload: path.join(__dirname, 'preload.js'),
         webSecurity: !isDevelopment,
+        additionalArguments: [brandingArg],
       },
       ...getPlatformSpecificWindowOptions(),
     }

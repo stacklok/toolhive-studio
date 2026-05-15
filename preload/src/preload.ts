@@ -4,6 +4,7 @@
 import { contextBridge } from 'electron'
 import { appApi, type AppAPI } from './api/app'
 import { autoUpdateApi, type AutoUpdateAPI } from './api/auto-update'
+import { brandingApi, type BrandingAPI } from './api/branding'
 import { chatApi, type ChatAPI } from './api/chat'
 import { cliApi, type CliAPI } from './api/cli'
 import { darkModeApi, type DarkModeAPI } from './api/dark-mode'
@@ -28,7 +29,8 @@ export type ElectronAPI = AppAPI &
   CliAPI &
   UiPreferencesAPI &
   UtilsAPI &
-  EventsAPI
+  EventsAPI &
+  BrandingAPI
 
 const electronAPI = {
   ...appApi,
@@ -44,6 +46,7 @@ const electronAPI = {
   ...uiPreferencesApi,
   ...utilsApi,
   ...eventsApi,
+  ...brandingApi,
 } satisfies ElectronAPI
 
 contextBridge.exposeInMainWorld('electronAPI', electronAPI)

@@ -11,6 +11,7 @@
   "scripts": {
     "start": "electron-forge start",
     "start:inspect": "tsx scripts/start-inspect.ts",
+    "start:customTheme": "tsx scripts/start-custom-theme.ts",
     "rebuild": "electron-rebuild -f -w better-sqlite3",
     "postinstall": "pnpm run rebuild",
     "e2e": "pnpm package && pnpm e2e:prebuilt",

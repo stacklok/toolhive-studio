@@ -18,6 +18,20 @@ import './common/lib/feature-flags'
 // Import OS design devtools to bind OsDesign.setMac/setWindows/reset to window
 import './common/lib/os-design'
 
+// SEP#725 — Apply operator-supplied brand color overrides before mounting
+// React, so the first paint shows the branded palette and there's no FOUC.
+// The CSS is computed in the main process from `branding-0.json` and forwarded
+// to preload via webPreferences.additionalArguments. See:
+//   - main/src/main-window.ts (load + pass)
+//   - preload/src/api/branding.ts (decode + expose)
+const brandingCss = window.electronAPI?.branding?.css
+if (brandingCss) {
+  const styleEl = document.createElement('style')
+  styleEl.id = 'brand-theme'
+  styleEl.textContent = brandingCss
+  document.head.appendChild(styleEl)
+}
+
 initSentry()
 
 if (!window.electronAPI || !window.electronAPI.apiFetch) {
