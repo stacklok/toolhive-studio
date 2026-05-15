@@ -49,6 +49,12 @@ export default defineConfig({
         'main/src/csp.ts',
         'main/src/logger.ts',
         'main/src/headers.ts',
+        // Generated files
+        '**/*.gen.ts',
+        '**/*.gen.tsx',
+        'renderer/src/route-tree.gen.ts',
+        // shadcn/ui components (generated, not project-specific)
+        'renderer/src/common/components/ui/**',
       ],
     },
   },
