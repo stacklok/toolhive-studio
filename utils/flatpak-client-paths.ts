@@ -19,6 +19,7 @@ export const CLIENT_FLATPAK_PATHS: Record<string, string[]> = {
   cline: ['~/.config/Code'],
   codex: ['~/.codex', '~/.agents'],
   continue: ['~/.continue'],
+  'copilot-cli': ['~/.copilot'],
   cursor: ['~/.cursor'],
   factory: ['~/.factory'],
   'gemini-cli': ['~/.gemini'],
