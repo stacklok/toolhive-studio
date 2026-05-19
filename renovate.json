@@ -13,6 +13,24 @@
       "matchPackageNames": ["stacklok/toolhive"],
       "prPriority": 10,
       "schedule": []
+    },
+    {
+      "description": "Group all AI SDK packages into a single PR — they are tightly coupled and should move together",
+      "groupName": "ai stack",
+      "groupSlug": "ai-stack",
+      "matchPackageNames": [
+        "ai",
+        "ai-sdk-ollama",
+        "/^@ai-sdk\\//",
+        "/^@modelcontextprotocol\\//",
+        "/^@openrouter\\//"
+      ]
+    },
+    {
+      "description": "Group streamdown core + plugin renderers — sub-plugins must move with the core to avoid API mismatch",
+      "groupName": "streamdown",
+      "groupSlug": "streamdown",
+      "matchPackageNames": ["streamdown", "/^@streamdown\\//"]
     }
   ],
   "customManagers": [
