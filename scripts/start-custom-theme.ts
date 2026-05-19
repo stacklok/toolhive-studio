@@ -1,11 +1,9 @@
 #!/usr/bin/env tsx
 /**
- * Dev helper: launch the app with the test theme at
- * `branding-examples/test-theme.json` so we can verify that every themeable
- * surface in studio is actually wired to the branding override. The theme
- * uses a deliberately-distinct wine/coral/gold palette unmistakable from
- * studio's defaults. Cross-platform env-var setting (vs. inline `KEY=val` in
- * package.json, which breaks on Windows cmd.exe).
+ * Dev helper: launch the app with `branding-examples/test-theme.json` to
+ * verify every themeable surface is wired to the branding override. Uses a
+ * tsx wrapper instead of inline `KEY=val` in package.json (which breaks on
+ * Windows cmd.exe).
  */
 import { spawn } from 'node:child_process'
 import path from 'node:path'
@@ -26,9 +24,8 @@ const child = spawn('pnpm', ['exec', 'electron-forge', 'start'], {
   },
 })
 
-child.on('exit', (code, signal) => {
-  if (signal) process.kill(process.pid, signal)
-  else process.exit(code ?? 0)
+child.on('exit', (code) => {
+  process.exit(code ?? 1)
 })
 
 for (const sig of ['SIGINT', 'SIGTERM'] as const) {

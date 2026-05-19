@@ -157,10 +157,9 @@ export async function createMainWindow(
   try {
     log.info('Creating main window...')
 
-    // SEP#725 — load the operator-supplied branding CSS (if any) and pass it
-    // to the renderer via additionalArguments. Preload reads it from
-    // process.argv synchronously; renderer injects before React mounts so
-    // there's no FOUC. See preload/src/api/branding.ts.
+    // Pass the operator-supplied branding CSS (if any) to the renderer via
+    // additionalArguments; preload reads it synchronously so the renderer
+    // can inject before React mounts.
     const brandingCss = await getBrandingCss(getBrandingConfigPath())
     const brandingArg = `--branding-css=${Buffer.from(brandingCss, 'utf-8').toString('base64')}`
 

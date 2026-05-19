@@ -28,8 +28,6 @@ describe('tokensToCssDeclarations', () => {
   })
 
   it('drops unknown keys silently', () => {
-    // ColorTokens permits any string key on the wire; the runtime allowlist
-    // filters non-token keys before they're emitted as CSS variables.
     const out = tokensToCssDeclarations({
       'not-a-real-key': '#000',
       primary: '#fff',
@@ -60,8 +58,8 @@ describe('tokensToCssDeclarations', () => {
 })
 
 describe('colorTokensToStyleContent', () => {
-  it('returns an empty string when theme is null', () => {
-    expect(colorTokensToStyleContent(null)).toBe('')
+  it('returns an empty string when theme is undefined', () => {
+    expect(colorTokensToStyleContent(undefined)).toBe('')
   })
 
   it('returns an empty string when theme is empty', () => {
