@@ -4,7 +4,7 @@ import { z } from 'zod/v4'
 // only `design_tokens.colors`; the other fields are parsed for forward
 // compatibility but not yet applied.
 
-const colorMap = z.record(z.string(), z.string())
+const colorMap = z.record(z.string(), z.unknown())
 
 export const brandingConfigSchema = z
   .object({
