@@ -53,6 +53,7 @@ import {
   postApiV1BetaRegistry,
   postApiV1BetaRegistryAuthLogin,
   postApiV1BetaRegistryAuthLogout,
+  postApiV1BetaRegistryByNameRefresh,
   postApiV1BetaSecrets,
   postApiV1BetaSecretsDefaultKeys,
   postApiV1BetaSkills,
@@ -187,6 +188,9 @@ import type {
   PostApiV1BetaRegistryAuthLogoutData,
   PostApiV1BetaRegistryAuthLogoutError,
   PostApiV1BetaRegistryAuthLogoutResponse,
+  PostApiV1BetaRegistryByNameRefreshData,
+  PostApiV1BetaRegistryByNameRefreshError,
+  PostApiV1BetaRegistryByNameRefreshResponse,
   PostApiV1BetaRegistryData,
   PostApiV1BetaRegistryError,
   PostApiV1BetaSecretsData,
@@ -825,6 +829,35 @@ export const putApiV1BetaRegistryByNameMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await putApiV1BetaRegistryByName({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Refresh registry cache
+ *
+ * Force a refresh of the server-side registry cache for the default registry
+ */
+export const postApiV1BetaRegistryByNameRefreshMutation = (
+  options?: Partial<Options<PostApiV1BetaRegistryByNameRefreshData>>
+): UseMutationOptions<
+  PostApiV1BetaRegistryByNameRefreshResponse,
+  PostApiV1BetaRegistryByNameRefreshError,
+  Options<PostApiV1BetaRegistryByNameRefreshData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaRegistryByNameRefreshResponse,
+    PostApiV1BetaRegistryByNameRefreshError,
+    Options<PostApiV1BetaRegistryByNameRefreshData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaRegistryByNameRefresh({
         ...options,
         ...fnOptions,
         throwOnError: true,

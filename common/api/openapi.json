@@ -37,50 +37,22 @@
         },
         "type": "object"
       },
-      "github_com_stacklok_toolhive_cmd_thv-operator_api_v1beta1.RateLimitBucket": {
-        "description": "PerUser token bucket configuration for this tool.\n+optional",
-        "properties": {
-          "maxTokens": {
-            "description": "MaxTokens is the maximum number of tokens (bucket capacity).\nThis is also the burst size: the maximum number of requests that can be served\ninstantaneously before the bucket is depleted.\n+kubebuilder:validation:Required\n+kubebuilder:validation:Minimum=1",
-            "type": "integer"
-          },
-          "refillPeriod": {
-            "$ref": "#/components/schemas/v1.Duration"
-          }
-        },
-        "type": "object"
-      },
       "github_com_stacklok_toolhive_cmd_thv-operator_api_v1beta1.RateLimitConfig": {
         "description": "RateLimitConfig contains the CRD rate limiting configuration.\nWhen set, rate limiting middleware is added to the proxy middleware chain.",
         "properties": {
           "perUser": {
-            "$ref": "#/components/schemas/github_com_stacklok_toolhive_cmd_thv-operator_api_v1beta1.RateLimitBucket"
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_ratelimit_types.RateLimitBucket"
           },
           "shared": {
-            "$ref": "#/components/schemas/github_com_stacklok_toolhive_cmd_thv-operator_api_v1beta1.RateLimitBucket"
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_ratelimit_types.RateLimitBucket"
           },
           "tools": {
             "description": "Tools defines per-tool rate limit overrides.\nEach entry applies additional rate limits to calls targeting a specific tool name.\nA request must pass both the server-level limit and the per-tool limit.\n+listType=map\n+listMapKey=name\n+optional",
             "items": {
-              "$ref": "#/components/schemas/github_com_stacklok_toolhive_cmd_thv-operator_api_v1beta1.ToolRateLimitConfig"
+              "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_ratelimit_types.ToolRateLimitConfig"
             },
             "type": "array",
             "uniqueItems": false
-          }
-        },
-        "type": "object"
-      },
-      "github_com_stacklok_toolhive_cmd_thv-operator_api_v1beta1.ToolRateLimitConfig": {
-        "properties": {
-          "name": {
-            "description": "Name is the MCP tool name this limit applies to.\n+kubebuilder:validation:Required\n+kubebuilder:validation:MinLength=1",
-            "type": "string"
-          },
-          "perUser": {
-            "$ref": "#/components/schemas/github_com_stacklok_toolhive_cmd_thv-operator_api_v1beta1.RateLimitBucket"
-          },
-          "shared": {
-            "$ref": "#/components/schemas/github_com_stacklok_toolhive_cmd_thv-operator_api_v1beta1.RateLimitBucket"
           }
         },
         "type": "object"
@@ -396,6 +368,24 @@
         },
         "type": "object"
       },
+      "github_com_stacklok_toolhive_pkg_authserver.IdentityFromTokenRunConfig": {
+        "description": "IdentityFromToken extracts user identity (subject, name, email) directly from the\nOAuth2 token-endpoint response body using gjson dot-notation paths. When set, the\nembedded auth server skips the userinfo HTTP call entirely. Mirrors the CRD type\n(cmd/thv-operator/api/v1beta1.IdentityFromTokenConfig) — the authoritative\ntrust-model and uniqueness documentation lives there.",
+        "properties": {
+          "email_path": {
+            "description": "EmailPath is the dot-notation path to the email address field.",
+            "type": "string"
+          },
+          "name_path": {
+            "description": "NamePath is the dot-notation path to the display name field.",
+            "type": "string"
+          },
+          "subject_path": {
+            "description": "SubjectPath is the dot-notation path to the subject (user ID) field.\nRequired when IdentityFromToken is set.",
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
       "github_com_stacklok_toolhive_pkg_authserver.OAuth2UpstreamRunConfig": {
         "description": "OAuth2Config contains OAuth 2.0-specific configuration.\nRequired when Type is \"oauth2\", must be nil when Type is \"oidc\".",
         "properties": {
@@ -424,6 +414,9 @@
           },
           "dcr_config": {
             "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_authserver.DCRUpstreamConfig"
+          },
+          "identity_from_token": {
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_authserver.IdentityFromTokenRunConfig"
           },
           "redirect_uri": {
             "description": "RedirectURI is the callback URL where the upstream IDP will redirect after authentication.\nWhen not specified, defaults to `{issuer}/oauth/callback`.",
@@ -856,7 +849,8 @@
           "mistral-vibe",
           "codex",
           "kimi-cli",
-          "factory"
+          "factory",
+          "copilot-cli"
         ],
         "type": "string",
         "x-enum-varnames": [
@@ -886,7 +880,8 @@
           "MistralVibe",
           "Codex",
           "KimiCli",
-          "Factory"
+          "Factory",
+          "CopilotCli"
         ]
       },
       "github_com_stacklok_toolhive_pkg_client.ClientAppStatus": {
@@ -1134,6 +1129,34 @@
         },
         "type": "object"
       },
+      "github_com_stacklok_toolhive_pkg_ratelimit_types.RateLimitBucket": {
+        "description": "PerUser token bucket configuration for this tool.\n+optional",
+        "properties": {
+          "maxTokens": {
+            "description": "MaxTokens is the maximum number of tokens (bucket capacity).\nThis is also the burst size: the maximum number of requests that can be served\ninstantaneously before the bucket is depleted.\n+kubebuilder:validation:Required\n+kubebuilder:validation:Minimum=1",
+            "type": "integer"
+          },
+          "refillPeriod": {
+            "$ref": "#/components/schemas/v1.Duration"
+          }
+        },
+        "type": "object"
+      },
+      "github_com_stacklok_toolhive_pkg_ratelimit_types.ToolRateLimitConfig": {
+        "properties": {
+          "name": {
+            "description": "Name is the MCP tool name this limit applies to.\n+kubebuilder:validation:Required\n+kubebuilder:validation:MinLength=1",
+            "type": "string"
+          },
+          "perUser": {
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_ratelimit_types.RateLimitBucket"
+          },
+          "shared": {
+            "$ref": "#/components/schemas/github_com_stacklok_toolhive_pkg_ratelimit_types.RateLimitBucket"
+          }
+        },
+        "type": "object"
+      },
       "github_com_stacklok_toolhive_pkg_registry.OAuthPublicConfig": {
         "description": "AuthConfig contains the non-secret OAuth configuration when auth is configured.\nNil when auth_status is \"none\".",
         "properties": {
@@ -1363,6 +1386,11 @@
             },
             "type": "array",
             "uniqueItems": false
+          },
+          "session_ttl": {
+            "description": "SessionTTL is the inactivity timeout for proxy sessions, expressed as a Go\nduration string (e.g. \"30m\", \"2h\", \"168h\"). Empty uses the transport\ndefault (2h). Negative durations and values that fail time.ParseDuration\nare rejected at runtime.\nString (not time.Duration) keeps the wire format unit-explicit: a\ntime.Duration field serializes as nanoseconds in JSON.",
+            "example": "2h",
+            "type": "string"
           },
           "stateless": {
             "description": "Stateless indicates the server only supports POST (no SSE/GET).\nWhen true, the proxy returns 405 for incoming GET requests and uses a\nPOST-based health check instead of the default GET probe.\nApplies to both remote URLs and local container workloads.",
@@ -2113,6 +2141,7 @@
           "version": {
             "description": "Version is the package version (required for npm, pypi, nuget; optional for mcpb; not used by oci where version is in the identifier)",
             "example": "1.0.2",
+            "maxLength": 255,
             "minLength": 1,
             "type": "string"
           }
@@ -3938,6 +3967,8 @@
           },
           "version": {
             "example": "1.0.2",
+            "maxLength": 255,
+            "minLength": 1,
             "type": "string"
           },
           "websiteUrl": {
@@ -4773,6 +4804,69 @@
           }
         },
         "summary": "Update registry configuration",
+        "tags": ["registry"]
+      }
+    },
+    "/api/v1beta/registry/{name}/refresh": {
+      "post": {
+        "description": "Force a refresh of the server-side registry cache for the default registry",
+        "parameters": [
+          {
+            "description": "Registry name (must be 'default')",
+            "in": "path",
+            "name": "name",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Registry refreshed"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Not Found"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": "Internal Server Error"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/pkg_api_v1.registryErrorResponse"
+                }
+              }
+            },
+            "description": "Registry authentication required or upstream registry unavailable"
+          }
+        },
+        "summary": "Refresh registry cache",
         "tags": ["registry"]
       }
     },
