@@ -120,6 +120,9 @@ import type {
   PostApiV1BetaRegistryAuthLogoutData,
   PostApiV1BetaRegistryAuthLogoutErrors,
   PostApiV1BetaRegistryAuthLogoutResponses,
+  PostApiV1BetaRegistryByNameRefreshData,
+  PostApiV1BetaRegistryByNameRefreshErrors,
+  PostApiV1BetaRegistryByNameRefreshResponses,
   PostApiV1BetaRegistryData,
   PostApiV1BetaRegistryErrors,
   PostApiV1BetaSecretsData,
@@ -517,6 +520,22 @@ export const putApiV1BetaRegistryByName = <
       ...options.headers,
     },
   })
+
+/**
+ * Refresh registry cache
+ *
+ * Force a refresh of the server-side registry cache for the default registry
+ */
+export const postApiV1BetaRegistryByNameRefresh = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaRegistryByNameRefreshData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    PostApiV1BetaRegistryByNameRefreshResponses,
+    PostApiV1BetaRegistryByNameRefreshErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/registry/{name}/refresh', ...options })
 
 /**
  * List servers in a registry

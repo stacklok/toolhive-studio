@@ -36,28 +36,12 @@ export type GithubComStacklokToolhiveCoreRegistryTypesRegistry = {
 }
 
 /**
- * PerUser token bucket configuration for this tool.
- * +optional
- */
-export type GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket = {
-  /**
-   * MaxTokens is the maximum number of tokens (bucket capacity).
-   * This is also the burst size: the maximum number of requests that can be served
-   * instantaneously before the bucket is depleted.
-   * +kubebuilder:validation:Required
-   * +kubebuilder:validation:Minimum=1
-   */
-  maxTokens?: number
-  refillPeriod?: V1Duration
-}
-
-/**
  * RateLimitConfig contains the CRD rate limiting configuration.
  * When set, rate limiting middleware is added to the proxy middleware chain.
  */
 export type GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitConfig = {
-  perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket
-  shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket
+  perUser?: GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket
+  shared?: GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket
   /**
    * Tools defines per-tool rate limit overrides.
    * Each entry applies additional rate limits to calls targeting a specific tool name.
@@ -66,20 +50,8 @@ export type GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitConfig = {
    * +listMapKey=name
    * +optional
    */
-  tools?: Array<GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1ToolRateLimitConfig>
+  tools?: Array<GithubComStacklokToolhivePkgRatelimitTypesToolRateLimitConfig>
 }
-
-export type GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1ToolRateLimitConfig =
-  {
-    /**
-     * Name is the MCP tool name this limit applies to.
-     * +kubebuilder:validation:Required
-     * +kubebuilder:validation:MinLength=1
-     */
-    name?: string
-    perUser?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket
-    shared?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitBucket
-  }
 
 /**
  * DEPRECATED: Middleware configuration.
@@ -431,6 +403,29 @@ export type GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig = {
 }
 
 /**
+ * IdentityFromToken extracts user identity (subject, name, email) directly from the
+ * OAuth2 token-endpoint response body using gjson dot-notation paths. When set, the
+ * embedded auth server skips the userinfo HTTP call entirely. Mirrors the CRD type
+ * (cmd/thv-operator/api/v1beta1.IdentityFromTokenConfig) — the authoritative
+ * trust-model and uniqueness documentation lives there.
+ */
+export type GithubComStacklokToolhivePkgAuthserverIdentityFromTokenRunConfig = {
+  /**
+   * EmailPath is the dot-notation path to the email address field.
+   */
+  email_path?: string
+  /**
+   * NamePath is the dot-notation path to the display name field.
+   */
+  name_path?: string
+  /**
+   * SubjectPath is the dot-notation path to the subject (user ID) field.
+   * Required when IdentityFromToken is set.
+   */
+  subject_path?: string
+}
+
+/**
  * OAuth2Config contains OAuth 2.0-specific configuration.
  * Required when Type is "oauth2", must be nil when Type is "oidc".
  */
@@ -464,6 +459,7 @@ export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
    */
   client_secret_file?: string
   dcr_config?: GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig
+  identity_from_token?: GithubComStacklokToolhivePkgAuthserverIdentityFromTokenRunConfig
   /**
    * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
    * When not specified, defaults to `{issuer}/oauth/callback`.
@@ -880,6 +876,7 @@ export type GithubComStacklokToolhivePkgClientClientApp =
   | 'codex'
   | 'kimi-cli'
   | 'factory'
+  | 'copilot-cli'
 
 export type GithubComStacklokToolhivePkgClientClientAppStatus = {
   client_type?: GithubComStacklokToolhivePkgClientClientApp
@@ -1079,6 +1076,33 @@ export type GithubComStacklokToolhivePkgOauthprotoTokenexchangeConfig = {
 }
 
 /**
+ * PerUser token bucket configuration for this tool.
+ * +optional
+ */
+export type GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket = {
+  /**
+   * MaxTokens is the maximum number of tokens (bucket capacity).
+   * This is also the burst size: the maximum number of requests that can be served
+   * instantaneously before the bucket is depleted.
+   * +kubebuilder:validation:Required
+   * +kubebuilder:validation:Minimum=1
+   */
+  maxTokens?: number
+  refillPeriod?: V1Duration
+}
+
+export type GithubComStacklokToolhivePkgRatelimitTypesToolRateLimitConfig = {
+  /**
+   * Name is the MCP tool name this limit applies to.
+   * +kubebuilder:validation:Required
+   * +kubebuilder:validation:MinLength=1
+   */
+  name?: string
+  perUser?: GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket
+  shared?: GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket
+}
+
+/**
  * AuthConfig contains the non-secret OAuth configuration when auth is configured.
  * Nil when auth_status is "none".
  */
@@ -1271,6 +1295,15 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Format: "<secret name>,target=<target environment variable>"
    */
   secrets?: Array<string>
+  /**
+   * SessionTTL is the inactivity timeout for proxy sessions, expressed as a Go
+   * duration string (e.g. "30m", "2h", "168h"). Empty uses the transport
+   * default (2h). Negative durations and values that fail time.ParseDuration
+   * are rejected at runtime.
+   * String (not time.Duration) keeps the wire format unit-explicit: a
+   * time.Duration field serializes as nanoseconds in JSON.
+   */
+  session_ttl?: string
   /**
    * Stateless indicates the server only supports POST (no SSE/GET).
    * When true, the proxy returns 405 for incoming GET requests and uses a
@@ -3937,6 +3970,48 @@ export type PutApiV1BetaRegistryByNameResponses = {
 
 export type PutApiV1BetaRegistryByNameResponse =
   PutApiV1BetaRegistryByNameResponses[keyof PutApiV1BetaRegistryByNameResponses]
+
+export type PostApiV1BetaRegistryByNameRefreshData = {
+  body?: never
+  path: {
+    /**
+     * Registry name (must be 'default')
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/registry/{name}/refresh'
+}
+
+export type PostApiV1BetaRegistryByNameRefreshErrors = {
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+  /**
+   * Registry authentication required or upstream registry unavailable
+   */
+  503: PkgApiV1RegistryErrorResponse
+}
+
+export type PostApiV1BetaRegistryByNameRefreshError =
+  PostApiV1BetaRegistryByNameRefreshErrors[keyof PostApiV1BetaRegistryByNameRefreshErrors]
+
+export type PostApiV1BetaRegistryByNameRefreshResponses = {
+  /**
+   * Registry refreshed
+   */
+  200: {
+    [key: string]: string
+  }
+}
+
+export type PostApiV1BetaRegistryByNameRefreshResponse =
+  PostApiV1BetaRegistryByNameRefreshResponses[keyof PostApiV1BetaRegistryByNameRefreshResponses]
 
 export type GetApiV1BetaRegistryByNameServersData = {
   body?: never
