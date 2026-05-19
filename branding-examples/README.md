@@ -7,6 +7,10 @@ Stacklok palette without touching code.
 - `test-theme.json` — wine / coral / gold palette, deliberately distinct from
   studio's defaults. Used by `pnpm run start:customTheme` to stress-test that
   every themeable surface is wired to the override.
+- `cloud-ui.json` — Port of `toolhive-cloud-ui`'s default palette (zinc primary,
+  dark-green nav, green success / accent). Bare HSL triplets from the source are
+  wrapped in `hsl(…)` so they resolve in studio's bare-`var` consumers. Useful
+  for previewing what studio looks like when aligned with the cloud surface.
 
 To use any of these on a normal launch, copy to `<userData>/branding-0.json`:
 
@@ -21,6 +25,8 @@ Or override the path entirely:
 
 ```bash
 BRANDING_CONFIG_PATH="$PWD/branding-examples/test-theme.json" pnpm run start
+# or to test the cloud-ui-aligned palette:
+BRANDING_CONFIG_PATH="$PWD/branding-examples/cloud-ui.json" pnpm run start
 ```
 
 ## Schema

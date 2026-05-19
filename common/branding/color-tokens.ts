@@ -1,23 +1,17 @@
-// SEP#725 — brand color customization. Port of cloud-ui's `color-tokens.ts`
-// (see `sep/enterprise/toolhive-cloud-ui/src/lib/color-tokens.ts`).
-//
-// Override values are emitted into a `<style>` tag at runtime, so they reach
-// the browser as raw CSS. Values MUST be sanitized before emission to prevent
+// Brand-color override serialization. Values are emitted into a `<style>`
+// tag at runtime, so they MUST be sanitized before emission to prevent
 // stylesheet escape via `;`, `}`, comment markers, etc.
 
-// Per-mode color overrides from `BrandingConfig.design_tokens.colors`.
+export type ColorTokenMap = Record<string, string>
+
 export type ColorTokens = {
-  light?: { [key: string]: string }
-  dark?: { [key: string]: string }
+  light?: ColorTokenMap
+  dark?: ColorTokenMap
 }
 
-// Allowlist of CSS variable names that may be overridden. Mirrors cloud-ui's
-// list so a single `BrandingConfig` JSON is portable across both surfaces.
-// Studio's `renderer/src/index.css` declares all of these except
-// `avatar-background` and `destructive-foreground`; those two are silently
-// no-ops here until studio's CSS adds them, but stay in the allowlist so
-// configs authored for cloud-ui don't trip the unknown-key drop. The leading
-// `--` is added at serialization time.
+// Allowlist of CSS variable names that may be overridden. Keys not declared
+// in `renderer/src/index.css` are silent no-ops. The leading `--` is added
+// at serialization time.
 const COLOR_TOKEN_KEYS = [
   'background',
   'foreground',
@@ -63,14 +57,12 @@ type ColorTokenKey = (typeof COLOR_TOKEN_KEYS)[number]
 
 const COLOR_TOKEN_KEY_SET: ReadonlySet<string> = new Set(COLOR_TOKEN_KEYS)
 
-// Longest plausible CSS color value (e.g. `oklch(0.5849 0.095 159.91 / 100%)`)
-// is well under 50 chars; 100 is generous enough to absorb formatting variation
-// while still capping pathological input that could explode the `<style>` body.
+// Caps pathological input that could explode the `<style>` body. Real values
+// (e.g. `oklch(0.5849 0.095 159.91 / 100%)`) are well under 50 chars.
 const MAX_VALUE_LENGTH = 100
 
-// Reject any character or sequence that could close the property/declaration
-// or open a comment inside the emitted `<style>` block. `url(` is blocked as
-// defense-in-depth.
+// Reject anything that could close the property/declaration or open a comment
+// inside the emitted `<style>` block. `url(` blocked as defense-in-depth.
 const UNSAFE_VALUE_PATTERN = /[;{}<>\n\r\\]|\/\*|\*\/|url\(/i
 
 function isColorTokenKey(key: string): key is ColorTokenKey {
@@ -86,11 +78,10 @@ function isValidColorTokenValue(value: unknown): value is string {
   )
 }
 
-// Render one mode's color token map as a CSS declaration list (no surrounding
-// selector). Unknown keys and unsafe values are dropped silently — partial
-// output is preferable to no override at all.
+// Unknown keys and unsafe values are dropped silently — partial output is
+// preferable to no override at all.
 export function tokensToCssDeclarations(
-  tokens: ColorTokens['light'] | undefined
+  tokens: ColorTokenMap | undefined
 ): string {
   if (!tokens) return ''
   const parts: string[] = []
@@ -102,13 +93,12 @@ export function tokensToCssDeclarations(
   return parts.join(' ')
 }
 
-// Selector choice — `:root:not(.dark)` for light, `.dark` for dark — matches
-// cloud-ui. The `:not(.dark)` is load-bearing: a bare `:root` would tie with
-// `.dark` on specificity and leak light values into dark mode via source
-// order. `:root:not(.dark)` doesn't match in dark mode, so the cascade picks
-// up the default `.dark` declaration in `renderer/src/index.css`.
+// `:not(.dark)` is load-bearing: a bare `:root` would tie with `.dark` on
+// specificity and leak light values into dark mode via source order.
+// `:root:not(.dark)` doesn't match in dark mode, so the cascade picks up
+// the default `.dark` declaration in `renderer/src/index.css`.
 export function colorTokensToStyleContent(
-  tokens: ColorTokens | null | undefined
+  tokens: ColorTokens | undefined
 ): string {
   if (!tokens) return ''
   const lightDecls = tokensToCssDeclarations(tokens.light)
