@@ -2,7 +2,10 @@
 // tag at runtime, so they MUST be sanitized before emission to prevent
 // stylesheet escape via `;`, `}`, comment markers, etc.
 
-export type ColorTokenMap = Record<string, string>
+// Values arrive as `unknown` because the schema deliberately doesn't constrain
+// them — see `schema.ts`. Per-value validation happens in
+// `isValidColorTokenValue` below.
+export type ColorTokenMap = Record<string, unknown>
 
 export type ColorTokens = {
   light?: ColorTokenMap
@@ -78,16 +81,29 @@ function isValidColorTokenValue(value: unknown): value is string {
   )
 }
 
-// Unknown keys and unsafe values are dropped silently — partial output is
-// preferable to no override at all.
+// Unknown keys and unsafe values are dropped per-entry — partial output is
+// preferable to no override at all. Each drop is warn-logged so a malformed
+// override doesn't silently revert to default.
 export function tokensToCssDeclarations(
   tokens: ColorTokenMap | undefined
 ): string {
   if (!tokens) return ''
   const parts: string[] = []
   for (const [key, value] of Object.entries(tokens)) {
-    if (!isColorTokenKey(key)) continue
-    if (!isValidColorTokenValue(value)) continue
+    if (!isColorTokenKey(key)) {
+      console.warn(
+        `[branding] dropping unknown token "${key}" ` +
+          `(not in the ${COLOR_TOKEN_KEYS.length}-key allowlist)`
+      )
+      continue
+    }
+    if (!isValidColorTokenValue(value)) {
+      console.warn(
+        `[branding] dropping unsafe value for "${key}" ` +
+          `(must be a non-empty string ≤${MAX_VALUE_LENGTH} chars without ;{}<>/\\ etc.)`
+      )
+      continue
+    }
     parts.push(`--${key}: ${value};`)
   }
   return parts.join(' ')
