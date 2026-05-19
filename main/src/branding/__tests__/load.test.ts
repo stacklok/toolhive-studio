@@ -1,4 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+
+let warnSpy: ReturnType<typeof vi.spyOn>
+beforeEach(() => {
+  warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+})
+afterEach(() => {
+  warnSpy.mockRestore()
+})
 
 const { mockReadFile } = vi.hoisted(() => ({ mockReadFile: vi.fn() }))
 
@@ -116,7 +124,7 @@ describe('getBrandingCss', () => {
     )
   })
 
-  it('drops unknown token keys silently', async () => {
+  it('drops unknown token keys with a warn-log', async () => {
     mockReadFile.mockResolvedValueOnce(
       JSON.stringify({
         design_tokens: {
@@ -129,9 +137,12 @@ describe('getBrandingCss', () => {
     await expect(getBrandingCss(FAKE_PATH)).resolves.toBe(
       ':root:not(.dark) { --primary: #abc; }'
     )
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('unknown token "not-a-real-token"')
+    )
   })
 
-  it('drops values that fail sanitization', async () => {
+  it('drops values that fail sanitization with a warn-log', async () => {
     mockReadFile.mockResolvedValueOnce(
       JSON.stringify({
         design_tokens: {
@@ -140,5 +151,8 @@ describe('getBrandingCss', () => {
       })
     )
     await expect(getBrandingCss(FAKE_PATH)).resolves.toBe('')
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('unsafe value for "primary"')
+    )
   })
 })

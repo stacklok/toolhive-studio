@@ -1,8 +1,18 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   colorTokensToStyleContent,
   tokensToCssDeclarations,
 } from '@common/branding/color-tokens'
+
+let warnSpy: ReturnType<typeof vi.spyOn>
+
+beforeEach(() => {
+  warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+})
+
+afterEach(() => {
+  warnSpy.mockRestore()
+})
 
 describe('tokensToCssDeclarations', () => {
   it('returns an empty string for undefined', () => {
@@ -27,12 +37,15 @@ describe('tokensToCssDeclarations', () => {
     expect(out).toBe('--primary: #ff6600; --secondary: #0066ff;')
   })
 
-  it('drops unknown keys silently', () => {
+  it('drops unknown keys with a warn-log', () => {
     const out = tokensToCssDeclarations({
       'not-a-real-key': '#000',
       primary: '#fff',
     })
     expect(out).toBe('--primary: #fff;')
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('unknown token "not-a-real-key"')
+    )
   })
 
   it.each([
@@ -45,6 +58,15 @@ describe('tokensToCssDeclarations', () => {
     ['over-length', 'a'.repeat(101)],
   ])('drops values rejected by the safety check (%s)', (_label, badValue) => {
     expect(tokensToCssDeclarations({ primary: badValue })).toBe('')
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.stringContaining('unsafe value for "primary"')
+    )
+  })
+
+  it('drops non-string values (numbers, null) with a warn-log', () => {
+    const out = tokensToCssDeclarations({ primary: 123, secondary: null })
+    expect(out).toBe('')
+    expect(warnSpy).toHaveBeenCalledTimes(2)
   })
 
   it('accepts oklch and hsl values', () => {
