@@ -30,10 +30,7 @@
       "description": "Group streamdown core + plugin renderers — sub-plugins must move with the core to avoid API mismatch",
       "groupName": "streamdown",
       "groupSlug": "streamdown",
-      "matchPackageNames": [
-        "streamdown",
-        "/^@streamdown\\//"
-      ]
+      "matchPackageNames": ["streamdown", "/^@streamdown\\//"]
     }
   ],
   "customManagers": [
