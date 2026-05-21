@@ -35,7 +35,7 @@ overrides:
   '@tootallnate/once': '>=3.0.1'
   serialize-javascript: '>=7.0.5'
   uuid: '>=14.0.0'
-  brace-expansion@>=4.0.0 <5.0.5: 5.0.5
+  brace-expansion@>=4.0.0 <5.0.5: 5.0.6
   brace-expansion@>=2.0.0 <2.0.3: 2.0.3
   brace-expansion@<1.1.13: 1.1.14
 
