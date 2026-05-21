@@ -1,4 +1,4 @@
-import { test, expect } from './fixtures/electron'
+import { test, expect, LONG_TIMEOUT } from './fixtures/electron'
 
 test('install and uninstall server from registry', async ({ window }) => {
   await window.getByRole('button', { name: /add an mcp server/i }).click()
@@ -14,8 +14,15 @@ test('install and uninstall server from registry', async ({ window }) => {
     .click()
   await window.getByRole('button', { name: /install server/i }).click()
 
-  await window.getByRole('link', { name: /^view$/i }).click()
-  await window.getByText('Running').waitFor()
+  // Installing from the registry pulls the mcp/everything image and boots
+  // the workload container (plus the egress squid proxy, since the server's
+  // manifest declares no outbound network). On CI cold-cache runners that
+  // chain regularly exceeds Playwright's default 30s action timeout, causing
+  // a flaky timeout on the "View" link that appears once install completes.
+  await window
+    .getByRole('link', { name: /^view$/i })
+    .click({ timeout: LONG_TIMEOUT })
+  await window.getByText('Running').waitFor({ timeout: LONG_TIMEOUT })
 
   await window.getByRole('button', { name: /more options/i }).click()
   await window.getByRole('menuitem', { name: /remove/i }).click()
