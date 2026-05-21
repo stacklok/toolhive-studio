@@ -9,7 +9,7 @@ overrides:
   '@hono/node-server': '>=1.19.14'
   '@xmldom/xmldom': '>=0.9.10'
   fast-uri: '>=3.1.2'
-  fast-xml-builder: '>=1.1.7'
+  fast-xml-builder: '>=1.2.0'
   fast-xml-parser: 5.5.8
   hono: '>=4.12.16'
   ip-address: '>=10.1.1'
@@ -2969,6 +2969,7 @@ packages:
   '@smithy/core@3.24.0':
     resolution: {integrity: sha512-rZ5YfycIXX6puoGjthnDiMpUgtKNOq3c7CndQYkCNYQTv26AiCrZQOJPy7ANSfZ6Okk3UvCRnmO1OYWlLnYZgg==}
     engines: {node: '>=18.0.0'}
+    deprecated: Deprecated due to incompatibility with Node.js 18 in some environments https://github.com/smithy-lang/smithy-typescript/issues/2022
 
   '@smithy/credential-provider-imds@4.3.0':
     resolution: {integrity: sha512-5gi+28FH+RurB2+tcRH1CK7KiLJ0dVnabjWLY3DgeFLiU45dbyrsq7NOYvMUcHgu9LVZH5F7G+Qk1GdXF0y6jg==}
