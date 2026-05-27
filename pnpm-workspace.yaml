@@ -32,7 +32,7 @@ overrides:
   tar: '>=7.5.15'
   picomatch: '>=4.0.4'
   qs: '>=6.15.2'
-  tmp: '>=0.2.5'
+  tmp: '>=0.2.6'
   '@tootallnate/once': '>=3.0.1'
   serialize-javascript: '>=7.0.5'
   uuid: '>=14.0.0'
