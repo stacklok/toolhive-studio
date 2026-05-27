@@ -66,7 +66,11 @@ export default function RegistryRouteComponent() {
 
   const { filter, setFilter, filteredData } = useFilterSort({
     data: items,
-    filterFields: (item) => [item.name || '', item.description || ''],
+    filterFields: (item) => [
+      item.name || '',
+      ('title' in item && item.title) || '',
+      item.description || '',
+    ],
     sortBy: (item) => item.name || '',
   })
 
