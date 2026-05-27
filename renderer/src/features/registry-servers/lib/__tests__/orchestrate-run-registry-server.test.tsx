@@ -67,6 +67,8 @@ describe('prepareCreateWorkloadData', () => {
       target_port: 8080,
       network_isolation: false,
       volumes: [],
+      registry: 'default',
+      server: 'test-server',
     })
   })
 
@@ -97,7 +99,33 @@ describe('prepareCreateWorkloadData', () => {
       target_port: 8080,
       network_isolation: false,
       volumes: [],
+      registry: 'default',
+      server: 'test-server',
     })
+  })
+
+  it('tags the request with the registry source so the API runs the registry-resolution path', () => {
+    const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
+      name: 'My Custom github',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      networkIsolation: false,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(SERVER, data)
+
+    // Workload name comes from the form (user-editable); registry entry name
+    // comes from the canonical server metadata. They are deliberately distinct
+    // so the API can resolve registry defaults even when the user renames the
+    // workload at install time.
+    expect(result.name).toBe('My Custom github')
+    expect(result.registry).toBe('default')
+    expect(result.server).toBe('test-server')
   })
 
   it('handles empty cmd_arguments', () => {
