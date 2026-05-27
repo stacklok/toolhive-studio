@@ -51,5 +51,14 @@ export function prepareCreateWorkloadData(
     network_isolation: networkIsolation,
     permission_profile,
     volumes,
+    // Tag the request as a registry install so the API records the source
+    // registry on the workload. `name` is the workload name (user-editable
+    // and may diverge from the registry entry name when the user installs
+    // the same server twice into different groups), so the canonical
+    // registry entry name from `server.name` is sent separately. Without
+    // these fields the API treats the request as a direct image install
+    // and policy gates that allow only registry servers reject it.
+    registry: 'default',
+    server: server.name,
   }
 }
