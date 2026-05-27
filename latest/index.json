@@ -1,93 +1,93 @@
 {
-  "tag": "v0.35.2",
+  "tag": "v0.35.3",
   "prerelease": false,
-  "published_at": "2026-05-21T12:50:13Z",
+  "published_at": "2026-05-27T17:14:34Z",
   "base_url": "https://stacklok.github.io/toolhive-studio",
   "assets": [
     {
       "name": "com.stacklok.ToolHive_aarch64.flatpak",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/linux/arm64/com.stacklok.ToolHive_aarch64.flatpak",
-      "size": 113529632
+      "url": "https://releases.toolhive.dev/stable/0.35.3/linux/arm64/com.stacklok.ToolHive_aarch64.flatpak",
+      "size": 113595264
     },
     {
       "name": "com.stacklok.ToolHive_x86_64.flatpak",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/linux/x64/com.stacklok.ToolHive_x86_64.flatpak",
-      "size": 122716128
+      "url": "https://releases.toolhive.dev/stable/0.35.3/linux/x64/com.stacklok.ToolHive_x86_64.flatpak",
+      "size": 122737160
     },
     {
       "name": "RELEASES",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/win32/x64/RELEASES",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/win32/x64/RELEASES",
       "size": 77
     },
     {
       "name": "RELEASES.json",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/darwin/x64/RELEASES.json",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/darwin/x64/RELEASES.json",
       "size": 267
     },
     {
-      "name": "ToolHive-0.35.2-1.arm64.rpm",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/linux/arm64/ToolHive-0.35.2-1.arm64.rpm",
-      "size": 127571169
+      "name": "ToolHive-0.35.3-1.arm64.rpm",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/linux/arm64/ToolHive-0.35.3-1.arm64.rpm",
+      "size": 127572821
     },
     {
-      "name": "ToolHive-0.35.2-1.x86_64.rpm",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/linux/x64/ToolHive-0.35.2-1.x86_64.rpm",
-      "size": 137268965
+      "name": "ToolHive-0.35.3-1.x86_64.rpm",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/linux/x64/ToolHive-0.35.3-1.x86_64.rpm",
+      "size": 137280293
     },
     {
-      "name": "ToolHive-0.35.2-full.nupkg",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/win32/x64/ToolHive-0.35.2-full.nupkg",
-      "size": 192391536
+      "name": "ToolHive-0.35.3-full.nupkg",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/win32/x64/ToolHive-0.35.3-full.nupkg",
+      "size": 192398139
     },
     {
       "name": "ToolHive-arm64.dmg",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/darwin/arm64/ToolHive-arm64.dmg",
-      "size": 169374845
+      "url": "https://releases.toolhive.dev/stable/0.35.3/darwin/arm64/ToolHive-arm64.dmg",
+      "size": 169413274
     },
     {
-      "name": "ToolHive-darwin-arm64-0.35.2.zip",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/darwin/arm64/ToolHive-darwin-arm64-0.35.2.zip",
-      "size": 168395862
+      "name": "ToolHive-darwin-arm64-0.35.3.zip",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/darwin/arm64/ToolHive-darwin-arm64-0.35.3.zip",
+      "size": 168404554
     },
     {
-      "name": "ToolHive-darwin-x64-0.35.2.zip",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/darwin/x64/ToolHive-darwin-x64-0.35.2.zip",
-      "size": 179610155
+      "name": "ToolHive-darwin-x64-0.35.3.zip",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/darwin/x64/ToolHive-darwin-x64-0.35.3.zip",
+      "size": 179616655
     },
     {
       "name": "toolhive-studio-linux-arm64.tar.gz",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/linux/arm64/toolhive-studio-linux-arm64.tar.gz",
-      "size": 173902005
+      "url": "https://releases.toolhive.dev/stable/0.35.3/linux/arm64/toolhive-studio-linux-arm64.tar.gz",
+      "size": 173907221
     },
     {
       "name": "toolhive-studio-linux-x64.tar.gz",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/linux/x64/toolhive-studio-linux-x64.tar.gz",
-      "size": 175919397
+      "url": "https://releases.toolhive.dev/stable/0.35.3/linux/x64/toolhive-studio-linux-x64.tar.gz",
+      "size": 175923548
     },
     {
-      "name": "ToolHive-win32-x64-0.35.2.zip",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/win32/x64/ToolHive-win32-x64-0.35.2.zip",
-      "size": 199289966
+      "name": "ToolHive-win32-x64-0.35.3.zip",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/win32/x64/ToolHive-win32-x64-0.35.3.zip",
+      "size": 199299971
     },
     {
       "name": "ToolHive-x64.dmg",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/darwin/x64/ToolHive-x64.dmg",
-      "size": 180393972
+      "url": "https://releases.toolhive.dev/stable/0.35.3/darwin/x64/ToolHive-x64.dmg",
+      "size": 180383582
     },
     {
       "name": "ToolHive.Setup.exe",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/win32/x64/ToolHive%20Setup.exe",
-      "size": 193324216
+      "url": "https://releases.toolhive.dev/stable/0.35.3/win32/x64/ToolHive%20Setup.exe",
+      "size": 193329848
     },
     {
-      "name": "toolhive_0.35.2_amd64.deb",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/linux/x64/toolhive_0.35.2_amd64.deb",
-      "size": 130538636
+      "name": "toolhive_0.35.3_amd64.deb",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/linux/x64/toolhive_0.35.3_amd64.deb",
+      "size": 130550090
     },
     {
-      "name": "toolhive_0.35.2_arm64.deb",
-      "url": "https://releases.toolhive.dev/stable/0.35.2/linux/arm64/toolhive_0.35.2_arm64.deb",
-      "size": 126660754
+      "name": "toolhive_0.35.3_arm64.deb",
+      "url": "https://releases.toolhive.dev/stable/0.35.3/linux/arm64/toolhive_0.35.3_arm64.deb",
+      "size": 126664478
     }
   ]
 }
