@@ -47,9 +47,9 @@ export function useToastMutation<
           ? loadingMsg(variables)
           : (loadingMsg ?? 'Loading...')
 
-      if (resolvedSuccessMsg !== null) {
+      if (resolvedSuccessMsg !== null || errorMsg !== undefined) {
         toast.promise(promise, {
-          success: resolvedSuccessMsg,
+          ...(resolvedSuccessMsg !== null && { success: resolvedSuccessMsg }),
           loading: resolvedLoadingMsg,
           error: (e: TError) => {
             if (typeof errorMsg === 'function') return errorMsg(e)
