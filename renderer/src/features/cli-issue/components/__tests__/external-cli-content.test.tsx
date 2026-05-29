@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { ExternalCliContent } from '../external-cli-content'
-import { APP_DISPLAY_NAME, APP_NAME } from '@common/app-info'
+import { APP_DISPLAY_NAME, THV_DISPLAY_NAME } from '@common/app-info'
 
 const mockWriteText = vi.fn()
 
@@ -32,7 +32,9 @@ describe('ExternalCliContent', () => {
   it('renders the title and description', () => {
     render(<ExternalCliContent {...defaultProps} />)
 
-    expect(screen.getByText(`External ${APP_NAME} CLI Detected`)).toBeVisible()
+    expect(
+      screen.getByText(`External ${THV_DISPLAY_NAME} CLI Detected`)
+    ).toBeVisible()
     expect(
       screen.getByText(
         `${APP_DISPLAY_NAME} cannot run while an external CLI is installed.`
@@ -104,7 +106,7 @@ describe('ExternalCliContent', () => {
     expect(screen.getByText('Manual installation')).toBeVisible()
     expect(
       screen.getByText(
-        `Please manually remove the external ${APP_NAME} CLI installation.`
+        `Please manually remove the external ${THV_DISPLAY_NAME} CLI installation.`
       )
     ).toBeVisible()
   })
