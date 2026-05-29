@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Loader2 } from 'lucide-react'
-import { APP_DISPLAY_NAME } from '@common/app-info'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import {
   Card,
   CardContent,
@@ -26,7 +26,7 @@ function Shutdown() {
         </CardHeader>
         <CardContent className="space-y-4 text-center">
           <p className="text-muted-foreground">
-            Please wait while {APP_DISPLAY_NAME} safely shuts down your MCP
+            Please wait while {THV_DISPLAY_NAME} safely shuts down your MCP
             servers...
           </p>
         </CardContent>
