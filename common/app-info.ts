@@ -16,6 +16,11 @@ const electronBridge = (
 ).electronAPI
 export const APP_DISPLAY_NAME = electronBridge?.appDisplayName ?? 'ToolHive Studio'
 export const APP_IDENTIFIER = 'toolhive-studio'
+
+// Display name of the bundled ToolHive CLI / backend engine (the `thv` process).
+// Distinct from APP_DISPLAY_NAME: this names the engine the app manages, not the
+// desktop product brand — so it stays "ToolHive" even in rebranded builds.
+export const THV_DISPLAY_NAME = 'ToolHive'
 export const EXECUTABLE_NAME = 'ToolHive'
 export const COMPANY_NAME = 'Stacklok'
 export const DEVELOPER_ID = 'com.stacklok'
