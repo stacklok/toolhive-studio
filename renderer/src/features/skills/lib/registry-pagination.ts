@@ -1,4 +1,4 @@
-import { DEFAULT_PAGE_SIZE_OPTIONS } from '@/common/components/ui/pagination'
+import { DEFAULT_PAGE_SIZE_OPTIONS } from '@/common/components/ui/pagination-constants'
 
 export const REGISTRY_PAGE_SIZE_OPTIONS = DEFAULT_PAGE_SIZE_OPTIONS
 export const DEFAULT_REGISTRY_PAGE_SIZE: (typeof REGISTRY_PAGE_SIZE_OPTIONS)[number] = 24
