@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToastMutation } from './use-toast-mutation'
+import { APP_DISPLAY_NAME } from '@common/app-info'
 
 export function useAutoUpdateStatus() {
   return useQuery({
@@ -19,7 +20,7 @@ export function useSetAutoUpdate() {
     },
     successMsg: (enabled) =>
       enabled
-        ? 'Auto-update enabled - ToolHive will automatically update to the latest version'
+        ? `Auto-update enabled - ${APP_DISPLAY_NAME} will automatically update to the latest version`
         : 'Auto-update disabled',
     errorMsg: 'Failed to update auto-update setting',
   })

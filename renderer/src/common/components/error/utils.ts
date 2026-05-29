@@ -1,3 +1,5 @@
+import { APP_DISPLAY_NAME } from '@common/app-info'
+
 export interface EnvironmentInfo {
   desktopVersion: string
   cliVersion: string
@@ -21,7 +23,7 @@ export const METADATA_FIELDS: {
 export function buildCrashReport(error: Error, env: EnvironmentInfo): string {
   const timestamp = new Date().toISOString()
   return [
-    'ToolHive Crash Report',
+    `${APP_DISPLAY_NAME} Crash Report`,
     '=====================',
     `Timestamp: ${timestamp}`,
     `Desktop Version: ${env.desktopVersion}`,

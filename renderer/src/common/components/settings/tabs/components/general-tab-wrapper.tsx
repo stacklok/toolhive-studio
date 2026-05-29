@@ -1,4 +1,5 @@
 import { trackEvent } from '@/common/lib/analytics'
+import { APP_DISPLAY_NAME } from '@common/app-info'
 import {
   useAutoLaunchStatus,
   useSetAutoLaunch,
@@ -34,7 +35,7 @@ function ThemeField() {
   return (
     <WrapperField
       label="Theme"
-      description="Choose how ToolHive looks to you"
+      description={`Choose how ${APP_DISPLAY_NAME} looks to you`}
       htmlFor="theme-select"
     >
       <Select value={theme} onValueChange={handleThemeChange}>
@@ -95,7 +96,7 @@ function TelemetryField() {
   return (
     <WrapperField
       label="Error reporting"
-      description="Help improve ToolHive by sending error reports to Sentry"
+      description={`Help improve ${APP_DISPLAY_NAME} by sending error reports to Sentry`}
       htmlFor="telemetry"
     >
       <Switch
@@ -123,7 +124,7 @@ function AutoLaunchField() {
   return (
     <WrapperField
       label="Start on login"
-      description="Automatically start ToolHive when you log in to your computer"
+      description={`Automatically start ${APP_DISPLAY_NAME} when you log in to your computer`}
       htmlFor="auto-launch"
     >
       <Switch
@@ -159,7 +160,7 @@ function QuitConfirmationField() {
   return (
     <WrapperField
       label="Quit confirmation"
-      description="Skip the confirmation dialog when quitting ToolHive"
+      description={`Skip the confirmation dialog when quitting ${APP_DISPLAY_NAME}`}
       htmlFor="quit-confirmation"
     >
       <Switch
