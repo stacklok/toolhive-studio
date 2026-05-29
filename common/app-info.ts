@@ -6,7 +6,15 @@
 // ── Core identity ────────────────────────────────────────────────────────────
 
 export const APP_NAME = 'ToolHive'
-export const APP_DISPLAY_NAME = 'ToolHive Studio'
+
+// In the renderer, derive from the live Electron app name (productName) via the
+// preload bridge, so branded builds rebrand with no code change. Falls back to
+// the literal where the bridge is absent (main process, forge build-time).
+// `globalThis` (not `window`) keeps it valid under the node tsconfig.
+const electronBridge = (
+  globalThis as unknown as { electronAPI?: { appDisplayName?: string } }
+).electronAPI
+export const APP_DISPLAY_NAME = electronBridge?.appDisplayName ?? 'ToolHive Studio'
 export const APP_IDENTIFIER = 'toolhive-studio'
 export const EXECUTABLE_NAME = 'ToolHive'
 export const COMPANY_NAME = 'Stacklok'

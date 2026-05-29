@@ -5,7 +5,13 @@ import { ipcRenderer } from 'electron'
 // process: zero React Query / useEffect boilerplate in every consumer.
 const mainLogPath = ipcRenderer.sendSync('get-main-log-path-sync') as string
 
+// Resolved once at preload load time (sync) → a plain string available
+// immediately to the renderer, no async/Suspense. Source of truth: app.getName().
+const appDisplayName: string = ipcRenderer.sendSync('get-app-display-name')
+
 export const appApi = {
+  appDisplayName,
+
   getAutoLaunchStatus: () => ipcRenderer.invoke('get-auto-launch-status'),
   setAutoLaunch: (enabled: boolean) =>
     ipcRenderer.invoke('set-auto-launch', enabled),
@@ -47,6 +53,7 @@ export const appApi = {
 }
 
 export interface AppAPI {
+  appDisplayName: string
   getAutoLaunchStatus: () => Promise<boolean>
   setAutoLaunch: (enabled: boolean) => Promise<boolean>
   showApp: () => Promise<void>

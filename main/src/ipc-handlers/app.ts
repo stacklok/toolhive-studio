@@ -25,6 +25,13 @@ import { updateTrayStatus } from '../system-tray'
 import { isToolhiveRunning } from '../toolhive-manager'
 
 export function register() {
+  // Synchronous one-shot bootstrap: returns app.getName() (= productName from
+  // package.json), the single source of truth the renderer reads at preload
+  // load time. Sync is fine here — fires once, before the page renders.
+  ipcMain.on('get-app-display-name', (event) => {
+    event.returnValue = app.getName()
+  })
+
   ipcMain.handle('get-auto-launch-status', () => getAutoLaunchStatus())
 
   ipcMain.handle('set-auto-launch', (_event, enabled: boolean) => {

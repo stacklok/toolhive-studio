@@ -6,6 +6,7 @@ import type { ElectronAPI } from '../../../../preload/src/preload'
  */
 function createElectronStub(): Partial<ElectronAPI> {
   return {
+    appDisplayName: 'ToolHive',
     onServerShutdown: () => () => {},
     onDeepLinkNavigation: () => () => {},
     getSkipQuitConfirmation: vi.fn().mockResolvedValue(false),
