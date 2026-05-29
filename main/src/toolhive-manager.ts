@@ -256,14 +256,14 @@ export async function startToolhive(): Promise<void> {
       child.stderr.on('data', (data) => {
         const output = data.toString().trim()
         if (!output) return
-        // eslint-disable-next-line no-restricted-syntax -- matches thv CLI stdout — must stay literal
+        // eslint-disable-next-line no-restricted-syntax -- matches thv stderr output — must stay literal
         if (output.includes('A new version of ToolHive is available')) {
           return
         }
         if (output.includes('registry authentication required')) {
           processError = REGISTRY_AUTH_REQUIRED
         }
-        // eslint-disable-next-line no-restricted-syntax -- matches thv CLI stdout — must stay literal
+        // eslint-disable-next-line no-restricted-syntax -- matches thv stderr output — must stay literal
         if (output.includes('another ToolHive server is already running')) {
           processError = ALREADY_RUNNING
         }
