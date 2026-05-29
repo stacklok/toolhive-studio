@@ -1,9 +1,8 @@
-import { dialog } from 'electron'
+import { app, dialog } from 'electron'
 import Store from 'electron-store'
 import log from './logger'
 import { writeSetting } from './db/writers/settings-writer'
 import { readSetting } from './db/readers/settings-reader'
-import { THV_DISPLAY_NAME } from '@common/app-info'
 
 interface QuitConfirmationStore {
   skipQuitConfirmation: boolean
@@ -56,9 +55,9 @@ export async function showNativeQuitConfirmation(): Promise<boolean> {
   try {
     const { response, checkboxChecked } = await dialog.showMessageBox({
       type: 'warning',
-      title: `Quit ${THV_DISPLAY_NAME}`,
-      message: `Quit ${THV_DISPLAY_NAME}?`,
-      detail: `Shutting down ${THV_DISPLAY_NAME} stops all MCP servers.`,
+      title: `Quit ${app.getName()}`,
+      message: `Quit ${app.getName()}?`,
+      detail: `Shutting down ${app.getName()} stops all MCP servers.`,
       buttons: ['Quit', 'Cancel'],
       defaultId: 0,
       cancelId: 1,
