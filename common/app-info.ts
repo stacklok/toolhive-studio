@@ -8,7 +8,7 @@
 // TODO: forge.config.ts and generate-flatpak-assets.ts should read directly
 // from package.json. Needs careful audit — some values allow spaces (display
 // names), others must be identifiers (package names, binary names).
-export const APP_NAME_BUILD = 'ToolHive'
+export const DEPRECATED_APP_NAME_FOR_BUILD = 'ToolHive'
 
 // In the renderer, derive from the live Electron app name (productName) via the
 // preload bridge, so branded builds rebrand with no code change. Falls back to
