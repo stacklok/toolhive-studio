@@ -12,7 +12,7 @@ export function AlertErrorFetchingEditingData() {
         Something went wrong while retrieving the data of the server
       </AlertTitle>
       <AlertDescription>
-        <p className="text-red-300">
+        <p className="text-destructive">
           Close the dialog and try again. <br />
           If issues persist, contact the ToolHive team via <LinkErrorDiscord />.
         </p>

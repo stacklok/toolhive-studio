@@ -34,6 +34,7 @@ function createElectronStub(): Partial<ElectronAPI> {
       }),
       set: vi.fn().mockResolvedValue(true),
     } as ElectronAPI['darkMode'],
+    branding: { css: '' } as ElectronAPI['branding'],
     featureFlags: {
       get: vi.fn().mockResolvedValue(false),
       enable: vi.fn().mockResolvedValue(undefined),

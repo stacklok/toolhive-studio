@@ -58,9 +58,14 @@
   --color-nav-border: var(--nav-border);
   --color-nav-button-active-bg: var(--nav-button-active-bg);
   --color-nav-button-active-text: var(--nav-button-active-text);
+  --color-nav-foreground: var(--nav-foreground);
 
   /* Status colors */
   --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
 
   /* Brand colors */
   --color-brand-green-light: var(--brand-green-light);
@@ -115,6 +120,13 @@
 
   /* Status colors */
   --success: oklch(0.5849 0.095 159.91);
+  --warning: oklch(0.75 0.17 80);
+  --warning-foreground: oklch(0.2 0.05 80);
+  --info: oklch(0.55 0.2 240);
+  --info-foreground: oklch(0.98 0 0);
+
+  /* Nav foreground (text/icons painted over --nav-background) */
+  --nav-foreground: oklch(0.985 0 0);
 
   /* Brand colors */
   --brand-green-light: oklch(0.9522 0.0524 164.2);
@@ -168,6 +180,13 @@
 
   /* Status colors */
   --success: oklch(0.724 0.1091 160.66);
+  --warning: oklch(0.8 0.16 80);
+  --warning-foreground: oklch(0.2 0.05 80);
+  --info: oklch(0.7 0.18 240);
+  --info-foreground: oklch(0.15 0.05 240);
+
+  /* Nav foreground */
+  --nav-foreground: oklch(0.985 0 0);
 
   /* Brand colors */
   --brand-green-light: oklch(0.3262 0.0342 161.99);

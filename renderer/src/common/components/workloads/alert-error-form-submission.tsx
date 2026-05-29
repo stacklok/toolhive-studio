@@ -42,7 +42,7 @@ export function AlertErrorFormSubmission({
         </Button>
       </AlertTitle>
       <AlertDescription>
-        <p className="text-red-300">
+        <p className="text-destructive">
           {isErrorSecrets && 'Failed to create secrets for the server. '}
           Check the configuration and try again. <br />
           If issues persist, contact the ToolHive team via <LinkErrorDiscord />.
@@ -50,7 +50,7 @@ export function AlertErrorFormSubmission({
         {!isErrorSecrets && (
           <>
             <Separator className="my-2" />
-            <p className="font-mono text-xs text-gray-300">{error}</p>
+            <p className="text-muted-foreground font-mono text-xs">{error}</p>
           </>
         )}
       </AlertDescription>
