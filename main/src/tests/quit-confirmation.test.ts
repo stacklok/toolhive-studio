@@ -21,6 +21,7 @@ vi.mock('electron-store', () => ({
 }))
 
 vi.mock('electron', () => ({
+  app: { getName: vi.fn(() => 'ToolHive') },
   dialog: {
     showMessageBox: mockShowMessageBox,
   },
