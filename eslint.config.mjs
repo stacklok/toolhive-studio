@@ -64,6 +64,7 @@ export default defineConfig([
     ignores: [
       '**/__tests__/**',
       '**/*.test.{ts,tsx}',
+      '**/mocks/**',
       'common/app-info.ts',
     ],
     rules: {
