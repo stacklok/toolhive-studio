@@ -172,8 +172,8 @@ export function AgentDetailPage({ agent }: { agent: AgentConfig }) {
             />
             {isBuiltin && (
               <p className="text-muted-foreground text-xs leading-5">
-                Built-in agents are curated by ToolHive and cannot be edited.
-                Duplicate this agent to create a customisable copy.
+                Built-in agents are curated and cannot be edited. Duplicate this
+                agent to create a customisable copy.
               </p>
             )}
           </div>

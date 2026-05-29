@@ -290,9 +290,8 @@ export function AgentFormPage({ mode, agent }: AgentFormPageProps) {
                 />
               </FormControl>
               <FormDescription>
-                Give this agent access to a curated bundle of ToolHive-provided
-                tools. Leave unselected to use only MCP tools enabled in the
-                chat.
+                Give this agent access to a curated bundle of built-in tools.
+                Leave unselected to use only MCP tools enabled in the chat.
               </FormDescription>
               <FormMessage />
             </FormItem>

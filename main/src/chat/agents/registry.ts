@@ -1,3 +1,4 @@
+import { app } from 'electron'
 import { nanoid } from 'nanoid'
 import log from '../../logger'
 import {
@@ -111,7 +112,7 @@ export function resolveAgentForThread(
   return {
     id: DEFAULT_AGENT_ID,
     kind: 'builtin',
-    name: 'ToolHive Assistant',
+    name: `${app.getName()} Assistant`,
     description: '',
     instructions: 'You are a helpful assistant.',
     builtinToolsKey: null,

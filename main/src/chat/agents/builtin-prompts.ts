@@ -1,3 +1,4 @@
+import { app } from 'electron'
 import { BUILTIN_AGENT_IDS, type AgentConfig } from '@common/types/agents'
 
 // eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
@@ -216,7 +217,7 @@ export function getBuiltinAgentSeeds(now: number): AgentConfig[] {
     {
       id: BUILTIN_AGENT_IDS.toolhiveAssistant,
       kind: 'builtin',
-      name: 'ToolHive Assistant',
+      name: `${app.getName()} Assistant`,
       description:
         'General-purpose assistant with access to all enabled MCP tools.',
       instructions: TOOLHIVE_ASSISTANT_INSTRUCTIONS,
