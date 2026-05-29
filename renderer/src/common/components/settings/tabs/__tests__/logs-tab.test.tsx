@@ -24,6 +24,11 @@ describe('LogsTab', () => {
   beforeEach(() => {
     vi.clearAllMocks()
 
+    // Preload exposes `mainLogPath` synchronously via `ipcRenderer.sendSync`
+    // at bootstrap time. In tests, the global `resetElectronAPI` runs first
+    // and re-creates `window.electronAPI`, so this assignment must live here.
+    window.electronAPI.mainLogPath =
+      '/Users/test/Library/Logs/ToolHive/main.log'
     window.electronAPI.platform = 'darwin'
     window.electronAPI.getMainLogContent = mockGetMainLogContent
 
@@ -33,51 +38,22 @@ describe('LogsTab', () => {
     document.querySelectorAll('a').forEach((link) => link.remove())
   })
 
-  it('renders logs tab heading and description', async () => {
+  it('renders logs tab heading and description', () => {
     render(<LogsTab />)
 
-    await waitFor(() => {
-      expect(screen.getByText('Logs')).toBeVisible()
-    })
-
+    expect(screen.getByText('Logs')).toBeVisible()
     expect(
       screen.getByText(/Application logs are stored locally/)
     ).toBeVisible()
     expect(screen.getByRole('button', { name: 'Save log file' })).toBeVisible()
   })
 
-  it('displays correct log path for macOS', async () => {
-    window.electronAPI.platform = 'darwin'
-
+  it('displays the log path exposed by preload', () => {
     render(<LogsTab />)
 
-    await waitFor(() => {
-      expect(screen.getByText('~/Library/Logs/ToolHive/main.log')).toBeVisible()
-    })
-  })
-
-  it('displays correct log path for Windows', async () => {
-    window.electronAPI.platform = 'win32'
-
-    render(<LogsTab />)
-
-    await waitFor(() => {
-      expect(
-        screen.getByText(
-          '%USERPROFILE%\\AppData\\Roaming\\ToolHive\\logs\\main.log'
-        )
-      ).toBeVisible()
-    })
-  })
-
-  it('displays correct log path for Linux', async () => {
-    window.electronAPI.platform = 'linux'
-
-    render(<LogsTab />)
-
-    await waitFor(() => {
-      expect(screen.getByText('~/.config/ToolHive/logs/main.log')).toBeVisible()
-    })
+    expect(
+      screen.getByText('/Users/test/Library/Logs/ToolHive/main.log')
+    ).toBeVisible()
   })
 
   it('copies log path to clipboard when copy button is clicked', async () => {
@@ -88,19 +64,13 @@ describe('LogsTab', () => {
 
     await waitFor(() => {
       expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        '~/Library/Logs/ToolHive/main.log'
+        '/Users/test/Library/Logs/ToolHive/main.log'
       )
     })
   })
 
   it('downloads log file when download button is clicked', async () => {
     render(<LogsTab />)
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Save log file' })
-      ).toBeVisible()
-    })
 
     const downloadButton = screen.getByRole('button', {
       name: 'Save log file',
@@ -119,12 +89,6 @@ describe('LogsTab', () => {
     mockGetMainLogContent.mockRejectedValue(mockError)
 
     render(<LogsTab />)
-
-    await waitFor(() => {
-      expect(
-        screen.getByRole('button', { name: 'Save log file' })
-      ).toBeVisible()
-    })
 
     const downloadButton = screen.getByRole('button', {
       name: 'Save log file',

@@ -1,5 +1,10 @@
 import { ipcRenderer } from 'electron'
 
+// Captured once at preload bootstrap (before the page loads). `sendSync` here
+// is the canonical pattern for static, immutable strings sourced from the main
+// process: zero React Query / useEffect boilerplate in every consumer.
+const mainLogPath = ipcRenderer.sendSync('get-main-log-path-sync') as string
+
 export const appApi = {
   getAutoLaunchStatus: () => ipcRenderer.invoke('get-auto-launch-status'),
   setAutoLaunch: (enabled: boolean) =>
@@ -32,6 +37,7 @@ export const appApi = {
   setExpertConsultationDismissedAt: (dismissedAt: string): Promise<void> =>
     ipcRenderer.invoke('set-expert-consultation-dismissed-at', dismissedAt),
 
+  mainLogPath,
   getMainLogContent: () => ipcRenderer.invoke('get-main-log-content'),
 
   isMac: process.platform === 'darwin',
@@ -60,6 +66,7 @@ export interface AppAPI {
   }>
   setExpertConsultationSubmitted: (submitted: boolean) => Promise<void>
   setExpertConsultationDismissedAt: (dismissedAt: string) => Promise<void>
+  mainLogPath: string
   getMainLogContent: () => Promise<string>
   isMac: boolean
   isWindows: boolean
