@@ -31,6 +31,7 @@ export function useMcpOptimizerStartupCleanup() {
         const ready = await waitForToolhiveReady()
         if (!ready) {
           log.warn(
+            // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
             'MCP Optimizer startup cleanup: ToolHive did not become ready in time, skipping'
           )
           return

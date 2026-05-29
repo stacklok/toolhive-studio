@@ -378,6 +378,7 @@ function renderInstructionsSuffix(
 
   if (enabledSkills.length === 0) {
     if (ctx.loadFailureReason) {
+      // eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
       return `${header}\n\nCould not load installed skills: ${ctx.loadFailureReason}. Ask the user to retry once ToolHive is reachable.`
     }
     if (ctx.installedCount === 0) {
@@ -483,6 +484,7 @@ export async function createSkillsAgentTools(
       return {
         skills: [],
         error:
+          // eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
           'ToolHive is not running locally. Ask the user to start it and try again.',
       }
     }
@@ -580,6 +582,7 @@ export async function createSkillsAgentTools(
 
     [BUILD_SKILL_TOOL]: tool({
       description:
+        // eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
         'Builds the skill that lives at `workdir` using the local ToolHive API. Pass the exact `workdir` returned by `write_skill_files`. On success returns an object with: `reference` (canonical artifact reference in `name:tag` form, derived from the SKILL.md frontmatter), `apiReference` (raw reference returned by the build endpoint), `tag` (local build tag for install / navigation), `workdir`, and `build` (full LocalBuild metadata: name, description, tag, version, digest).',
       inputSchema: z.object({
         workdir: z
@@ -606,6 +609,7 @@ export async function createSkillsAgentTools(
           if (!apiClient) {
             return {
               error:
+                // eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
                 'ToolHive is not running locally. Ask the user to start it and try again.',
             }
           }
@@ -697,6 +701,7 @@ export async function createSkillsAgentTools(
 
     [LIST_SKILLS_TOOL]: tool({
       description:
+        // eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
         "Re-fetches the list of skills installed via ToolHive **and enabled for this chat via the Skills picker in the toolbar**. Covers both user-scope (installed under `~/.<client>/skills/`) and project-scope (installed under `<project_root>/.<client>/skills/`) installs. Entries are deduplicated by `name`: if the same skill is installed in both the user home and one or more projects, it appears once with a `variants` array listing every installation site (`{ scope, projectRoot?, clients }`). Returns `{ skills: [{ name, description, reference, version, variants }] }`. The list is already filtered by the user's selection, so an empty list means the user has not enabled any skills yet.",
       inputSchema: z.object({}),
       execute: async () => {
@@ -766,6 +771,7 @@ export async function createSkillsAgentTools(
 
         if (summary.variants.every((v) => v.clients.length === 0)) {
           return {
+            // eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
             error: `Skill "${trimmed}" has no associated clients on any InstalledSkill record. Re-install it via the Skills page so ToolHive materializes it for at least one client.`,
           }
         }
@@ -799,6 +805,7 @@ export async function createSkillsAgentTools(
           return {
             error: `Could not find an on-disk install for skill "${trimmed}". Looked under: ${candidates.join(
               ', '
+              // eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
             )}. Re-install the skill so ToolHive materializes its files.`,
           }
         }

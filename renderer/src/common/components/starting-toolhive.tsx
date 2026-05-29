@@ -25,6 +25,7 @@ export function StartingToolHive() {
   useEffect(() => {
     if (!error && !isChecking) {
       log.info(
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         '[StartingToolHive] Health check successful, navigating to default group'
       )
       navigate({ to: '/group/$groupName', params: { groupName: 'default' } })
@@ -32,6 +33,7 @@ export function StartingToolHive() {
 
     if (hasError) {
       log.error(
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         '[StartingToolHive] Error checking health:',
         JSON.stringify(error)
       )

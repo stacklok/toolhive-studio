@@ -39,6 +39,7 @@ export function CustomSocketBanner() {
       <AlertTriangle />
       <AlertDescription className="flex items-start gap-2">
         <div className="whitespace-nowrap">
+          {/* eslint-disable-next-line no-restricted-syntax -- external thv CLI reference */}
           <span>Using external ToolHive at </span>
           <span
             className="rounded bg-yellow-100 px-1 py-0.5 font-mono text-xs

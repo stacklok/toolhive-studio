@@ -22,11 +22,13 @@ export function RegistryTab() {
     <div className="space-y-3">
       <div className="flex flex-col gap-2">
         <SettingsSectionTitle>Registry</SettingsSectionTitle>
+        {/* eslint-disable no-restricted-syntax -- OSS thv registry */}
         <p className="text-muted-foreground text-sm leading-5.5">
           Choose between ToolHive default registry, a custom remote registry
           JSON URL, a custom local registry JSON file, or a custom registry
           server API URL.
         </p>
+        {/* eslint-enable no-restricted-syntax */}
       </div>
       <RegistryForm
         form={form}

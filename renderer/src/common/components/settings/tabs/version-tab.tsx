@@ -128,6 +128,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
           />
         </SettingsRow>
         <Separator />
+        {/* eslint-disable-next-line no-restricted-syntax -- thv CLI binary version label */}
         <SettingsRow label="ToolHive binary version">
           <VersionBadge
             version={appInfo.toolhiveVersion}
