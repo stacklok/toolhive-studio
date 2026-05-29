@@ -3,7 +3,7 @@ import path from 'node:path'
 import { existsSync, writeFileSync, unlinkSync, mkdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import log from './logger'
-import { APP_NAME, AUTO_LAUNCH_DESKTOP_FILENAME } from '@common/app-info'
+import { AUTO_LAUNCH_DESKTOP_FILENAME } from '@common/app-info'
 
 interface DesktopEntry {
   Type: string
@@ -18,12 +18,12 @@ interface DesktopEntry {
 export function createDesktopEntry(execPath: string): string {
   const entry: DesktopEntry = {
     Type: 'Application',
-    Name: APP_NAME,
+    Name: app.getName(),
     Exec: `"${execPath}" --hidden`,
     Hidden: 'false',
     NoDisplay: 'false',
     'X-GNOME-Autostart-enabled': 'true',
-    Comment: `${APP_NAME} Auto-Launch`,
+    Comment: `${app.getName()} Auto-Launch`,
   }
 
   return Object.entries(entry)

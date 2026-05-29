@@ -22,11 +22,7 @@ import {
   ConsentCheckbox,
   PrivacyFooter,
 } from './hubspot-form-parts'
-import {
-  APP_NAME,
-  APP_DISPLAY_NAME,
-  HUBSPOT_NEWSLETTER_FORM_ID,
-} from '@common/app-info'
+import { APP_DISPLAY_NAME, HUBSPOT_NEWSLETTER_FORM_ID } from '@common/app-info'
 const DISMISS_DAYS = 15
 
 const emailSchema = z.email('Please enter a valid email address')
@@ -121,11 +117,11 @@ function NewsletterDialog({
               <DialogTitle
                 className="text-brand-blue-mid font-serif text-3xl font-light"
               >
-                Stay up to date with improvements to {APP_NAME}
+                Stay up to date with improvements to {APP_DISPLAY_NAME}
               </DialogTitle>
               <DialogDescription className="text-primary">
                 Subscribe to our quarterly email showing you all the new product
-                improvements to {APP_NAME}
+                improvements to {APP_DISPLAY_NAME}
               </DialogDescription>
             </DialogHeader>
             <form
