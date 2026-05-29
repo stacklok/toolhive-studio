@@ -1,5 +1,6 @@
 import { FolderKey } from 'lucide-react'
 import { BaseErrorScreen } from './base-error-screen'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 
 export function KeyringError() {
   return (
@@ -8,8 +9,8 @@ export function KeyringError() {
       icon={<FolderKey className="text-destructive size-12" />}
     >
       <p>
-        ToolHive needs to access your system keyring in order to securely store
-        and manage secrets.
+        {THV_DISPLAY_NAME} needs to access your system keyring in order to
+        securely store and manage secrets.
       </p>
 
       <p>Most Linux distributions have a system keyring out of the box.</p>

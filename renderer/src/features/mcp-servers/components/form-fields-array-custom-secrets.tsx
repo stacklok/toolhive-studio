@@ -8,6 +8,7 @@ import {
 import type { ChangeEventHandler } from 'react'
 
 import { FormControl, FormField, FormItem } from '@/common/components/ui/form'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import { Input } from '@/common/components/ui/input'
 import { DynamicArrayField } from '@/features/registry-servers/components/dynamic-array-field'
 import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-combobox'
@@ -33,7 +34,7 @@ export function FormFieldsArrayCustomSecrets<T extends FormWithSecrets>({
             label="Secrets"
             inputLabelPrefix="Secret"
             addButtonText="Add secret"
-            description="All secrets are encrypted and securely stored by ToolHive."
+            description={`All secrets are encrypted and securely stored by ${THV_DISPLAY_NAME}.`}
             gridConfig="grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
             columnHeaders={[
               { title: 'Secret name' },

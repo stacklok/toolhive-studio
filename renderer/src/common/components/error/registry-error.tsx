@@ -1,4 +1,5 @@
 import { LinkErrorDiscord } from '../workloads/link-error-discord'
+import { APP_DISPLAY_NAME } from '@common/app-info'
 import { Button } from '../ui/button'
 import { EmptyState } from '../empty-state'
 import { Link } from '@tanstack/react-router'
@@ -67,7 +68,7 @@ export function RegistryError({ error }: { error: unknown }) {
         >
           <div className="mt-8 flex flex-col items-center gap-4">
             <p className="text-muted-foreground text-sm">
-              If issues persist, contact the ToolHive team via{' '}
+              If issues persist, contact the {APP_DISPLAY_NAME} team via{' '}
               <LinkErrorDiscord />
             </p>
             {registrySettingsButton}

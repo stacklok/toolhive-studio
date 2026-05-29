@@ -8,6 +8,7 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { Label } from '@/common/components/ui/label'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import { Button } from '@/common/components/ui/button'
 import { useFieldArray, type UseFormReturn } from 'react-hook-form'
 import { Plus, Trash2 } from 'lucide-react'
@@ -282,7 +283,7 @@ export function ConfigurationTabContent({
           Secrets
         </Label>
         <p className="text-muted-foreground mb-6 text-sm">
-          All secrets are encrypted and securely stored by ToolHive.
+          All secrets are encrypted and securely stored by {THV_DISPLAY_NAME}.
         </p>
 
         {groupedEnvVars.secrets.map((secret, index) => (

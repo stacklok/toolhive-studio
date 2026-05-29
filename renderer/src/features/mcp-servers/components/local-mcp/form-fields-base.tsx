@@ -7,6 +7,7 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { type UseFormReturn } from 'react-hook-form'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import {
   Select,
   SelectContent,
@@ -177,8 +178,8 @@ export function FormFieldsBase({
               <div className="flex items-center gap-1">
                 <FormLabel htmlFor={field.name}>Target port</FormLabel>
                 <TooltipInfoIcon className="max-w-72">
-                  Target port to expose from the container. If not specified,
-                  ToolHive will automatically assign a random port.
+                  Target port to expose from the container. If not specified,{' '}
+                  {THV_DISPLAY_NAME} will automatically assign a random port.
                 </TooltipInfoIcon>
               </div>
               <FormControl>
@@ -238,8 +239,8 @@ export function FormFieldsBase({
               <div className="flex items-center gap-1">
                 <FormLabel htmlFor={field.name}>Protocol</FormLabel>
                 <TooltipInfoIcon>
-                  ToolHive supports running MCP servers directly from supported
-                  package managers.
+                  {THV_DISPLAY_NAME} supports running MCP servers directly from
+                  supported package managers.
                 </TooltipInfoIcon>
               </div>
               <FormControl>

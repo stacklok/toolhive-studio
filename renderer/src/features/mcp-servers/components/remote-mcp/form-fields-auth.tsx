@@ -7,6 +7,7 @@ import {
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
 import { TooltipInfoIcon } from '@/common/components/ui/tooltip-info-icon'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import { type UseFormReturn, useWatch } from 'react-hook-form'
 import { SecretStoreCombobox } from '@/common/components/secrets/secret-store-combobox'
 import type { FormSchemaRemoteMcp } from '@/common/lib/workloads/remote/form-schema-remote-mcp'
@@ -130,7 +131,7 @@ export function FormFieldsAuth({
                   </TooltipInfoIcon>
                 </div>
                 <p className="text-muted-foreground text-sm">
-                  The bearer token is stored securely by ToolHive.
+                  The bearer token is stored securely by {THV_DISPLAY_NAME}.
                 </p>
                 <FormControl>
                   <div className="grid grid-cols-2 gap-2">
@@ -414,7 +415,8 @@ export function FormFieldsAuth({
                   </TooltipInfoIcon>
                 </div>
                 <p className="text-muted-foreground text-sm">
-                  All secrets are encrypted and securely stored by ToolHive.
+                  All secrets are encrypted and securely stored by{' '}
+                  {THV_DISPLAY_NAME}.
                 </p>
                 <FormControl>
                   <div className="grid grid-cols-2 gap-2">

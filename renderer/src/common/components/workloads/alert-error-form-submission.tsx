@@ -7,6 +7,7 @@ import { Button } from '@/common/components/ui/button'
 import { Separator } from '@/common/components/ui/separator'
 import { X } from 'lucide-react'
 import { LinkErrorDiscord } from './link-error-discord'
+import { APP_DISPLAY_NAME, THV_DISPLAY_NAME } from '@common/app-info'
 
 interface AlertErrorFormSubmissionProps {
   error: string
@@ -16,7 +17,7 @@ interface AlertErrorFormSubmissionProps {
 
 function getErrorTitle(error: string): string {
   if (error.includes('Failed to retrieve MCP server image')) {
-    return 'ToolHive could not download the server image'
+    return `${THV_DISPLAY_NAME} could not download the server image`
   }
   return 'Something went wrong'
 }
@@ -45,7 +46,8 @@ export function AlertErrorFormSubmission({
         <p className="text-red-300">
           {isErrorSecrets && 'Failed to create secrets for the server. '}
           Check the configuration and try again. <br />
-          If issues persist, contact the ToolHive team via <LinkErrorDiscord />.
+          If issues persist, contact the {APP_DISPLAY_NAME} team via{' '}
+          <LinkErrorDiscord />.
         </p>
         {!isErrorSecrets && (
           <>

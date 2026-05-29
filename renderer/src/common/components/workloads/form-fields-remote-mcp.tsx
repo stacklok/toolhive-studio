@@ -22,7 +22,7 @@ import { REMOTE_MCP_AUTH_TYPES } from '@/common/lib/form-schema-mcp'
 import { FormFieldsProxy } from './form-fields-proxy'
 import { Button } from '../ui/button'
 import { SecretStoreCombobox } from '../secrets/secret-store-combobox'
-import { DOCS_BASE_URL } from '@common/app-info'
+import { DOCS_BASE_URL, THV_DISPLAY_NAME } from '@common/app-info'
 
 function FormFieldRemoteAuthType({
   control,
@@ -363,8 +363,8 @@ function FormFieldsCustomHeaders({
                 Headers from Secrets
               </FormLabel>
               <TooltipInfoIcon className="max-w-72">
-                Header values are retrieved from ToolHive&apos;s secrets
-                manager. Use this for sensitive data like API keys.
+                Header values are retrieved from {THV_DISPLAY_NAME}&apos;s
+                secrets manager. Use this for sensitive data like API keys.
               </TooltipInfoIcon>
             </div>
 

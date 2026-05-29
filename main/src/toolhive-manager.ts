@@ -5,6 +5,7 @@ import net from 'node:net'
 import { app } from 'electron'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
 import { readSetting } from './db/readers/settings-reader'
@@ -201,7 +202,7 @@ export async function startToolhive(): Promise<void> {
     cleanupSocketFile(toolhiveSocketPath)
 
     log.info(
-      `Starting ToolHive from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}`
+      `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}`
     )
 
     const serveArgs = [
@@ -243,7 +244,7 @@ export async function startToolhive(): Promise<void> {
 
     scope.addBreadcrumb({
       category: 'debug',
-      message: `Starting ToolHive from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}, PID: ${child.pid}`,
+      message: `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}, PID: ${child.pid}`,
     })
 
     updateTrayStatus(!!child)
@@ -278,7 +279,7 @@ export async function startToolhive(): Promise<void> {
       // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.error('Failed to start ToolHive: ', error)
       Sentry.captureMessage(
-        `Failed to start ToolHive: ${JSON.stringify(error)}`,
+        `Failed to start ${THV_DISPLAY_NAME}: ${JSON.stringify(error)}`,
         'fatal'
       )
       updateTrayStatus(false)
@@ -305,7 +306,7 @@ export async function startToolhive(): Promise<void> {
       if (!isRestarting && !getQuittingState()) {
         updateTrayStatus(false)
         Sentry.captureMessage(
-          `ToolHive process exited with code: ${code}`,
+          `${THV_DISPLAY_NAME} process exited with code: ${code}`,
           'fatal'
         )
       }
@@ -339,7 +340,7 @@ export async function restartToolhive(): Promise<void> {
     // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.error('Failed to restart ToolHive: ', error)
     Sentry.captureMessage(
-      `Failed to restart ToolHive: ${JSON.stringify(error)}`,
+      `Failed to restart ${THV_DISPLAY_NAME}: ${JSON.stringify(error)}`,
       'fatal'
     )
   } finally {
