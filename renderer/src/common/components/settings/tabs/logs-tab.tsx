@@ -5,16 +5,15 @@ import { CodeBlockWithCopy } from '../../code-block-with-copy'
 import { Separator } from '../../ui/separator'
 import { SettingsSectionTitle } from './components/settings-section-title'
 
-const LOG_PATHS = {
-  darwin: '~/Library/Logs/ToolHive/main.log',
-  win32: '%USERPROFILE%\\AppData\\Roaming\\ToolHive\\logs\\main.log',
-  linux: '~/.config/ToolHive/logs/main.log',
-} as const
-
 export function LogsTab() {
   const { isDownloading, downloadFile } = useDownloadFile()
-  const platform = window.electronAPI.platform
-  const logPath = LOG_PATHS[platform as keyof typeof LOG_PATHS] ?? null
+
+  // Sync property captured at preload bootstrap from the main process.
+  // Reflects `path.join(app.getPath('logs'), 'main.log')`, which Electron
+  // derives from `app.getName()` (i.e. `productName` in package.json).
+  // A hard-coded string would go stale for any branded build whose
+  // productName is not "ToolHive".
+  const logPath = window.electronAPI.mainLogPath
 
   const handleDownloadLog = async () => {
     await downloadFile(

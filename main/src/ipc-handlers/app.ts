@@ -80,6 +80,13 @@ export function register() {
     (_e, dismissedAt: string) => setExpertConsultationDismissedAt(dismissedAt)
   )
 
+  // Sync IPC: preload reads this once at load time and exposes it as
+  // `window.electronAPI.mainLogPath`. `sendSync` is acceptable here because
+  // it runs once at preload bootstrap, before any page is rendered.
+  ipcMain.on('get-main-log-path-sync', (event) => {
+    event.returnValue = path.join(app.getPath('logs'), 'main.log')
+  })
+
   ipcMain.handle(
     'get-main-log-content',
     async (): Promise<string | undefined> => {
