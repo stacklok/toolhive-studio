@@ -15,6 +15,7 @@ export async function ensureToolhiveRunning(
     queryFn: async () => {
       const res = await window.electronAPI.isToolhiveRunning()
       if (!res) {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         log.error('ToolHive is not running')
       }
       return res

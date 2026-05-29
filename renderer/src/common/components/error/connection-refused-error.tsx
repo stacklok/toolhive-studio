@@ -44,6 +44,7 @@ export function ConnectionRefusedError() {
     isError: isRestartError,
   } = useMutation({
     mutationFn: async () => {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.info('Container engines are now available, restarting ToolHive...')
       const result = await withMinimumDelay(
         window.electronAPI.restartToolhive,
@@ -53,13 +54,16 @@ export function ConnectionRefusedError() {
     },
     onSuccess: (result) => {
       if (result.success) {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         log.info('ToolHive restarted successfully')
         window.location.reload()
       } else {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         log.error('Failed to restart ToolHive: ', result.error)
       }
     },
     onError: (error) => {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.error('Error restarting ToolHive: ', error)
     },
   })

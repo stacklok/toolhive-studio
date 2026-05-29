@@ -184,11 +184,13 @@ export async function startToolhive(): Promise<void> {
     if (isUsingCustomSocket()) {
       toolhiveSocketPath = process.env.THV_SOCKET!
       toolhiveMcpPort = parseMcpPortEnv(process.env.THV_MCP_PORT)
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.info(`Using external ToolHive on socket ${toolhiveSocketPath}`)
       return
     }
 
     if (!existsSync(binPath)) {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.error(`ToolHive binary not found at: ${binPath}`)
       return
     }
@@ -248,6 +250,7 @@ export async function startToolhive(): Promise<void> {
 
     // Capture and log stderr
     if (child.stderr) {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.info(`[ToolHive] Capturing stderr enabled`)
       child.stderr.on('data', (data) => {
         const output = data.toString().trim()
@@ -261,6 +264,7 @@ export async function startToolhive(): Promise<void> {
         if (output.includes('another ToolHive server is already running')) {
           processError = ALREADY_RUNNING
         }
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         log.info(`[ToolHive stderr] ${output}`)
         scope.addBreadcrumb({
           category: 'debug',
@@ -271,6 +275,7 @@ export async function startToolhive(): Promise<void> {
     }
 
     child.on('error', (error) => {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.error('Failed to start ToolHive: ', error)
       Sentry.captureMessage(
         `Failed to start ToolHive: ${JSON.stringify(error)}`,
@@ -280,6 +285,7 @@ export async function startToolhive(): Promise<void> {
     })
 
     child.on('exit', (code) => {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.warn(`ToolHive process exited with code: ${code}`)
       // Only clear globals if this exit is for the currently tracked child.
       // Otherwise a prior child's exit can run after restart has spawned a
@@ -314,19 +320,23 @@ export async function restartToolhive(): Promise<void> {
   }
 
   isRestarting = true
+  // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
   log.info('Restarting ToolHive...')
 
   try {
     // Stop existing process if running
     if (toolhiveProcess && !toolhiveProcess.killed) {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.info('Stopping existing ToolHive process...')
       toolhiveProcess.kill()
     }
 
     // Start new process
     await startToolhive()
+    // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.info('ToolHive restarted successfully')
   } catch (error) {
+    // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.error('Failed to restart ToolHive: ', error)
     Sentry.captureMessage(
       `Failed to restart ToolHive: ${JSON.stringify(error)}`,
@@ -408,6 +418,7 @@ export function stopToolhive(options?: { force?: boolean }): void {
   const pidToKill = toolhiveProcess.pid
   const processToKill = toolhiveProcess
   isStopping = true
+  // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
   log.info(`Stopping ToolHive process (PID: ${pidToKill})...`)
 
   // Attempt to kill the process

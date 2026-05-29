@@ -28,6 +28,7 @@ export function register() {
       await restartToolhive()
       return { success: true }
     } catch (error) {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.error('Failed to restart ToolHive: ', error)
       return {
         success: false,

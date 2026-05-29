@@ -21,6 +21,7 @@ import './common/lib/os-design'
 initSentry()
 
 if (!window.electronAPI || !window.electronAPI.apiFetch) {
+  // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
   log.error('ToolHive API bridge not available in renderer')
 }
 

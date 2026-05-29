@@ -7,6 +7,7 @@ import log from '../logger'
 
 export function register() {
   app.on('quit', () => {
+    // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.info('[quit event] Ensuring ToolHive cleanup...')
     // Only cleanup if not already tearing down to avoid double cleanup
     if (!getTearingDownState()) {

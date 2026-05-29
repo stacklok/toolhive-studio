@@ -78,11 +78,13 @@ export async function fetchLatestRelease(span: Sentry.Span) {
   const currentVersion = getAppVersion()
   const url = getManifestUrl(currentVersion)
 
+  // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
   log.info('[update] checking for latest ToolHive release...')
 
   const latestTag = await fetchLatestVersionFromUrl(url)
 
   if (!latestTag) {
+    // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.error('[update] Failed to check for ToolHive update from: ', url)
     span.setStatus({
       code: 2,

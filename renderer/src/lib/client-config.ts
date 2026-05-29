@@ -17,6 +17,7 @@ export async function configureClient() {
       headers: telemetryHeaders,
     })
   } catch (e) {
+    // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.error('Failed to configure ToolHive API client: ', e)
     throw e
   }

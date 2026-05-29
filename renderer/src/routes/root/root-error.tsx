@@ -16,6 +16,7 @@ export function RootErrorComponent({ error }: { error: unknown }) {
   const cause = errorData instanceof Error ? errorData.cause : undefined
 
   if (cause?.processError === ALREADY_RUNNING) {
+    // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.info('[HealthCheckError] Another ToolHive server is already running')
     return <AlreadyRunningError />
   }
