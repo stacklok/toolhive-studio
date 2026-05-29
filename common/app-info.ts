@@ -5,11 +5,10 @@
 
 // ── Core identity ────────────────────────────────────────────────────────────
 
-// Derives from package.json so branded builds (enterprise) get the correct
-// artifact names in forge without any overlay changes.
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const pkg = require('../package.json') as { productName?: string; name: string }
-export const APP_NAME: string = pkg.productName ?? pkg.name
+// TODO: forge.config.ts and generate-flatpak-assets.ts should read directly
+// from package.json. Needs careful audit — some values allow spaces (display
+// names), others must be identifiers (package names, binary names).
+export const APP_NAME_BUILD = 'ToolHive'
 
 // In the renderer, derive from the live Electron app name (productName) via the
 // preload bridge, so branded builds rebrand with no code change. Falls back to
