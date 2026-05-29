@@ -227,6 +227,20 @@ describe('GeneralTab', () => {
     ).not.toBeInTheDocument()
   })
 
+  it('hides the telemetry toggle when isEnterprise is true', async () => {
+    renderWithProviders(<GeneralTabWrapper isEnterprise={true} />)
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: 'General' })).toBeVisible()
+    })
+
+    // Error reporting (Sentry) toggle is hidden in branded/enterprise builds
+    // because they typically ship without a Sentry DSN — the toggle would be
+    // a confusing no-op.
+    expect(screen.queryByText('Error reporting')).not.toBeInTheDocument()
+    expect(screen.queryByRole('switch', { name: /telemetry/i })).toBeNull()
+  })
+
   describe('Experimental Features', () => {
     it('displays message when no experimental features are available', async () => {
       // Override the mock to return false for experimental_features flag

@@ -187,8 +187,12 @@ export function GeneralTabWrapper({
         <Separator />
         <AutoLaunchField />
         <Separator />
-        <TelemetryField />
-        <Separator />
+        {!isEnterprise && (
+          <>
+            <TelemetryField />
+            <Separator />
+          </>
+        )}
         <QuitConfirmationField />
         <Separator />
         {children}
