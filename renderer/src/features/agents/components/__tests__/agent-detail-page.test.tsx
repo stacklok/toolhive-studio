@@ -144,7 +144,9 @@ describe('AgentDetailPage', () => {
     it('shows the curated hint for built-ins', () => {
       renderDetail(builtinAgent)
       expect(
-        screen.getByText(/built-in agents are curated and cannot be edited/i)
+        screen.getByText(
+          /built-in agents are curated by stacklok and cannot be edited/i
+        )
       ).toBeInTheDocument()
     })
 

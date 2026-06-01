@@ -1,3 +1,4 @@
+import { COMPANY_NAME } from '@common/app-info'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from '@tanstack/react-router'
@@ -290,8 +291,9 @@ export function AgentFormPage({ mode, agent }: AgentFormPageProps) {
                 />
               </FormControl>
               <FormDescription>
-                Give this agent access to a curated bundle of built-in tools.
-                Leave unselected to use only MCP tools enabled in the chat.
+                Give this agent access to a curated bundle of {COMPANY_NAME}
+                -provided tools. Leave unselected to use only MCP tools enabled
+                in the chat.
               </FormDescription>
               <FormMessage />
             </FormItem>
