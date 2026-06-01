@@ -223,6 +223,14 @@ jobs:
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
 
+      - name: Upload flatpak bundle as artifact (Linux only)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: flatpak-bundle-${{ matrix.arch == 'arm64' && 'aarch64' || 'x86_64' }}
+          path: out/make/**/*.flatpak
+          retention-days: 1
+
       - name: Upload artifacts
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:

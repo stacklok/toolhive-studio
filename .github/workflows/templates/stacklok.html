@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en" class="light-theme">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>__AETHERPAK_REPO_TITLE__</title>
+  <meta name="description" content="A signed Flatpak repository for Stacklok desktop tooling.">
+  <meta property="og:title" content="__AETHERPAK_REPO_TITLE__">
+  <meta property="og:description" content="A signed Flatpak repository for Stacklok desktop tooling.">
+  <meta property="og:type" content="website">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-1 12 26 24'%3E%3Cpath d='M0.79 34L12.34 20.2L23.89 34M0.79 34L12.34 24.85L23.89 34M0.79 34L12.34 29.24L23.89 34M0.79 34L12.34 14L23.89 34' stroke='%23262626' stroke-width='1.6' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E">
+  <link rel="preconnect" href="https://stacklok.com" crossorigin>
+  <style>
+    /* Stacklok brand fonts, hotlinked. */
+    @font-face { font-family: 'Rhetorik'; font-style: normal; font-weight: 300; font-display: swap; src: url('https://stacklok.com/wp-content/themes/stacklok-wp/public/build/assets/RhetorikSerif-Light-D-4Fjf-R.woff2') format('woff2'); }
+    @font-face { font-family: 'Rhetorik'; font-style: italic; font-weight: 300; font-display: swap; src: url('https://stacklok.com/wp-content/themes/stacklok-wp/public/build/assets/RhetorikSerif-LightItalic-FFWuB8kq.woff2') format('woff2'); }
+    @font-face { font-family: 'Brut Grotesque'; font-style: normal; font-weight: 400; font-display: swap; src: url('https://stacklok.com/wp-content/themes/stacklok-wp/public/build/assets/Brut_Grotesque_WEB-Regular-D9AqDN1-.woff2') format('woff2'); }
+    @font-face { font-family: 'Brut Grotesque'; font-style: normal; font-weight: 600; font-display: swap; src: url('https://stacklok.com/wp-content/themes/stacklok-wp/public/build/assets/Brut_Grotesque_WEB-Medium-CrKLgjr4.woff2') format('woff2'); }
+    @font-face { font-family: 'Brut Grotesque'; font-style: normal; font-weight: 700; font-display: swap; src: url('https://stacklok.com/wp-content/themes/stacklok-wp/public/build/assets/Brut_Grotesque_WEB-Bold-D0-J8h8g.woff2') format('woff2'); }
+    @font-face { font-family: 'ABC Repro Mono'; font-style: normal; font-weight: 400; font-display: swap; src: url('https://stacklok.com/wp-content/themes/stacklok-wp/public/build/assets/ABCReproMono-Regular-V1zDVzpB.woff2') format('woff2'); }
+
+    :root {
+      --bg: #f9faf9;
+      --card: #ffffff;
+      --ink: #262626;
+      --muted: #6b6b66;
+      --accent: #2d684b;
+      --accent-ink: #1d4733;
+      --sage: #dff2e2;
+      --sage-line: #c3e0cb;
+      --line: #e7e7e1;
+      --code-bg: #111513;
+      --code-ink: #ecf1ed;
+      --code-border: #232d28;
+      --serif: 'Rhetorik', Georgia, 'Times New Roman', serif;
+      --sans: 'Brut Grotesque', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --mono: 'ABC Repro Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      --shadow: 0 4px 12px rgba(38,38,38,0.03);
+      --shadow-hover: 0 12px 30px rgba(38,38,38,0.08);
+      --card-radius: 16px;
+      --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .dark-theme {
+      --bg: #0c0f0d;
+      --card: #131815;
+      --ink: #eef3ef;
+      --muted: #89978f;
+      --accent: #48a374;
+      --accent-ink: #dff2e2;
+      --sage: #162a1f;
+      --sage-line: #223f2f;
+      --line: #202723;
+      --shadow: 0 4px 12px rgba(0,0,0,0.2);
+      --shadow-hover: 0 12px 30px rgba(0,0,0,0.35);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg); color: var(--ink); font-family: var(--sans); line-height: 1.55; padding: 1.5rem 1.25rem 0; -webkit-font-smoothing: antialiased; transition: background-color 0.3s, color 0.3s; }
+    a { color: var(--accent); text-decoration: none; transition: var(--transition); }
+    a:hover { text-decoration: underline; color: var(--accent-ink); }
+    .container { max-width: 820px; margin: 0 auto; }
+
+    /* header */
+    header.site { display: flex; align-items: center; justify-content: space-between; height: 56px; border-bottom: 1px solid var(--line); margin-bottom: 1rem; }
+    .logo { height: 22px; color: var(--ink); display: block; }
+    .logo svg { height: 100%; width: auto; }
+
+    .theme-toggle {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem;
+      border-radius: 9999px;
+      transition: var(--transition);
+    }
+    .theme-toggle:hover {
+      background: var(--sage);
+      color: var(--accent);
+    }
+    .theme-toggle .sun-icon { display: none; }
+    .theme-toggle .moon-icon { display: block; }
+    .dark-theme .theme-toggle .sun-icon { display: block; }
+    .dark-theme .theme-toggle .moon-icon { display: none; }
+
+    /* hero */
+    .hero { padding: 3rem 0 2rem; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 0.5rem; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em; color: var(--accent-ink); background: var(--sage); border: 1px solid var(--sage-line); padding: 0.3rem 0.7rem; border-radius: 9999px; margin-bottom: 1.25rem; }
+    .hero h1 { font-family: var(--serif); font-weight: 300; font-size: clamp(2.3rem, 5.2vw, 3.4rem); line-height: 1.04; letter-spacing: -0.02em; color: var(--ink); }
+    .hero .lede { font-size: 1.15rem; color: var(--muted); max-width: 36rem; margin-top: 1rem; }
+    .hero-badges { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 1.5rem; }
+
+    /* cards */
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--card-radius); padding: 1.75rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); transition: var(--transition); }
+    .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-hover); }
+    .card.setup { background: linear-gradient(180deg, var(--bg) 0%, var(--card) 100%); border-color: var(--sage-line); }
+    .dark-theme .card.setup { background: linear-gradient(180deg, rgba(22, 42, 31, 0.1) 0%, var(--card) 100%); }
+    .section-label { font-family: var(--sans); font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.50rem; }
+
+    /* code blocks */
+    .code-container { margin: 1rem 0; border-radius: 10px; overflow: hidden; border: 1px solid var(--code-border); background: var(--code-bg); }
+    .code-header { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 1rem; background: #0b0e0c; border-bottom: 1px solid var(--code-border); font-family: var(--sans); font-size: 0.72rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em; }
+    .code-lang { display: flex; align-items: center; gap: 0.4rem; }
+    .code-lang::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+    .code-block { padding: 0.85rem 1rem; margin: 0; border: none; border-radius: 0; font-family: var(--mono); font-size: 0.83rem; line-height: 1.6; overflow-x: auto; background: transparent; }
+    .code-block code { white-space: pre; color: var(--code-ink); }
+    
+    .btn-copy { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); cursor: pointer; color: var(--muted); display: flex; padding: 0.35rem; border-radius: 6px; transition: var(--transition); align-items: center; justify-content: center; }
+    .btn-copy:hover { color: #fff; background: rgba(255,255,255,0.1); border-color: var(--accent); }
+    .btn-copy.success { color: var(--accent); border-color: var(--accent); background: rgba(45, 104, 75, 0.15); }
+
+    /* buttons */
+    .actions { margin-top: 1.25rem; display: flex; gap: 0.65rem; flex-wrap: wrap; }
+    .btn { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.25rem; border-radius: 9999px; font-family: var(--sans); font-weight: 600; font-size: 0.875rem; text-decoration: none; cursor: pointer; border: 1px solid transparent; transition: var(--transition); }
+    .btn:hover { text-decoration: none; transform: translateY(-1px); }
+    .btn:active { transform: translateY(1px); }
+    .btn.primary { background: var(--accent); color: #fff; }
+    .btn.primary:hover { background: var(--accent-ink); }
+    .btn.ghost { background: var(--card); border-color: var(--line); color: var(--ink); }
+    .btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    details > summary { cursor: pointer; color: var(--muted); font-size: 0.85rem; margin-top: 1rem; outline: none; transition: var(--transition); }
+    details > summary:hover { color: var(--ink); }
+
+    /* app cards */
+    .app-head { display: flex; align-items: center; gap: 1.25rem; margin-bottom: 0.5rem; }
+    .app-icon { width: 54px; height: 54px; border-radius: 13px; flex-shrink: 0; background: var(--sage); border: 1px solid var(--sage-line); object-fit: contain; box-shadow: var(--shadow); }
+    .app-icon.placeholder { display: flex; align-items: center; justify-content: center; color: var(--accent); }
+    .app-name { font-family: var(--serif); font-weight: 300; font-size: 1.7rem; letter-spacing: -0.01em; color: var(--ink); }
+    .app-id { font-family: var(--mono); font-size: 0.78rem; color: var(--muted); }
+    .app-summary { color: var(--muted); font-size: 0.97rem; margin: 0.5rem 0 0.75rem; }
+
+    .badge { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.2rem 0.65rem; font-size: 0.72rem; font-family: var(--mono); border-radius: 9999px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); transition: var(--transition); }
+    .badge.primary { background: var(--sage); border-color: var(--sage-line); color: var(--accent-ink); }
+    .badge.signed { background: var(--sage); border-color: var(--sage-line); color: var(--accent-ink); font-family: var(--sans); font-weight: 600; }
+    .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+    .releases { margin-top: 1.25rem; border-left: 2px solid var(--line); padding-left: 1.5rem; }
+    .release { position: relative; padding-bottom: 1.5rem; }
+    .release:last-child { padding-bottom: 0; }
+    .release::before { content: ''; position: absolute; left: calc(-1.5rem - 6px); top: 0.35rem; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--card); transition: var(--transition); }
+    .release.old::before { background: var(--line); }
+    .release-head { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+    .release-date { color: var(--muted); font-size: 0.82rem; margin-left: auto; font-family: var(--sans); }
+    .release-meta { color: var(--muted); font-size: 0.78rem; font-family: var(--mono); margin: 0.5rem 0 0.75rem; }
+
+    .empty-state { text-align: center; padding: 3rem 1.5rem; border: 1px dashed var(--line); border-radius: 16px; color: var(--muted); background: var(--card); }
+    .empty-state h2 { font-family: var(--serif); font-weight: 300; font-size: 1.6rem; margin-bottom: 0.5rem; color: var(--ink); }
+
+    /* Skeleton loaders */
+    .skeleton-card { background: var(--card); border: 1px solid var(--line); border-radius: var(--card-radius); padding: 1.75rem; margin-bottom: 1.5rem; box-shadow: var(--shadow); }
+    .skeleton-line { height: 12px; background: linear-gradient(90deg, var(--line) 25%, var(--bg) 50%, var(--line) 75%); background-size: 200% 100%; animation: loading-skeleton 1.5s infinite ease-in-out; border-radius: 6px; margin-bottom: 0.75rem; }
+    .skeleton-line.title { height: 24px; width: 40%; margin-bottom: 1rem; }
+    .skeleton-line.body-long { width: 85%; }
+    .skeleton-line.body-short { width: 60%; }
+    .skeleton-circle { width: 54px; height: 54px; border-radius: 13px; background: linear-gradient(90deg, var(--line) 25%, var(--bg) 50%, var(--line) 75%); background-size: 200% 100%; animation: loading-skeleton 1.5s infinite ease-in-out; }
+    .skeleton-header { display: flex; gap: 1rem; align-items: center; margin-bottom: 1.25rem; }
+    .skeleton-header-lines { flex-grow: 1; }
+    @keyframes loading-skeleton { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    footer { text-align: center; padding: 3.5rem 0 2rem; color: var(--muted); font-size: 0.84rem; border-top: 1px solid var(--line); margin-top: 2rem; }
+    footer a { color: var(--accent); }
+
+    /* modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(12,15,13,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; padding: 1rem; z-index: 100; overflow-y: auto; opacity: 0; transition: opacity 0.25s ease; pointer-events: none; }
+    .modal-backdrop.open { display: flex; opacity: 1; pointer-events: auto; }
+    .modal { background: var(--card); border: 1px solid var(--sage-line); border-radius: 16px; padding: 1.75rem; max-width: 540px; width: 100%; max-height: calc(100dvh - 2rem); overflow-y: auto; position: relative; box-shadow: 0 24px 60px rgba(0,0,0,0.25); transform: translateY(20px) scale(0.95); transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+    .modal-backdrop.open .modal { transform: translateY(0) scale(1); }
+    @media (max-width: 560px) { .modal { padding: 1.25rem; } }
+    .modal h2 { font-family: var(--serif); font-weight: 300; font-size: 1.5rem; margin-bottom: 0.5rem; color: var(--ink); }
+    .step-badge { display: inline-block; padding: 0.2rem 0.65rem; background: var(--sage); border: 1px solid var(--sage-line); border-radius: 9999px; font-size: 0.72rem; font-weight: 600; color: var(--accent-ink); margin-bottom: 0.9rem; }
+    .modal p { color: var(--muted); font-size: 0.93rem; margin-bottom: 1rem; }
+    .modal-close { position: absolute; top: 1rem; right: 1rem; background: transparent; border: none; color: var(--muted); cursor: pointer; font-size: 1.4rem; line-height: 1; transition: var(--transition); }
+    .modal-close:hover { color: var(--ink); }
+    .modal-foot { margin-top: 1.25rem; display: flex; justify-content: flex-end; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="site">
+      <span class="logo" aria-label="Stacklok">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 13.21 144.01 21.59" role="img" aria-label="Stacklok">
+          <path d="M0.793945 34L12.3412 20.2012L23.8885 34M0.793945 34L12.3412 24.8528L23.8885 34M0.793945 34L12.3412 29.2389L23.8885 34M0.793945 34L12.3412 14L23.8885 34" stroke="currentColor" stroke-width="1.58793" stroke-miterlimit="16" stroke-linejoin="round"></path>
+          <path d="M45.8746 18.045C45.6126 18.045 45.3982 17.8306 45.3982 17.5686V16.1393C45.3982 15.8773 45.6126 15.6629 45.8746 15.6629H57.5466C57.8087 15.6629 58.023 15.8773 58.023 16.1393V17.5686C58.023 17.8306 57.8087 18.045 57.5466 18.045H53.4971C53.2351 18.045 53.0207 18.2593 53.0207 18.5214V31.8609C53.0207 32.1229 52.8064 32.3373 52.5443 32.3373H50.8769C50.6149 32.3373 50.4005 32.1229 50.4005 31.8609V18.5214C50.4005 18.2593 50.1861 18.045 49.9241 18.045H45.8746Z" fill="currentColor"></path>
+          <path d="M38.082 32.5754C34.4851 32.5754 31.8887 30.4792 31.8887 27.5731V27.3349C31.8887 27.0729 32.1031 26.8585 32.3651 26.8585H34.0325C34.2945 26.8585 34.5089 27.0729 34.5089 27.3349V27.5731C34.5089 29.0976 35.962 30.1933 38.082 30.1933C40.1067 30.1933 41.6551 29.1929 41.6551 27.7875V27.5493C41.6551 23.476 32.3413 26.8823 32.3413 20.3316C32.3413 17.4494 34.7471 15.4246 38.1535 15.4246C41.4883 15.4246 43.9657 17.3779 43.9657 20.0696V20.3078C43.9657 20.5699 43.7513 20.7842 43.4893 20.7842H41.8218C41.5598 20.7842 41.3454 20.5699 41.3454 20.3078V20.0696C41.3454 18.7595 40.1544 17.8067 38.1535 17.8067C36.2716 17.8067 34.9615 18.6404 34.9615 19.9982V20.2364C34.9615 24 44.2753 21.1415 44.2753 27.454C44.2753 30.4792 41.6789 32.5754 38.082 32.5754Z" fill="currentColor"></path>
+          <path d="M72.1066 31.6823L66.4221 16.0842C66.3283 15.8224 66.1407 15.705 65.8843 15.705L63.8722 15.705C63.6143 15.705 63.4282 15.824 63.3344 16.0842L57.653 31.6823C57.5358 32.014 57.7703 32.3235 58.097 32.3235H59.8981C60.156 32.3235 60.3186 32.2045 60.4124 31.9442L61.1472 29.7796H61.1457L61.3223 29.2654L61.6053 28.4307C61.6115 28.4148 61.6178 28.4005 61.6241 28.3847L62.4573 25.9614L63.4532 23.0271H63.4564L64.435 20.1437C64.5758 19.693 65.1605 19.693 65.3231 20.1437L66.8411 24.6125L67.5869 26.6977L68.3138 28.9004L69.3472 31.9442C69.441 32.206 69.6052 32.3235 69.8616 32.3235L71.6626 32.3235C71.9894 32.3235 72.2239 31.9918 72.1066 31.6823Z" fill="currentColor"></path>
+          <path d="M131.623 16.1393C131.623 15.8773 131.837 15.6629 132.099 15.6629H133.767C134.029 15.6629 134.243 15.8773 134.243 16.1393V22.1183C134.243 22.5947 134.815 22.7376 135.077 22.4279L140.675 15.9249C140.842 15.7344 141.032 15.6629 141.27 15.6629H143.152C143.557 15.6629 143.795 16.1393 143.509 16.449L137.197 23.476C137.03 23.6428 137.03 23.9048 137.197 24.0954L143.891 31.5512C144.129 31.8132 144.01 32.3373 143.509 32.3373H141.508C141.27 32.3373 141.08 32.2658 140.913 32.0752L135.101 25.477C134.791 25.1197 134.243 25.3102 134.243 25.7866V31.8609C134.243 32.1229 134.029 32.3373 133.767 32.3373H132.099C131.837 32.3373 131.623 32.1229 131.623 31.8609V16.1393Z" fill="currentColor"></path>
+          <path d="M122.028 32.5754C117.883 32.5754 114.882 29.574 114.882 25.4292V22.5708C114.882 18.426 117.883 15.4246 122.028 15.4246C126.173 15.4246 129.174 18.426 129.174 22.5708V25.4292C129.174 29.574 126.173 32.5754 122.028 32.5754ZM122.028 30.1933C124.648 30.1933 126.554 28.2877 126.554 25.6674V22.3326C126.554 19.7123 124.648 17.8067 122.028 17.8067C119.407 17.8067 117.502 19.7123 117.502 22.3326V25.6674C117.502 28.2877 119.407 30.1933 122.028 30.1933Z" fill="currentColor"></path>
+          <path d="M104.508 32.3373C104.246 32.3373 104.032 32.1229 104.032 31.8609V16.1393C104.032 15.8773 104.246 15.6629 104.508 15.6629H106.176C106.438 15.6629 106.652 15.8773 106.652 16.1393V29.4788C106.652 29.7408 106.866 29.9552 107.129 29.9552H113.56C113.822 29.9552 114.036 30.1696 114.036 30.4316V31.8609C114.036 32.1229 113.822 32.3373 113.56 32.3373H104.508Z" fill="currentColor"></path>
+          <path d="M89.7713 16.1393C89.7713 15.8773 89.9857 15.6629 90.2477 15.6629H91.9152C92.1772 15.6629 92.3916 15.8773 92.3916 16.1393V22.1183C92.3916 22.5947 92.9633 22.7376 93.2253 22.4279L98.8231 15.9249C98.9899 15.7344 99.1804 15.6629 99.4186 15.6629H101.3C101.705 15.6629 101.944 16.1393 101.658 16.449L95.3453 23.476C95.1786 23.6428 95.1786 23.9048 95.3453 24.0954L102.039 31.5512C102.277 31.8132 102.158 32.3373 101.658 32.3373H99.6569C99.4186 32.3373 99.2281 32.2658 99.0613 32.0752L93.2491 25.477C92.9395 25.1197 92.3916 25.3102 92.3916 25.7866V31.8609C92.3916 32.1229 92.1772 32.3373 91.9152 32.3373H90.2477C89.9857 32.3373 89.7713 32.1229 89.7713 31.8609V16.1393Z" fill="currentColor"></path>
+          <path d="M81.0368 32.5754C76.892 32.5754 73.8906 29.574 73.8906 25.4292V22.5708C73.8906 18.426 76.892 15.4246 81.0368 15.4246C84.7766 15.4246 87.4683 17.8305 87.4683 21.1415V21.3798C87.4683 21.6418 87.2539 21.8562 86.9919 21.8562H85.3244C85.0624 21.8562 84.848 21.6418 84.848 21.3798V21.1415C84.848 19.2121 83.2521 17.8067 81.0368 17.8067C78.4165 17.8067 76.5109 19.7123 76.5109 22.3326V25.6674C76.5109 28.2877 78.4165 30.1933 81.0368 30.1933C83.2521 30.1933 84.848 28.7879 84.848 26.8585V26.6203C84.848 26.3582 85.0624 26.1439 85.3244 26.1439H86.9919C87.2539 26.1439 87.4683 26.3344 87.4683 26.6203V26.8585C87.4683 30.1695 84.7766 32.5754 81.0368 32.5754Z" fill="currentColor"></path>
+        </svg>
+      </span>
+      <button class="theme-toggle" id="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark/light mode">
+        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+      </button>
+    </header>
+
+    <section class="hero">
+      <span class="eyebrow"><span class="dot"></span> Flatpak repository</span>
+      <h1>Stacklok apps on Linux</h1>
+      <p class="lede">A signed Flatpak repository for Stacklok desktop tooling. Add the repository once, then install and update every app straight from your software center.</p>
+      <div class="hero-badges" id="hero-badges"></div>
+    </section>
+
+    <main id="app-content">
+      <!-- Setup card skeleton -->
+      <div class="skeleton-card">
+        <div class="skeleton-line title"></div>
+        <div class="skeleton-line body-long"></div>
+        <div class="skeleton-line body-short"></div>
+      </div>
+      <!-- App card skeleton -->
+      <div class="skeleton-card">
+        <div class="skeleton-header">
+          <div class="skeleton-circle"></div>
+          <div class="skeleton-header-lines">
+            <div class="skeleton-line" style="width: 50%; height: 20px;"></div>
+            <div class="skeleton-line" style="width: 30%;"></div>
+          </div>
+        </div>
+        <div class="skeleton-line body-long"></div>
+        <div class="skeleton-line body-short"></div>
+      </div>
+    </main>
+    <footer><p>__AETHERPAK_BRANDING_FOOTER_TEXT__</p></footer>
+  </div>
+
+  <script>
+    // Theme setup
+    (function() {
+      const storedTheme = localStorage.getItem('theme');
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (storedTheme === 'dark' || (!storedTheme && prefersDark)) {
+        document.documentElement.className = 'dark-theme';
+      } else {
+        document.documentElement.className = 'light-theme';
+      }
+    })();
+
+    const remoteName = (n => /^__.+__$/.test(n) ? 'aetherpak' : n)('__AETHERPAK_REMOTE_NAME__');
+    const ICON_COPY = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    const ICON_DL = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>`;
+    const ICON_APP = `<svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>`;
+
+    function esc(s) { return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c])); }
+    function copyCmd(btn) {
+      const container = btn.closest('.code-container') || btn.parentElement;
+      const codeEl = container.querySelector('code');
+      if (codeEl) copyToClipboard(codeEl.textContent, btn);
+    }
+    function openRepoModal() { 
+      const backdrop = document.getElementById('repo-modal');
+      if (backdrop) {
+        backdrop.style.display = 'flex';
+        // Force reflow
+        backdrop.offsetHeight;
+        backdrop.classList.add('open');
+      }
+    }
+    function closeRepoModal() { 
+      const backdrop = document.getElementById('repo-modal');
+      if (backdrop) {
+        backdrop.classList.remove('open');
+        setTimeout(() => { backdrop.style.display = 'none'; }, 250);
+      }
+    }
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeRepoModal(); });
+    function fmtSize(b) { b = +b || 0; const u = ['B','KB','MB','GB']; let i = 0; while (b >= 1024 && i < u.length-1) { b /= 1024; i++; } return `${b.toFixed(b < 10 && i > 0 ? 1 : 0)} ${u[i]}`; }
+    function fmtDate(ts) { const d = new Date((+ts) * 1000); return isNaN(d) ? '' : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
+    function appMeta(xml) {
+      try { const doc = new DOMParser().parseFromString(xml, 'application/xml');
+        const pick = sel => { const e = [...doc.querySelectorAll(sel)]; return (e.find(x => !x.getAttribute('xml:lang')) || e[0])?.textContent; };
+        return { name: pick('component > name'), summary: pick('component > summary') }; }
+      catch (e) { return {}; }
+    }
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const o = btn.innerHTML; btn.classList.add('success');
+        btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+        setTimeout(() => { btn.classList.remove('success'); btn.innerHTML = o; }, 1500);
+      }).catch(err => {
+        console.error('Failed to copy text:', err);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Setup theme button event
+      const themeToggleBtn = document.getElementById('theme-toggle');
+      themeToggleBtn?.addEventListener('click', () => {
+        if (document.documentElement.classList.contains('dark-theme')) {
+          document.documentElement.className = 'light-theme';
+          localStorage.setItem('theme', 'light');
+        } else {
+          document.documentElement.className = 'dark-theme';
+          localStorage.setItem('theme', 'dark');
+        }
+      });
+
+      const pagesUrl = location.origin + location.pathname.replace(/\/(index\.html)?$/, '');
+      const el = document.getElementById('app-content');
+      const render = html => { el.innerHTML = html; };
+      const legacyCmd = `flatpak remote-add --if-not-exists --user --no-gpg-verify \\
+  ${remoteName} \\
+  oci+${pagesUrl}`;
+
+      function codeBlock(label, cmd) {
+        return `
+          <div class="section-label">${label}</div>
+          <div class="code-container">
+            <div class="code-header">
+              <span class="code-lang">bash</span>
+              <button class="btn-copy" onclick="copyCmd(this)" title="Copy">${ICON_COPY}</button>
+            </div>
+            <pre class="code-block"><code>${esc(cmd)}</code></pre>
+          </div>`;
+      }
+
+      function buildSetup(signing) {
+        const repoFile = `${remoteName}.flatpakrepo`;
+        if (signing && signing.enabled && signing.lookaside) {
+          const look = `${pagesUrl}/${signing.lookaside}`;
+          const verified = `flatpak remote-add --user \\
+  --signature-lookaside=${look} \\
+  ${remoteName} \\
+  ${pagesUrl}/${repoFile}`;
+          const modifyCmd = `flatpak remote-modify --user \\
+  --signature-lookaside=${look} \\
+  ${remoteName}`;
+          return `
+            <div class="card setup">
+              ${codeBlock('Add this repository — verified (flatpak ≥ 1.17)', verified)}
+              <details>
+                <summary>Older clients (&lt; 1.17) — unverified</summary>
+                <p class="app-summary" style="margin-top:0.5rem; margin-bottom: 0.5rem;">These clients cannot read the signature lookaside; the remote is added without verification.</p>
+                ${codeBlock('Add this repository — unverified', legacyCmd)}
+              </details>
+              <div class="actions">
+                <a class="btn primary" href="${repoFile}" download onclick="openRepoModal()">${ICON_DL} Download .flatpakrepo</a>
+              </div>
+            </div>
+            <div class="modal-backdrop" id="repo-modal" onclick="if (event.target === this) closeRepoModal()">
+              <div class="modal">
+                <button class="modal-close" title="Close" onclick="closeRepoModal()">&times;</button>
+                <span class="step-badge">ONE MORE STEP</span>
+                <h2>Enable verified installs</h2>
+                <p>The repository file adds the remote and trusts the signing key — but Flatpak can’t store the signature location in a repo file. Once the repository is added, run this once to turn on signature verification:</p>
+                ${codeBlock('Enable verification', modifyCmd)}
+                <div class="modal-foot"><button class="btn primary" onclick="closeRepoModal()">Got it</button></div>
+              </div>
+            </div>`;
+        }
+        return `
+          <div class="card setup">
+            ${codeBlock('Add this repository (once)', legacyCmd)}
+            <div class="actions">
+              <a class="btn primary" href="${repoFile}" download>${ICON_DL} Download .flatpakrepo</a>
+            </div>
+          </div>`;
+      }
+
+      function renderHeroBadges(signing, arches) {
+        const host = document.getElementById('hero-badges');
+        if (!host) return;
+        const parts = [];
+        if (signing && signing.enabled) parts.push(`<span class="badge signed"><span class="dot"></span> GPG signed &amp; verified</span>`);
+        parts.push(`<span class="badge">Remote: ${esc(remoteName)}</span>`);
+        if (arches.length) parts.push(`<span class="badge">${arches.map(esc).join(' · ')}</span>`);
+        host.innerHTML = parts.join('');
+      }
+
+      Promise.all([
+        fetch('sigs/signing.json').then(r => r.ok ? r.json() : null).catch(() => null),
+        fetch('index/static').then(r => { if (!r.ok) throw new Error('load'); return r.json(); })
+      ]).then(([signing, data]) => {
+        const setup = buildSetup(signing);
+        const apps = {};
+        const allArches = new Set();
+        (data.Results || []).forEach(res => (res.Images || []).forEach(img => {
+          const L = img.Labels || {}; const ref = L['org.flatpak.ref'];
+          if (!ref || !L['org.flatpak.metadata']) return;
+          const [, id, arch, branch] = ref.split('/'); if (!branch) return;
+          allArches.add(arch);
+          const a = apps[id] || (apps[id] = { id, icon: L['org.freedesktop.appstream.icon-64'], meta: appMeta(L['org.freedesktop.appstream.appdata'] || ''), ch: {} });
+          const c = a.ch[branch] || (a.ch[branch] = { branch, arches: new Set(), ts: 0, isize: L['org.flatpak.installed-size'], dsize: L['org.flatpak.download-size'], commit: L['org.flatpak.commit'] });
+          c.arches.add(arch); c.ts = Math.max(c.ts, +L['org.flatpak.timestamp'] || 0);
+        }));
+
+        renderHeroBadges(signing, [...allArches].sort());
+
+        const ids = Object.keys(apps).sort();
+        if (!ids.length) { render(setup + `<div class="empty-state"><h2>No applications published yet</h2><p>Once an app is published it will appear here.</p></div>`); return; }
+
+        const cards = ids.map(id => {
+          const app = apps[id];
+          const name = app.meta.name || id.split('.').pop();
+          const icon = app.icon
+            ? `<img class="app-icon" src="${esc(app.icon)}" alt="">`
+            : `<div class="app-icon placeholder">${ICON_APP}</div>`;
+          const summary = app.meta.summary ? `<p class="app-summary">${esc(app.meta.summary)}</p>` : '';
+          const rels = Object.values(app.ch).sort((a, b) => b.ts - a.ts).map((c, i) => {
+            const cmd = `flatpak install --user ${remoteName} ${id}//${c.branch}`;
+            const refFile = `refs/${id}-${c.branch.replace(/\//g, '-')}.flatpakref`;
+            const arches = [...c.arches].sort().map(a => `<span class="badge">${esc(a)}</span>`).join('');
+            return `
+              <div class="release ${i ? 'old' : ''}">
+                <div class="release-head">
+                  <span class="badge primary">${esc(c.branch)}</span>${arches}
+                  <span class="release-date">${i ? '' : 'latest &bull; '}${c.ts ? 'released ' + fmtDate(c.ts) : ''}</span>
+                </div>
+                <div class="release-meta">${fmtSize(c.isize)} installed &bull; ${fmtSize(c.dsize)} download${c.commit ? ' &bull; ' + esc(c.commit.slice(0, 10)) : ''}</div>
+                <div class="actions"><a class="btn primary" href="${esc(refFile)}" download>${ICON_DL} Install (${esc(c.branch)})</a></div>
+                <div class="code-container">
+                  <div class="code-header"><span class="code-lang">bash</span><button class="btn-copy" onclick="copyCmd(this)" title="Copy">${ICON_COPY}</button></div>
+                  <pre class="code-block"><code>${esc(cmd)}</code></pre>
+                </div>
+              </div>`;
+          }).join('');
+          return `
+            <div class="card">
+              <div class="app-head">${icon}<div><div class="app-name">${esc(name)}</div><div class="app-id">${esc(id)}</div></div></div>
+              ${summary}
+              <div class="section-label" style="margin-top:1.25rem;">Releases</div>
+              <div class="releases">${rels}</div>
+            </div>`;
+        }).join('');
+
+        render(setup + `<div id="apps-container">${cards}</div>`);
+
+      }).catch(() => {
+        el.innerHTML = `<div class="empty-state" style="border-color:#d98b8b;color:#b35454;"><h2>Failed to load repository</h2><p>Serve this page over HTTP and ensure index/static exists.</p></div>`;
+      });
+    });
+  </script>
+</body>
+</html>
