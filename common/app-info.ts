@@ -18,6 +18,7 @@ const electronBridge = (
   globalThis as unknown as { electronAPI?: { appDisplayName?: string } }
 ).electronAPI
 export const APP_DISPLAY_NAME = electronBridge?.appDisplayName ?? 'ToolHive'
+export const APP_ASSISTANT_NAME = `${APP_DISPLAY_NAME} Assistant`
 export const APP_IDENTIFIER = 'toolhive-studio'
 
 // Display name of the bundled ToolHive CLI / backend engine (the `thv` process).
