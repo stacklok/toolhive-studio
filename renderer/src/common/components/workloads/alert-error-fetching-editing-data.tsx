@@ -4,7 +4,7 @@ import {
   AlertDescription,
 } from '@/common/components/ui/alert'
 import { LinkErrorDiscord } from './link-error-discord'
-import { APP_DISPLAY_NAME } from '@common/app-info'
+import { COMPANY_NAME } from '@common/app-info'
 
 export function AlertErrorFetchingEditingData() {
   return (
@@ -15,7 +15,7 @@ export function AlertErrorFetchingEditingData() {
       <AlertDescription>
         <p className="text-red-300">
           Close the dialog and try again. <br />
-          If issues persist, contact the {APP_DISPLAY_NAME} team via{' '}
+          If issues persist, contact the {COMPANY_NAME} team via{' '}
           <LinkErrorDiscord />.
         </p>
       </AlertDescription>
