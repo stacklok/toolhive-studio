@@ -132,7 +132,7 @@ const handleStartOnLogin = async (toolHiveIsRunning: boolean) => {
   }
 }
 
-const createStatusMenuItem = (toolHiveIsRunning: boolean) => ({
+export const createStatusMenuItem = (toolHiveIsRunning: boolean) => ({
   label: toolHiveIsRunning
     ? `🟢 ${app.getName()} is running`
     : `🔴 ${app.getName()} is stopped`,
@@ -140,7 +140,7 @@ const createStatusMenuItem = (toolHiveIsRunning: boolean) => ({
   enabled: false,
 })
 
-const getCurrentAppVersion = () => {
+export const getCurrentAppVersion = () => {
   const appVersion = getAppVersion()
   return {
     label: `Current version: v${appVersion}`,
@@ -149,7 +149,7 @@ const getCurrentAppVersion = () => {
   }
 }
 
-const createUpdateMenuItem = () => {
+export const createUpdateMenuItem = () => {
   const isProduction = app.isPackaged
   return {
     label: 'Check for Updates...',
@@ -161,7 +161,7 @@ const createUpdateMenuItem = () => {
   }
 }
 
-const startOnLoginMenu = (toolHiveIsRunning: boolean) => {
+export const startOnLoginMenu = (toolHiveIsRunning: boolean) => {
   const isStartOnLogin = getAutoLaunchStatus()
   return {
     label: 'Start on login',
@@ -172,21 +172,21 @@ const startOnLoginMenu = (toolHiveIsRunning: boolean) => {
   }
 }
 
-const createShowMenuItem = () => ({
+export const createShowMenuItem = () => ({
   label: 'Show Window',
   accelerator: 'CmdOrCtrl+S',
   type: 'normal' as const,
   click: withWindow(showWindowWithFocus),
 })
 
-const createHideMenuItem = () => ({
+export const createHideMenuItem = () => ({
   label: 'Hide Window',
   accelerator: 'CmdOrCtrl+H',
   type: 'normal' as const,
   click: withWindow(hideWindow),
 })
 
-const createQuitMenuItem = () => ({
+export const createQuitMenuItem = () => ({
   label: `Quit ${app.getName()}`,
   type: 'normal' as const,
   click: () => {
@@ -196,9 +196,9 @@ const createQuitMenuItem = () => ({
   },
 })
 
-const createSeparator = () => ({ type: 'separator' as const })
+export const createSeparator = () => ({ type: 'separator' as const })
 
-const createMenuTemplate = (toolHiveIsRunning: boolean) => [
+export const createMenuTemplate = (toolHiveIsRunning: boolean) => [
   createStatusMenuItem(toolHiveIsRunning),
   getCurrentAppVersion(),
   createUpdateMenuItem(),
