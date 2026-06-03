@@ -1,7 +1,7 @@
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
 import {
-  APP_NAME,
+  DEPRECATED_APP_NAME_FOR_BUILD,
   COMPANY_NAME,
   DEEP_LINK_PROTOCOL,
   DEVELOPER_ID,
@@ -17,9 +17,9 @@ const FLATPAK_DIR = path.resolve(import.meta.dirname, '..', 'flatpak')
 
 function desktopFileContent(): string {
   return `[Desktop Entry]
-Name=${APP_NAME}
+Name=${DEPRECATED_APP_NAME_FOR_BUILD}
 Comment=Install, manage and run MCP servers and connect them to AI agents and clients
-GenericName=${APP_NAME}
+GenericName=${DEPRECATED_APP_NAME_FOR_BUILD}
 Exec=${FLATPAK_WRAPPER_NAME} %U
 Icon=${FLATPAK_APP_ID}
 Type=Application
@@ -33,7 +33,7 @@ function metainfoFileContent(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop-application">
   <id>${FLATPAK_APP_ID}</id>
-  <name>${APP_NAME}</name>
+  <name>${DEPRECATED_APP_NAME_FOR_BUILD}</name>
   <summary>Install, manage and run MCP servers</summary>
   <metadata_license>CC0-1.0</metadata_license>
   <project_license>Apache-2.0</project_license>
@@ -43,7 +43,7 @@ function metainfoFileContent(): string {
   </developer>
 
   <description>
-    <p>${APP_NAME} is an application that allows you to install, manage and run MCP servers and connect them to AI agents and clients.</p>
+    <p>${DEPRECATED_APP_NAME_FOR_BUILD} is an application that allows you to install, manage and run MCP servers and connect them to AI agents and clients.</p>
   </description>
 
   <launchable type="desktop-id">${FLATPAK_APP_ID}.desktop</launchable>
@@ -64,7 +64,7 @@ function metainfoFileContent(): string {
   <!-- TODO: Add real screenshots before Flathub submission -->
   <screenshots>
     <screenshot type="default">
-      <caption>${APP_NAME} main window</caption>
+      <caption>${DEPRECATED_APP_NAME_FOR_BUILD} main window</caption>
       <image>https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/main/assets/screenshot.png</image>
     </screenshot>
   </screenshots>

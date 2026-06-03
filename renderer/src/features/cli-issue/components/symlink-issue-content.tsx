@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from '@/common/components/ui/card'
 import { Button } from '@/common/components/ui/button'
-import { APP_DISPLAY_NAME, APP_NAME } from '@common/app-info'
+import { APP_DISPLAY_NAME, THV_DISPLAY_NAME } from '@common/app-info'
 
 interface SymlinkIssueContentProps {
   type: 'broken' | 'tampered'
@@ -26,8 +26,8 @@ export function SymlinkIssueContent({
     ? 'CLI Installation Needs Repair'
     : 'CLI Installation Modified'
   const description = isBroken
-    ? `The ${APP_NAME} CLI symlink is broken.`
-    : `The ${APP_NAME} CLI has been modified externally.`
+    ? `The ${THV_DISPLAY_NAME} CLI symlink is broken.`
+    : `The ${THV_DISPLAY_NAME} CLI has been modified externally.`
   const detail = isBroken
     ? `This can happen if ${APP_DISPLAY_NAME} was moved or updated.`
     : 'This could cause version compatibility issues.'

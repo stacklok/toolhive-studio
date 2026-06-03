@@ -16,10 +16,12 @@ export function ExternalCliAlert({ path, source }: ExternalCliAlertProps) {
       <AlertTriangle className="size-4" />
       <AlertTitle>External CLI Installation Detected</AlertTitle>
       <AlertDescription className="space-y-2">
+        {/* eslint-disable no-restricted-syntax -- external thv CLI reference */}
         <p>
           An external ToolHive CLI was found at{' '}
           <code className="bg-muted rounded px-1 text-xs">{path}</code>
         </p>
+        {/* eslint-enable no-restricted-syntax */}
         <p>
           {uninstallCommand ? (
             <>

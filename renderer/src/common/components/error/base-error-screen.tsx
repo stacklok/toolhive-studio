@@ -29,6 +29,7 @@ export function BaseErrorScreen({
         await withMinimumDelay(window.electronAPI.restartToolhive, 1200)
         window.location.reload()
       } catch (error) {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         log.error('Error restarting ToolHive: ', error)
       }
     }

@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { TechnicalDetails } from '../technical-details'
+import { APP_DISPLAY_NAME } from '@common/app-info'
 
 vi.mock('../../layout/top-nav/minimal', () => ({
   TopNavMinimal: () => <div />,
@@ -97,7 +98,7 @@ describe('TechnicalDetails', () => {
 
     expect(writeText).toHaveBeenCalledTimes(1)
     const reportText = writeText.mock.calls[0]?.[0] as string
-    expect(reportText).toContain('ToolHive Crash Report')
+    expect(reportText).toContain(`${APP_DISPLAY_NAME} Crash Report`)
     expect(reportText).toContain('Error: Crash error')
     expect(reportText).toContain('Desktop Version:')
     expect(reportText).toContain('CLI Version:')

@@ -1,4 +1,5 @@
 import { type FieldValues, type UseFormReturn } from 'react-hook-form'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import { Button } from '../ui/button'
 import { Form } from '@/common/components/ui/form'
 import {
@@ -58,9 +59,9 @@ export function DialogWorkloadFormWrapper<T extends FieldValues = FieldValues>({
                   <DialogDescription>{description}</DialogDescription>
                 ) : (
                   <DialogDescription className="sr-only">
-                    ToolHive allows you to securely run a remote MCP server or a
-                    custom local MCP server from a Docker image or a package
-                    manager.
+                    {THV_DISPLAY_NAME} allows you to securely run a remote MCP
+                    server or a custom local MCP server from a Docker image or a
+                    package manager.
                   </DialogDescription>
                 )}
               </DialogHeader>

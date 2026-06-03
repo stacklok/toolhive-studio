@@ -141,11 +141,11 @@ describe('AgentDetailPage', () => {
       ).not.toBeInTheDocument()
     })
 
-    it('shows the "curated by ToolHive" hint for built-ins', () => {
+    it('shows the curated hint for built-ins', () => {
       renderDetail(builtinAgent)
       expect(
         screen.getByText(
-          /built-in agents are curated by toolhive and cannot be edited/i
+          /built-in agents are curated by stacklok and cannot be edited/i
         )
       ).toBeInTheDocument()
     })

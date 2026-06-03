@@ -5,9 +5,26 @@
 
 // ── Core identity ────────────────────────────────────────────────────────────
 
-export const APP_NAME = 'ToolHive'
-export const APP_DISPLAY_NAME = 'ToolHive Studio'
+// TODO: forge.config.ts and generate-flatpak-assets.ts should read directly
+// from package.json. Needs careful audit — some values allow spaces (display
+// names), others must be identifiers (package names, binary names).
+export const DEPRECATED_APP_NAME_FOR_BUILD = 'ToolHive'
+
+// In the renderer, derive from the live Electron app name (productName) via the
+// preload bridge, so branded builds rebrand with no code change. Falls back to
+// the literal where the bridge is absent (main process, forge build-time).
+// `globalThis` (not `window`) keeps it valid under the node tsconfig.
+const electronBridge = (
+  globalThis as unknown as { electronAPI?: { appDisplayName?: string } }
+).electronAPI
+export const APP_DISPLAY_NAME = electronBridge?.appDisplayName ?? 'ToolHive'
+export const APP_ASSISTANT_NAME = `${APP_DISPLAY_NAME} Assistant`
 export const APP_IDENTIFIER = 'toolhive-studio'
+
+// Display name of the bundled ToolHive CLI / backend engine (the `thv` process).
+// Distinct from APP_DISPLAY_NAME: this names the engine the app manages, not the
+// desktop product brand — so it stays "ToolHive" even in rebranded builds.
+export const THV_DISPLAY_NAME = 'ToolHive'
 export const EXECUTABLE_NAME = 'ToolHive'
 export const COMPANY_NAME = 'Stacklok'
 export const DEVELOPER_ID = 'com.stacklok'

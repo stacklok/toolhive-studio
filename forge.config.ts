@@ -4,7 +4,7 @@ import { MakerDeb } from '@electron-forge/maker-deb'
 import { MakerRpm } from '@electron-forge/maker-rpm'
 import {
   APP_DISPLAY_NAME,
-  APP_NAME,
+  DEPRECATED_APP_NAME_FOR_BUILD,
   COMPANY_NAME,
   DEEP_LINK_PROTOCOL,
   EXECUTABLE_NAME,
@@ -74,9 +74,9 @@ const config: ForgeConfig = {
     // Windows specific options
     win32metadata: {
       CompanyName: COMPANY_NAME,
-      FileDescription: APP_NAME,
+      FileDescription: DEPRECATED_APP_NAME_FOR_BUILD,
       OriginalFilename: `${EXECUTABLE_NAME}.exe`,
-      ProductName: APP_NAME,
+      ProductName: DEPRECATED_APP_NAME_FOR_BUILD,
       InternalName: EXECUTABLE_NAME,
     },
 
@@ -152,19 +152,19 @@ const config: ForgeConfig = {
       name: '@electron-forge/maker-squirrel',
       config: () => ({
         setupIcon: './icons/icon.ico',
-        setupExe: `${APP_NAME} Setup.exe`,
+        setupExe: `${DEPRECATED_APP_NAME_FOR_BUILD} Setup.exe`,
         noMsi: true,
         authors: COMPANY_NAME,
         exe: `${EXECUTABLE_NAME}.exe`,
-        name: APP_NAME,
+        name: DEPRECATED_APP_NAME_FOR_BUILD,
         noDelta: true,
         windowsSign: getWindowsSignConfig(),
       }),
     },
     new MakerDMGWithArch(
       {
-        name: APP_NAME,
-        title: APP_NAME,
+        name: DEPRECATED_APP_NAME_FOR_BUILD,
+        title: DEPRECATED_APP_NAME_FOR_BUILD,
         icon: './icons/icon.icns',
         overwrite: true,
         background: './assets/dmg-installer-background.png',
@@ -189,9 +189,9 @@ const config: ForgeConfig = {
     new MakerTarGz({}, ['linux']),
     new MakerRpm({
       options: {
-        name: APP_NAME,
-        productName: APP_NAME,
-        genericName: APP_NAME,
+        name: DEPRECATED_APP_NAME_FOR_BUILD,
+        productName: DEPRECATED_APP_NAME_FOR_BUILD,
+        genericName: DEPRECATED_APP_NAME_FOR_BUILD,
         icon: './icons/icon.png',
         license: 'Apache-2.0',
         bin: EXECUTABLE_NAME,
@@ -200,9 +200,9 @@ const config: ForgeConfig = {
     }),
     new MakerDeb({
       options: {
-        name: APP_NAME,
-        productName: APP_NAME,
-        genericName: APP_NAME,
+        name: DEPRECATED_APP_NAME_FOR_BUILD,
+        productName: DEPRECATED_APP_NAME_FOR_BUILD,
+        genericName: DEPRECATED_APP_NAME_FOR_BUILD,
         icon: './icons/icon.png',
         depends: [],
         maintainer: COMPANY_NAME,

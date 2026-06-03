@@ -3,6 +3,7 @@ import { ipcMain } from 'electron'
 import * as Sentry from '@sentry/electron/main'
 import log from './logger'
 import { getToolhiveSocketPath } from './toolhive-manager'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import { getHeaders } from './headers'
 import { createClient, type Client } from '@common/api/generated/client'
 
@@ -86,7 +87,7 @@ function performRequest(
 function requireSocketPath(): string {
   const socketPath = getToolhiveSocketPath()
   if (!socketPath) {
-    throw new Error('No ToolHive socket available')
+    throw new Error(`No ${THV_DISPLAY_NAME} socket available`)
   }
   return socketPath
 }

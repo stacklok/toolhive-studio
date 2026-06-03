@@ -1,8 +1,8 @@
-import { dialog, shell } from 'electron'
+import { app, dialog, shell } from 'electron'
 import log from '../logger'
 import { getAppVersion } from '../util'
 import { getLatestAvailableVersion, manualUpdate } from '../auto-update'
-import { APP_NAME, GITHUB_RELEASES_URL } from '@common/app-info'
+import { GITHUB_RELEASES_URL } from '@common/app-info'
 
 /**
  * Check for updates and show appropriate dialogs to the user
@@ -45,7 +45,7 @@ export async function handleCheckForUpdates(): Promise<boolean> {
         type: 'info',
         title: 'No Update Available',
         message: 'You are already using the latest version.',
-        detail: `Current version: ${currentVersion}\n\nYou have the latest version of ${APP_NAME} installed.`,
+        detail: `Current version: ${currentVersion}\n\nYou have the latest version of ${app.getName()} installed.`,
         buttons: ['OK'],
         defaultId: 0,
       })

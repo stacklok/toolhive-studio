@@ -46,6 +46,7 @@ export async function checkHealth(queryClient: QueryClient): Promise<void> {
       `[beforeLoad] Client baseUrl: ${clientConfig.baseUrl || 'NOT SET'}`
     )
     log.error(
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       `[beforeLoad] ToolHive status: running=${freshStatus.isRunning}, processError=${freshStatus.processError ?? 'none'}`
     )
 

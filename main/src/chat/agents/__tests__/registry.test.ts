@@ -21,7 +21,7 @@ vi.mock('../../../logger', () => ({
 }))
 
 vi.mock('electron', () => ({
-  app: { getPath: vi.fn(() => ':memory:') },
+  app: { getPath: vi.fn(() => ':memory:'), getName: vi.fn(() => 'ToolHive') },
 }))
 
 import {

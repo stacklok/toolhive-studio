@@ -1,3 +1,4 @@
+import { COMPANY_NAME } from '@common/app-info'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
 import { Streamdown } from 'streamdown'
@@ -172,8 +173,8 @@ export function AgentDetailPage({ agent }: { agent: AgentConfig }) {
             />
             {isBuiltin && (
               <p className="text-muted-foreground text-xs leading-5">
-                Built-in agents are curated by ToolHive and cannot be edited.
-                Duplicate this agent to create a customisable copy.
+                Built-in agents are curated by {COMPANY_NAME} and cannot be
+                edited. Duplicate this agent to create a customisable copy.
               </p>
             )}
           </div>

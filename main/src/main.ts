@@ -13,6 +13,7 @@ initSentry()
 
 // Environment variables are now handled in mainWindow.ts
 
+// eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
 log.info(`ToolHive binary path: ${binPath}`)
 log.info(`Binary file exists: ${existsSync(binPath)}`)
 

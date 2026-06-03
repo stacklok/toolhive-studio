@@ -75,7 +75,9 @@ describe('NewsletterModal', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Stay up to date with improvements to ToolHive')
+          screen.getByText(
+            `Stay up to date with improvements to ${APP_DISPLAY_NAME}`
+          )
         ).toBeVisible()
       })
     })
@@ -91,7 +93,9 @@ describe('NewsletterModal', () => {
         expect(window.electronAPI.getNewsletterState).toHaveBeenCalled()
       })
       expect(
-        screen.queryByText('Stay up to date with improvements to ToolHive')
+        screen.queryByText(
+          `Stay up to date with improvements to ${APP_DISPLAY_NAME}`
+        )
       ).not.toBeInTheDocument()
     })
 
@@ -109,7 +113,9 @@ describe('NewsletterModal', () => {
         expect(window.electronAPI.getNewsletterState).toHaveBeenCalled()
       })
       expect(
-        screen.queryByText('Stay up to date with improvements to ToolHive')
+        screen.queryByText(
+          `Stay up to date with improvements to ${APP_DISPLAY_NAME}`
+        )
       ).not.toBeInTheDocument()
     })
 
@@ -125,7 +131,9 @@ describe('NewsletterModal', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Stay up to date with improvements to ToolHive')
+          screen.getByText(
+            `Stay up to date with improvements to ${APP_DISPLAY_NAME}`
+          )
         ).toBeVisible()
       })
     })
@@ -267,7 +275,9 @@ describe('NewsletterModal', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByText('Stay up to date with improvements to ToolHive')
+          screen.getByText(
+            `Stay up to date with improvements to ${APP_DISPLAY_NAME}`
+          )
         ).toBeVisible()
       })
 

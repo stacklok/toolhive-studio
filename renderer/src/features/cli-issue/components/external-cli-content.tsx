@@ -9,7 +9,7 @@ import { Button } from '@/common/components/ui/button'
 import { CodeBlockWithCopy } from '@/common/components/code-block-with-copy'
 import { getUninstallCommand, getSourceLabel } from '../lib/cli-issue-utils'
 import type { ExternalCliInfo } from '@common/types/cli'
-import { APP_DISPLAY_NAME, APP_NAME } from '@common/app-info'
+import { APP_DISPLAY_NAME, THV_DISPLAY_NAME } from '@common/app-info'
 
 interface ExternalCliContentProps {
   cli: ExternalCliInfo
@@ -32,7 +32,7 @@ export function ExternalCliContent({
           <AlertTriangle className="text-destructive size-12" />
         </div>
         <CardTitle className="text-2xl font-semibold">
-          External {APP_NAME} CLI Detected
+          External {THV_DISPLAY_NAME} CLI Detected
         </CardTitle>
         <CardDescription>
           {APP_DISPLAY_NAME} cannot run while an external CLI is installed.
@@ -62,7 +62,8 @@ export function ExternalCliContent({
           </>
         ) : (
           <p className="text-muted-foreground text-sm">
-            Please manually remove the external {APP_NAME} CLI installation.
+            Please manually remove the external {THV_DISPLAY_NAME} CLI
+            installation.
           </p>
         )}
         <Button

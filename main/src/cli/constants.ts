@@ -41,6 +41,7 @@ export function getDesktopCliPath(
     case 'win32':
       return path.join(
         process.env.LOCALAPPDATA || path.join(home, 'AppData', 'Local'),
+        // eslint-disable-next-line no-restricted-syntax -- CLI install path segment; stays "ToolHive".
         'ToolHive',
         'bin',
         'thv.exe'
@@ -69,10 +70,12 @@ export const LEGACY_BASH_PROFILE_PATH = path.join(homedir(), '.bash_profile')
 
 export const SHELL_PATH_ENTRY = 'export PATH="$HOME/.toolhive/bin:$PATH"'
 
+/* eslint-disable no-restricted-syntax -- CLI marker written to shell rc; stays "ToolHive". */
 export const SHELL_PATH_MARKERS = {
   start: '# Added by ToolHive UI - do not modify this block',
   end: '# End ToolHive UI',
 }
+/* eslint-enable no-restricted-syntax */
 
 export const FISH_PATH_ENTRY = 'fish_add_path -g $HOME/.toolhive/bin'
 
@@ -128,6 +131,7 @@ export function getUninstallInstructions(
     case 'winget':
       return 'To uninstall, run:\n  winget uninstall thv'
     case 'manual':
+      // eslint-disable-next-line no-restricted-syntax -- external CLI message; stays "ToolHive".
       return 'Please manually remove the external ToolHive CLI installation.'
   }
 }

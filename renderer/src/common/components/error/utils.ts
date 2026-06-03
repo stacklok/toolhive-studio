@@ -1,3 +1,5 @@
+import { APP_DISPLAY_NAME, THV_DISPLAY_NAME } from '@common/app-info'
+
 export interface EnvironmentInfo {
   desktopVersion: string
   cliVersion: string
@@ -14,20 +16,20 @@ export const METADATA_FIELDS: {
   { label: 'Desktop', key: 'desktopVersion' },
   { label: 'CLI', key: 'cliVersion' },
   { label: 'Platform', key: 'platform' },
-  { label: 'ToolHive', key: 'toolhiveRunning' },
+  { label: THV_DISPLAY_NAME, key: 'toolhiveRunning' },
   { label: 'Engine', key: 'containerEngine' },
 ]
 
 export function buildCrashReport(error: Error, env: EnvironmentInfo): string {
   const timestamp = new Date().toISOString()
   return [
-    'ToolHive Crash Report',
+    `${APP_DISPLAY_NAME} Crash Report`,
     '=====================',
     `Timestamp: ${timestamp}`,
     `Desktop Version: ${env.desktopVersion}`,
     `CLI Version: ${env.cliVersion}`,
     `Platform: ${env.platform}`,
-    `ToolHive Running: ${env.toolhiveRunning}`,
+    `${THV_DISPLAY_NAME} Running: ${env.toolhiveRunning}`,
     `Container Engine: ${env.containerEngine}`,
     `User Agent: ${env.userAgent}`,
     '',

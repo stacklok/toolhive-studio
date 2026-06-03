@@ -1,5 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Loader2 } from 'lucide-react'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import {
   Card,
   CardContent,
@@ -25,7 +26,8 @@ function Shutdown() {
         </CardHeader>
         <CardContent className="space-y-4 text-center">
           <p className="text-muted-foreground">
-            Please wait while ToolHive safely shuts down your MCP servers...
+            Please wait while {THV_DISPLAY_NAME} safely shuts down your MCP
+            servers...
           </p>
         </CardContent>
       </Card>

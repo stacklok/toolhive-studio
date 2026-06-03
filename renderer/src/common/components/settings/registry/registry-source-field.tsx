@@ -40,7 +40,9 @@ const REGISTRY_INPUT_CONFIG = {
             target="_blank"
             rel="noopener noreferrer"
           >
+            {/* eslint-disable no-restricted-syntax -- OSS thv registry */}
             official ToolHive registry
+            {/* eslint-enable no-restricted-syntax */}
           </a>
         </Button>
         ).

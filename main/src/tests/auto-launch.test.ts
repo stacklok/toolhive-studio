@@ -4,6 +4,7 @@ import { createDesktopEntry } from '../auto-launch'
 vi.mock('electron', () => ({
   app: {
     isPackaged: false,
+    getName: vi.fn(() => 'ToolHive'),
   },
 }))
 

@@ -450,8 +450,10 @@ async function performUpdateInstallation({
 
         try {
           stopToolhive()
+          // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
           log.info('[update] ToolHive stopped')
         } catch (error) {
+          // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
           log.error('[update] Error stopping ToolHive: ', error)
         }
 
@@ -715,6 +717,7 @@ export async function getLatestAvailableVersion() {
           isNewVersionAvailable,
         }
       } catch (error) {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         log.error('[update] Failed to check for ToolHive update: ', error)
         span.setStatus({
           code: 2,

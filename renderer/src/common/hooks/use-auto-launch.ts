@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useToastMutation } from './use-toast-mutation'
+import { APP_DISPLAY_NAME } from '@common/app-info'
 
 export function useAutoLaunchStatus() {
   return useQuery({
@@ -19,7 +20,7 @@ export function useSetAutoLaunch() {
     },
     successMsg: (enabled) =>
       enabled
-        ? 'Auto-launch enabled - ToolHive will start when you log into your system'
+        ? `Auto-launch enabled - ${APP_DISPLAY_NAME} will start when you log into your system`
         : 'Auto-launch disabled',
     errorMsg: 'Failed to update auto-launch setting',
   })

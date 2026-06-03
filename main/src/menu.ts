@@ -1,5 +1,4 @@
 import { Menu, app } from 'electron'
-import { APP_NAME } from '@common/app-info'
 import { getAutoLaunchStatus, setAutoLaunch } from './auto-launch'
 import { updateTrayStatus } from './system-tray'
 import { handleCheckForUpdates } from './utils/update-dialogs'
@@ -51,7 +50,7 @@ export function createApplicationMenu() {
   const isProduction = app.isPackaged
   const template: Electron.MenuItemConstructorOptions[] = [
     {
-      label: APP_NAME,
+      label: app.getName(),
       submenu: [
         { role: 'about' as const },
         { type: 'separator' as const },

@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { describe, it, expect, vi } from 'vitest'
 import { SymlinkIssueContent } from '../symlink-issue-content'
-import { APP_DISPLAY_NAME, APP_NAME } from '@common/app-info'
+import { APP_DISPLAY_NAME, THV_DISPLAY_NAME } from '@common/app-info'
 
 describe('SymlinkIssueContent', () => {
   const defaultProps = {
@@ -23,7 +23,7 @@ describe('SymlinkIssueContent', () => {
       render(<SymlinkIssueContent {...defaultProps} type="broken" />)
 
       expect(
-        screen.getByText(`The ${APP_NAME} CLI symlink is broken.`)
+        screen.getByText(`The ${THV_DISPLAY_NAME} CLI symlink is broken.`)
       ).toBeVisible()
     })
 
@@ -67,7 +67,9 @@ describe('SymlinkIssueContent', () => {
       render(<SymlinkIssueContent {...defaultProps} type="tampered" />)
 
       expect(
-        screen.getByText(`The ${APP_NAME} CLI has been modified externally.`)
+        screen.getByText(
+          `The ${THV_DISPLAY_NAME} CLI has been modified externally.`
+        )
       ).toBeVisible()
     })
 

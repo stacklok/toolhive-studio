@@ -6,6 +6,7 @@ import {
   FormMessage,
 } from '@/common/components/ui/form'
 import { Input } from '@/common/components/ui/input'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 import {
   Select,
   SelectContent,
@@ -89,8 +90,8 @@ export function FormFieldsProxy<T extends FieldValues & ProxyFields>({
             <div className="flex items-center gap-1">
               <FormLabel htmlFor={field.name}>Proxy port</FormLabel>
               <TooltipInfoIcon className="max-w-72">
-                Port for the HTTP proxy to listen on. If not specified, ToolHive
-                will automatically assign a random port.
+                Port for the HTTP proxy to listen on. If not specified,{' '}
+                {THV_DISPLAY_NAME} will automatically assign a random port.
               </TooltipInfoIcon>
             </div>
             <FormControl>

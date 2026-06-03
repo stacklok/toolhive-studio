@@ -53,4 +53,39 @@ export default defineConfig([
       globals: globals.node,
     },
   },
+  // EXPERIMENT (issue #2296): ban hardcoded brand literals; enumerate sites.
+  {
+    files: [
+      'renderer/**/*.{ts,tsx}',
+      'main/**/*.{ts,tsx}',
+      'common/**/*.{ts,tsx}',
+      'preload/**/*.{ts,tsx}',
+    ],
+    ignores: [
+      '**/__tests__/**',
+      '**/*.test.{ts,tsx}',
+      '**/mocks/**',
+      'common/app-info.ts',
+    ],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'Literal[value=/ToolHive/]',
+          message:
+            "Hardcoded 'ToolHive' brand string — import from @common/app-info instead.",
+        },
+        {
+          selector: 'JSXText[value=/ToolHive/]',
+          message:
+            "Hardcoded 'ToolHive' brand string — import from @common/app-info instead.",
+        },
+        {
+          selector: 'TemplateElement[value.cooked=/ToolHive/]',
+          message:
+            "Hardcoded 'ToolHive' brand string — import from @common/app-info instead.",
+        },
+      ],
+    },
+  },
 ])

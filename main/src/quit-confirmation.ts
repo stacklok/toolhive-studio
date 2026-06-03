@@ -1,4 +1,4 @@
-import { dialog } from 'electron'
+import { app, dialog } from 'electron'
 import Store from 'electron-store'
 import log from './logger'
 import { writeSetting } from './db/writers/settings-writer'
@@ -55,9 +55,9 @@ export async function showNativeQuitConfirmation(): Promise<boolean> {
   try {
     const { response, checkboxChecked } = await dialog.showMessageBox({
       type: 'warning',
-      title: 'Quit ToolHive',
-      message: 'Quit ToolHive?',
-      detail: 'Shutting down ToolHive stops all MCP servers.',
+      title: `Quit ${app.getName()}`,
+      message: `Quit ${app.getName()}?`,
+      detail: `Shutting down ${app.getName()} stops all MCP servers.`,
       buttons: ['Quit', 'Cancel'],
       defaultId: 0,
       cancelId: 1,

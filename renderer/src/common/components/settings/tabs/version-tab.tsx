@@ -18,7 +18,7 @@ import { SettingsRow } from './components/settings-row'
 import { WrapperField } from './components/wrapper-field'
 import { usePermissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
-import { APP_NAME, GITHUB_RELEASES_URL } from '@common/app-info'
+import { APP_DISPLAY_NAME, GITHUB_RELEASES_URL } from '@common/app-info'
 
 interface VersionTabProps {
   appInfo: AppVersionInfo | undefined
@@ -128,6 +128,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
           />
         </SettingsRow>
         <Separator />
+        {/* eslint-disable-next-line no-restricted-syntax -- thv CLI binary version label */}
         <SettingsRow label="ToolHive binary version">
           <VersionBadge
             version={appInfo.toolhiveVersion}
@@ -149,7 +150,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
           <div className="flex flex-col gap-3 py-1">
             <WrapperField
               label="Downloads"
-              description={`Automatically download and install ${APP_NAME} updates when a new release is available.`}
+              description={`Automatically download and install ${APP_DISPLAY_NAME} updates when a new release is available.`}
               htmlFor="auto-update"
             >
               <Switch

@@ -15,6 +15,7 @@ import type {
 import { ThemeProviderContext } from '@/common/contexts/theme-context'
 import { AlertCircle, Loader2, Maximize2, Minimize2, X } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
+import { APP_DISPLAY_NAME } from '@common/app-info'
 
 interface McpAppViewProps {
   toolName: string
@@ -152,7 +153,7 @@ export function McpAppView({
     const currentTheme = resolveTheme()
     const bridge = new AppBridge(
       null, // no MCP client — proxied through IPC
-      { name: 'ToolHive Studio', version: '1.0.0' },
+      { name: APP_DISPLAY_NAME, version: '1.0.0' },
       HOST_CAPABILITIES,
       {
         hostContext: {
@@ -162,7 +163,7 @@ export function McpAppView({
           platform: 'desktop',
           locale: navigator.language,
           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-          userAgent: 'ToolHive Studio',
+          userAgent: APP_DISPLAY_NAME,
           deviceCapabilities: { hover: true },
         },
       }

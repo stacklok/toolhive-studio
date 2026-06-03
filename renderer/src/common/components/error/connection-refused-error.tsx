@@ -7,7 +7,7 @@ import { BaseErrorScreen } from './base-error-screen'
 import { IllustrationPackage } from '../illustrations/illustration-package'
 import { withMinimumDelay } from './utils'
 import log from 'electron-log/renderer'
-import { DISCORD_URL } from '@common/app-info'
+import { DISCORD_URL, THV_DISPLAY_NAME } from '@common/app-info'
 
 interface ExternalLinkButtonProps {
   href: string
@@ -44,6 +44,7 @@ export function ConnectionRefusedError() {
     isError: isRestartError,
   } = useMutation({
     mutationFn: async () => {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.info('Container engines are now available, restarting ToolHive...')
       const result = await withMinimumDelay(
         window.electronAPI.restartToolhive,
@@ -53,13 +54,16 @@ export function ConnectionRefusedError() {
     },
     onSuccess: (result) => {
       if (result.success) {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         log.info('ToolHive restarted successfully')
         window.location.reload()
       } else {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         log.error('Failed to restart ToolHive: ', result.error)
       }
     },
     onError: (error) => {
+      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.error('Error restarting ToolHive: ', error)
     },
   })
@@ -80,8 +84,8 @@ export function ConnectionRefusedError() {
         icon={<AlertCircle className="text-destructive size-12" />}
       >
         <p>
-          We're having trouble connecting to ToolHive. This is unexpected and
-          may indicate a service issue.
+          We're having trouble connecting to {THV_DISPLAY_NAME}. This is
+          unexpected and may indicate a service issue.
         </p>
 
         <div className="bg-muted rounded-md p-3 text-sm">
@@ -109,7 +113,7 @@ export function ConnectionRefusedError() {
           <RefreshCw className="mx-auto mb-2 size-6 animate-spin" />
           <p>
             {isRestarting
-              ? 'Restarting ToolHive...'
+              ? `Restarting ${THV_DISPLAY_NAME}...`
               : 'Checking container engines...'}
           </p>
         </div>
@@ -123,8 +127,8 @@ export function ConnectionRefusedError() {
       icon={<IllustrationPackage className="size-20" />}
     >
       <p>
-        ToolHive requires a container engine to be installed and running to
-        manage containerized tools and services. We support{' '}
+        {THV_DISPLAY_NAME} requires a container engine to be installed and
+        running to manage containerized tools and services. We support{' '}
         <strong>Docker</strong>, <strong>Podman</strong> or{' '}
         <strong>Rancher Desktop</strong> (with dockerd - moby).
       </p>

@@ -19,6 +19,7 @@ import {
   DEFAULT_AGENT_ID,
   LEGACY_BUILTIN_AGENT_IDS,
 } from '@common/types/agents'
+import { APP_ASSISTANT_NAME } from '@common/app-info'
 import { getBuiltinAgentSeeds } from './builtin-prompts'
 
 /**
@@ -111,7 +112,7 @@ export function resolveAgentForThread(
   return {
     id: DEFAULT_AGENT_ID,
     kind: 'builtin',
-    name: 'ToolHive Assistant',
+    name: APP_ASSISTANT_NAME,
     description: '',
     instructions: 'You are a helpful assistant.',
     builtinToolsKey: null,

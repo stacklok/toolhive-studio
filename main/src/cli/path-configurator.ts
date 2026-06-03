@@ -140,6 +140,7 @@ async function configureWindowsPath(): Promise<{
 }> {
   const toolhiveBinPath = path.join(
     process.env.LOCALAPPDATA ?? path.join(homedir(), 'AppData', 'Local'),
+    // eslint-disable-next-line no-restricted-syntax -- CLI install path segment — thv-owned directory
     'ToolHive',
     'bin'
   )
@@ -262,6 +263,7 @@ async function removeWindowsPath(): Promise<{
 }> {
   const toolhiveBinPath = path.join(
     process.env.LOCALAPPDATA ?? path.join(homedir(), 'AppData', 'Local'),
+    // eslint-disable-next-line no-restricted-syntax -- CLI install path segment — thv-owned directory
     'ToolHive',
     'bin'
   )
@@ -311,6 +313,7 @@ export async function checkPathConfiguration(): Promise<PathConfigStatus> {
   if (process.platform === 'win32') {
     const toolhiveBinPath = path.join(
       process.env.LOCALAPPDATA ?? path.join(homedir(), 'AppData', 'Local'),
+      // eslint-disable-next-line no-restricted-syntax -- CLI install path segment — thv-owned directory
       'ToolHive',
       'bin'
     )

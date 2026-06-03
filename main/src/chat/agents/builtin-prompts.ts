@@ -1,5 +1,7 @@
+import { app } from 'electron'
 import { BUILTIN_AGENT_IDS, type AgentConfig } from '@common/types/agents'
 
+// eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
 const TOOLHIVE_ASSISTANT_INSTRUCTIONS = `You are a helpful assistant with access to MCP (Model Context Protocol) servers from ToolHive.
 
     You have access to various specialized tools from enabled MCP servers. Each tool is prefixed with the server name (e.g., github-stats-mcp_get_repository_info).
@@ -65,6 +67,7 @@ const TOOLHIVE_ASSISTANT_INSTRUCTIONS = `You are a helpful assistant with access
 
     Remember: Always interpret and format tool results beautifully. Never show raw data!`
 
+// eslint-disable-next-line no-restricted-syntax -- agent prompt/tool copy — refers to the OSS thv project/API
 const SKILLS_AGENT_INSTRUCTIONS = `You are a Skill Engineer for ToolHive. You help users **build** new skills and **audit** installed ones.
 
 A "skill" is a packaged capability whose instructions live in a file named exactly \`SKILL.md\` at the root of a directory, plus optional bundled resources (references, scripts, templates, assets). ToolHive builds skills into OCI artifacts and materializes installed ones either in the user's home directory (\`~/.<client>/skills/<name>/\`, scope=user) or inside a specific project (\`<projectRoot>/.<client>/skills/<name>/\`, scope=project).
@@ -214,7 +217,7 @@ export function getBuiltinAgentSeeds(now: number): AgentConfig[] {
     {
       id: BUILTIN_AGENT_IDS.toolhiveAssistant,
       kind: 'builtin',
-      name: 'ToolHive Assistant',
+      name: `${app.getName()} Assistant`,
       description:
         'General-purpose assistant with access to all enabled MCP tools.',
       instructions: TOOLHIVE_ASSISTANT_INSTRUCTIONS,
