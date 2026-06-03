@@ -25,6 +25,7 @@ export default {
     'renderer/src/vite-env.d.ts',
     'renderer/src/types/global.d.ts',
     'main/src/vite-env.d.ts',
+    'main/src/system-tray.ts',
   ],
   ignoreDependencies: [
     '@electron-forge/maker-dmg', // Used indirectly in MakerDMGWithArch
