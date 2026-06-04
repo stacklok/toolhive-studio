@@ -180,8 +180,55 @@ function cleanupSocketFile(socketPath: string): void {
   }
 }
 
+// How long to wait for thv to bind its UNIX socket / named pipe before
+// resolving `startToolhive`. The probe runs every 100ms; on a healthy machine
+// thv binds in <2s, but starting Docker, a slow disk, or AV scanning the
+// binary can extend that. After this deadline we resolve anyway and let the
+// renderer fall back to its retrying `getHealth` query.
+const SOCKET_READY_TIMEOUT_MS = 15_000
+const SOCKET_PROBE_INTERVAL_MS = 100
+
+/**
+ * Probe the thv socket by attempting a real connection. Works on both Unix
+ * sockets and Windows named pipes — `existsSync` is unreliable for the
+ * latter and even on Unix the file can appear before the server has called
+ * Listen().
+ */
+function probeSocket(socketPath: string, timeoutMs: number): Promise<boolean> {
+  return new Promise((resolve) => {
+    const sock = net.connect({ path: socketPath })
+    const done = (ok: boolean) => {
+      sock.removeAllListeners()
+      sock.destroy()
+      resolve(ok)
+    }
+    const timer = setTimeout(() => done(false), timeoutMs)
+    sock.once('connect', () => {
+      clearTimeout(timer)
+      done(true)
+    })
+    sock.once('error', () => {
+      clearTimeout(timer)
+      done(false)
+    })
+  })
+}
+
+async function waitForSocketReady(
+  socketPath: string,
+  child: ReturnType<typeof spawn>
+): Promise<boolean> {
+  const deadline = Date.now() + SOCKET_READY_TIMEOUT_MS
+  while (Date.now() < deadline) {
+    if (child.exitCode !== null) return false
+    if (await probeSocket(socketPath, 200)) return true
+    await new Promise((r) => setTimeout(r, SOCKET_PROBE_INTERVAL_MS))
+  }
+  return false
+}
+
 export async function startToolhive(): Promise<void> {
-  Sentry.withScope<Promise<void>>(async (scope) => {
+  return Sentry.withScope<Promise<void>>(async (scope) => {
     if (isUsingCustomSocket()) {
       toolhiveSocketPath = process.env.THV_SOCKET!
       toolhiveMcpPort = parseMcpPortEnv(process.env.THV_MCP_PORT)
@@ -314,6 +361,20 @@ export async function startToolhive(): Promise<void> {
         )
       }
     })
+
+    // Wait for thv to actually bind its UNIX socket / named pipe before
+    // resolving. Without this, `startToolhive` returns the moment `spawn()`
+    // succeeds and the renderer fires its first `getHealth` while thv is
+    // still initializing — producing an ENOENT in main logs and a black
+    // window flash before retry kicks in.
+    const ready = await waitForSocketReady(toolhiveSocketPath, child)
+    if (ready) {
+      log.info(`[startToolhive] socket ready: ${toolhiveSocketPath}`)
+    } else {
+      log.warn(
+        `[startToolhive] socket did not become ready within ${SOCKET_READY_TIMEOUT_MS}ms`
+      )
+    }
   })
 }
 

@@ -1,9 +1,15 @@
-import { app, BrowserWindow, shell } from 'electron'
+import { app, BrowserWindow, nativeTheme, shell } from 'electron'
 import path from 'node:path'
 import log from './logger'
 import { hideWindow } from './dock-utils'
 import { getQuittingState, getTray } from './app-state'
 import { pollWindowReady } from './util'
+
+// Mirror the Tailwind theme `:root` / `.dark` --background values so that
+// the brief window between BrowserWindow creation and the first paint of
+// index.html doesn't flash white-on-dark (or vice versa).
+const BG_LIGHT = '#f9faf9'
+const BG_DARK = '#2e2e2e'
 
 // Forge environment variables
 declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string | undefined
@@ -160,6 +166,7 @@ export async function createMainWindow(
       height: options.height || DEFAULT_WINDOW_HEIGHT,
       show: options.show ?? !shouldStartHidden,
       autoHideMenuBar: true,
+      backgroundColor: nativeTheme.shouldUseDarkColors ? BG_DARK : BG_LIGHT,
       webPreferences: {
         contextIsolation: true,
         preload: path.join(__dirname, 'preload.js'),

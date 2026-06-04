@@ -3,8 +3,98 @@
   <head>
     <meta charset="UTF-8" />
     <title>ToolHive</title>
+    <style>
+      /*
+        Static splash painted from the first parse of index.html, before the
+        Vite bundle loads and React mounts. Covers the ~1–2s cold-start gap
+        that would otherwise show a bare BrowserWindow background. React's
+        createRoot().render() replaces the contents of #root on first commit.
+
+        Colors mirror the Tailwind theme `:root` / `.dark` --background and
+        --foreground so the transition between this static splash and the
+        first React paint is seamless.
+      */
+      :root {
+        color-scheme: light dark;
+        --splash-bg: #f9faf9;
+        --splash-fg: oklch(0.145 0 0);
+        --splash-muted: oklch(0.556 0 0);
+        --splash-border: oklch(0.922 0 0);
+        --splash-spinner-track: oklch(0.922 0 0);
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --splash-bg: oklch(0.1867 0 0);
+          --splash-fg: oklch(0.985 0 0);
+          --splash-muted: oklch(0.708 0 0);
+          --splash-border: oklch(0.269 0 0);
+          --splash-spinner-track: oklch(0.269 0 0);
+        }
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        height: 100vh;
+        background: var(--splash-bg);
+        color: var(--splash-fg);
+        font-family:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .initial-splash {
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
+      }
+      .initial-splash-card {
+        width: 100%;
+        max-width: 32rem;
+        border: 1px solid var(--splash-border);
+        border-radius: 0.75rem;
+        padding: 2rem;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.25rem;
+        text-align: center;
+      }
+      .initial-splash-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+      .initial-splash-subtitle {
+        color: var(--splash-muted);
+        font-size: 0.9rem;
+        line-height: 1.4;
+      }
+      .initial-splash-spinner {
+        width: 2.5rem;
+        height: 2.5rem;
+        border: 3px solid var(--splash-spinner-track);
+        border-top-color: var(--splash-fg);
+        border-radius: 50%;
+        animation: initial-splash-spin 1.5s linear infinite;
+      }
+      @keyframes initial-splash-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
   </head>
   <body id="root" class="font-sans">
+    <div class="initial-splash">
+      <div class="initial-splash-card">
+        <div class="initial-splash-title">Starting ToolHive</div>
+        <div class="initial-splash-subtitle">
+          We're checking your ToolHive configuration to ensure it's set up
+          correctly.
+        </div>
+        <div class="initial-splash-spinner"></div>
+      </div>
+    </div>
     <script type="module" src="/src/renderer.tsx"></script>
   </body>
 </html>
