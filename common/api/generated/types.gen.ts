@@ -338,6 +338,30 @@ export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
 }
 
 /**
+ * CIMD controls client_id metadata document support. When enabled, the
+ * embedded authorization server accepts HTTPS URLs as client_id values
+ * and resolves them via the CIMD protocol instead of requiring DCR.
+ */
+export type GithubComStacklokToolhivePkgAuthserverCimdRunConfig = {
+  /**
+   * CacheFallbackTTL is the fixed TTL applied to every cached CIMD document.
+   * Cache-Control header parsing is not yet implemented; all entries use this value.
+   * Format: Go duration string (e.g. "5m", "10m", "1h").
+   * Defaults to 5 minutes when Enabled is true and this field is omitted.
+   */
+  cache_fallback_ttl?: string
+  /**
+   * CacheMaxSize is the maximum number of CIMD documents held in the LRU cache.
+   * Defaults to 256 when Enabled is true and this field is zero.
+   */
+  cache_max_size?: number
+  /**
+   * Enabled activates CIMD client lookup when true.
+   */
+  enabled?: boolean
+}
+
+/**
  * DCRConfig enables RFC 7591 Dynamic Client Registration against the
  * upstream authorization server. When set, the client credentials are
  * obtained at runtime rather than being pre-provisioned via ClientID /
@@ -555,6 +579,7 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    * ScopesSupported explicitly.
    */
   baseline_client_scopes?: Array<string>
+  cimd?: GithubComStacklokToolhivePkgAuthserverCimdRunConfig
   /**
    * HMACSecretFiles contains file paths to HMAC secrets for signing authorization codes
    * and refresh tokens (opaque tokens).
@@ -1783,6 +1808,109 @@ export type GithubComStacklokToolhivePkgWebhookTlsConfig = {
   insecure_skip_verify?: boolean
 }
 
+/**
+ * Result is the upgrade-check outcome for the workload. It carries only
+ * metadata (status, image references, drift) and never secret values.
+ */
+export type GithubComStacklokToolhivePkgWorkloadsUpgradeCheckResult = {
+  /**
+   * CandidateImage is the image reference the registry currently reports.
+   */
+  candidate_image?: string
+  config_drift?: GithubComStacklokToolhivePkgWorkloadsUpgradeConfigDrift
+  /**
+   * CurrentImage is the image reference the workload is currently running.
+   */
+  current_image?: string
+  env_var_drift?: GithubComStacklokToolhivePkgWorkloadsUpgradeEnvVarDrift
+  /**
+   * Reason provides additional context, primarily for StatusUnknown.
+   */
+  reason?: string
+  /**
+   * RegistryServer is the registry entry name the workload was sourced from.
+   * Empty when the workload is not registry-sourced.
+   */
+  registry_server?: string
+  status?: GithubComStacklokToolhivePkgWorkloadsUpgradeUpgradeStatus
+  /**
+   * WorkloadName is the name of the workload that was checked.
+   */
+  workload_name?: string
+}
+
+/**
+ * ConfigDrift describes posture differences (transport, permission profile)
+ * between the workload and the candidate registry entry.
+ */
+export type GithubComStacklokToolhivePkgWorkloadsUpgradeConfigDrift = {
+  permission_profile?: GithubComStacklokToolhivePkgWorkloadsUpgradeStringChange
+  transport?: GithubComStacklokToolhivePkgWorkloadsUpgradeStringChange
+}
+
+/**
+ * EnvVarDrift describes environment variables the candidate registry entry
+ * declares that differ from the workload's current configuration.
+ */
+export type GithubComStacklokToolhivePkgWorkloadsUpgradeEnvVarDrift = {
+  /**
+   * Added lists environment variables the candidate declares that the
+   * workload does not currently supply (via plain env vars or secrets).
+   */
+  added?: Array<GithubComStacklokToolhivePkgWorkloadsUpgradeEnvVarInfo>
+  /**
+   * Removed lists environment variables the workload supplies that the
+   * candidate no longer declares. Populated on a best-effort basis; may be
+   * empty even when removals exist (forward-compatible field).
+   */
+  removed?: Array<GithubComStacklokToolhivePkgWorkloadsUpgradeEnvVarInfo>
+}
+
+export type GithubComStacklokToolhivePkgWorkloadsUpgradeEnvVarInfo = {
+  /**
+   * Default is the candidate's default value. It is cleared (left empty)
+   * whenever Secret is true: a secret env var's default could carry sensitive
+   * data, and surfacing it in a drift report (which may be logged or returned
+   * over the API) would leak it. Non-secret defaults are safe to display.
+   */
+  default?: string
+  /**
+   * Description is the human-readable purpose of the variable.
+   */
+  description?: string
+  /**
+   * Name is the environment variable name.
+   */
+  name?: string
+  /**
+   * Required indicates whether the candidate marks the variable as required.
+   */
+  required?: boolean
+  /**
+   * Secret indicates whether the variable holds sensitive data.
+   */
+  secret?: boolean
+}
+
+/**
+ * PermissionProfile is set when the candidate's permission profile differs
+ * from the workload's current profile.
+ */
+export type GithubComStacklokToolhivePkgWorkloadsUpgradeStringChange = {
+  from?: string
+  to?: string
+}
+
+/**
+ * Status is the upgrade status for the workload.
+ */
+export type GithubComStacklokToolhivePkgWorkloadsUpgradeUpgradeStatus =
+  | 'up-to-date'
+  | 'upgrade-available'
+  | 'not-registry-sourced'
+  | 'server-not-found'
+  | 'unknown'
+
 export type ModelArgument = {
   choices?: Array<string>
   default?: string
@@ -2808,6 +2936,44 @@ export type PkgApiV1UpdateSecretResponse = {
    * Success message
    */
   message?: string
+}
+
+/**
+ * Results of checking multiple workloads for available upgrades
+ */
+export type PkgApiV1UpgradeCheckBulkResponse = {
+  /**
+   * Results holds one upgrade-check outcome per scoped workload, in the order
+   * the workloads were enumerated. Each entry carries only metadata and never
+   * secret values.
+   */
+  results?: Array<GithubComStacklokToolhivePkgWorkloadsUpgradeCheckResult>
+}
+
+/**
+ * Result of checking a single workload for an available upgrade
+ */
+export type PkgApiV1UpgradeCheckResponse = {
+  result?: GithubComStacklokToolhivePkgWorkloadsUpgradeCheckResult
+}
+
+/**
+ * Request to apply an available upgrade to a workload. All fields are optional; an empty body applies the upgrade preserving the workload's existing configuration.
+ */
+export type PkgApiV1UpgradeRequest = {
+  /**
+   * Env holds additional or overriding environment variables to merge into the
+   * upgraded workload's configuration.
+   */
+  env?: {
+    [key: string]: string
+  }
+  /**
+   * Secrets holds additional secret parameters (`<name>,target=<env>`) to merge
+   * into the upgraded workload's configuration. Only references are accepted;
+   * no secret values are transmitted in the request.
+   */
+  secrets?: Array<string>
 }
 
 /**
@@ -4960,6 +5126,46 @@ export type PostApiV1BetaWorkloadsStopResponses = {
 export type PostApiV1BetaWorkloadsStopResponse =
   PostApiV1BetaWorkloadsStopResponses[keyof PostApiV1BetaWorkloadsStopResponses]
 
+export type GetApiV1BetaWorkloadsUpgradeCheckData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Include stopped workloads
+     */
+    all?: boolean
+    /**
+     * Filter workloads by group name
+     */
+    group?: string
+  }
+  url: '/api/v1beta/workloads/upgrade-check'
+}
+
+export type GetApiV1BetaWorkloadsUpgradeCheckErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Group not found
+   */
+  404: string
+}
+
+export type GetApiV1BetaWorkloadsUpgradeCheckError =
+  GetApiV1BetaWorkloadsUpgradeCheckErrors[keyof GetApiV1BetaWorkloadsUpgradeCheckErrors]
+
+export type GetApiV1BetaWorkloadsUpgradeCheckResponses = {
+  /**
+   * OK
+   */
+  200: PkgApiV1UpgradeCheckBulkResponse
+}
+
+export type GetApiV1BetaWorkloadsUpgradeCheckResponse =
+  GetApiV1BetaWorkloadsUpgradeCheckResponses[keyof GetApiV1BetaWorkloadsUpgradeCheckResponses]
+
 export type DeleteApiV1BetaWorkloadsByNameData = {
   body?: never
   path: {
@@ -5278,6 +5484,93 @@ export type PostApiV1BetaWorkloadsByNameStopResponses = {
 
 export type PostApiV1BetaWorkloadsByNameStopResponse =
   PostApiV1BetaWorkloadsByNameStopResponses[keyof PostApiV1BetaWorkloadsByNameStopResponses]
+
+export type PostApiV1BetaWorkloadsByNameUpgradeData = {
+  /**
+   * Upgrade options
+   */
+  body?:
+    | {
+        [key: string]: unknown
+      }
+    | PkgApiV1UpgradeRequest
+  path: {
+    /**
+     * Workload name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/workloads/{name}/upgrade'
+}
+
+export type PostApiV1BetaWorkloadsByNameUpgradeErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Unprocessable Entity
+   */
+  422: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaWorkloadsByNameUpgradeError =
+  PostApiV1BetaWorkloadsByNameUpgradeErrors[keyof PostApiV1BetaWorkloadsByNameUpgradeErrors]
+
+export type PostApiV1BetaWorkloadsByNameUpgradeResponses = {
+  /**
+   * OK
+   */
+  200: PkgApiV1UpgradeCheckResponse
+}
+
+export type PostApiV1BetaWorkloadsByNameUpgradeResponse =
+  PostApiV1BetaWorkloadsByNameUpgradeResponses[keyof PostApiV1BetaWorkloadsByNameUpgradeResponses]
+
+export type GetApiV1BetaWorkloadsByNameUpgradeCheckData = {
+  body?: never
+  path: {
+    /**
+     * Workload name
+     */
+    name: string
+  }
+  query?: never
+  url: '/api/v1beta/workloads/{name}/upgrade-check'
+}
+
+export type GetApiV1BetaWorkloadsByNameUpgradeCheckErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+}
+
+export type GetApiV1BetaWorkloadsByNameUpgradeCheckError =
+  GetApiV1BetaWorkloadsByNameUpgradeCheckErrors[keyof GetApiV1BetaWorkloadsByNameUpgradeCheckErrors]
+
+export type GetApiV1BetaWorkloadsByNameUpgradeCheckResponses = {
+  /**
+   * OK
+   */
+  200: PkgApiV1UpgradeCheckResponse
+}
+
+export type GetApiV1BetaWorkloadsByNameUpgradeCheckResponse =
+  GetApiV1BetaWorkloadsByNameUpgradeCheckResponses[keyof GetApiV1BetaWorkloadsByNameUpgradeCheckResponses]
 
 export type GetHealthData = {
   body?: never
