@@ -14,6 +14,8 @@ import {
   stopToolhive,
   restartToolhive,
   binPath,
+  probeSocket,
+  waitForSocketReady,
 } from '../toolhive-manager'
 import { updateTrayStatus } from '../system-tray'
 import log from '../logger'
@@ -49,12 +51,15 @@ vi.mock('node:fs')
 vi.mock('node:net', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:net')>()
   const mockCreateServerFn = vi.fn()
+  const mockConnectFn = vi.fn()
   return {
     ...actual,
     createServer: mockCreateServerFn,
+    connect: mockConnectFn,
     default: {
       ...actual,
       createServer: mockCreateServerFn,
+      connect: mockConnectFn,
     },
   }
 })
@@ -185,6 +190,25 @@ describe('toolhive-manager', () => {
     // Mock net.createServer to return a new MockServer instance each time
     mockNet.createServer.mockImplementation(function createServer() {
       return new MockServer() as unknown as net.Server
+    })
+
+    // Default `net.connect` stub for tests that exercise `startToolhive`
+    // (which now awaits a real socket-readiness probe in a detached
+    // promise inside the Sentry.withScope mock). The default returns a
+    // socket that errors on next tick, so `probeSocket` resolves false
+    // without throwing — individual probe/wait-for-ready tests override
+    // this with `mockReturnValueOnce` / `mockImplementationOnce`.
+    mockNet.connect.mockImplementation(function connect() {
+      const fakeSock = new EventEmitter() as EventEmitter & {
+        destroy: () => void
+        destroyed: boolean
+      }
+      fakeSock.destroy = () => {
+        fakeSock.destroyed = true
+      }
+      fakeSock.destroyed = false
+      process.nextTick(() => fakeSock.emit('error', new Error('ENOENT')))
+      return fakeSock as unknown as net.Socket
     })
 
     // Mock logger methods
@@ -955,6 +979,104 @@ describe('toolhive-manager', () => {
       expect(mockLog.warn).toHaveBeenCalledWith(
         expect.stringContaining('Ignoring invalid THV_MCP_PORT=70000')
       )
+    })
+  })
+
+  describe('socket readiness probe', () => {
+    // Minimal fake of `net.Socket` exposing the API used by `probeSocket`.
+    class FakeSocket extends EventEmitter {
+      destroyed = false
+      destroy() {
+        this.destroyed = true
+      }
+      // `removeAllListeners` is inherited from EventEmitter and works as-is.
+    }
+
+    beforeEach(() => {
+      // probeSocket / waitForSocketReady use real timers (with `.unref()`)
+      // so the tests for them run faster against real time. Switch back to
+      // fake timers between cases is unnecessary because each test sets up
+      // its own connect mock.
+      vi.useRealTimers()
+    })
+
+    describe('probeSocket', () => {
+      it('resolves true when net.connect emits `connect`', async () => {
+        const sock = new FakeSocket()
+        vi.mocked(net.connect).mockReturnValueOnce(
+          sock as unknown as net.Socket
+        )
+
+        const promise = probeSocket('/tmp/whatever.sock', 1_000)
+        sock.emit('connect')
+        await expect(promise).resolves.toBe(true)
+        expect(sock.destroyed).toBe(true)
+      })
+
+      it('resolves false when net.connect emits `error`', async () => {
+        const sock = new FakeSocket()
+        vi.mocked(net.connect).mockReturnValueOnce(
+          sock as unknown as net.Socket
+        )
+
+        const promise = probeSocket('/tmp/whatever.sock', 1_000)
+        sock.emit('error', new Error('ENOENT'))
+        await expect(promise).resolves.toBe(false)
+        expect(sock.destroyed).toBe(true)
+      })
+
+      it('resolves false when neither connect nor error fires before timeout', async () => {
+        const sock = new FakeSocket()
+        vi.mocked(net.connect).mockReturnValueOnce(
+          sock as unknown as net.Socket
+        )
+
+        await expect(probeSocket('/tmp/whatever.sock', 20)).resolves.toBe(false)
+        expect(sock.destroyed).toBe(true)
+      })
+    })
+
+    describe('waitForSocketReady', () => {
+      it('returns true on the first successful probe', async () => {
+        const sock = new FakeSocket()
+        vi.mocked(net.connect).mockImplementationOnce(() => {
+          // Resolve `connect` on next tick so the listener is attached first.
+          process.nextTick(() => sock.emit('connect'))
+          return sock as unknown as net.Socket
+        })
+
+        const child = { exitCode: null } as ReturnType<typeof spawn>
+        await expect(
+          waitForSocketReady('/tmp/whatever.sock', child)
+        ).resolves.toBe(true)
+      })
+
+      it('returns false immediately when the child has already exited', async () => {
+        const child = { exitCode: 1 } as ReturnType<typeof spawn>
+        await expect(
+          waitForSocketReady('/tmp/whatever.sock', child)
+        ).resolves.toBe(false)
+        expect(net.connect).not.toHaveBeenCalled()
+      })
+
+      it('eventually returns true after initial failed probes', async () => {
+        let attempt = 0
+        vi.mocked(net.connect).mockImplementation(() => {
+          attempt++
+          const sock = new FakeSocket()
+          process.nextTick(() => {
+            if (attempt < 3) sock.emit('error', new Error('ENOENT'))
+            else sock.emit('connect')
+          })
+          return sock as unknown as net.Socket
+        })
+
+        const child = { exitCode: null } as ReturnType<typeof spawn>
+        await expect(
+          waitForSocketReady('/tmp/whatever.sock', child)
+        ).resolves.toBe(true)
+        expect(attempt).toBeGreaterThanOrEqual(3)
+      })
     })
   })
 })

@@ -3,6 +3,27 @@
   <head>
     <meta charset="UTF-8" />
     <title>ToolHive</title>
+    <script>
+      // Apply the theme class on <html> before paint, mirroring what
+      // ThemeProvider does in its `useEffect`. Without this the splash
+      // would render with the light `:root` tokens for a frame on
+      // dark-mode systems before React's first commit.
+      ;(function () {
+        try {
+          var stored = localStorage.getItem('toolhive-ui-theme')
+          var theme =
+            stored === 'dark' || stored === 'light'
+              ? stored
+              : window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+          document.documentElement.classList.add(theme)
+        } catch (e) {
+          // localStorage / matchMedia unavailable — fall back to no class,
+          // splash will use `:root` (light) tokens.
+        }
+      })()
+    </script>
     <style>
       /*
         Static splash painted from the first parse of index.html, before the
@@ -10,26 +31,31 @@
         that would otherwise show a bare BrowserWindow background. React's
         createRoot().render() replaces the contents of #root on first commit.
 
-        Colors mirror the Tailwind theme `:root` / `.dark` --background and
-        --foreground so the transition between this static splash and the
-        first React paint is seamless.
+        Token values mirror the Tailwind theme `:root` / `.dark` selectors
+        defined in `src/index.css`. They are inlined rather than pulled in
+        via <link rel="stylesheet" href="/src/index.css"> because Vite's
+        production build emits the bundled CSS at the end of <body>, which
+        would delay first paint by the CSS fetch round-trip. The set of
+        tokens used here is small and rarely changes — `.dark` class is
+        applied by the inline <script> above so the same selectors work as
+        in the rest of the app.
       */
       :root {
         color-scheme: light dark;
         --splash-bg: #f9faf9;
         --splash-fg: oklch(0.145 0 0);
+        --splash-card: oklch(1 0 0);
         --splash-muted: oklch(0.556 0 0);
         --splash-border: oklch(0.922 0 0);
         --splash-spinner-track: oklch(0.922 0 0);
       }
-      @media (prefers-color-scheme: dark) {
-        :root {
-          --splash-bg: oklch(0.1867 0 0);
-          --splash-fg: oklch(0.985 0 0);
-          --splash-muted: oklch(0.708 0 0);
-          --splash-border: oklch(0.269 0 0);
-          --splash-spinner-track: oklch(0.269 0 0);
-        }
+      .dark {
+        --splash-bg: oklch(0.1867 0 0);
+        --splash-fg: oklch(0.985 0 0);
+        --splash-card: oklch(0.1408 0.0044 285.82);
+        --splash-muted: oklch(0.708 0 0);
+        --splash-border: oklch(1 0 0 / 10%);
+        --splash-spinner-track: oklch(0.269 0 0);
       }
       html,
       body {
@@ -51,6 +77,7 @@
       .initial-splash-card {
         width: 100%;
         max-width: 32rem;
+        background: var(--splash-card);
         border: 1px solid var(--splash-border);
         border-radius: 0.75rem;
         padding: 2rem;
@@ -82,17 +109,27 @@
           transform: rotate(360deg);
         }
       }
+      @media (prefers-reduced-motion: reduce) {
+        .initial-splash-spinner {
+          animation: none;
+        }
+      }
     </style>
   </head>
   <body id="root" class="font-sans">
-    <div class="initial-splash">
+    <div
+      class="initial-splash"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+    >
       <div class="initial-splash-card">
         <div class="initial-splash-title">Starting ToolHive</div>
         <div class="initial-splash-subtitle">
           We're checking your ToolHive configuration to ensure it's set up
           correctly.
         </div>
-        <div class="initial-splash-spinner"></div>
+        <div class="initial-splash-spinner" aria-hidden="true"></div>
       </div>
     </div>
     <script type="module" src="/src/renderer.tsx"></script>

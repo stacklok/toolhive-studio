@@ -192,9 +192,13 @@ const SOCKET_PROBE_INTERVAL_MS = 100
  * Probe the thv socket by attempting a real connection. Works on both Unix
  * sockets and Windows named pipes — `existsSync` is unreliable for the
  * latter and even on Unix the file can appear before the server has called
- * Listen().
+ * Listen(). The connect-timeout timer is `unref`'d so it does not keep the
+ * Electron main event loop alive during shutdown.
  */
-function probeSocket(socketPath: string, timeoutMs: number): Promise<boolean> {
+export function probeSocket(
+  socketPath: string,
+  timeoutMs: number
+): Promise<boolean> {
   return new Promise((resolve) => {
     const sock = net.connect({ path: socketPath })
     const done = (ok: boolean) => {
@@ -203,6 +207,7 @@ function probeSocket(socketPath: string, timeoutMs: number): Promise<boolean> {
       resolve(ok)
     }
     const timer = setTimeout(() => done(false), timeoutMs)
+    timer.unref()
     sock.once('connect', () => {
       clearTimeout(timer)
       done(true)
@@ -214,7 +219,7 @@ function probeSocket(socketPath: string, timeoutMs: number): Promise<boolean> {
   })
 }
 
-async function waitForSocketReady(
+export async function waitForSocketReady(
   socketPath: string,
   child: ReturnType<typeof spawn>
 ): Promise<boolean> {
@@ -222,7 +227,10 @@ async function waitForSocketReady(
   while (Date.now() < deadline) {
     if (child.exitCode !== null) return false
     if (await probeSocket(socketPath, 200)) return true
-    await new Promise((r) => setTimeout(r, SOCKET_PROBE_INTERVAL_MS))
+    await new Promise<void>((r) => {
+      const t = setTimeout(r, SOCKET_PROBE_INTERVAL_MS)
+      t.unref()
+    })
   }
   return false
 }
@@ -367,9 +375,20 @@ export async function startToolhive(): Promise<void> {
     // succeeds and the renderer fires its first `getHealth` while thv is
     // still initializing — producing an ENOENT in main logs and a black
     // window flash before retry kicks in.
-    const ready = await waitForSocketReady(toolhiveSocketPath, child)
+    //
+    // Capture the socket path locally — the `child.on('exit')` handler can
+    // clear `toolhiveSocketPath` if the child fast-fails before we get here,
+    // and `net.connect({ path: undefined })` would throw.
+    const probeSocketPath = toolhiveSocketPath
+    if (!probeSocketPath) {
+      log.warn(
+        '[startToolhive] socket path was cleared before readiness probe; child likely exited'
+      )
+      return
+    }
+    const ready = await waitForSocketReady(probeSocketPath, child)
     if (ready) {
-      log.info(`[startToolhive] socket ready: ${toolhiveSocketPath}`)
+      log.info(`[startToolhive] socket ready: ${probeSocketPath}`)
     } else {
       log.warn(
         `[startToolhive] socket did not become ready within ${SOCKET_READY_TIMEOUT_MS}ms`
