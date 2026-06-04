@@ -40,6 +40,8 @@ import {
   getApiV1BetaWorkloadsByNameLogs,
   getApiV1BetaWorkloadsByNameProxyLogs,
   getApiV1BetaWorkloadsByNameStatus,
+  getApiV1BetaWorkloadsByNameUpgradeCheck,
+  getApiV1BetaWorkloadsUpgradeCheck,
   getHealth,
   getRegistryByRegistryNameV01Servers,
   getRegistryByRegistryNameV01ServersByServerNameVersionsLatest,
@@ -64,6 +66,7 @@ import {
   postApiV1BetaWorkloadsByNameEdit,
   postApiV1BetaWorkloadsByNameRestart,
   postApiV1BetaWorkloadsByNameStop,
+  postApiV1BetaWorkloadsByNameUpgrade,
   postApiV1BetaWorkloadsDelete,
   postApiV1BetaWorkloadsRestart,
   postApiV1BetaWorkloadsStop,
@@ -153,9 +156,15 @@ import type {
   GetApiV1BetaWorkloadsByNameStatusData,
   GetApiV1BetaWorkloadsByNameStatusError,
   GetApiV1BetaWorkloadsByNameStatusResponse,
+  GetApiV1BetaWorkloadsByNameUpgradeCheckData,
+  GetApiV1BetaWorkloadsByNameUpgradeCheckError,
+  GetApiV1BetaWorkloadsByNameUpgradeCheckResponse,
   GetApiV1BetaWorkloadsData,
   GetApiV1BetaWorkloadsError,
   GetApiV1BetaWorkloadsResponse,
+  GetApiV1BetaWorkloadsUpgradeCheckData,
+  GetApiV1BetaWorkloadsUpgradeCheckError,
+  GetApiV1BetaWorkloadsUpgradeCheckResponse,
   GetHealthData,
   GetHealthResponse,
   GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestData,
@@ -220,6 +229,9 @@ import type {
   PostApiV1BetaWorkloadsByNameStopData,
   PostApiV1BetaWorkloadsByNameStopError,
   PostApiV1BetaWorkloadsByNameStopResponse,
+  PostApiV1BetaWorkloadsByNameUpgradeData,
+  PostApiV1BetaWorkloadsByNameUpgradeError,
+  PostApiV1BetaWorkloadsByNameUpgradeResponse,
   PostApiV1BetaWorkloadsData,
   PostApiV1BetaWorkloadsDeleteData,
   PostApiV1BetaWorkloadsDeleteError,
@@ -1576,6 +1588,39 @@ export const postApiV1BetaWorkloadsStopMutation = (
   return mutationOptions
 }
 
+export const getApiV1BetaWorkloadsUpgradeCheckQueryKey = (
+  options?: Options<GetApiV1BetaWorkloadsUpgradeCheckData>
+) => createQueryKey('getApiV1BetaWorkloadsUpgradeCheck', options)
+
+/**
+ * Check workloads for available upgrades
+ *
+ * Check all workloads (optionally filtered by group) for newer
+ * images available in their source registries. This is an offline
+ * metadata comparison; it does not pull images. Secret values are
+ * never returned.
+ */
+export const getApiV1BetaWorkloadsUpgradeCheckOptions = (
+  options?: Options<GetApiV1BetaWorkloadsUpgradeCheckData>
+) =>
+  queryOptions<
+    GetApiV1BetaWorkloadsUpgradeCheckResponse,
+    GetApiV1BetaWorkloadsUpgradeCheckError,
+    GetApiV1BetaWorkloadsUpgradeCheckResponse,
+    ReturnType<typeof getApiV1BetaWorkloadsUpgradeCheckQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaWorkloadsUpgradeCheck({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaWorkloadsUpgradeCheckQueryKey(options),
+  })
+
 /**
  * Delete a workload
  *
@@ -1842,6 +1887,72 @@ export const postApiV1BetaWorkloadsByNameStopMutation = (
   }
   return mutationOptions
 }
+
+/**
+ * Apply an available upgrade to a workload
+ *
+ * Apply a registry-sourced upgrade to a single workload. This
+ * re-resolves and verifies the candidate image, pulls it, and only
+ * then recreates the workload with the new image, preserving the
+ * existing configuration. If the workload is already up to date or
+ * is not registry-sourced, the current check result is returned
+ * unchanged (no-op). Secret values are never accepted or returned.
+ */
+export const postApiV1BetaWorkloadsByNameUpgradeMutation = (
+  options?: Partial<Options<PostApiV1BetaWorkloadsByNameUpgradeData>>
+): UseMutationOptions<
+  PostApiV1BetaWorkloadsByNameUpgradeResponse,
+  PostApiV1BetaWorkloadsByNameUpgradeError,
+  Options<PostApiV1BetaWorkloadsByNameUpgradeData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaWorkloadsByNameUpgradeResponse,
+    PostApiV1BetaWorkloadsByNameUpgradeError,
+    Options<PostApiV1BetaWorkloadsByNameUpgradeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaWorkloadsByNameUpgrade({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const getApiV1BetaWorkloadsByNameUpgradeCheckQueryKey = (
+  options: Options<GetApiV1BetaWorkloadsByNameUpgradeCheckData>
+) => createQueryKey('getApiV1BetaWorkloadsByNameUpgradeCheck', options)
+
+/**
+ * Check a workload for an available upgrade
+ *
+ * Check whether a single workload has a newer image available in
+ * its source registry. This is an offline metadata comparison; it
+ * does not pull images. Secret values are never returned.
+ */
+export const getApiV1BetaWorkloadsByNameUpgradeCheckOptions = (
+  options: Options<GetApiV1BetaWorkloadsByNameUpgradeCheckData>
+) =>
+  queryOptions<
+    GetApiV1BetaWorkloadsByNameUpgradeCheckResponse,
+    GetApiV1BetaWorkloadsByNameUpgradeCheckError,
+    GetApiV1BetaWorkloadsByNameUpgradeCheckResponse,
+    ReturnType<typeof getApiV1BetaWorkloadsByNameUpgradeCheckQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaWorkloadsByNameUpgradeCheck({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaWorkloadsByNameUpgradeCheckQueryKey(options),
+  })
 
 export const getHealthQueryKey = (options?: Options<GetHealthData>) =>
   createQueryKey('getHealth', options)

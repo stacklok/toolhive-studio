@@ -85,9 +85,15 @@ import type {
   GetApiV1BetaWorkloadsByNameStatusData,
   GetApiV1BetaWorkloadsByNameStatusErrors,
   GetApiV1BetaWorkloadsByNameStatusResponses,
+  GetApiV1BetaWorkloadsByNameUpgradeCheckData,
+  GetApiV1BetaWorkloadsByNameUpgradeCheckErrors,
+  GetApiV1BetaWorkloadsByNameUpgradeCheckResponses,
   GetApiV1BetaWorkloadsData,
   GetApiV1BetaWorkloadsErrors,
   GetApiV1BetaWorkloadsResponses,
+  GetApiV1BetaWorkloadsUpgradeCheckData,
+  GetApiV1BetaWorkloadsUpgradeCheckErrors,
+  GetApiV1BetaWorkloadsUpgradeCheckResponses,
   GetHealthData,
   GetHealthResponses,
   GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestData,
@@ -152,6 +158,9 @@ import type {
   PostApiV1BetaWorkloadsByNameStopData,
   PostApiV1BetaWorkloadsByNameStopErrors,
   PostApiV1BetaWorkloadsByNameStopResponses,
+  PostApiV1BetaWorkloadsByNameUpgradeData,
+  PostApiV1BetaWorkloadsByNameUpgradeErrors,
+  PostApiV1BetaWorkloadsByNameUpgradeResponses,
   PostApiV1BetaWorkloadsData,
   PostApiV1BetaWorkloadsDeleteData,
   PostApiV1BetaWorkloadsDeleteErrors,
@@ -982,6 +991,25 @@ export const postApiV1BetaWorkloadsStop = <
   })
 
 /**
+ * Check workloads for available upgrades
+ *
+ * Check all workloads (optionally filtered by group) for newer
+ * images available in their source registries. This is an offline
+ * metadata comparison; it does not pull images. Secret values are
+ * never returned.
+ */
+export const getApiV1BetaWorkloadsUpgradeCheck = <
+  ThrowOnError extends boolean = false,
+>(
+  options?: Options<GetApiV1BetaWorkloadsUpgradeCheckData, ThrowOnError>
+) =>
+  (options?.client ?? client).get<
+    GetApiV1BetaWorkloadsUpgradeCheckResponses,
+    GetApiV1BetaWorkloadsUpgradeCheckErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/workloads/upgrade-check', ...options })
+
+/**
  * Delete a workload
  *
  * Delete a workload asynchronously. Returns 202 Accepted immediately.
@@ -1132,6 +1160,52 @@ export const postApiV1BetaWorkloadsByNameStop = <
     PostApiV1BetaWorkloadsByNameStopErrors,
     ThrowOnError
   >({ url: '/api/v1beta/workloads/{name}/stop', ...options })
+
+/**
+ * Apply an available upgrade to a workload
+ *
+ * Apply a registry-sourced upgrade to a single workload. This
+ * re-resolves and verifies the candidate image, pulls it, and only
+ * then recreates the workload with the new image, preserving the
+ * existing configuration. If the workload is already up to date or
+ * is not registry-sourced, the current check result is returned
+ * unchanged (no-op). Secret values are never accepted or returned.
+ */
+export const postApiV1BetaWorkloadsByNameUpgrade = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaWorkloadsByNameUpgradeData, ThrowOnError>
+) =>
+  (options.client ?? client).post<
+    PostApiV1BetaWorkloadsByNameUpgradeResponses,
+    PostApiV1BetaWorkloadsByNameUpgradeErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/workloads/{name}/upgrade',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Check a workload for an available upgrade
+ *
+ * Check whether a single workload has a newer image available in
+ * its source registry. This is an offline metadata comparison; it
+ * does not pull images. Secret values are never returned.
+ */
+export const getApiV1BetaWorkloadsByNameUpgradeCheck = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetApiV1BetaWorkloadsByNameUpgradeCheckData, ThrowOnError>
+) =>
+  (options.client ?? client).get<
+    GetApiV1BetaWorkloadsByNameUpgradeCheckResponses,
+    GetApiV1BetaWorkloadsByNameUpgradeCheckErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/workloads/{name}/upgrade-check', ...options })
 
 /**
  * Health check
