@@ -211,6 +211,20 @@ export const createMenuTemplate = (toolHiveIsRunning: boolean) => [
   createQuitMenuItem(),
 ]
 
+// Module-level template builder. Defaults to createMenuTemplate. Downstream
+// consumers (overlays, packagers, custom distributions) can swap it via
+// setMenuTemplateBuilder before app.whenReady() fires to recompose the tray
+// menu without forking this module.
+type MenuTemplateBuilder = (
+  toolHiveIsRunning: boolean
+) => Electron.MenuItemConstructorOptions[]
+
+let menuTemplateBuilder: MenuTemplateBuilder = createMenuTemplate
+
+export function setMenuTemplateBuilder(builder: MenuTemplateBuilder) {
+  menuTemplateBuilder = builder
+}
+
 const createClickHandler = () => {
   let lastClickTime = 0
 
@@ -245,7 +259,7 @@ function setupTrayMenu(toolHiveIsRunning: boolean) {
     setTray(tray)
   }
 
-  const menuTemplate = createMenuTemplate(toolHiveIsRunning)
+  const menuTemplate = menuTemplateBuilder(toolHiveIsRunning)
   const contextMenu = Menu.buildFromTemplate(menuTemplate)
 
   tray.setToolTip(app.getName())
