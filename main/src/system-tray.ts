@@ -215,7 +215,7 @@ export const createMenuTemplate = (toolHiveIsRunning: boolean) => [
 // consumers (overlays, packagers, custom distributions) can swap it via
 // setMenuTemplateBuilder before app.whenReady() fires to recompose the tray
 // menu without forking this module.
-type MenuTemplateBuilder = (
+export type MenuTemplateBuilder = (
   toolHiveIsRunning: boolean
 ) => Electron.MenuItemConstructorOptions[]
 
