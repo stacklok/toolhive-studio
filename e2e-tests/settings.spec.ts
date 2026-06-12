@@ -8,5 +8,7 @@ test('displays correct ToolHive binary version', async ({ window }) => {
   const versionRow = window
     .locator('text=ToolHive binary version')
     .locator('..')
-  await expect(versionRow).toContainText(TOOLHIVE_VERSION)
+  // The row shows the version detected from the bundled binary, which prints
+  // it without the "v" prefix the build-time constant carries.
+  await expect(versionRow).toContainText(TOOLHIVE_VERSION.replace(/^v/, ''))
 })

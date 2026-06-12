@@ -1,12 +1,10 @@
 import { ipcRenderer } from 'electron'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
-import { TOOLHIVE_VERSION } from '../../../utils/constants'
 import type { ToolhiveStatus } from '../../../common/types/toolhive-status'
 
 export const toolhiveApi = {
   getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
   getToolhiveSocketPath: () => ipcRenderer.invoke('get-toolhive-socket-path'),
-  getToolhiveVersion: () => TOOLHIVE_VERSION,
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
   getToolhiveStatus: () => ipcRenderer.invoke('get-toolhive-status'),
   isUsingCustomSocket: () => ipcRenderer.invoke('is-using-custom-socket'),
@@ -34,7 +32,6 @@ export const toolhiveApi = {
 export interface ToolhiveAPI {
   getToolhiveMcpPort: () => Promise<number | undefined>
   getToolhiveSocketPath: () => Promise<string | undefined>
-  getToolhiveVersion: () => string
   isToolhiveRunning: () => Promise<boolean>
   getToolhiveStatus: () => Promise<ToolhiveStatus>
   isUsingCustomSocket: () => Promise<boolean>

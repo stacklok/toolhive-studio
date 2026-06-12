@@ -15,10 +15,10 @@ export function useAppVersion() {
     queryKey: ['app-version'],
     queryFn: async (): Promise<AppVersionInfo> => {
       try {
-        const [version, release, toolhiveVersion] = await Promise.allSettled([
+        const [version, release, cliStatus] = await Promise.allSettled([
           window.electronAPI.getAppVersion(),
           window.electronAPI.isOfficialReleaseBuild(),
-          window.electronAPI.getToolhiveVersion(),
+          window.electronAPI.cliAlignment.getStatus(),
         ])
 
         return {
@@ -36,10 +36,12 @@ export function useAppVersion() {
               : false,
           isReleaseBuild:
             release.status === 'fulfilled' ? release.value : false,
+          // Same value the CLI tab shows (detected from the actual binary),
+          // so the two settings tabs can never disagree.
           toolhiveVersion:
-            toolhiveVersion.status === 'fulfilled'
-              ? toolhiveVersion.value
-              : 'N/A',
+            cliStatus.status === 'fulfilled'
+              ? (cliStatus.value.cliVersion ?? 'Unknown')
+              : 'Unknown',
         }
       } catch (error) {
         toast.error('Failed to fetch version info')
