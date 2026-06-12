@@ -15,9 +15,12 @@ import log from '../logger'
 
 const execFileAsync = promisify(execFile)
 
-/** Extracts version from "ToolHive v0.X.X" line in `thv version` output */
+/**
+ * Extracts version from the "ToolHive v0.X.X" line in `thv version` output.
+ * The "v" prefix is optional: enterprise builds stamp the version without it.
+ */
 const parseVersionOutput = (stdout: string): string | null => {
-  const match = stdout.match(/^ToolHive v(\d+\.\d+\.\d+(?:-[\w.]+)?)/m)
+  const match = stdout.match(/^ToolHive v?(\d+\.\d+\.\d+(?:-[\w.]+)?)/m)
   return match?.[1] ?? null
 }
 

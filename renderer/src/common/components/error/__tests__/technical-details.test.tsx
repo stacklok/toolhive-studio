@@ -28,7 +28,9 @@ describe('TechnicalDetails', () => {
       latestVersion: '0.34.0',
       isNewVersionAvailable: false,
     })
-    window.electronAPI.getToolhiveVersion = vi.fn().mockReturnValue('0.8.0')
+    window.electronAPI.cliAlignment = {
+      getStatus: vi.fn().mockResolvedValue({ cliVersion: '0.8.0' }),
+    } as unknown as typeof window.electronAPI.cliAlignment
     window.electronAPI.isOfficialReleaseBuild = vi.fn().mockResolvedValue(false)
     window.electronAPI.getToolhiveStatus = vi
       .fn()

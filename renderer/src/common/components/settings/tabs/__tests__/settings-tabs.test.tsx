@@ -12,7 +12,7 @@ import { Suspense } from 'react'
 const mockGetMainLogContent = vi.fn()
 const mockGetAppVersion = vi.fn()
 const mockIsOfficialReleaseBuild = vi.fn()
-const mockGetToolhiveVersion = vi.fn()
+const mockGetCliStatus = vi.fn()
 const mockIsAutoUpdateEnabled = vi.fn()
 const mockSetAutoUpdate = vi.fn()
 const mockGetUpdateState = vi.fn()
@@ -89,7 +89,9 @@ describe('SettingsTabs', () => {
     window.electronAPI.getMainLogContent = mockGetMainLogContent
     window.electronAPI.getAppVersion = mockGetAppVersion
     window.electronAPI.isOfficialReleaseBuild = mockIsOfficialReleaseBuild
-    window.electronAPI.getToolhiveVersion = mockGetToolhiveVersion
+    window.electronAPI.cliAlignment = {
+      getStatus: mockGetCliStatus,
+    } as unknown as typeof window.electronAPI.cliAlignment
     window.electronAPI.isAutoUpdateEnabled = mockIsAutoUpdateEnabled
     window.electronAPI.setAutoUpdate = mockSetAutoUpdate
     window.electronAPI.getUpdateState = mockGetUpdateState
@@ -108,7 +110,7 @@ describe('SettingsTabs', () => {
     mockGetMainLogContent.mockResolvedValue('Mock log content')
     mockGetAppVersion.mockResolvedValue('1.0.0')
     mockIsOfficialReleaseBuild.mockResolvedValue(true)
-    mockGetToolhiveVersion.mockResolvedValue('0.9.0')
+    mockGetCliStatus.mockResolvedValue({ cliVersion: '0.9.0' })
     mockIsAutoUpdateEnabled.mockResolvedValue(false)
     mockGetUpdateState.mockResolvedValue('none')
     mockSentryIsEnabled.mockResolvedValue(true)
