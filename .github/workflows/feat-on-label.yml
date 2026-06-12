@@ -1,0 +1,23 @@
+name: Feature Agent (On Label)
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  id-token: write
+
+jobs:
+  feat:
+    name: Feature Agent
+    if: >-
+      github.event.label.name == 'agent-feat'
+      && (contains(github.event.issue.labels.*.name, 'Task')
+          || contains(github.event.issue.labels.*.name, 'enhancement'))
+    uses: ./.github/workflows/_feat-agent.yml
+    with:
+      issue-number: ${{ github.event.issue.number }}
+    secrets: inherit

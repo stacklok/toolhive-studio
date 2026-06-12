@@ -217,7 +217,7 @@ jobs:
         run: |
           ISSUE_NUM="${{ inputs.issue-number }}"
           BRANCH="fix/auto-${ISSUE_NUM}"
-          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${ISSUE_NUM}")
+          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: agent-fix for #${ISSUE_NUM}")
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -243,19 +243,19 @@ jobs:
         run: |
           BRANCH="${{ steps.push.outputs.branch }}"
           BASE="${{ github.event.repository.default_branch }}"
-          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${{ inputs.issue-number }}")
+          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: agent-fix for #${{ inputs.issue-number }}")
 
           if [ ! -f pr-body.md ]; then
             echo "Automated fix for #${{ inputs.issue-number }}." > pr-body.md
           fi
 
-          gh label create auto-fix --description "Automated bug fix by Bug Fix Agent" --color 0E8A16 2>/dev/null || true
+          gh label create agent-fix --description "Automated fix by Bug Fix Agent" --color 0E8A16 2>/dev/null || true
           gh pr create \
             --title "$TITLE" \
             --body-file pr-body.md \
             --base "$BASE" \
             --head "$BRANCH" \
-            --label "auto-fix"
+            --label "agent-fix"
 
       - name: Comment on issue (all attempts failed)
         if: >-
@@ -276,4 +276,4 @@ jobs:
             "$ANALYSIS" > /tmp/comment-body.md
 
           gh issue comment "${{ inputs.issue-number }}" --body-file /tmp/comment-body.md
-          gh issue edit "${{ inputs.issue-number }}" --remove-label "auto-fix" 2>/dev/null || true
+          gh issue edit "${{ inputs.issue-number }}" --remove-label "agent-fix" 2>/dev/null || true
