@@ -196,5 +196,44 @@ describe('cli-detection', () => {
         isExecutable: false,
       })
     })
+
+    it('parses version without the "v" prefix (enterprise builds)', async () => {
+      vol.fromJSON({
+        '/path/to/thv': 'binary content',
+      })
+
+      mockExecFileAsync.mockResolvedValue({
+        stdout: 'ToolHive 0.1.39\nCommit: be1357a\nBuilt: 2026-05-19',
+        stderr: '',
+      })
+
+      const result = await getCliInfo('/path/to/thv')
+
+      expect(result).toEqual({
+        exists: true,
+        version: '0.1.39',
+        isExecutable: true,
+      })
+    })
+
+    it('parses prerelease versions with and without the "v" prefix', async () => {
+      vol.fromJSON({
+        '/path/to/thv': 'binary content',
+      })
+
+      mockExecFileAsync.mockResolvedValue({
+        stdout: 'ToolHive v1.5.0-rc.1',
+        stderr: '',
+      })
+
+      expect((await getCliInfo('/path/to/thv')).version).toBe('1.5.0-rc.1')
+
+      mockExecFileAsync.mockResolvedValue({
+        stdout: 'ToolHive 1.5.0-rc.1',
+        stderr: '',
+      })
+
+      expect((await getCliInfo('/path/to/thv')).version).toBe('1.5.0-rc.1')
+    })
   })
 })
