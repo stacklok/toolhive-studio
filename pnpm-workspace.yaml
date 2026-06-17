@@ -34,9 +34,7 @@ auditConfig:
 overrides:
   '@electron/rebuild': ^4.0.4
   '@hono/node-server': '>=1.19.14'
-  '@opentelemetry/core': '>=2.8.0'
   '@xmldom/xmldom': '>=0.9.10'
-  dompurify: '>=3.4.7'
   esbuild: '>=0.28.1'
   fast-uri: '>=3.1.2'
   fast-xml-builder: '>=1.2.0'
