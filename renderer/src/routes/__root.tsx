@@ -46,6 +46,10 @@ function RootComponent() {
 
   return (
     <NewsletterModalProvider>
+      <div
+        className="app-region-drag pointer-events-none fixed top-0 right-0
+          left-0 z-50 h-9"
+      />
       {!hideNav && <TopNav />}
       {!hideNav && import.meta.env.DEV && <CustomSocketBanner />}
       <Main>
