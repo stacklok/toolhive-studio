@@ -3,7 +3,6 @@ import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { ChatMcpServer } from '../types'
-import { TOOLHIVE_MCP_SERVER_NAME } from '../lib/constants'
 
 /**
  * Pass `threadId` to scope the enabled-servers view to that thread; omit it
@@ -38,14 +37,6 @@ export function useAvailableServers(threadId?: string | null) {
     [enabledMcpTools]
   )
 
-  const { data: toolhiveMcpInfo } = useQuery({
-    queryKey: ['toolhive-mcp-info'],
-    queryFn: () => window.electronAPI.chat.getToolhiveMcpInfo(),
-    refetchInterval: 5000, // Refresh every 5 seconds
-    staleTime: 0,
-    refetchOnMount: true,
-  })
-
   // Process workloads data to get running MCP servers
   const installedMcpServers: ChatMcpServer[] = (workloadsData?.workloads || [])
     .filter((w: CoreWorkload) => w.status === 'running' && w.url)
@@ -56,21 +47,9 @@ export function useAvailableServers(threadId?: string | null) {
       package: w.package,
     }))
 
-  const internalMcpServers: ChatMcpServer[] = toolhiveMcpInfo?.isRunning
-    ? [
-        {
-          id: 'mcp_toolhive',
-          name: TOOLHIVE_MCP_SERVER_NAME,
-          status: 'running',
-          package: 'toolhive-mcp',
-        },
-      ]
-    : []
-
-  const allAvailableMcpServer = [
-    ...installedMcpServers,
-    ...internalMcpServers,
-  ].sort((a, b) => a.name.localeCompare(b.name))
+  const allAvailableMcpServer = [...installedMcpServers].sort((a, b) =>
+    a.name.localeCompare(b.name)
+  )
 
   const enabledMcpServers = allAvailableMcpServer.filter((server) =>
     backendEnabledTools.includes(server.name)

@@ -3,7 +3,6 @@ import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@
 import type { ToolhiveStatus } from '../../../common/types/toolhive-status'
 
 export const toolhiveApi = {
-  getToolhiveMcpPort: () => ipcRenderer.invoke('get-toolhive-mcp-port'),
   getToolhiveSocketPath: () => ipcRenderer.invoke('get-toolhive-socket-path'),
   isToolhiveRunning: () => ipcRenderer.invoke('is-toolhive-running'),
   getToolhiveStatus: () => ipcRenderer.invoke('get-toolhive-status'),
@@ -30,7 +29,6 @@ export const toolhiveApi = {
 }
 
 export interface ToolhiveAPI {
-  getToolhiveMcpPort: () => Promise<number | undefined>
   getToolhiveSocketPath: () => Promise<string | undefined>
   isToolhiveRunning: () => Promise<boolean>
   getToolhiveStatus: () => Promise<ToolhiveStatus>

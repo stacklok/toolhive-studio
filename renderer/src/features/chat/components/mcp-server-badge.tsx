@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Badge } from '@/common/components/ui/badge'
 import { Settings2 } from 'lucide-react'
 import { McpToolsModal } from './mcp-tools-modal'
-import { getNormalizedServerName } from '../lib/utils'
 import { trackEvent } from '@/common/lib/analytics'
 
 interface McpServerBadgeProps {
@@ -48,7 +47,7 @@ export function McpServerBadge({
         className="group h-auto max-w-48 cursor-pointer"
         onClick={handleBadgeClick}
       >
-        <span className="truncate">{getNormalizedServerName(serverName)}</span>
+        <span className="truncate">{serverName}</span>
         <Badge variant="outline" className="bg-background/90 font-light">
           {getEnabledToolsCount()} tools
         </Badge>

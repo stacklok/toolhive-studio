@@ -233,7 +233,7 @@ The Electron main window's `WM_CLASS` is `ToolHive`, **not** `Electron`. The `~/
 
 ### Readiness false-positive (transient processes)
 
-`pgrep -x thv` would match the short-lived `thv version` / `thv --version` invocation that Electron runs during startup to verify the binary is present. The long-running backend is always `thv serve --openapi --experimental-mcp ... --port=N`, so use `pgrep -f "thv serve"` to gate on that specifically.
+`pgrep -x thv` would match the short-lived `thv version` / `thv --version` invocation that Electron runs during startup to verify the binary is present. The long-running backend is always `thv serve --openapi ... --port=N`, so use `pgrep -f "thv serve"` to gate on that specifically.
 
 ### Readiness false-positive (pgrep self-match)
 

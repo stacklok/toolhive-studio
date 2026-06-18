@@ -11,7 +11,6 @@ vi.mock('../../toolhive-manager', () => ({
   getToolhiveSocketPath: vi.fn(),
   isToolhiveRunning: vi.fn(),
   getToolhiveStatus: vi.fn(),
-  getToolhiveMcpPort: vi.fn(),
   isUsingCustomSocket: vi.fn(),
 }))
 
@@ -43,7 +42,6 @@ import {
   getToolhiveSocketPath,
   isToolhiveRunning,
   getToolhiveStatus,
-  getToolhiveMcpPort,
   isUsingCustomSocket,
 } from '../../toolhive-manager'
 import { checkContainerEngine } from '../../container-engine'
@@ -61,7 +59,6 @@ const mockRestartToolhive = vi.mocked(restartToolhive)
 const mockGetSocketPath = vi.mocked(getToolhiveSocketPath)
 const mockIsRunning = vi.mocked(isToolhiveRunning)
 const mockGetStatus = vi.mocked(getToolhiveStatus)
-const mockGetMcpPort = vi.mocked(getToolhiveMcpPort)
 const mockIsUsingCustomSocket = vi.mocked(isUsingCustomSocket)
 const mockCheckContainerEngine = vi.mocked(checkContainerEngine)
 const mockGetLastShutdownServers = vi.mocked(getLastShutdownServers)
@@ -87,7 +84,6 @@ describe('ipc-handlers/toolhive register()', () => {
     const channels = mockHandle.mock.calls.map(([c]) => c)
     expect(channels.sort()).toEqual(
       [
-        'get-toolhive-mcp-port',
         'get-toolhive-socket-path',
         'is-toolhive-running',
         'get-toolhive-status',
@@ -104,13 +100,6 @@ describe('ipc-handlers/toolhive register()', () => {
     register()
 
     expect(mockRegisterApiFetchHandlers).toHaveBeenCalledTimes(1)
-  })
-
-  it('get-toolhive-mcp-port returns the value from the manager', () => {
-    mockGetMcpPort.mockReturnValue(12345)
-    register()
-
-    expect(getHandler('get-toolhive-mcp-port')({})).toBe(12345)
   })
 
   it('get-toolhive-socket-path returns the value from the manager', () => {

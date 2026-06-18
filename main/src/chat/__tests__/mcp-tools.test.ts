@@ -4,7 +4,6 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 // Hoisted mock factories — must be defined before vi.mock() calls
 // ---------------------------------------------------------------------------
 
-const mockGetToolhiveMcpPort = vi.hoisted(() => vi.fn().mockReturnValue(3001))
 const mockCreateMainProcessApiClient = vi.hoisted(() =>
   vi.fn().mockReturnValue({})
 )
@@ -29,7 +28,7 @@ const mockSdkClient = vi.hoisted(() => ({
   close: vi.fn().mockResolvedValue(undefined),
 }))
 
-// AI SDK MCP client mock (used by getToolhiveMcpInfo / createMcpTools)
+// AI SDK MCP client mock (used by createMcpTools)
 const mockAiMcpClient = vi.hoisted(() => ({
   tools: vi.fn().mockResolvedValue({}),
   close: vi.fn().mockResolvedValue(undefined),
@@ -47,10 +46,6 @@ const mockReplaceAllMcpAppUiMetadata = vi.hoisted(() => vi.fn())
 // ---------------------------------------------------------------------------
 // Module mocks
 // ---------------------------------------------------------------------------
-
-vi.mock('../../toolhive-manager', () => ({
-  getToolhiveMcpPort: mockGetToolhiveMcpPort,
-}))
 
 vi.mock('../../unix-socket-fetch', () => ({
   createMainProcessApiClient: mockCreateMainProcessApiClient,
@@ -104,10 +99,6 @@ vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
   },
 }))
 
-vi.mock('@modelcontextprotocol/sdk/client/streamableHttp.js', () => ({
-  StreamableHTTPClientTransport: function StreamableHTTPTransportMock() {},
-}))
-
 // The schemas are passed through to the mocked client.request(), so they
 // just need to be non-undefined objects.
 vi.mock('@modelcontextprotocol/sdk/types.js', () => ({
@@ -136,7 +127,6 @@ import {
   getCachedUiMetadata,
   fetchUiResource,
   proxyMcpToolCall,
-  getToolhiveMcpInfo,
   getMcpServerTools,
   createMcpTools,
 } from '../mcp-tools'
@@ -145,8 +135,6 @@ import log from '../../logger'
 // ---------------------------------------------------------------------------
 // Shared fixtures
 // ---------------------------------------------------------------------------
-
-const THV_SERVER = 'toolhive-mcp-internal'
 
 const makeWorkload = (overrides: Record<string, unknown> = {}) => ({
   name: 'test-server',
@@ -171,9 +159,6 @@ const makeToolDef = (overrides: Record<string, unknown> = {}) => ({
 
 beforeEach(() => {
   vi.clearAllMocks()
-
-  // MCP backend port (still TCP)
-  mockGetToolhiveMcpPort.mockReturnValue(3001)
 
   // API client chain (fetchWorkloads)
   mockCreateMainProcessApiClient.mockReturnValue({})
@@ -250,8 +235,11 @@ describe('getCachedUiMetadata', () => {
         ui: { resourceUri: 'res://cached-tool', visibility: ['model'] },
       },
     }
+    mockGetApiV1BetaWorkloads.mockResolvedValue({
+      data: { workloads: [makeWorkload()] },
+    })
     mockGetEnabledMcpTools.mockResolvedValue({
-      [THV_SERVER]: ['cached-tool'],
+      'test-server': ['cached-tool'],
     })
     mockAiMcpClient.tools.mockResolvedValue({ 'cached-tool': toolWithUi })
 
@@ -345,20 +333,6 @@ describe('fetchUiResource', () => {
     expect(mockSdkClient.close).toHaveBeenCalledOnce()
   })
 
-  it('uses the raw ToolHive MCP transport for the internal ToolHive server', async () => {
-    mockSdkClient.request.mockResolvedValue({
-      contents: [{ text: '<html>thv</html>' }],
-    })
-
-    await fetchUiResource(THV_SERVER, 'res://thv')
-
-    // buildRawTransport should NOT be called for the internal server
-    expect(mockBuildRawTransport).not.toHaveBeenCalled()
-    // StreamableHTTPClientTransport is newed up inside
-    // createToolhiveRawMcpTransport
-    expect(mockSdkClient.connect).toHaveBeenCalledOnce()
-  })
-
   it('uses buildRawTransport for external servers', async () => {
     mockGetApiV1BetaWorkloads.mockResolvedValue({
       data: { workloads: [makeWorkload()] },
@@ -424,88 +398,6 @@ describe('proxyMcpToolCall', () => {
 })
 
 // ---------------------------------------------------------------------------
-// getToolhiveMcpInfo
-// ---------------------------------------------------------------------------
-
-describe('getToolhiveMcpInfo', () => {
-  it('returns isRunning: false when port is not available', async () => {
-    mockGetToolhiveMcpPort.mockReturnValue(null)
-
-    const result = await getToolhiveMcpInfo()
-
-    expect(result.isRunning).toBe(false)
-    expect(result.serverName).toBe(THV_SERVER)
-    expect(mockCreateMCPClient).not.toHaveBeenCalled()
-  })
-
-  it('returns tools with correct enabled flags', async () => {
-    mockAiMcpClient.tools.mockResolvedValue({
-      'tool-enabled': makeToolDef({ description: 'enabled' }),
-      'tool-disabled': makeToolDef({ description: 'disabled' }),
-    })
-
-    const result = await getToolhiveMcpInfo(['tool-enabled'])
-
-    expect(result.isRunning).toBe(true)
-    expect(result.tools).toHaveLength(2)
-    const enabled = result.tools.find((t) => t.name === 'tool-enabled')
-    const disabled = result.tools.find((t) => t.name === 'tool-disabled')
-    expect(enabled?.enabled).toBe(true)
-    expect(disabled?.enabled).toBe(false)
-  })
-
-  it('advertises MCP_UI_EXTENSION_CAPABILITY when creating the client', async () => {
-    await getToolhiveMcpInfo()
-
-    expect(mockCreateMCPClient).toHaveBeenCalledWith(
-      expect.objectContaining({
-        capabilities: expect.objectContaining({
-          extensions: expect.objectContaining({
-            'io.modelcontextprotocol/ui': expect.anything(),
-          }),
-        }),
-      })
-    )
-  })
-
-  it('closes the AI SDK client after listing tools', async () => {
-    await getToolhiveMcpInfo()
-
-    expect(mockAiMcpClient.close).toHaveBeenCalledOnce()
-  })
-
-  it('returns isRunning: false and logs when createMCPClient throws', async () => {
-    mockCreateMCPClient.mockRejectedValue(new Error('connection refused'))
-
-    const result = await getToolhiveMcpInfo()
-
-    expect(result.isRunning).toBe(false)
-    expect(log.error).toHaveBeenCalledWith(
-      'Failed to get Toolhive MCP info:',
-      expect.any(Error)
-    )
-  })
-
-  it('extracts tool parameters from inputSchema', async () => {
-    mockAiMcpClient.tools.mockResolvedValue({
-      'draw-tool': {
-        description: 'Draw something',
-        inputSchema: {
-          type: 'object',
-          properties: { canvas: { type: 'string' } },
-        },
-      },
-    })
-
-    const result = await getToolhiveMcpInfo()
-
-    expect(result.tools[0]?.parameters).toEqual({
-      canvas: { type: 'string' },
-    })
-  })
-})
-
-// ---------------------------------------------------------------------------
 // getMcpServerTools
 // ---------------------------------------------------------------------------
 
@@ -557,19 +449,6 @@ describe('getMcpServerTools', () => {
     expect(mockGetWorkloadAvailableTools).not.toHaveBeenCalled()
   })
 
-  it('falls back to getToolhiveMcpInfo for the internal ToolHive server', async () => {
-    mockGetApiV1BetaWorkloads.mockResolvedValue({ data: { workloads: [] } })
-    mockGetEnabledMcpTools.mockResolvedValue({ [THV_SERVER]: ['thv-tool'] })
-    mockAiMcpClient.tools.mockResolvedValue({
-      'thv-tool': makeToolDef(),
-    })
-
-    const result = await getMcpServerTools(THV_SERVER)
-
-    expect(result?.serverName).toBe(THV_SERVER)
-    expect(mockCreateMCPClient).toHaveBeenCalled()
-  })
-
   it('throws when a regular server workload is not found', async () => {
     mockGetApiV1BetaWorkloads.mockResolvedValue({ data: { workloads: [] } })
 
@@ -612,7 +491,10 @@ describe('createMcpTools', () => {
       ...makeToolDef(),
       _meta: { ui: { resourceUri: 'res://reset-test', visibility: ['model'] } },
     }
-    mockGetEnabledMcpTools.mockResolvedValue({ [THV_SERVER]: ['cached'] })
+    mockGetApiV1BetaWorkloads.mockResolvedValue({
+      data: { workloads: [makeWorkload()] },
+    })
+    mockGetEnabledMcpTools.mockResolvedValue({ 'test-server': ['cached'] })
     mockAiMcpClient.tools.mockResolvedValue({ cached: toolWithUi })
     await createMcpTools()
     expect(getCachedUiMetadata()).toHaveProperty('cached')
@@ -716,35 +598,6 @@ describe('createMcpTools', () => {
     await createMcpTools()
 
     expect(mockCreateMCPClient).not.toHaveBeenCalled()
-  })
-
-  it('registers ToolHive MCP tools when port is available', async () => {
-    mockGetEnabledMcpTools.mockResolvedValue({ [THV_SERVER]: ['thv-draw'] })
-    mockAiMcpClient.tools.mockResolvedValue({ 'thv-draw': makeToolDef() })
-
-    const { tools, clients } = await createMcpTools()
-
-    expect(tools).toHaveProperty('thv-draw')
-    expect(clients).toHaveLength(1)
-    expect(mockCreateMCPClient).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'toolhive-mcp',
-        capabilities: expect.objectContaining({
-          extensions: expect.objectContaining({
-            'io.modelcontextprotocol/ui': expect.anything(),
-          }),
-        }),
-      })
-    )
-  })
-
-  it('skips ToolHive MCP tools when port is not available', async () => {
-    mockGetToolhiveMcpPort.mockReturnValue(null)
-    mockGetEnabledMcpTools.mockResolvedValue({ [THV_SERVER]: ['thv-draw'] })
-
-    const { tools } = await createMcpTools()
-
-    expect(tools).toEqual({})
   })
 
   it('registers per-server tools using createTransport', async () => {

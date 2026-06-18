@@ -81,7 +81,6 @@ export const chatApi = {
         serverName,
         enabledTools
       ),
-    getToolhiveMcpInfo: () => ipcRenderer.invoke('chat:get-toolhive-mcp-info'),
     getEnabledSkills: (installedNames?: readonly string[]) =>
       ipcRenderer.invoke('chat:get-enabled-skills', installedNames) as Promise<
         string[]
@@ -314,7 +313,6 @@ export interface ChatAPI {
       serverName: string,
       enabledTools: string[]
     ) => Promise<{ success: boolean; error?: string }>
-    getToolhiveMcpInfo: () => Promise<AvailableServer>
     getEnabledSkills: (installedNames?: readonly string[]) => Promise<string[]>
     setEnabledSkill: (
       name: string,

@@ -4,7 +4,6 @@ import {
   getToolhiveSocketPath,
   isToolhiveRunning,
   getToolhiveStatus,
-  getToolhiveMcpPort,
   isUsingCustomSocket,
 } from '../toolhive-manager'
 import { checkContainerEngine } from '../container-engine'
@@ -13,7 +12,6 @@ import { registerApiFetchHandlers } from '../unix-socket-fetch'
 import log from '../logger'
 
 export function register() {
-  ipcMain.handle('get-toolhive-mcp-port', () => getToolhiveMcpPort())
   ipcMain.handle('get-toolhive-socket-path', () => getToolhiveSocketPath())
   ipcMain.handle('is-toolhive-running', () => isToolhiveRunning())
   ipcMain.handle('get-toolhive-status', () => getToolhiveStatus())
