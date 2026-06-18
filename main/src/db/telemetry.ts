@@ -46,8 +46,10 @@ export function captureDbReadOnly(
       'db.applied_schema': appliedSchema,
       'db.known_schema': knownSchema,
     })
+    // Stable message so Sentry groups all occurrences into one issue; the
+    // schema versions live in extras above rather than in the message.
     Sentry.captureMessage(
-      `[DB] Read-only: on-disk schema v${appliedSchema} is newer than app v${knownSchema}; SQLite writes disabled`,
+      '[DB] Read-only: on-disk schema is newer than app; SQLite writes disabled',
       'warning'
     )
   })
