@@ -15,7 +15,7 @@ function createElectronStub(): Partial<ElectronAPI> {
       .fn()
       .mockResolvedValue({ subscribed: false, dismissedAt: '' }),
     setNewsletterSubscribed: vi.fn().mockResolvedValue(undefined),
-    setNewsletterDismissedAt: vi.fn().mockResolvedValue(undefined),
+    setNewsletterDismissedAt: vi.fn().mockResolvedValue(true),
     getExpertConsultationState: vi
       .fn()
       .mockResolvedValue({ submitted: false, dismissedAt: '' }),
