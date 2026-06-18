@@ -1,12 +1,4 @@
-import { TOOLHIVE_MCP_SERVER_NAME } from './constants'
 import type { ChatSettings } from '../types'
-
-export const getNormalizedServerName = (serverName: string) => {
-  if (serverName === TOOLHIVE_MCP_SERVER_NAME) {
-    return 'toolhive mcp'
-  }
-  return serverName
-}
 
 type ProviderSettings =
   | {

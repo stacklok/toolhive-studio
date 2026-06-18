@@ -1,7 +1,6 @@
 import { spawn } from 'node:child_process'
 import { existsSync, unlinkSync } from 'node:fs'
 import path from 'node:path'
-import net from 'node:net'
 import { app } from 'electron'
 import { updateTrayStatus } from './system-tray'
 import log from './logger'
@@ -35,16 +34,11 @@ const binPath = app.isPackaged
     )
 
 let toolhiveProcess: ReturnType<typeof spawn> | undefined
-let toolhiveMcpPort: number | undefined
 let toolhiveSocketPath: string | undefined
 let isRestarting = false
 let isStopping = false
 let killTimer: NodeJS.Timeout | undefined
 let processError: ToolhiveProcessError | undefined
-
-export function getToolhiveMcpPort(): number | undefined {
-  return toolhiveMcpPort
-}
 
 export function getToolhiveSocketPath(): string | undefined {
   return toolhiveSocketPath
@@ -81,80 +75,6 @@ export function isUsingCustomSocket(): boolean {
   return !app.isPackaged && !!process.env.THV_SOCKET
 }
 
-/**
- * Parses THV_MCP_PORT into a positive integer. Returns `undefined` for
- * unset / blank / non-numeric / out-of-range values and logs a warning so
- * a typo doesn't silently turn into NaN being treated as a real port.
- */
-function parseMcpPortEnv(raw: string | undefined): number | undefined {
-  if (!raw) return undefined
-  const port = Number(raw)
-  if (!Number.isInteger(port) || port <= 0 || port > 65535) {
-    log.warn(
-      `Ignoring invalid THV_MCP_PORT=${raw}; expected an integer in 1..65535`
-    )
-    return undefined
-  }
-  return port
-}
-
-async function findFreePort(
-  minPort?: number,
-  maxPort?: number
-): Promise<number> {
-  const checkPort = (port: number): Promise<boolean> => {
-    return new Promise((resolve) => {
-      const server = net.createServer()
-      server.listen(port, () => {
-        server.close(() => resolve(true))
-      })
-      server.on('error', () => resolve(false))
-    })
-  }
-
-  const getRandomPort = (): Promise<number> => {
-    return new Promise((resolve, reject) => {
-      const server = net.createServer()
-      server.listen(0, () => {
-        const address = server.address()
-        if (typeof address === 'object' && address && address.port) {
-          const port = address.port
-          server.close(() => resolve(port))
-        } else {
-          reject(new Error('Failed to get random port'))
-        }
-      })
-      server.on('error', reject)
-    })
-  }
-
-  // If no range specified, use OS assignment directly
-  if (!minPort || !maxPort) {
-    return await getRandomPort()
-  }
-
-  // Try random ports within range for better distribution
-  const attempts = Math.min(20, maxPort - minPort + 1)
-  const triedPorts = new Set<number>()
-
-  for (let i = 0; i < attempts; i++) {
-    const port = Math.floor(Math.random() * (maxPort - minPort + 1)) + minPort
-
-    if (triedPorts.has(port)) continue
-    triedPorts.add(port)
-
-    if (await checkPort(port)) {
-      return port
-    }
-  }
-
-  // Fallback to OS-assigned random port
-  log.warn(
-    `No free port found in range ${minPort}-${maxPort}, falling back to random port`
-  )
-  return await getRandomPort()
-}
-
 function generateSocketPath(): string {
   // Windows AF_UNIX sockets created in %TEMP% hit EACCES on connect due to
   // DACL handling. Named pipes are the canonical Windows IPC and are
@@ -184,7 +104,6 @@ export async function startToolhive(): Promise<void> {
   Sentry.withScope<Promise<void>>(async (scope) => {
     if (isUsingCustomSocket()) {
       toolhiveSocketPath = process.env.THV_SOCKET!
-      toolhiveMcpPort = parseMcpPortEnv(process.env.THV_MCP_PORT)
       // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
       log.info(`Using external ToolHive on socket ${toolhiveSocketPath}`)
       return
@@ -197,22 +116,14 @@ export async function startToolhive(): Promise<void> {
     }
 
     processError = undefined
-    toolhiveMcpPort = await findFreePort()
     toolhiveSocketPath = generateSocketPath()
     cleanupSocketFile(toolhiveSocketPath)
 
     log.info(
-      `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}`
+      `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}`
     )
 
-    const serveArgs = [
-      'serve',
-      '--openapi',
-      '--experimental-mcp',
-      '--experimental-mcp-host=127.0.0.1',
-      `--experimental-mcp-port=${toolhiveMcpPort}`,
-      `--socket=${toolhiveSocketPath}`,
-    ]
+    const serveArgs = ['serve', '--openapi', `--socket=${toolhiveSocketPath}`]
 
     const isE2E = process.env.TOOLHIVE_E2E === 'true'
     const sentryDsn = isE2E ? undefined : import.meta.env.VITE_SENTRY_THV_DSN
@@ -244,7 +155,7 @@ export async function startToolhive(): Promise<void> {
 
     scope.addBreadcrumb({
       category: 'debug',
-      message: `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}, MCP on port ${toolhiveMcpPort}, PID: ${child.pid}`,
+      message: `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}, PID: ${child.pid}`,
     })
 
     updateTrayStatus(!!child)
@@ -297,7 +208,6 @@ export async function startToolhive(): Promise<void> {
       if (toolhiveProcess === child) {
         toolhiveProcess = undefined
         toolhiveSocketPath = undefined
-        toolhiveMcpPort = undefined
         isStopping = false
         // Drop the pending SIGKILL timer - the child is already gone and a
         // live setTimeout would keep the event loop alive during shutdown.
@@ -408,7 +318,6 @@ export function stopToolhive(options?: { force?: boolean }): void {
     // THV_SOCKET — that path is not owned by this process and must stay visible.
     if ((!toolhiveProcess || hasExited) && !isUsingCustomSocket()) {
       toolhiveSocketPath = undefined
-      toolhiveMcpPort = undefined
     }
     return
   }
@@ -436,7 +345,6 @@ export function stopToolhive(options?: { force?: boolean }): void {
     // bridge until the real `exit` handler runs (mock tests may not emit exit).
     if (!isUsingCustomSocket()) {
       toolhiveSocketPath = undefined
-      toolhiveMcpPort = undefined
     }
     log.info(`[stopToolhive] Process cleanup completed`)
     return
@@ -451,7 +359,6 @@ export function stopToolhive(options?: { force?: boolean }): void {
     cleanupSocketFile(toolhiveSocketPath)
   }
   toolhiveSocketPath = undefined
-  toolhiveMcpPort = undefined
 
   log.info(`[stopToolhive] Process cleanup completed`)
 }

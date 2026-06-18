@@ -2,12 +2,10 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from 'node:events'
 import { vol } from 'memfs'
 import { spawn } from 'node:child_process'
-import net from 'node:net'
 import { platform } from 'node:os'
 import { app } from 'electron'
 import {
   startToolhive,
-  getToolhiveMcpPort,
   getToolhiveSocketPath,
   getToolhiveStatus,
   isToolhiveRunning,
@@ -46,18 +44,6 @@ vi.mock('node:os', async (importOriginal) => {
   }
 })
 vi.mock('node:fs')
-vi.mock('node:net', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('node:net')>()
-  const mockCreateServerFn = vi.fn()
-  return {
-    ...actual,
-    createServer: mockCreateServerFn,
-    default: {
-      ...actual,
-      createServer: mockCreateServerFn,
-    },
-  }
-})
 vi.mock('electron', () => ({
   app: {
     isPackaged: false,
@@ -101,7 +87,6 @@ vi.mock('electron-store', () => {
 
 // Get mocked functions
 const mockSpawn = vi.mocked(spawn)
-const mockNet = vi.mocked(net)
 const mockApp = vi.mocked(app)
 const mockUpdateTrayStatus = vi.mocked(updateTrayStatus)
 const mockLog = vi.mocked(log)
@@ -119,34 +104,6 @@ class MockProcess extends EventEmitter {
     // Don't automatically set killed - let tests control this
     // This allows testing delayed SIGKILL scenarios
     return true
-  }
-}
-
-// Mock server for net.createServer
-class MockServer extends EventEmitter {
-  private _port: number | null = null
-
-  listen(port: number, callback?: () => void) {
-    // Use fake timers - will be controlled by vi.advanceTimersByTime()
-    setTimeout(() => {
-      if (port === 0) {
-        // Simulate OS assigning a random port
-        this._port = Math.floor(Math.random() * 10000) + 10000
-      } else {
-        this._port = port
-      }
-      callback?.()
-    }, 10)
-  }
-
-  address() {
-    return { port: this._port }
-  }
-
-  close(callback?: () => void) {
-    setTimeout(() => {
-      callback?.()
-    }, 10)
   }
 }
 
@@ -181,11 +138,6 @@ describe('toolhive-manager', () => {
       configurable: true,
     })
     vi.mocked(mockApp.getPath).mockReturnValue('/test/userData')
-
-    // Mock net.createServer to return a new MockServer instance each time
-    mockNet.createServer.mockImplementation(function createServer() {
-      return new MockServer() as unknown as net.Server
-    })
 
     // Mock logger methods
     mockLog.info = vi.fn()
@@ -226,9 +178,6 @@ describe('toolhive-manager', () => {
         expect.arrayContaining([
           'serve',
           '--openapi',
-          '--experimental-mcp',
-          '--experimental-mcp-host=127.0.0.1',
-          expect.stringMatching(/--experimental-mcp-port=\d+/),
           expect.stringMatching(/--socket=.+/),
         ]),
         {
@@ -246,7 +195,6 @@ describe('toolhive-manager', () => {
       )
       expect(isToolhiveRunning()).toBe(true)
       expect(getToolhiveSocketPath()).toBeTypeOf('string')
-      expect(getToolhiveMcpPort()).toBeTypeOf('number')
     })
 
     it('updates tray status after starting', async () => {
@@ -388,11 +336,9 @@ describe('toolhive-manager', () => {
         await startPromise
 
         const socketPath = getToolhiveSocketPath()
-        const mcpPort = getToolhiveMcpPort()
 
         expect(socketPath).toBeTypeOf('string')
         expect(socketPath).toMatch(/toolhive-\d+\.sock$/)
-        expect(mcpPort).toBeTypeOf('number')
 
         const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
         expect(spawnArgs).toEqual(
@@ -425,7 +371,6 @@ describe('toolhive-manager', () => {
         expect(socketPath).toBeTypeOf('string')
         // Named pipe shape: \\.\pipe\toolhive-<pid>
         expect(socketPath).toMatch(/^\\\\\.\\pipe\\toolhive-\d+$/)
-        expect(getToolhiveMcpPort()).toBeTypeOf('number')
 
         const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
         expect(spawnArgs).toEqual(
@@ -441,20 +386,17 @@ describe('toolhive-manager', () => {
       }
     })
 
-    it('logs socket path and MCP port on startup', async () => {
+    it('logs socket path on startup', async () => {
       const startPromise = startToolhive()
 
       await vi.advanceTimersByTimeAsync(50)
       await startPromise
 
       expect(getToolhiveSocketPath()).toBeTypeOf('string')
-      expect(getToolhiveMcpPort()).toBeTypeOf('number')
 
-      // Verify the log message includes the socket path and MCP port
+      // Verify the log message includes the socket path
       expect(mockLog.info).toHaveBeenCalledWith(
-        expect.stringMatching(
-          /Starting ToolHive from: .+ on socket .+, MCP on port \d+/
-        )
+        expect.stringMatching(/Starting ToolHive from: .+ on socket .+/)
       )
     })
 
@@ -469,9 +411,6 @@ describe('toolhive-manager', () => {
         expect.arrayContaining([
           'serve',
           '--openapi',
-          '--experimental-mcp',
-          '--experimental-mcp-host=127.0.0.1',
-          expect.stringMatching(/--experimental-mcp-port=\d+/),
           expect.stringMatching(/--socket=.+/),
         ]),
         {
@@ -592,24 +531,6 @@ describe('toolhive-manager', () => {
       await vi.advanceTimersByTimeAsync(5000)
 
       expect(getToolhiveStatus().processError).toBeUndefined()
-    })
-  })
-
-  describe('port finding', () => {
-    it('uses an OS-assigned random port for the MCP service', async () => {
-      const startPromise = startToolhive()
-
-      await vi.advanceTimersByTimeAsync(50)
-      await startPromise
-
-      // findFreePort() is called without a range, so it uses OS assignment
-      // (server.listen(0, ...)) which always succeeds. No fallback warning is
-      // expected on the happy path.
-      expect(mockLog.warn).not.toHaveBeenCalledWith(
-        expect.stringContaining('falling back to random port')
-      )
-      expect(isToolhiveRunning()).toBe(true)
-      expect(getToolhiveMcpPort()).toBeTypeOf('number')
     })
   })
 
@@ -778,7 +699,6 @@ describe('toolhive-manager', () => {
 
       expect(isToolhiveRunning()).toBe(false)
       expect(getToolhiveSocketPath()).toBeUndefined()
-      expect(getToolhiveMcpPort()).toBeUndefined()
       expect(mockLog.info).toHaveBeenCalledWith(
         '[stopToolhive] Process cleanup completed'
       )
@@ -892,69 +812,30 @@ describe('toolhive-manager', () => {
 
   describe('external thv via THV_SOCKET', () => {
     const originalSocket = process.env.THV_SOCKET
-    const originalMcpPort = process.env.THV_MCP_PORT
 
     afterEach(() => {
       if (originalSocket === undefined) delete process.env.THV_SOCKET
       else process.env.THV_SOCKET = originalSocket
-      if (originalMcpPort === undefined) delete process.env.THV_MCP_PORT
-      else process.env.THV_MCP_PORT = originalMcpPort
     })
 
     it('reports running and exposes the socket without spawning thv', async () => {
       process.env.THV_SOCKET = '/tmp/external-thv.sock'
-      delete process.env.THV_MCP_PORT
 
       await startToolhive()
 
       expect(mockSpawn).not.toHaveBeenCalled()
       expect(isToolhiveRunning()).toBe(true)
       expect(getToolhiveSocketPath()).toBe('/tmp/external-thv.sock')
-      expect(getToolhiveMcpPort()).toBeUndefined()
     })
 
     it('does not clear THV_SOCKET path when stopToolhive has no child to stop', async () => {
       process.env.THV_SOCKET = '/tmp/external-thv.sock'
-      delete process.env.THV_MCP_PORT
 
       await startToolhive()
       stopToolhive()
 
       expect(getToolhiveSocketPath()).toBe('/tmp/external-thv.sock')
       expect(isToolhiveRunning()).toBe(true)
-    })
-
-    it('parses a valid THV_MCP_PORT', async () => {
-      process.env.THV_SOCKET = '/tmp/external-thv.sock'
-      process.env.THV_MCP_PORT = '40000'
-
-      await startToolhive()
-
-      expect(getToolhiveMcpPort()).toBe(40000)
-    })
-
-    it('falls back to undefined and warns on a non-numeric THV_MCP_PORT', async () => {
-      process.env.THV_SOCKET = '/tmp/external-thv.sock'
-      process.env.THV_MCP_PORT = 'not-a-port'
-
-      await startToolhive()
-
-      expect(getToolhiveMcpPort()).toBeUndefined()
-      expect(mockLog.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Ignoring invalid THV_MCP_PORT=not-a-port')
-      )
-    })
-
-    it('rejects out-of-range THV_MCP_PORT values', async () => {
-      process.env.THV_SOCKET = '/tmp/external-thv.sock'
-      process.env.THV_MCP_PORT = '70000'
-
-      await startToolhive()
-
-      expect(getToolhiveMcpPort()).toBeUndefined()
-      expect(mockLog.warn).toHaveBeenCalledWith(
-        expect.stringContaining('Ignoring invalid THV_MCP_PORT=70000')
-      )
     })
   })
 })

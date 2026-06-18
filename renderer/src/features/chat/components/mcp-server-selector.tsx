@@ -15,7 +15,6 @@ import { ChevronDown, Loader2, ServerIcon, Settings2 } from 'lucide-react'
 import { Badge } from '@/common/components/ui/badge'
 import { ScrollArea } from '@/common/components/ui/scroll-area'
 import { useAvailableServers } from '../hooks/use-available-servers'
-import { getNormalizedServerName } from '../lib/utils'
 import { McpToolsModal } from './mcp-tools-modal'
 import { cn } from '@/common/lib/utils'
 import {
@@ -215,12 +214,10 @@ export function McpServerSelector({ threadId }: McpServerSelectorProps) {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <span className="max-w-30 truncate font-normal">
-                          {getNormalizedServerName(server.name)}
+                          {server.name}
                         </span>
                       </TooltipTrigger>
-                      <TooltipContent>
-                        {getNormalizedServerName(server.name)}
-                      </TooltipContent>
+                      <TooltipContent>{server.name}</TooltipContent>
                     </Tooltip>
                   </div>
                   {backendEnabledTools.includes(server.name) && (

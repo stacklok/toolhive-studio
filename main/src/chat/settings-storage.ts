@@ -5,8 +5,6 @@ import { getApiV1BetaWorkloads } from '@common/api/generated/sdk.gen'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import { createMainProcessApiClient } from '../unix-socket-fetch'
 import { getTearingDownState } from '../app-state'
-import { getToolhiveMcpInfo } from './mcp-tools'
-import { TOOLHIVE_MCP_SERVER_NAME } from '../utils/constants'
 import {
   CHAT_PROVIDER_INFO,
   LOCAL_PROVIDER_IDS,
@@ -259,25 +257,16 @@ export async function getEnabledMcpTools(): Promise<
         query: { all: true },
       })
 
-      const toolHiveMcpInfo = await getToolhiveMcpInfo()
-
       const runningServerNames = (data?.workloads || [])
         .filter((w: CoreWorkload) => w.status === 'running')
         .map((w: CoreWorkload) => w.name)
-
-      const internalMcpServerName = toolHiveMcpInfo.isRunning
-        ? [TOOLHIVE_MCP_SERVER_NAME]
-        : []
 
       // Filter enabled tools to only include tools from running servers
       const filteredTools: ChatSettings['enabledMcpTools'] = {}
       const serversToRemove: string[] = []
 
       for (const [serverName, tools] of Object.entries(enabledMcpTools)) {
-        if (
-          runningServerNames.includes(serverName) ||
-          internalMcpServerName.includes(serverName)
-        ) {
+        if (runningServerNames.includes(serverName)) {
           filteredTools[serverName] = tools
         } else if (tools.length > 0) {
           // Only log if server actually had tools to clean up

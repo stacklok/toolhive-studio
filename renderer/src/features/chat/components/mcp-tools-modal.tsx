@@ -16,7 +16,6 @@ import { Input } from '@/common/components/ui/input'
 
 import { Search, Wrench, AlertCircle, CheckCheck, ListX } from 'lucide-react'
 import { cn } from '@/common/lib/utils'
-import { getNormalizedServerName } from '../lib/utils'
 import { ScrollArea } from '@/common/components/ui/scroll-area'
 import { trackEvent } from '@/common/lib/analytics'
 
@@ -179,10 +178,10 @@ export function McpToolsModal({
             Manage tools
           </DialogTitle>
           <DialogDescription
-            aria-describedby={`Manage the tools for ${getNormalizedServerName(serverName)}`}
+            aria-describedby={`Manage the tools for ${serverName}`}
           />
           <div className="flex items-center gap-1">
-            {getNormalizedServerName(serverName)}
+            {serverName}
             <Badge variant="secondary" className="text-muted-foreground">
               {enabledCount} tools enabled
             </Badge>

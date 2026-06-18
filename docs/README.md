@@ -190,10 +190,7 @@ point the studio at it via `THV_SOCKET`:
    ```bash
    thv serve \
      --openapi \
-     --socket=/tmp/thv-dev.sock \
-     --experimental-mcp \
-     --experimental-mcp-host=127.0.0.1 \
-     --experimental-mcp-port=50001
+     --socket=/tmp/thv-dev.sock
    ```
 
    **Windows (PowerShell)**
@@ -201,23 +198,19 @@ point the studio at it via `THV_SOCKET`:
    ```powershell
    thv.exe serve `
      --openapi `
-     --socket='\\.\pipe\thv-dev' `
-     --experimental-mcp `
-     --experimental-mcp-host=127.0.0.1 `
-     --experimental-mcp-port=50001
+     --socket='\\.\pipe\thv-dev'
    ```
 
-2. Set `THV_SOCKET` (and `THV_MCP_PORT` if you also need the experimental MCP
-   backend) and start the dev server:
+2. Set `THV_SOCKET` and start the dev server:
 
    ```bash
-   THV_SOCKET=/tmp/thv-dev.sock THV_MCP_PORT=50001 pnpm start
+   THV_SOCKET=/tmp/thv-dev.sock pnpm start
    ```
 
    On Windows:
 
    ```powershell
-   $env:THV_SOCKET = '\\.\pipe\thv-dev'; $env:THV_MCP_PORT = '50001'; pnpm start
+   $env:THV_SOCKET = '\\.\pipe\thv-dev'; pnpm start
    ```
 
 The UI displays a banner with the socket / pipe path when `THV_SOCKET` is set.

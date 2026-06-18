@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { getMcpServerTools, getToolhiveMcpInfo } from '../../chat'
+import { getMcpServerTools } from '../../chat'
 import {
   getEnabledMcpTools,
   getEnabledMcpServersFromTools,
@@ -21,5 +21,4 @@ export function register() {
     (_, serverName: string, enabledTools: string[]) =>
       saveEnabledMcpTools(serverName, enabledTools)
   )
-  ipcMain.handle('chat:get-toolhive-mcp-info', () => getToolhiveMcpInfo())
 }
