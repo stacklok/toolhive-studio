@@ -32,3 +32,46 @@ export function withDbSpan<T>(
     }
   )
 }
+
+// Bucket A: the on-disk schema is newer than the running app, so the migrator
+// disabled all writes (see migrator.ts). Reported once per launch on affected
+// installs. os.name / release are attached automatically by @sentry/electron.
+export function captureDbReadOnly(
+  appliedSchema: number,
+  knownSchema: number
+): void {
+  Sentry.withScope((scope) => {
+    scope.setTag('db.failure_bucket', 'schema_newer')
+    scope.setExtras({
+      'db.applied_schema': appliedSchema,
+      'db.known_schema': knownSchema,
+    })
+    // Stable message so Sentry groups all occurrences into one issue; the
+    // schema versions live in extras above rather than in the message.
+    Sentry.captureMessage(
+      '[DB] Read-only: on-disk schema is newer than app; SQLite writes disabled',
+      'warning'
+    )
+  })
+}
+
+// Bucket B: a SQLite write actually threw (filesystem/permission/lock/disk/
+// corruption). The native `code` (e.g. SQLITE_IOERR, SQLITE_FULL, SQLITE_BUSY)
+// is surfaced as a tag so we can tell the failure modes apart.
+export function captureDbWriteFailure(
+  table: string,
+  key: string,
+  error: unknown
+): void {
+  const code =
+    typeof error === 'object' && error !== null && 'code' in error
+      ? String((error as { code: unknown }).code)
+      : undefined
+  Sentry.withScope((scope) => {
+    scope.setTag('db.failure_bucket', 'write_threw')
+    scope.setTag('db.table', table)
+    if (code) scope.setTag('db.sqlite_code', code)
+    scope.setExtras({ 'db.key': key })
+    Sentry.captureException(error)
+  })
+}

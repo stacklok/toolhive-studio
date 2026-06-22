@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
-const { mockReadSetting, mockWriteSetting } = vi.hoisted(() => ({
-  mockReadSetting: vi.fn(),
-  mockWriteSetting: vi.fn(),
-}))
+const { mockReadSetting, mockWriteSetting, mockIsDbWritable } = vi.hoisted(
+  () => ({
+    mockReadSetting: vi.fn(),
+    mockWriteSetting: vi.fn(),
+    mockIsDbWritable: vi.fn(() => true),
+  })
+)
 
 vi.mock('@sentry/electron/main', () => ({
   startSpan: vi.fn((_opts: unknown, cb: (span: unknown) => unknown) =>
@@ -28,6 +31,10 @@ vi.mock('../db/readers/settings-reader', () => ({
   readSetting: mockReadSetting,
 }))
 
+vi.mock('../db/database', () => ({
+  isDbWritable: mockIsDbWritable,
+}))
+
 vi.mock('electron-store', () => ({
   default: vi.fn(function ElectronStore() {
     return { get: vi.fn(), set: vi.fn() }
@@ -42,7 +49,10 @@ import {
 
 describe('newsletter', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    // resetAllMocks (not just clearAllMocks) so a throwing writeSetting/readSetting
+    // implementation set by one test doesn't leak into the next.
+    vi.resetAllMocks()
+    mockIsDbWritable.mockReturnValue(true)
   })
 
   describe('getNewsletterState', () => {
@@ -100,24 +110,36 @@ describe('newsletter', () => {
   })
 
   describe('setNewsletterDismissedAt', () => {
-    it('writes to SQLite', () => {
+    it('writes to SQLite and returns true on success', () => {
       const timestamp = '2026-03-18T10:00:00.000Z'
-      setNewsletterDismissedAt(timestamp)
+      const persisted = setNewsletterDismissedAt(timestamp)
 
       expect(mockWriteSetting).toHaveBeenCalledWith(
         'newsletterDismissedAt',
         timestamp
       )
+      expect(persisted).toBe(true)
     })
 
-    it('does not throw when SQLite write fails', () => {
+    it('returns false and skips the write when the DB is read-only', () => {
+      mockIsDbWritable.mockReturnValue(false)
+
+      const persisted = setNewsletterDismissedAt('2026-03-18T10:00:00.000Z')
+
+      expect(persisted).toBe(false)
+      expect(mockWriteSetting).not.toHaveBeenCalled()
+    })
+
+    it('returns false (and does not throw) when the SQLite write fails', () => {
       mockWriteSetting.mockImplementation(() => {
         throw new Error('DB write failed')
       })
 
-      expect(() =>
-        setNewsletterDismissedAt('2026-03-18T10:00:00.000Z')
-      ).not.toThrow()
+      let persisted: boolean | undefined
+      expect(() => {
+        persisted = setNewsletterDismissedAt('2026-03-18T10:00:00.000Z')
+      }).not.toThrow()
+      expect(persisted).toBe(false)
     })
   })
 })

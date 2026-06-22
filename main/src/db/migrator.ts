@@ -1,7 +1,7 @@
 import type Database from 'better-sqlite3'
 import { getDb, setDbWritable } from './database'
 import log from '../logger'
-import { withDbSpan } from './telemetry'
+import { withDbSpan, captureDbReadOnly } from './telemetry'
 
 interface Migration {
   id: number
@@ -58,6 +58,7 @@ export function runMigrations(): void {
           `[DB] Database schema (v${highestApplied}) is newer than app (v${highestKnown}). ` +
             'Skipping SQLite writes to avoid corruption.'
         )
+        captureDbReadOnly(highestApplied, highestKnown)
         setDbWritable(false)
         return
       }

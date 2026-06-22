@@ -1,14 +1,19 @@
 import { getDb, isDbWritable } from '../database'
-import { withDbSpan } from '../telemetry'
+import { withDbSpan, captureDbWriteFailure } from '../telemetry'
 
 export function writeSetting(key: string, value: string): void {
   if (!isDbWritable()) return
-  withDbSpan('DB write setting', 'db.write', { 'db.key': key }, () => {
-    const db = getDb()
-    db.prepare(
-      'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)'
-    ).run(key, value)
-  })
+  try {
+    withDbSpan('DB write setting', 'db.write', { 'db.key': key }, () => {
+      const db = getDb()
+      db.prepare(
+        'INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)'
+      ).run(key, value)
+    })
+  } catch (err) {
+    captureDbWriteFailure('settings', key, err)
+    throw err
+  }
 }
 
 export function deleteSetting(key: string): void {

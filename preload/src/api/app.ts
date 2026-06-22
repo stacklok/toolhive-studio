@@ -31,7 +31,7 @@ export const appApi = {
   }> => ipcRenderer.invoke('get-newsletter-state'),
   setNewsletterSubscribed: (subscribed: boolean): Promise<void> =>
     ipcRenderer.invoke('set-newsletter-subscribed', subscribed),
-  setNewsletterDismissedAt: (dismissedAt: string): Promise<void> =>
+  setNewsletterDismissedAt: (dismissedAt: string): Promise<boolean> =>
     ipcRenderer.invoke('set-newsletter-dismissed-at', dismissedAt),
 
   getExpertConsultationState: (): Promise<{
@@ -66,7 +66,7 @@ export interface AppAPI {
     dismissedAt: string
   }>
   setNewsletterSubscribed: (subscribed: boolean) => Promise<void>
-  setNewsletterDismissedAt: (dismissedAt: string) => Promise<void>
+  setNewsletterDismissedAt: (dismissedAt: string) => Promise<boolean>
   getExpertConsultationState: () => Promise<{
     submitted: boolean
     dismissedAt: string

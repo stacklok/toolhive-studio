@@ -35,7 +35,7 @@ function NewsletterDialog({
 }: {
   successMessage: string
   onSubscribed: (message: string) => void
-  onDismiss: () => void
+  onDismiss: (persisted: boolean) => void
   onClose: () => void
 }) {
   const [email, setEmail] = useState('')
@@ -76,9 +76,9 @@ function NewsletterDialog({
   const { mutate: dismiss } = useMutation({
     mutationFn: () =>
       window.electronAPI.setNewsletterDismissedAt(new Date().toISOString()),
-    onSuccess: () => {
+    onSuccess: (persisted) => {
       trackEvent('Newsletter dismissed')
-      onDismiss()
+      onDismiss(persisted)
     },
   })
 
@@ -214,7 +214,13 @@ export function NewsletterModal() {
     <NewsletterDialog
       successMessage={successMessage}
       onSubscribed={(message) => setSuccessMessage(message)}
-      onDismiss={() => {
+      onDismiss={(persisted) => {
+        // Only when the dismissal could NOT be persisted (read-only DB — Bucket
+        // A — or a failed write — Bucket B): hide for the rest of the session,
+        // otherwise the invalidate->refetch below returns an empty dismissedAt
+        // and immediately re-shows the modal, looping within the session.
+        // When persistence works, the stored state handles suppression.
+        if (!persisted) setClosed(true)
         closeNewsletterModal()
         queryClient.invalidateQueries({ queryKey: ['newsletter-state'] })
       }}

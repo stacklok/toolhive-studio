@@ -60,7 +60,7 @@ describe('NewsletterModal', () => {
       .mockResolvedValue(undefined)
     window.electronAPI.setNewsletterDismissedAt = vi
       .fn()
-      .mockResolvedValue(undefined)
+      .mockResolvedValue(true)
 
     server.use(
       http.post(HUBSPOT_URL, () =>
@@ -293,6 +293,39 @@ describe('NewsletterModal', () => {
       const calledWith = vi.mocked(window.electronAPI.setNewsletterDismissedAt)
         .mock.calls[0]?.[0]
       expect(new Date(calledWith!).getTime()).not.toBeNaN()
+    })
+
+    it('does not re-show the modal in the same session when the dismissal cannot be persisted', async () => {
+      const title = `Stay up to date with improvements to ${APP_DISPLAY_NAME}`
+      // Read-only DB: the write never persists, so getNewsletterState keeps
+      // returning an empty dismissedAt across refetches.
+      window.electronAPI.setNewsletterDismissedAt = vi
+        .fn()
+        .mockResolvedValue(false)
+      window.electronAPI.getNewsletterState = vi
+        .fn()
+        .mockResolvedValue({ subscribed: false, dismissedAt: '' })
+
+      renderWithProviders(<NewsletterModal />)
+
+      await waitFor(() => {
+        expect(screen.getByText(title)).toBeVisible()
+      })
+
+      const initialStateCalls = vi.mocked(window.electronAPI.getNewsletterState)
+        .mock.calls.length
+
+      await userEvent.click(screen.getByRole('button', { name: /close/i }))
+
+      // The dismiss triggers an invalidate -> refetch of the newsletter state.
+      await waitFor(() => {
+        expect(
+          vi.mocked(window.electronAPI.getNewsletterState).mock.calls.length
+        ).toBeGreaterThan(initialStateCalls)
+      })
+
+      // Even though the dismissal wasn't persisted, the modal must stay gone.
+      expect(screen.queryByText(title)).not.toBeInTheDocument()
     })
   })
 })

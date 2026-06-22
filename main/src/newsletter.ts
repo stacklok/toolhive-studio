@@ -1,5 +1,6 @@
 import Store from 'electron-store'
 import log from './logger'
+import { isDbWritable } from './db/database'
 import { writeSetting } from './db/writers/settings-writer'
 import { readSetting } from './db/readers/settings-reader'
 
@@ -50,10 +51,16 @@ export function setNewsletterSubscribed(subscribed: boolean): void {
   }
 }
 
-export function setNewsletterDismissedAt(dismissedAt: string): void {
+// Returns whether the dismissal was actually persisted. `false` means the
+// write was skipped (read-only DB — Bucket A) or threw (Bucket B); the renderer
+// uses this to suppress the modal for the session so it doesn't loop.
+export function setNewsletterDismissedAt(dismissedAt: string): boolean {
+  if (!isDbWritable()) return false
   try {
     writeSetting('newsletterDismissedAt', dismissedAt)
+    return true
   } catch (err) {
     log.error('[DB] Failed to write newsletterDismissedAt:', err)
+    return false
   }
 }
