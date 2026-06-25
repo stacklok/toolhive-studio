@@ -1039,7 +1039,7 @@ describe('DialogFormLocalMcp', () => {
       await waitFor(() => {
         expect(
           screen.getByText(
-            'This configuration blocks all outbound network traffic from the MCP server.'
+            'All outbound traffic is permitted. Add specific hosts or ports below to restrict network access.'
           )
         ).toBeInTheDocument()
       })
@@ -1052,7 +1052,7 @@ describe('DialogFormLocalMcp', () => {
       await waitFor(() => {
         expect(
           screen.queryByText(
-            'This configuration blocks all outbound network traffic from the MCP server.'
+            'All outbound traffic is permitted. Add specific hosts or ports below to restrict network access.'
           )
         ).not.toBeInTheDocument()
       })
