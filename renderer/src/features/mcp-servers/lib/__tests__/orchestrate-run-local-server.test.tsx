@@ -279,6 +279,64 @@ describe('prepareCreateWorkloadData', () => {
     expect(result.permission_profile).toBeUndefined()
   })
 
+  it('sets insecure_allow_all to true when networkIsolation is true and both allow lists are empty', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: true,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.network_isolation).toBe(true)
+    expect(
+      result.permission_profile?.network?.outbound?.insecure_allow_all
+    ).toBe(true)
+    expect(result.permission_profile?.network?.outbound?.allow_host).toEqual([])
+    expect(result.permission_profile?.network?.outbound?.allow_port).toEqual([])
+  })
+
+  it('keeps insecure_allow_all false when networkIsolation is true and allow lists are populated', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkIsolation: true,
+      allowedHosts: [{ value: 'api.example.com' }],
+      allowedPorts: [{ value: '443' }],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.network_isolation).toBe(true)
+    expect(
+      result.permission_profile?.network?.outbound?.insecure_allow_all
+    ).toBe(false)
+    expect(result.permission_profile?.network?.outbound?.allow_host).toEqual([
+      'api.example.com',
+    ])
+    expect(result.permission_profile?.network?.outbound?.allow_port).toEqual([
+      443,
+    ])
+  })
+
   it('sends proxy mode for stdio transport', () => {
     const data: FormSchemaLocalMcp = {
       image: 'test-image',
@@ -998,6 +1056,33 @@ describe('prepareUpdateLocalWorkloadData', () => {
     const result = prepareUpdateLocalWorkloadData(data)
 
     expect(result.tools).toEqual([])
+  })
+
+  it('sets insecure_allow_all to true when networkIsolation is true and allow lists are empty', () => {
+    const data: FormSchemaLocalMcp = {
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      type: 'docker_image',
+      group: 'default',
+      image: 'test-image',
+      cmd_arguments: [],
+      envVars: [],
+      secrets: [],
+      networkIsolation: true,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareUpdateLocalWorkloadData(data)
+
+    expect(result.network_isolation).toBe(true)
+    expect(
+      result.permission_profile?.network?.outbound?.insecure_allow_all
+    ).toBe(true)
+    expect(result.permission_profile?.network?.outbound?.allow_host).toEqual([])
+    expect(result.permission_profile?.network?.outbound?.allow_port).toEqual([])
   })
 
   it('includes tools for package manager type', () => {

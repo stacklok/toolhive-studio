@@ -289,6 +289,46 @@ describe('FormRunFromRegistry', () => {
     })
   })
 
+  it('defaults networkIsolation to true for a new registry server', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunFromRegistry.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    const server = { ...REGISTRY_SERVER, env_vars: ENV_VARS_OPTIONAL }
+
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Replace pre-filled server name and submit
+    await userEvent.type(screen.getByLabelText('Server name'), 'my-server', {
+      initialSelectionStart: 0,
+      initialSelectionEnd: REGISTRY_SERVER.name?.length,
+    })
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalled()
+    })
+    expect(
+      mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
+    ).toBe(true)
+  })
+
   it('should not submit the form if the server name is not valid', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunFromRegistry.mockReturnValue({

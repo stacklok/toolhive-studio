@@ -329,6 +329,52 @@ describe('DialogFormLocalMcp', () => {
     })
   })
 
+  it('defaults networkIsolation to true for a new server', async () => {
+    const mockInstallServerMutation = vi.fn()
+    mockUseRunCustomServer.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormLocalMcp isOpen closeDialog={vi.fn()} groupName="default" />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+
+    // Fill minimal required fields and submit
+    await userEvent.type(
+      screen.getByRole('textbox', { name: /name/i }),
+      'test-server'
+    )
+    await userEvent.click(screen.getByLabelText('Transport'))
+    await userEvent.click(screen.getByRole('option', { name: 'stdio' }))
+    await userEvent.type(
+      screen.getByRole('textbox', { name: 'Docker image' }),
+      'ghcr.io/test/server'
+    )
+
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Install server' })
+    )
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).toHaveBeenCalledWith(
+        {
+          data: expect.objectContaining({
+            networkIsolation: true,
+          }),
+        },
+        expect.any(Object)
+      )
+    })
+  })
+
   it('submits package manager form with all fields', async () => {
     const mockInstallServerMutation = vi.fn()
     mockUseRunCustomServer.mockReturnValue({

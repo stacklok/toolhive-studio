@@ -268,4 +268,68 @@ describe('prepareCreateWorkloadData', () => {
     expect(result.network_isolation).toBe(false)
     expect(result.permission_profile).toBeUndefined()
   })
+
+  it('keeps insecure_allow_all false when networkIsolation is true and allow lists are populated from registry server permissions', () => {
+    const serverWithPermissions: RegistryImageMetadata = {
+      ...REGISTRY_SERVER,
+      permissions: {
+        network: {
+          outbound: {
+            allow_host: ['api.github.com'],
+            allow_port: [443],
+          },
+        },
+      },
+    }
+
+    const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
+      name: 'test-server',
+      group: 'default',
+      cmd_arguments: [],
+      secrets: [],
+      envVars: [],
+      networkIsolation: true,
+      allowedHosts: [{ value: 'api.github.com' }],
+      allowedPorts: [{ value: '443' }],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(serverWithPermissions, data)
+
+    expect(result.network_isolation).toBe(true)
+    expect(result.permission_profile?.network?.outbound?.allow_host).toEqual([
+      'api.github.com',
+    ])
+    expect(result.permission_profile?.network?.outbound?.allow_port).toEqual([
+      443,
+    ])
+    expect(
+      result.permission_profile?.network?.outbound?.insecure_allow_all
+    ).toBe(false)
+  })
+
+  it('sets insecure_allow_all to true when networkIsolation is true and both allow lists are empty', () => {
+    const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
+      name: 'test-server',
+      group: 'default',
+      cmd_arguments: [],
+      secrets: [],
+      envVars: [],
+      networkIsolation: true,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(REGISTRY_SERVER, data)
+
+    expect(result.network_isolation).toBe(true)
+    expect(
+      result.permission_profile?.network?.outbound?.insecure_allow_all
+    ).toBe(true)
+    expect(result.permission_profile?.network?.outbound?.allow_host).toEqual([])
+    expect(result.permission_profile?.network?.outbound?.allow_port).toEqual([])
+  })
 })
