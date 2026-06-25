@@ -72,7 +72,7 @@ const DEFAULT_FORM_VALUES = {
   protocol: '',
   package_name: '',
   target_port: 0,
-  networkIsolation: false,
+  networkIsolation: true,
   allowedHosts: [],
   allowedPorts: [],
   volumes: [{ host: '', container: '', accessMode: 'rw' as const }],

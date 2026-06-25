@@ -133,7 +133,7 @@ export function FormRunFromRegistry({
         name: e.name || '',
         value: e.default || '',
       })),
-      networkIsolation: false,
+      networkIsolation: true,
       allowedHosts: server?.permissions?.network?.outbound?.allow_host
         ? server.permissions.network.outbound.allow_host.map((host) => ({
             value: host,

@@ -318,7 +318,7 @@ describe('DialogFormLocalMcp', () => {
             envVars: [],
             secrets: [],
             cmd_arguments: [],
-            networkIsolation: false,
+            networkIsolation: true,
             allowedHosts: [],
             allowedPorts: [],
             target_port: 0,
@@ -806,11 +806,7 @@ describe('DialogFormLocalMcp', () => {
       const networkTab = screen.getByRole('tab', { name: /network isolation/i })
       await userEvent.click(networkTab)
 
-      const switchLabel = screen.getByLabelText(
-        'Enable outbound network filtering'
-      )
-      await userEvent.click(switchLabel)
-
+      // Network isolation is enabled by default; no need to toggle the switch
       const addHostBtn = screen.getByRole('button', { name: /add a host/i })
       await userEvent.click(addHostBtn)
       const hostInput = screen.getByLabelText('Host 1')
@@ -873,6 +869,14 @@ describe('DialogFormLocalMcp', () => {
         screen.getByRole('textbox', { name: 'Docker image' }),
         'ghcr.io/test/server'
       )
+
+      // Network isolation is enabled by default; toggle it off
+      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      await userEvent.click(networkTab)
+      const switchLabel = screen.getByLabelText(
+        'Enable outbound network filtering'
+      )
+      await userEvent.click(switchLabel)
 
       await userEvent.click(
         screen.getByRole('button', { name: 'Install server' })
@@ -966,11 +970,8 @@ describe('DialogFormLocalMcp', () => {
 
       const networkTab = screen.getByRole('tab', { name: /network isolation/i })
       await userEvent.click(networkTab)
-      const switchLabel = screen.getByLabelText(
-        'Enable outbound network filtering'
-      )
-      await userEvent.click(switchLabel)
 
+      // Network isolation is enabled by default; no need to toggle the switch
       const addHostBtn = screen.getByRole('button', { name: /add a host/i })
       await userEvent.click(addHostBtn)
       const hostInput = screen.getByLabelText('Host 1')
@@ -1034,11 +1035,7 @@ describe('DialogFormLocalMcp', () => {
       const networkTab = screen.getByRole('tab', { name: /network isolation/i })
       await userEvent.click(networkTab)
 
-      const switchLabel = screen.getByLabelText(
-        'Enable outbound network filtering'
-      )
-      await userEvent.click(switchLabel)
-
+      // Network isolation is enabled by default; no need to toggle the switch
       await waitFor(() => {
         expect(
           screen.getByText(
@@ -1097,11 +1094,10 @@ describe('DialogFormLocalMcp', () => {
       const networkTab = screen.getByRole('tab', { name: /network isolation/i })
       await userEvent.click(networkTab)
 
-      // Enable network isolation first
+      // Network isolation is enabled by default
       const switchLabel = screen.getByLabelText(
         'Enable outbound network filtering'
       )
-      await userEvent.click(switchLabel)
 
       const addHostBtn = screen.getByRole('button', { name: /add a host/i })
       await userEvent.click(addHostBtn)

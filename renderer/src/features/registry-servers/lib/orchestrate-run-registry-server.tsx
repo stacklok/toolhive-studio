@@ -18,19 +18,22 @@ export function prepareCreateWorkloadData(
 ): V1CreateRequest {
   // Extract and transform network isolation fields
   const { allowedHosts, allowedPorts, networkIsolation } = data
+  const filteredHosts =
+    allowedHosts
+      ?.map(({ value }: { value: string }) => value)
+      .filter((host: string) => host.trim() !== '') ?? []
+  const filteredPorts =
+    allowedPorts
+      ?.map(({ value }: { value: string }) => parseInt(value, 10))
+      .filter((port: number) => !isNaN(port)) ?? []
   const permission_profile = networkIsolation
     ? {
         network: {
           outbound: {
-            allow_host:
-              allowedHosts
-                ?.map(({ value }: { value: string }) => value)
-                .filter((host: string) => host.trim() !== '') ?? [],
-            allow_port:
-              allowedPorts
-                ?.map(({ value }: { value: string }) => parseInt(value, 10))
-                .filter((port: number) => !isNaN(port)) ?? [],
-            insecure_allow_all: false,
+            allow_host: filteredHosts,
+            allow_port: filteredPorts,
+            insecure_allow_all:
+              filteredHosts.length === 0 && filteredPorts.length === 0,
           } as PermissionsOutboundNetworkPermissions,
         },
       }

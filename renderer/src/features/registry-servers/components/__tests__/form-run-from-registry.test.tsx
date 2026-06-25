@@ -279,6 +279,15 @@ describe('FormRunFromRegistry', () => {
       screen.getByLabelText('ENV_VAR value'),
       'my-awesome-env-var'
     )
+    // Network isolation is enabled by default; toggle it off for this scenario
+    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    await userEvent.click(networkTab)
+    const switchLabel = screen.getByLabelText(
+      'Enable outbound network filtering'
+    )
+    await userEvent.click(switchLabel)
+    const configTab = screen.getByRole('tab', { name: /configuration/i })
+    await userEvent.click(configTab)
     await userEvent.click(
       screen.getByRole('button', { name: 'Install server' })
     )
@@ -431,7 +440,7 @@ describe('FormRunFromRegistry', () => {
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
             ],
-            networkIsolation: false,
+            networkIsolation: true,
             allowedHosts: [],
             allowedPorts: [],
             volumes: [
@@ -494,7 +503,7 @@ describe('FormRunFromRegistry', () => {
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
             ],
-            networkIsolation: false,
+            networkIsolation: true,
             allowedHosts: [],
             allowedPorts: [],
           }),
@@ -1022,11 +1031,7 @@ describe('FormRunFromRegistry', () => {
     // Switch to Network Isolation tab
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    // Enable network isolation
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
+    // Network isolation is enabled by default
     // Do not add any ports
     // Submit
     const configTab = screen.getByRole('tab', { name: /configuration/i })
@@ -1068,11 +1073,7 @@ describe('Allowed Hosts field', () => {
     // Switch to the Network Isolation tab
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    // Enable network isolation
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
+    // Network isolation is enabled by default
     // Add a host so the input and label are rendered
     await userEvent.click(screen.getByRole('button', { name: /add a host/i }))
     // Allowed Hosts field should be present
@@ -1099,10 +1100,7 @@ describe('Allowed Hosts field', () => {
     })
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
+    // Network isolation is enabled by default
     // Add a host
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostButton)
@@ -1138,10 +1136,7 @@ describe('Allowed Hosts field', () => {
     })
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
+    // Network isolation is enabled by default
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostButton)
     const hostInput = screen.getByLabelText('Host 1')
@@ -1215,10 +1210,7 @@ describe('Allowed Hosts field', () => {
     )
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
+    // Network isolation is enabled by default
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostButton)
     const hostInput = screen.getByLabelText('Host 1')
@@ -1260,10 +1252,7 @@ describe('Allowed Hosts field', () => {
     })
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
+    // Network isolation is enabled by default
     // Should be empty by default
     expect(screen.queryByLabelText('Host 1')).not.toBeInTheDocument()
     // Add two hosts
@@ -1311,10 +1300,10 @@ describe('Allowed Hosts field', () => {
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
 
+    // Network isolation is enabled by default
     const switchLabel = screen.getByLabelText(
       'Enable outbound network filtering'
     )
-    await userEvent.click(switchLabel)
 
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostButton)
@@ -1391,13 +1380,9 @@ describe('Network Isolation Tab Activation', () => {
     // Ensure we are on the configuration tab
     const configTab = screen.getByRole('tab', { name: /configuration/i })
     expect(configTab).toHaveAttribute('aria-selected', 'true')
-    // Enable network isolation and add an invalid host
+    // Network isolation is enabled by default; add an invalid host
     const networkTab = screen.getByRole('tab', { name: /network isolation/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
-    await userEvent.click(switchLabel)
     // Add a host and enter an invalid value
     const addHostBtn = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostBtn)
@@ -1686,7 +1671,7 @@ describe('Storage Volumes', () => {
                 },
               },
             ],
-            networkIsolation: false,
+            networkIsolation: true,
             allowedHosts: [],
             allowedPorts: [],
             volumes: [

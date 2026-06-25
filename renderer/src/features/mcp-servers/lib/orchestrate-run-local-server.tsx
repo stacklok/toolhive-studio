@@ -65,19 +65,22 @@ export function prepareCreateWorkloadData(
   request.cmd_arguments = cmd_arguments || []
   request.env_vars = mapEnvVars(envVars || [])
   request.secrets = secrets
+  const filteredHosts =
+    allowedHosts
+      ?.map(({ value }: { value: string }) => value)
+      .filter((host: string) => host.trim() !== '') ?? []
+  const filteredPorts =
+    allowedPorts
+      ?.map(({ value }: { value: string }) => parseInt(value, 10))
+      .filter((port: number) => !isNaN(port)) ?? []
   const permission_profile = networkIsolation
     ? {
         network: {
           outbound: {
-            allow_host:
-              allowedHosts
-                ?.map(({ value }: { value: string }) => value)
-                .filter((host: string) => host.trim() !== '') ?? [],
-            allow_port:
-              allowedPorts
-                ?.map(({ value }: { value: string }) => parseInt(value, 10))
-                .filter((port: number) => !isNaN(port)) ?? [],
-            insecure_allow_all: false,
+            allow_host: filteredHosts,
+            allow_port: filteredPorts,
+            insecure_allow_all:
+              filteredHosts.length === 0 && filteredPorts.length === 0,
           } as PermissionsOutboundNetworkPermissions,
         },
       }
@@ -275,17 +278,26 @@ export function prepareUpdateLocalWorkloadData(
     secrets,
     network_isolation: data.networkIsolation,
     permission_profile: data.networkIsolation
-      ? {
-          network: {
-            outbound: {
-              allow_host: data.allowedHosts?.map((host) => host.value),
-              allow_port: data.allowedPorts?.map((port) =>
-                parseInt(port.value, 10)
-              ),
-              insecure_allow_all: false,
-            } as PermissionsOutboundNetworkPermissions,
-          },
-        }
+      ? (() => {
+          const filteredHosts =
+            data.allowedHosts
+              ?.map((host) => host.value)
+              .filter((h) => h.trim() !== '') ?? []
+          const filteredPorts =
+            data.allowedPorts
+              ?.map((port) => parseInt(port.value, 10))
+              .filter((p) => !isNaN(p)) ?? []
+          return {
+            network: {
+              outbound: {
+                allow_host: filteredHosts,
+                allow_port: filteredPorts,
+                insecure_allow_all:
+                  filteredHosts.length === 0 && filteredPorts.length === 0,
+              } as PermissionsOutboundNetworkPermissions,
+            },
+          }
+        })()
       : undefined,
     volumes: getVolumes(data.volumes ?? []),
     tools: data.tools || undefined,
