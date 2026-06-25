@@ -463,6 +463,14 @@ export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
     [key: string]: string
   }
   /**
+   * AllowPrivateIPs permits the upstream provider's HTTP client to connect to
+   * private IP ranges (RFC-1918, link-local). Use only when the upstream is
+   * hosted inside the same cluster and has no public endpoint. HTTP-scheme
+   * restrictions are unchanged — HTTPS is still required for non-localhost hosts.
+   * Defaults to false.
+   */
+  allow_private_ips?: boolean
+  /**
    * AuthorizationEndpoint is the URL for the OAuth authorization endpoint.
    */
   authorization_endpoint?: string
@@ -515,6 +523,14 @@ export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
     [key: string]: string
   }
   /**
+   * AllowPrivateIPs permits the OIDC discovery and token HTTP clients to
+   * connect to private IP ranges (RFC-1918, link-local). Use only when the
+   * upstream is hosted inside the same cluster and has no public endpoint.
+   * HTTP-scheme restrictions are unchanged — HTTPS is still required for
+   * non-localhost hosts. Defaults to false.
+   */
+  allow_private_ips?: boolean
+  /**
    * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
    */
   client_id?: string
@@ -546,6 +562,12 @@ export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
    * to avoid sending both offline_access and the provider-specific parameter.
    */
   scopes?: Array<string>
+  /**
+   * SubjectClaim names the validated ID-token claim to use as the upstream
+   * subject. Defaults to "sub" when empty. Set for IdPs where "sub" isn't
+   * stable per user (e.g. Entra/Azure AD's "oid"). See upstream.OIDCConfig.
+   */
+  subject_claim?: string
   userinfo_override?: GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig
 }
 
@@ -946,6 +968,7 @@ export type GithubComStacklokToolhivePkgContainerRuntimeWorkloadStatus =
   | 'removing'
   | 'unknown'
   | 'unauthenticated'
+  | 'auth_retrying'
   | 'policy_stopped'
   | 'running'
   | 'stopped'
@@ -956,6 +979,7 @@ export type GithubComStacklokToolhivePkgContainerRuntimeWorkloadStatus =
   | 'removing'
   | 'unknown'
   | 'unauthenticated'
+  | 'auth_retrying'
   | 'policy_stopped'
   | 'running'
   | 'stopped'
@@ -966,6 +990,7 @@ export type GithubComStacklokToolhivePkgContainerRuntimeWorkloadStatus =
   | 'removing'
   | 'unknown'
   | 'unauthenticated'
+  | 'auth_retrying'
   | 'policy_stopped'
 
 /**
@@ -2303,6 +2328,11 @@ export type PkgApiV1CreateRequest = {
   name?: string
   /**
    * Whether network isolation is turned on. This applies the rules in the permission profile.
+   * Pointer so that omitting the field defaults to network isolation ENABLED (matching the
+   * `thv run` CLI default); set it explicitly to false to disable network isolation.
+   * This also applies on update: a request that omits this field enables isolation, so
+   * clients that build update requests from scratch should send it explicitly to avoid
+   * unintentionally turning isolation on for a workload that had it off.
    */
   network_isolation?: boolean
   oauth_config?: PkgApiV1RemoteOAuthConfig
@@ -2890,6 +2920,11 @@ export type PkgApiV1UpdateRequest = {
   image?: string
   /**
    * Whether network isolation is turned on. This applies the rules in the permission profile.
+   * Pointer so that omitting the field defaults to network isolation ENABLED (matching the
+   * `thv run` CLI default); set it explicitly to false to disable network isolation.
+   * This also applies on update: a request that omits this field enables isolation, so
+   * clients that build update requests from scratch should send it explicitly to avoid
+   * unintentionally turning isolation on for a workload that had it off.
    */
   network_isolation?: boolean
   oauth_config?: PkgApiV1RemoteOAuthConfig
