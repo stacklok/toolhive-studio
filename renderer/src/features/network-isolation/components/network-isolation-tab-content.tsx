@@ -50,8 +50,8 @@ export function NetworkIsolationTabContent({
                   <Alert className="mt-2">
                     <AlertTriangle className="mt-0.5" />
                     <AlertDescription>
-                      This configuration blocks all outbound network traffic
-                      from the MCP server.
+                      All outbound traffic is permitted. Add specific hosts or
+                      ports below to restrict network access.
                     </AlertDescription>
                   </Alert>
                 )}
