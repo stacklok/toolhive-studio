@@ -265,6 +265,14 @@ export function prepareUpdateLocalWorkloadData(
       : `${data.protocol}://${data.package_name}`
 
   const sendProxyMode = data.transport === 'stdio'
+  const filteredHosts =
+    data.allowedHosts
+      ?.map((host) => host.value)
+      .filter((h) => h.trim() !== '') ?? []
+  const filteredPorts =
+    data.allowedPorts
+      ?.map((port) => parseInt(port.value, 10))
+      .filter((p) => !isNaN(p)) ?? []
 
   return {
     image,
@@ -278,26 +286,16 @@ export function prepareUpdateLocalWorkloadData(
     secrets,
     network_isolation: data.networkIsolation,
     permission_profile: data.networkIsolation
-      ? (() => {
-          const filteredHosts =
-            data.allowedHosts
-              ?.map((host) => host.value)
-              .filter((h) => h.trim() !== '') ?? []
-          const filteredPorts =
-            data.allowedPorts
-              ?.map((port) => parseInt(port.value, 10))
-              .filter((p) => !isNaN(p)) ?? []
-          return {
-            network: {
-              outbound: {
-                allow_host: filteredHosts,
-                allow_port: filteredPorts,
-                insecure_allow_all:
-                  filteredHosts.length === 0 && filteredPorts.length === 0,
-              } as PermissionsOutboundNetworkPermissions,
-            },
-          }
-        })()
+      ? {
+          network: {
+            outbound: {
+              allow_host: filteredHosts,
+              allow_port: filteredPorts,
+              insecure_allow_all:
+                filteredHosts.length === 0 && filteredPorts.length === 0,
+            } as PermissionsOutboundNetworkPermissions,
+          },
+        }
       : undefined,
     volumes: getVolumes(data.volumes ?? []),
     tools: data.tools || undefined,
