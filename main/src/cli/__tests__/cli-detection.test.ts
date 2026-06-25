@@ -216,6 +216,26 @@ describe('cli-detection', () => {
       })
     })
 
+    it('parses dev builds stamped with a commit hash as version', async () => {
+      vol.fromJSON({
+        '/path/to/thv': 'binary content',
+      })
+
+      mockExecFileAsync.mockResolvedValue({
+        stdout:
+          'ToolHive 493d030\nCommit: 493d030ed24b8c012db4c5717475a2386f5b72ce\nBuilt: unknown',
+        stderr: '',
+      })
+
+      const result = await getCliInfo('/path/to/thv')
+
+      expect(result).toEqual({
+        exists: true,
+        version: '493d030',
+        isExecutable: true,
+      })
+    })
+
     it('parses prerelease versions with and without the "v" prefix', async () => {
       vol.fromJSON({
         '/path/to/thv': 'binary content',
