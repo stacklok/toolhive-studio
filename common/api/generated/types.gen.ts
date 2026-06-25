@@ -581,6 +581,15 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
   baseline_client_scopes?: Array<string>
   cimd?: GithubComStacklokToolhivePkgAuthserverCimdRunConfig
   /**
+   * DisableUpstreamTokenInjection prevents the upstream swap middleware from being added.
+   * When true, the embedded auth server handles OAuth flows for clients, but instead of
+   * injecting upstream IdP tokens the proxy strips the client's credential headers
+   * (Authorization, Cookie, Proxy-Authorization) after the JWT is validated — the
+   * backend receives an unauthenticated request. Incompatible with token exchange
+   * and AWS STS, which would re-add credentials after the strip.
+   */
+  disable_upstream_token_injection?: boolean
+  /**
    * HMACSecretFiles contains file paths to HMAC secrets for signing authorization codes
    * and refresh tokens (opaque tokens).
    * First file is the current secret (must be at least 32 bytes), subsequent files
@@ -1162,6 +1171,23 @@ export type GithubComStacklokToolhivePkgRunnerHeaderForwardConfig = {
 }
 
 export type GithubComStacklokToolhivePkgRunnerRunConfig = {
+  /**
+   * AdditionalMiddlewareConfigs carries pre-built middleware configs injected by
+   * external-auth handlers (reached via *[]RunConfigBuilderOption) rather than
+   * derived from typed RunConfig fields. PopulateMiddlewareConfigs splices these
+   * into the chain in the backend-egress group — after auth and before recovery —
+   * instead of discarding them. Upstream carries these configs verbatim and never
+   * inspects their parameters; the middleware type identity (e.g. an enterprise
+   * auth type) is supplied by the caller via types.MiddlewareConfig.Type.
+   *
+   * Each entry's Type is expected to be a NEW egress middleware type (e.g. OBO),
+   * not one already produced from a typed RunConfig field (auth, authz, audit,
+   * tokenExchange, awssts, …). Dispatch in the proxyrunner is purely by Type
+   * string, so an injected Type that shadows a typed-field type would add a
+   * second instance of that middleware to the chain; the seam does not validate
+   * against this.
+   */
+  additional_middleware_configs?: Array<GithubComStacklokToolhivePkgTransportTypesMiddlewareConfig>
   /**
    * AllowDockerGateway permits outbound connections to Docker gateway addresses
    * (host.docker.internal, gateway.docker.internal, 172.17.0.1). These are
@@ -3142,6 +3168,10 @@ export type RegistryImageMetadata = {
    */
   repository_url?: string
   /**
+   * Stateless indicates the server only supports POST (no SSE/GET)
+   */
+  stateless?: boolean
+  /**
    * Status indicates whether the server is currently active or deprecated
    */
   status?: string
@@ -3334,6 +3364,10 @@ export type RegistryRemoteServerMetadata = {
    * RepositoryURL is the URL to the source code repository for the server
    */
   repository_url?: string
+  /**
+   * Stateless indicates the server only supports POST (no SSE/GET)
+   */
+  stateless?: boolean
   /**
    * Status indicates whether the server is currently active or deprecated
    */
