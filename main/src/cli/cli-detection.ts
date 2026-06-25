@@ -20,7 +20,7 @@ const execFileAsync = promisify(execFile)
  * The "v" prefix is optional: enterprise builds stamp the version without it.
  */
 const parseVersionOutput = (stdout: string): string | null => {
-  const match = stdout.match(/^ToolHive v?(\d+\.\d+\.\d+(?:-[\w.]+)?)/m)
+  const match = stdout.match(/^ToolHive v?([\w.-]+)/m)
   return match?.[1] ?? null
 }
 
