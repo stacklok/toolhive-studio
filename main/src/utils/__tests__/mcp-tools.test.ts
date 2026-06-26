@@ -1,7 +1,40 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createTransport } from '../mcp-tools'
+import {
+  createTransport,
+  getWorkloadAvailableTools,
+  buildRawTransport,
+} from '../mcp-tools'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
+
+const mockAiMcpClient = vi.hoisted(() => ({
+  tools: vi.fn().mockResolvedValue({}),
+  close: vi.fn().mockResolvedValue(undefined),
+}))
+
+const mockCreateMCPClient = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(mockAiMcpClient)
+)
+
+const mockSdkClient = vi.hoisted(() => ({
+  connect: vi.fn().mockResolvedValue(undefined),
+  listTools: vi.fn().mockResolvedValue({ tools: [] }),
+  close: vi.fn().mockResolvedValue(undefined),
+}))
+
+vi.mock('@ai-sdk/mcp', async (importOriginal) => {
+  const original = await importOriginal<typeof import('@ai-sdk/mcp')>()
+  return {
+    ...original,
+    experimental_createMCPClient: mockCreateMCPClient,
+  }
+})
+
+vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
+  Client: function ClientMock() {
+    return mockSdkClient
+  },
+}))
 
 vi.mock('../../logger', () => ({
   default: {
@@ -15,6 +48,12 @@ vi.mock('../../logger', () => ({
 describe('createTransport', () => {
   beforeEach(() => {
     vi.clearAllMocks()
+    mockAiMcpClient.tools.mockResolvedValue({})
+    mockAiMcpClient.close.mockResolvedValue(undefined)
+    mockCreateMCPClient.mockResolvedValue(mockAiMcpClient)
+    mockSdkClient.connect.mockResolvedValue(undefined)
+    mockSdkClient.listTools.mockResolvedValue({ tools: [] })
+    mockSdkClient.close.mockResolvedValue(undefined)
   })
 
   describe('streamable-http transport', () => {
@@ -207,6 +246,44 @@ describe('createTransport', () => {
 
       expect(config.name).toBe('pure-stdio')
       expect(config.transport).toBeInstanceOf(Experimental_StdioMCPTransport)
+    })
+  })
+})
+
+describe('getWorkloadAvailableTools', () => {
+  it('discovers tools for stdio servers proxied through streamable HTTP with the raw SDK transport', async () => {
+    const workload: CoreWorkload = {
+      name: 'context7',
+      port: 40281,
+      transport_type: 'stdio',
+      proxy_mode: 'streamable-http',
+      url: 'http://127.0.0.1:40281/mcp',
+      status: 'running',
+    }
+
+    mockSdkClient.listTools.mockResolvedValue({
+      tools: [
+        {
+          name: 'resolve-library-id',
+          description: 'Resolve a package name',
+          inputSchema: { type: 'object', properties: {} },
+        },
+      ],
+    })
+
+    const tools = await getWorkloadAvailableTools(workload)
+
+    expect(mockCreateMCPClient).not.toHaveBeenCalled()
+    expect(mockSdkClient.connect).toHaveBeenCalledWith(
+      buildRawTransport(workload)
+    )
+    expect(mockSdkClient.listTools).toHaveBeenCalledOnce()
+    expect(mockSdkClient.close).toHaveBeenCalledOnce()
+    expect(tools).toEqual({
+      'resolve-library-id': {
+        description: 'Resolve a package name',
+        inputSchema: { type: 'object', properties: {} },
+      },
     })
   })
 })

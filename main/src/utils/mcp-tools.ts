@@ -4,6 +4,7 @@ import {
 } from '@ai-sdk/mcp'
 import { type Tool } from 'ai'
 import { Experimental_StdioMCPTransport as StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
 import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js'
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
@@ -153,6 +154,34 @@ export async function getWorkloadAvailableTools(
   if (!workload.name) return null
 
   try {
+    if (
+      workload.transport_type === 'stdio' &&
+      workload.proxy_mode === 'streamable-http'
+    ) {
+      const mcpClient = new Client({
+        name: 'toolhive-studio-tool-discovery',
+        version: '1.0.0',
+      })
+
+      try {
+        await mcpClient.connect(buildRawTransport(workload))
+        const rawTools = await mcpClient.listTools()
+
+        return rawTools.tools
+          .filter((tool) => isMcpToolDefinition(tool))
+          .reduce<Record<string, McpToolDefinition>>((prev, tool) => {
+            if (!tool.name) return prev
+            prev[tool.name] = {
+              description: tool.description,
+              inputSchema: tool.inputSchema as Tool['inputSchema'],
+            }
+            return prev
+          }, {})
+      } finally {
+        await mcpClient.close()
+      }
+    }
+
     // Try to create an MCP client and discover tools
     const config = createTransport(workload)
     if (config) {
