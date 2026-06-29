@@ -2057,8 +2057,8 @@ export const getRegistryByRegistryNameV01ServersInfiniteQueryKey = (
  */
 export const getRegistryByRegistryNameV01ServersInfiniteOptions = (
   options: Options<GetRegistryByRegistryNameV01ServersData>
-) =>
-  infiniteQueryOptions<
+) => {
+  const opts = infiniteQueryOptions<
     GetRegistryByRegistryNameV01ServersResponse,
     GetRegistryByRegistryNameV01ServersError,
     InfiniteData<GetRegistryByRegistryNameV01ServersResponse>,
@@ -2096,6 +2096,8 @@ export const getRegistryByRegistryNameV01ServersInfiniteOptions = (
       queryKey: getRegistryByRegistryNameV01ServersInfiniteQueryKey(options),
     }
   )
+  return opts as Omit<typeof opts, 'initialData'>
+}
 
 export const getRegistryByRegistryNameV01ServersByServerNameVersionsLatestQueryKey =
   (
@@ -2185,8 +2187,8 @@ export const getRegistryByRegistryNameV01xDevToolhiveSkillsInfiniteQueryKey = (
  */
 export const getRegistryByRegistryNameV01xDevToolhiveSkillsInfiniteOptions = (
   options: Options<GetRegistryByRegistryNameV01xDevToolhiveSkillsData>
-) =>
-  infiniteQueryOptions<
+) => {
+  const opts = infiniteQueryOptions<
     GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse,
     GetRegistryByRegistryNameV01xDevToolhiveSkillsError,
     InfiniteData<GetRegistryByRegistryNameV01xDevToolhiveSkillsResponse>,
@@ -2229,6 +2231,8 @@ export const getRegistryByRegistryNameV01xDevToolhiveSkillsInfiniteOptions = (
         getRegistryByRegistryNameV01xDevToolhiveSkillsInfiniteQueryKey(options),
     }
   )
+  return opts as Omit<typeof opts, 'initialData'>
+}
 
 export const getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameQueryKey =
   (
