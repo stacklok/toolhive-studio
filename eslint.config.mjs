@@ -35,6 +35,18 @@ export default defineConfig([
     rules: {
       ...reactRefresh.configs.recommended.rules,
       ...reactHooks.configs.flat.recommended.rules,
+      // Allow route files to export `Route = createFileRoute(...)(...)`
+      // alongside their component, and allow shared constants in
+      // component files. The TanStack helpers aren't real React HOCs,
+      // but listing them here matches our project convention of
+      // co-locating the component with the route definition.
+      'react-refresh/only-export-components': [
+        'error',
+        {
+          allowConstantExport: true,
+          extraHOCs: ['createFileRoute', 'createRootRouteWithContext'],
+        },
+      ],
     },
   },
   {

@@ -14,8 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/common/components/ui/select'
-
-export const DEFAULT_PAGE_SIZE_OPTIONS = [12, 24, 50, 100] as const
+import { DEFAULT_PAGE_SIZE_OPTIONS } from './pagination-constants'
 
 type PaginationProps = {
   page: number
