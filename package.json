@@ -172,5 +172,5 @@
       "eslint --max-warnings 0 --no-warn-ignored"
     ]
   },
-  "packageManager": "pnpm@11.1.2"
+  "packageManager": "pnpm@11.9.0"
 }
