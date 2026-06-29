@@ -80,7 +80,7 @@
     "husky": "^9.1.7",
     "icon-gen": "^5.0.0",
     "jsdom": "^29.1.1",
-    "json-schema-faker": "^0.6.1",
+    "json-schema-faker": "^0.6.2",
     "knip": "^6.12.2",
     "lint-staged": "^16.4.0",
     "memfs": "^4.57.2",
