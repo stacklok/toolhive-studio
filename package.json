@@ -143,7 +143,7 @@
     "@tanstack/react-virtual": "^3.13.24",
     "ai": "^6.0.211",
     "ai-sdk-ollama": "^3.8.8",
-    "better-sqlite3": "^12.9.0",
+    "better-sqlite3": "^12.11.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
