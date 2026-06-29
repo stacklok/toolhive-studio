@@ -335,6 +335,9 @@ importers:
       electron:
         specifier: 42.5.0
         version: 42.5.0
+      electron-winstaller:
+        specifier: ^5.4.0
+        version: 5.4.0
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)
@@ -13460,7 +13463,6 @@ snapshots:
       '@electron/windows-sign': 1.2.2
     transitivePeerDependencies:
       - supports-color
-    optional: true
 
   electron@42.5.0:
     dependencies:
@@ -13961,7 +13963,6 @@ snapshots:
       graceful-fs: 4.2.11
       jsonfile: 4.0.0
       universalify: 0.1.2
-    optional: true
 
   fs-extra@8.1.0:
     dependencies:
@@ -14847,8 +14848,7 @@ snapshots:
 
   lodash.merge@4.6.2: {}
 
-  lodash@4.18.1:
-    optional: true
+  lodash@4.18.1: {}
 
   log-symbols@4.1.0:
     dependencies:
@@ -15408,7 +15408,6 @@ snapshots:
   mkdirp@0.5.6:
     dependencies:
       minimist: 1.2.8
-    optional: true
 
   module-details-from-path@1.0.4: {}
 
@@ -16179,7 +16178,6 @@ snapshots:
   rimraf@2.6.3:
     dependencies:
       glob: 7.2.3
-    optional: true
 
   rimraf@6.1.3:
     dependencies:
@@ -16708,7 +16706,6 @@ snapshots:
     dependencies:
       mkdirp: 0.5.6
       rimraf: 2.6.3
-    optional: true
 
   terser-webpack-plugin@5.6.0(esbuild@0.28.1)(webpack@5.106.2(esbuild@0.28.1)):
     dependencies:
