@@ -357,8 +357,8 @@ importers:
         specifier: ^29.1.1
         version: 29.1.1
       json-schema-faker:
-        specifier: ^0.6.1
-        version: 0.6.1
+        specifier: ^0.6.2
+        version: 0.6.2
       knip:
         specifier: ^6.12.2
         version: 6.12.2(@emnapi/core@1.10.0)(@emnapi/runtime@1.10.0)
@@ -5734,8 +5734,8 @@ packages:
   json-buffer@3.0.1:
     resolution: {integrity: sha512-4bV5BfR2mqfQTJm+V5tPPdf+ZpuhiIvTuAB5g8kcrXOZpTT/QwwVRWBywX1ozr6lEuPdbHxwaJlm9G6mI2sfSQ==}
 
-  json-schema-faker@0.6.1:
-    resolution: {integrity: sha512-IMF9QGFn/j7sys1LxgYpt/+0LUozFE8R/yUav4D7NqsHnh5L0mbJZOiU724nlJ3g+ZZo6NykVtTeJLoVcOP6Xw==}
+  json-schema-faker@0.6.2:
+    resolution: {integrity: sha512-jhOV/bIUxTPM3DiKaa9YDI9UIhO6md1wBnopuIleXATBCwBxnpEfUG0KZqWJS0nTc7nGeWu6ve4vL7Sk7l2BKA==}
     hasBin: true
 
   json-schema-traverse@0.4.1:
@@ -14357,7 +14357,7 @@ snapshots:
 
   json-buffer@3.0.1: {}
 
-  json-schema-faker@0.6.1: {}
+  json-schema-faker@0.6.2: {}
 
   json-schema-traverse@0.4.1: {}
 
