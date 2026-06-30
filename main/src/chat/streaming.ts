@@ -45,6 +45,24 @@ function addUsage(
   } as LanguageModelV2Usage
 }
 
+/** Map provider/SDK errors to user-facing messages for the playground UI. */
+export function toUserFacingErrorMessage(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error)
+  if (/overloaded/i.test(message)) {
+    return 'The AI service is currently overloaded. Please try again in a few moments.'
+  }
+  if (/rate limit/i.test(message)) {
+    return 'Rate limit exceeded. Please wait a moment before sending another message.'
+  }
+  if (/insufficient_quota|quota/i.test(message)) {
+    return 'API quota exceeded. Please check your API key billing status.'
+  }
+  if (/invalid_api_key|authentication/i.test(message)) {
+    return 'Invalid API key. Please check your API key configuration.'
+  }
+  return message || 'An error occurred.'
+}
+
 /**
  * Handle chat streaming request using real-time IPC events
  */
@@ -171,6 +189,7 @@ export async function handleChatStreamRealtime(
               prefix: 'msg',
               size: 16,
             }),
+            onError: (error) => toUserFacingErrorMessage(error),
             messageMetadata: ({ part }) => {
               if (part.type === 'start') {
                 const createdAt = Date.now()
@@ -354,43 +373,7 @@ export async function handleChatStreamRealtime(
             )
           }
 
-          // Improve error messages for common API issues
-          if (error instanceof Error) {
-            if (
-              error.message.includes('overloaded') ||
-              error.message.includes('Overloaded')
-            ) {
-              throw new Error(
-                'The AI service is currently overloaded. Please try again in a few moments.'
-              )
-            }
-            if (
-              error.message.includes('rate limit') ||
-              error.message.includes('Rate limit')
-            ) {
-              throw new Error(
-                'Rate limit exceeded. Please wait a moment before sending another message.'
-              )
-            }
-            if (
-              error.message.includes('insufficient_quota') ||
-              error.message.includes('quota')
-            ) {
-              throw new Error(
-                'API quota exceeded. Please check your API key billing status.'
-              )
-            }
-            if (
-              error.message.includes('invalid_api_key') ||
-              error.message.includes('authentication')
-            ) {
-              throw new Error(
-                'Invalid API key. Please check your API key configuration.'
-              )
-            }
-          }
-
-          throw error
+          throw new Error(toUserFacingErrorMessage(error))
         }
       } catch (error) {
         log.error('[CHAT] Chat stream error:', error)
