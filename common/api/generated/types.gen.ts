@@ -620,6 +620,12 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    */
   hmac_secret_files?: Array<string>
   /**
+   * InsecureAllowHTTP permits an http:// issuer URL for non-localhost hosts.
+   * Only set this for in-cluster Kubernetes deployments on a trusted network.
+   * Production deployments reachable outside the cluster MUST use https://.
+   */
+  insecure_allow_http?: boolean
+  /**
    * Issuer is the issuer identifier for this authorization server.
    * This will be included in the "iss" claim of issued tokens.
    * Must be a valid HTTPS URL (or HTTP for localhost) without query, fragment, or trailing slash.
@@ -1220,6 +1226,15 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Only applicable to Docker deployments with network isolation enabled.
    */
   allow_docker_gateway?: boolean
+  /**
+   * AllowedOrigins is the allowlist of values accepted on the HTTP Origin header,
+   * used for DNS-rebinding protection per MCP 2025-11-25 §"Security Warning".
+   * When empty and Host is loopback (127.0.0.1 / localhost / [::1]), a default
+   * loopback-only allowlist is derived at middleware-wiring time.
+   * When empty and Host is non-loopback, the middleware is disabled — operators
+   * exposing the proxy publicly must configure an explicit allowlist.
+   */
+  allowed_origins?: Array<string>
   audit_config?: GithubComStacklokToolhivePkgAuditConfig
   /**
    * DEPRECATED: Middleware configuration.
