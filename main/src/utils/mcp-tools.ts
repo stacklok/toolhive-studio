@@ -15,6 +15,49 @@ export interface McpToolDefinition {
   inputSchema: Tool['inputSchema']
 }
 
+/**
+ * Normalize a JSON Schema in place for Gemini's stricter validator. Drops
+ * non-string `enum`s (Gemini allows `enum` only on strings) and collapses
+ * union `type` arrays to a single type (`'null'` becomes `nullable: true`),
+ * both of which Gemini otherwise rejects.
+ */
+export function sanitizeMcpJsonSchema(node: unknown): void {
+  if (!node || typeof node !== 'object') return
+  if (Array.isArray(node)) {
+    for (const item of node) sanitizeMcpJsonSchema(item)
+    return
+  }
+  const obj = node as Record<string, unknown>
+  if (
+    Array.isArray(obj.enum) &&
+    !obj.enum.every((value) => typeof value === 'string')
+  ) {
+    delete obj.enum
+  }
+  if (Array.isArray(obj.type)) {
+    const types = obj.type.filter(
+      (t): t is string => typeof t === 'string' && t !== 'null'
+    )
+    if (obj.type.includes('null')) obj.nullable = true
+    obj.type = types[0] ?? 'string'
+  }
+  for (const key of Object.keys(obj)) sanitizeMcpJsonSchema(obj[key])
+}
+
+/** Sanitize a tool's JSON Schema, whether wrapped (`inputSchema.jsonSchema`)
+ * or bare (`inputSchema`). Mutates in place; safe on any tool. */
+export function sanitizeToolInputSchema(tool: unknown): void {
+  if (!tool || typeof tool !== 'object') return
+  const inputSchema = (tool as { inputSchema?: unknown }).inputSchema
+  if (!inputSchema || typeof inputSchema !== 'object') return
+  const wrapped = (inputSchema as { jsonSchema?: unknown }).jsonSchema
+  if (wrapped && typeof wrapped === 'object') {
+    sanitizeMcpJsonSchema(wrapped)
+  } else {
+    sanitizeMcpJsonSchema(inputSchema)
+  }
+}
+
 export function isMcpToolDefinition(obj: unknown): obj is McpToolDefinition {
   if (!obj || typeof obj !== 'object' || obj === null) return false
 

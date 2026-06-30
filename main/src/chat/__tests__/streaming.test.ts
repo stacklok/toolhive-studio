@@ -287,3 +287,34 @@ describe('handleChatStreamRealtime — agent resolution', () => {
     expect(ctorArg.toolChoice).toBeUndefined()
   })
 })
+
+describe('handleChatStreamRealtime — error message mapping', () => {
+  it('passes onError to toUIMessageStream so provider errors reach the UI', async () => {
+    mockGetAgent.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'TOOLHIVE INSTRUCTIONS')
+    )
+    const toUIMessageStream = vi.fn().mockReturnValue({})
+    mockAgentStream.mockResolvedValue({ toUIMessageStream })
+
+    await handleChatStreamRealtime(
+      makeRequest({ agentId: 'builtin.toolhive-assistant' }),
+      'stream-err',
+      fakeSender
+    )
+
+    expect(toUIMessageStream).toHaveBeenCalled()
+    const opts = toUIMessageStream.mock.calls[0]![0] as {
+      onError: (error: unknown) => string
+    }
+    expect(opts.onError(new Error('high demand, try later'))).toBe(
+      'high demand, try later'
+    )
+    expect(opts.onError(new Error('Overloaded'))).toContain('overloaded')
+    expect(
+      opts.onError({
+        message: 'This model is currently experiencing high demand.',
+      })
+    ).toBe('This model is currently experiencing high demand.')
+    expect(opts.onError({ code: 'UNKNOWN' })).toBe('An error occurred.')
+  })
+})

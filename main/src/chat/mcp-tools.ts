@@ -22,6 +22,7 @@ import {
   createTransport,
   getWorkloadAvailableTools,
   isMcpToolDefinition,
+  sanitizeToolInputSchema,
 } from '../utils/mcp-tools'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import { readAllMcpAppUiMetadata } from '../db/readers/mcp-app-ui-metadata-reader'
@@ -240,7 +241,10 @@ export async function getMcpServerTools(
 }
 
 // Create MCP tools for AI SDK
-export async function createMcpTools(threadId?: string): Promise<{
+export async function createMcpTools(
+  threadId?: string,
+  options?: { sanitizeSchemas?: boolean }
+): Promise<{
   tools: ToolSet
   clients: Awaited<ReturnType<typeof createMCPClient>>[]
   enabledTools: Record<string, string[]>
@@ -265,6 +269,9 @@ export async function createMcpTools(threadId?: string): Promise<{
     if (!isMcpToolDefinition(toolDef)) return false
     const ui = extractToolUiMeta(toolDef)
     if (shouldSkipAppOnlyTool(ui)) return false
+    // Only Gemini needs schema normalization; other providers handle the
+    // original schema (and keep richer constructs like union types).
+    if (options?.sanitizeSchemas) sanitizeToolInputSchema(toolDef)
     mcpTools[toolName] = toolDef
     if (ui?.resourceUri) {
       nextCachedUiMetadata[toolName] = {

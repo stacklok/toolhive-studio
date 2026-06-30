@@ -45,6 +45,40 @@ function addUsage(
   } as LanguageModelV2Usage
 }
 
+/** Gemini's function-declaration validator rejects schema constructs other
+ * providers accept. True for Google directly or a `google/*` OpenRouter model. */
+function requiresGeminiSchemaCompat(provider: string, model: string): boolean {
+  return provider === 'google' || model.toLowerCase().startsWith('google/')
+}
+
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message: unknown }).message
+    if (typeof message === 'string') return message
+  }
+  return ''
+}
+
+/** Map provider/SDK errors to user-facing messages for the playground UI. */
+function toUserFacingErrorMessage(error: unknown): string {
+  const message = getErrorMessage(error)
+  if (/overloaded/i.test(message)) {
+    return 'The AI service is currently overloaded. Please try again in a few moments.'
+  }
+  if (/rate limit/i.test(message)) {
+    return 'Rate limit exceeded. Please wait a moment before sending another message.'
+  }
+  if (/insufficient_quota|quota/i.test(message)) {
+    return 'API quota exceeded. Please check your API key billing status.'
+  }
+  if (/invalid_api_key|authentication/i.test(message)) {
+    return 'Invalid API key. Please check your API key configuration.'
+  }
+  return message || 'An error occurred.'
+}
+
 /**
  * Handle chat streaming request using real-time IPC events
  */
@@ -91,7 +125,12 @@ export async function handleChatStreamRealtime(
           tools: mcpTools,
           clients: mcpClients,
           enabledTools,
-        } = await createMcpTools(request.chatId)
+        } = await createMcpTools(request.chatId, {
+          sanitizeSchemas: requiresGeminiSchemaCompat(
+            request.provider,
+            request.model
+          ),
+        })
 
         // Agent-specific built-in tools (e.g. Skills Builder, Skill Tester).
         // Pass the threadId so per-thread skill enablement is honoured.
@@ -171,6 +210,7 @@ export async function handleChatStreamRealtime(
               prefix: 'msg',
               size: 16,
             }),
+            onError: (error) => toUserFacingErrorMessage(error),
             messageMetadata: ({ part }) => {
               if (part.type === 'start') {
                 const createdAt = Date.now()
@@ -354,43 +394,7 @@ export async function handleChatStreamRealtime(
             )
           }
 
-          // Improve error messages for common API issues
-          if (error instanceof Error) {
-            if (
-              error.message.includes('overloaded') ||
-              error.message.includes('Overloaded')
-            ) {
-              throw new Error(
-                'The AI service is currently overloaded. Please try again in a few moments.'
-              )
-            }
-            if (
-              error.message.includes('rate limit') ||
-              error.message.includes('Rate limit')
-            ) {
-              throw new Error(
-                'Rate limit exceeded. Please wait a moment before sending another message.'
-              )
-            }
-            if (
-              error.message.includes('insufficient_quota') ||
-              error.message.includes('quota')
-            ) {
-              throw new Error(
-                'API quota exceeded. Please check your API key billing status.'
-              )
-            }
-            if (
-              error.message.includes('invalid_api_key') ||
-              error.message.includes('authentication')
-            ) {
-              throw new Error(
-                'Invalid API key. Please check your API key configuration.'
-              )
-            }
-          }
-
-          throw error
+          throw new Error(toUserFacingErrorMessage(error))
         }
       } catch (error) {
         log.error('[CHAT] Chat stream error:', error)
