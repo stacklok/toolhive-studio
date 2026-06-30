@@ -310,5 +310,11 @@ describe('handleChatStreamRealtime — error message mapping', () => {
       'high demand, try later'
     )
     expect(opts.onError(new Error('Overloaded'))).toContain('overloaded')
+    expect(
+      opts.onError({
+        message: 'This model is currently experiencing high demand.',
+      })
+    ).toBe('This model is currently experiencing high demand.')
+    expect(opts.onError({ code: 'UNKNOWN' })).toBe('An error occurred.')
   })
 })

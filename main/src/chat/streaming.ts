@@ -51,9 +51,19 @@ function requiresGeminiSchemaCompat(provider: string, model: string): boolean {
   return provider === 'google' || model.toLowerCase().startsWith('google/')
 }
 
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) return error.message
+  if (typeof error === 'string') return error
+  if (error && typeof error === 'object' && 'message' in error) {
+    const message = (error as { message: unknown }).message
+    if (typeof message === 'string') return message
+  }
+  return ''
+}
+
 /** Map provider/SDK errors to user-facing messages for the playground UI. */
-export function toUserFacingErrorMessage(error: unknown): string {
-  const message = error instanceof Error ? error.message : String(error)
+function toUserFacingErrorMessage(error: unknown): string {
+  const message = getErrorMessage(error)
   if (/overloaded/i.test(message)) {
     return 'The AI service is currently overloaded. Please try again in a few moments.'
   }
