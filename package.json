@@ -53,7 +53,7 @@
     "@electron-forge/publisher-s3": "^7.11.2",
     "@electron-forge/shared-types": "^7.11.2",
     "@electron/fuses": "^2.1.2",
-    "@electron/rebuild": "^4.0.4",
+    "@electron/rebuild": "^4.0.6",
     "@eslint/js": "^9.39.4",
     "@hey-api/openapi-ts": "0.99.0",
     "@playwright/test": "^1.61.1",
