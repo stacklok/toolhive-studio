@@ -95,7 +95,7 @@
     "tsx": "^4.22.4",
     "typescript": "6.0.3",
     "typescript-eslint": "^8.59.3",
-    "unzipper": "^0.12.3",
+    "unzipper": "^0.12.5",
     "vite": "^8.1.0",
     "vitest": "^4.1.9",
     "vitest-fail-on-console": "^0.10.1"
