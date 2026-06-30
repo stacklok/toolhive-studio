@@ -45,6 +45,12 @@ function addUsage(
   } as LanguageModelV2Usage
 }
 
+/** Gemini's function-declaration validator rejects schema constructs other
+ * providers accept. True for Google directly or a `google/*` OpenRouter model. */
+function requiresGeminiSchemaCompat(provider: string, model: string): boolean {
+  return provider === 'google' || model.toLowerCase().startsWith('google/')
+}
+
 /** Map provider/SDK errors to user-facing messages for the playground UI. */
 export function toUserFacingErrorMessage(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error)
@@ -109,7 +115,12 @@ export async function handleChatStreamRealtime(
           tools: mcpTools,
           clients: mcpClients,
           enabledTools,
-        } = await createMcpTools(request.chatId)
+        } = await createMcpTools(request.chatId, {
+          sanitizeSchemas: requiresGeminiSchemaCompat(
+            request.provider,
+            request.model
+          ),
+        })
 
         // Agent-specific built-in tools (e.g. Skills Builder, Skill Tester).
         // Pass the threadId so per-thread skill enablement is honoured.

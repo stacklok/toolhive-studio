@@ -74,6 +74,8 @@ vi.mock('../../utils/mcp-tools', async (importOriginal) => {
   return {
     // Keep the real validator so fixtures need to be shaped correctly
     isMcpToolDefinition: original.isMcpToolDefinition,
+    // Keep the real sanitizer so registerTool can normalize schemas
+    sanitizeToolInputSchema: original.sanitizeToolInputSchema,
     buildRawTransport: mockBuildRawTransport,
     createTransport: mockCreateTransport,
     getWorkloadAvailableTools: mockGetWorkloadAvailableTools,
