@@ -73,7 +73,7 @@
     "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^17.4.2",
     "electron": "42.5.0",
-    "electron-winstaller": "^5.4.0",
+    "electron-winstaller": "^5.4.1",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "~7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
