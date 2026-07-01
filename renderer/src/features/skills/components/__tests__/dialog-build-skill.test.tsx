@@ -282,8 +282,7 @@ describe('DialogBuildSkill', () => {
     // Trigger the "Install now" handler captured by the toast call directly.
     const lastCall = vi.mocked(toast.success).mock.calls.at(-1)
     const opts = lastCall?.[1] as
-      | { action?: { onClick?: () => void } }
-      | undefined
+      { action?: { onClick?: () => void } } | undefined
     opts?.action?.onClick?.()
 
     const nameInput = await screen.findByLabelText(/name or reference/i)
@@ -324,8 +323,7 @@ describe('DialogBuildSkill', () => {
 
     const lastCall = vi.mocked(toast.success).mock.calls.at(-1)
     const opts = lastCall?.[1] as
-      | { action?: { onClick?: () => void } }
-      | undefined
+      { action?: { onClick?: () => void } } | undefined
     opts?.action?.onClick?.()
 
     const nameInput = await screen.findByLabelText(/name or reference/i)
@@ -372,8 +370,7 @@ describe('DialogBuildSkill', () => {
 
     const lastCall = vi.mocked(toast.success).mock.calls.at(-1)
     const opts = lastCall?.[1] as
-      | { action?: { onClick?: () => void } }
-      | undefined
+      { action?: { onClick?: () => void } } | undefined
     opts?.action?.onClick?.()
 
     const nameInput = await screen.findByLabelText(/name or reference/i)

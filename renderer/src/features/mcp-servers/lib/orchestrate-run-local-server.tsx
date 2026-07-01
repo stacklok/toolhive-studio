@@ -53,8 +53,7 @@ export function prepareCreateWorkloadData(
   // Extract and transform fields with proper typing
   const cmd_arguments = data.cmd_arguments as string[] | undefined
   const envVars = data.envVars as
-    | Array<{ name: string; value?: string }>
-    | undefined
+    Array<{ name: string; value?: string }> | undefined
   const allowedHosts = data.allowedHosts as Array<{ value: string }> | undefined
   const allowedPorts = data.allowedPorts as Array<{ value: string }> | undefined
   const networkIsolation = data.networkIsolation as boolean | undefined
@@ -117,9 +116,7 @@ export function convertWorkloadToFormData(
   const baseFormData = {
     name: workload.name || '',
     transport: (workload.transport_type || 'stdio') as
-      | 'sse'
-      | 'stdio'
-      | 'streamable-http',
+      'sse' | 'stdio' | 'streamable-http',
     ...(proxyMode ? { proxy_mode: proxyMode } : {}),
     proxy_port: workload.port,
     group: 'default',

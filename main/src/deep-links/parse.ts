@@ -4,8 +4,7 @@ import { deepLinkSchema, type DeepLinkIntent } from '@common/deep-links'
 import { DEEP_LINK_PROTOCOL } from '@common/app-info'
 
 type ParseResult =
-  | { ok: true; deepLink: DeepLinkIntent }
-  | { ok: false; error: string }
+  { ok: true; deepLink: DeepLinkIntent } | { ok: false; error: string }
 
 export function parseDeepLinkUrl(rawUrl: string): ParseResult {
   log.debug(`[deep-link] Parsing URL: ${rawUrl}`)

@@ -42,8 +42,7 @@ export function readAgent(id: string): AgentConfig | null {
   return withDbSpan('DB read agent', 'db.read', { 'db.agent_id': id }, () => {
     const db = getDb()
     const row = db.prepare('SELECT * FROM agents WHERE id = ?').get(id) as
-      | DbAgent
-      | undefined
+      DbAgent | undefined
     return row ? hydrate(row) : null
   })
 }

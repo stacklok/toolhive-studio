@@ -14,12 +14,7 @@ import { cn } from '@/common/lib/utils'
 interface ManageClientsButtonProps {
   groupName: string
   variant?:
-    | 'default'
-    | 'outline'
-    | 'secondary'
-    | 'ghost'
-    | 'link'
-    | 'destructive'
+    'default' | 'outline' | 'secondary' | 'ghost' | 'link' | 'destructive'
   className?: string
 }
 

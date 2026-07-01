@@ -28,9 +28,7 @@ interface ServerActionsDropdownProps {
   isFromRegistry: boolean
   drift: { localTag: string; registryTag: string } | null
   matchedRegistryItem:
-    | RegistryImageMetadata
-    | RegistryRemoteServerMetadata
-    | undefined
+    RegistryImageMetadata | RegistryRemoteServerMetadata | undefined
 }
 
 export function ServerActionsDropdown({

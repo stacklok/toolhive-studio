@@ -272,8 +272,7 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
           event.query.queryKey[1] === 'threadStarted')
       ) {
         const data = event.query.state.data as
-          | { threadId: string; timestamp: number }
-          | undefined
+          { threadId: string; timestamp: number } | undefined
         if (data?.threadId) {
           refreshThread(data.threadId).catch((err) =>
             log.error('[usePlaygroundThreads] refreshThread failed:', err)
