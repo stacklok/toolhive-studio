@@ -295,8 +295,7 @@ describe('useSetThreadAgent', () => {
 
     await waitFor(() => {
       const data = queryClient.getQueryData(['chat', 'threadStarted']) as
-        | { threadId: string }
-        | undefined
+        { threadId: string } | undefined
       expect(data?.threadId).toBe('thread-draft')
     })
   })

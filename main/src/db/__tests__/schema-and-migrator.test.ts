@@ -110,8 +110,7 @@ describe('001-initial-schema', () => {
     db.prepare("DELETE FROM threads WHERE id = 't1'").run()
 
     const row = db.prepare('SELECT * FROM active_thread WHERE id = 1').get() as
-      | { thread_id: string | null }
-      | undefined
+      { thread_id: string | null } | undefined
     expect(row?.thread_id).toBeNull()
   })
 

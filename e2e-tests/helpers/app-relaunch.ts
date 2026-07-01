@@ -78,8 +78,7 @@ export async function launchApp(userDataDir: string): Promise<LaunchedApp> {
   const socketPath = await window.evaluate(async () => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     return (await (globalThis as any).electronAPI.getToolhiveSocketPath()) as
-      | string
-      | undefined
+      string | undefined
   })
 
   if (!socketPath) {

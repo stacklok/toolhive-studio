@@ -85,8 +85,7 @@ function extractToolUiMeta(
   toolDef: unknown
 ): { resourceUri?: string; visibility?: string[] } | undefined {
   return (toolDef as { _meta?: Record<string, unknown> })?._meta?.['ui'] as
-    | { resourceUri?: string; visibility?: string[] }
-    | undefined
+    { resourceUri?: string; visibility?: string[] } | undefined
 }
 
 /** Returns true when a tool is app-only and must not be exposed to the model. */

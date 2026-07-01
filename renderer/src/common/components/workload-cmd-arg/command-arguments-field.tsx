@@ -18,8 +18,7 @@ import type { UseFormReturn } from 'react-hook-form'
 import type { FormSchemaRegistryMcp } from '@/features/registry-servers/lib/form-schema-registry-mcp'
 
 type CmdArguments =
-  | FormSchemaRegistryMcp['cmd_arguments']
-  | FormSchemaLocalMcp['cmd_arguments']
+  FormSchemaRegistryMcp['cmd_arguments'] | FormSchemaLocalMcp['cmd_arguments']
 
 interface CommandArgumentsFieldProps<
   T extends {

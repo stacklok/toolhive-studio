@@ -53,10 +53,7 @@ interface ToolPartReplay {
   callProviderMetadata?: ProviderMetadata
   resultProviderMetadata?: ProviderMetadata
   state:
-    | 'input-streaming'
-    | 'input-available'
-    | 'output-available'
-    | 'output-error'
+    'input-streaming' | 'input-available' | 'output-available' | 'output-error'
 }
 
 interface ActiveStream {

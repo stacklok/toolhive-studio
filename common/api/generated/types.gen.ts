@@ -726,8 +726,7 @@ export type GithubComStacklokToolhivePkgAuthserverTokenResponseMappingRunConfig 
  * Type specifies the provider type: "oidc" or "oauth2".
  */
 export type GithubComStacklokToolhivePkgAuthserverUpstreamProviderType =
-  | 'oidc'
-  | 'oauth2'
+  'oidc' | 'oauth2'
 
 export type GithubComStacklokToolhivePkgAuthserverUpstreamRunConfig = {
   /**
@@ -1527,9 +1526,7 @@ export type GithubComStacklokToolhivePkgSkillsDependency = {
  * Status is the current installation status.
  */
 export type GithubComStacklokToolhivePkgSkillsInstallStatus =
-  | 'installed'
-  | 'pending'
-  | 'failed'
+  'installed' | 'pending' | 'failed'
 
 /**
  * InstalledSkill contains the full installation record.
@@ -1803,10 +1800,7 @@ export type GithubComStacklokToolhivePkgTransportTypesMiddlewareConfig = {
  * Note: "sse" is deprecated; use "streamable-http" instead.
  */
 export type GithubComStacklokToolhivePkgTransportTypesProxyMode =
-  | 'sse'
-  | 'streamable-http'
-  | 'sse'
-  | 'streamable-http'
+  'sse' | 'streamable-http' | 'sse' | 'streamable-http'
 
 /**
  * Transport is the transport mode (stdio, sse, or streamable-http)

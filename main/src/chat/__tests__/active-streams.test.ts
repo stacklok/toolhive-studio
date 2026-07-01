@@ -262,8 +262,7 @@ describe('active-streams registry', () => {
 
     expect(mockUpdateThreadMessages).toHaveBeenCalled()
     const lastCall = mockUpdateThreadMessages.mock.calls.at(-1) as
-      | unknown[]
-      | undefined
+      unknown[] | undefined
     expect(lastCall?.[0]).toBe('thread-5')
   })
 

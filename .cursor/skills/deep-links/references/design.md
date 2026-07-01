@@ -109,7 +109,7 @@ Unfortunately, there is no simple, OS-independent way to trigger deep-links in P
 Instead, we will have to unit test the parsing logic, and use unit test/component tests in order to test the IPC handling in the renderer process.
 
 In a limited fashion, a simple manual testing method can be used to test how deep links are handled:  
- ./node_modules/.bin/electron . "toolhive://v1/open-group?groupName=default"
+./node_modules/.bin/electron . "toolhive://v1/open-group?groupName=default"
 
 ## Decisions
 
