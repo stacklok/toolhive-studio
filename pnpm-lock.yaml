@@ -320,8 +320,8 @@ importers:
         specifier: 42.5.0
         version: 42.5.0
       electron-winstaller:
-        specifier: ^5.4.0
-        version: 5.4.0
+        specifier: ^5.4.1
+        version: 5.4.3
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)
@@ -4655,8 +4655,8 @@ packages:
   electron-to-chromium@1.5.353:
     resolution: {integrity: sha512-kOrWphBi8TOZyiJZqsgqIle0lw+tzmnQK83pV9dZUd01Nm2POECSyFQMAuarzZdYqQW7FH9RaYOuaRo3h+bQ3w==}
 
-  electron-winstaller@5.4.0:
-    resolution: {integrity: sha512-bO3y10YikuUwUuDUQRM4KfwNkKhnpVO7IPdbsrejwN9/AABJzzTQ4GeHwyzNSrVO+tEH3/Np255a3sVZpZDjvg==}
+  electron-winstaller@5.4.3:
+    resolution: {integrity: sha512-1F3vYtQI1WVEPH0mmiu72Ol7qXXKj2x9S9S7tgs2QylYu8A/yOlhocC38UPu1+luMwjvGJBl0X8TnNP/O42sxA==}
     engines: {node: '>=8.0.0'}
 
   electron@42.5.0:
@@ -8848,7 +8848,7 @@ snapshots:
       '@electron-forge/shared-types': 7.11.2
       fs-extra: 10.1.0
     optionalDependencies:
-      electron-winstaller: 5.4.0
+      electron-winstaller: 5.4.3
     transitivePeerDependencies:
       - supports-color
 
@@ -8952,7 +8952,7 @@ snapshots:
       '@malept/cross-spawn-promise': 2.0.0
       debug: 4.4.3
       fs-extra: 10.1.0
-      semver: 7.8.0
+      semver: 7.8.4
       username: 5.1.0
     transitivePeerDependencies:
       - supports-color
@@ -12430,7 +12430,7 @@ snapshots:
       dot-prop: 9.0.0
       env-paths: 3.0.0
       json-schema-typed: 8.0.2
-      semver: 7.8.0
+      semver: 7.8.4
       uint8array-extras: 1.5.0
 
   confbox@0.2.4: {}
@@ -12894,12 +12894,13 @@ snapshots:
 
   electron-to-chromium@1.5.353: {}
 
-  electron-winstaller@5.4.0:
+  electron-winstaller@5.4.3:
     dependencies:
       '@electron/asar': 3.4.1
       debug: 4.4.3
       fs-extra: 7.0.1
       lodash: 4.18.1
+      semver: 7.8.4
       temp: 0.9.4
     optionalDependencies:
       '@electron/windows-sign': 1.2.2
@@ -13578,7 +13579,7 @@ snapshots:
       es6-error: 4.1.1
       matcher: 3.0.0
       roarr: 2.15.4
-      semver: 7.8.0
+      semver: 7.8.4
       serialize-error: 7.0.1
     optional: true
 
@@ -14906,7 +14907,7 @@ snapshots:
 
   node-abi@3.92.0:
     dependencies:
-      semver: 7.8.0
+      semver: 7.8.4
 
   node-abi@4.31.0:
     dependencies:
@@ -15763,7 +15764,7 @@ snapshots:
     dependencies:
       color: 4.2.3
       detect-libc: 2.1.2
-      semver: 7.8.0
+      semver: 7.8.4
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.33.5
       '@img/sharp-darwin-x64': 0.33.5
