@@ -8,7 +8,10 @@ import log from 'electron-log/renderer'
 import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import type { GithubComStacklokToolhivePkgCoreWorkload } from '@common/api/generated/types.gen'
 import { trackEvent } from '../lib/analytics'
-import { shouldShowAfterDismissal } from '../lib/hubspot'
+import {
+  shouldShowAfterDismissal,
+  HUBSPOT_ON_RAMP_DISMISS_DAYS,
+} from '../lib/hubspot'
 import { useHubSpotForm } from '../hooks/use-hubspot-form'
 import {
   Dialog,
@@ -30,7 +33,6 @@ import {
   DEMO_URL,
   HUBSPOT_EXPERT_CONSULTATION_FORM_ID,
 } from '@common/app-info'
-const DISMISS_DAYS = 30
 const MIN_SERVERS_IN_GROUP = 3
 
 function hasGroupWithEnoughServers(
@@ -391,7 +393,7 @@ export function ExpertConsultationBanner() {
     shouldShowAfterDismissal(
       consultationState.submitted,
       consultationState.dismissedAt,
-      DISMISS_DAYS
+      HUBSPOT_ON_RAMP_DISMISS_DAYS
     )
 
   const isNewsletterModalVisible =
