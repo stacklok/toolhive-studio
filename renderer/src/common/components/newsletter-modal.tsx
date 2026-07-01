@@ -5,7 +5,10 @@ import { z } from 'zod/v4'
 import * as Sentry from '@sentry/electron/renderer'
 import log from 'electron-log/renderer'
 import { trackEvent } from '../lib/analytics'
-import { shouldShowAfterDismissal, DISMISS_DAYS } from '../lib/hubspot'
+import {
+  shouldShowAfterDismissal,
+  HUBSPOT_ON_RAMP_DISMISS_DAYS,
+} from '../lib/hubspot'
 import { useHubSpotForm } from '../hooks/use-hubspot-form'
 import { useNewsletterModal } from '../contexts/newsletter-modal-context'
 import {
@@ -204,7 +207,7 @@ export function NewsletterModal() {
     !shouldShowAfterDismissal(
       newsletterState!.subscribed,
       newsletterState!.dismissedAt,
-      DISMISS_DAYS
+      HUBSPOT_ON_RAMP_DISMISS_DAYS
     )
 
   if (shouldHideBecauseClosed || shouldHideBecauseDismissed) return null

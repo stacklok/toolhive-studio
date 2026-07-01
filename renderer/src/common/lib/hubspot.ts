@@ -8,7 +8,7 @@ export { HUBSPOT_PORTAL_ID, PRIVACY_POLICY_URL }
 
 export const CONSENT_PROCESSING_TEXT = `I agree to allow ${COMPANY_NAME} to store and process my personal data.`
 
-export const DISMISS_DAYS = 60
+export const HUBSPOT_ON_RAMP_DISMISS_DAYS = 60
 
 export function shouldShowAfterDismissal(
   flag: boolean,
