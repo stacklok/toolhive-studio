@@ -27,7 +27,7 @@ jobs:
           sudo systemctl status docker
 
       - name: Cache Ollama models
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: /home/runner/.ollama/models
           key: ollama-${{ env.OLLAMA_MODEL }}-${{ env.OLLAMA_VERSION }}
@@ -50,7 +50,7 @@ jobs:
         run: docker exec ollama ollama pull ${{ env.OLLAMA_MODEL }}
 
       - name: Cache Playwright special dependencies
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: |
             ~/.cache/ms-playwright
@@ -60,7 +60,7 @@ jobs:
             ${{ runner.os }}-playwright-
 
       - name: Cache keyring-related dependencies
-        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
         with:
           path: /var/cache/apt/archives
           key: ${{ runner.os }}-apt-keyring
