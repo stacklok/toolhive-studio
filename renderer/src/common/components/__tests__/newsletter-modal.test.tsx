@@ -99,9 +99,9 @@ describe('NewsletterModal', () => {
       ).not.toBeInTheDocument()
     })
 
-    it('does not render when dismissed less than 15 days ago', async () => {
+    it('does not render when dismissed less than 60 days ago', async () => {
       const recentDismissal = new Date(
-        Date.now() - 10 * 24 * 60 * 60 * 1000
+        Date.now() - 30 * 24 * 60 * 60 * 1000
       ).toISOString()
       window.electronAPI.getNewsletterState = vi
         .fn()
@@ -119,9 +119,9 @@ describe('NewsletterModal', () => {
       ).not.toBeInTheDocument()
     })
 
-    it('renders when dismissed more than 15 days ago', async () => {
+    it('renders when dismissed more than 60 days ago', async () => {
       const oldDismissal = new Date(
-        Date.now() - 20 * 24 * 60 * 60 * 1000
+        Date.now() - 75 * 24 * 60 * 60 * 1000
       ).toISOString()
       window.electronAPI.getNewsletterState = vi
         .fn()

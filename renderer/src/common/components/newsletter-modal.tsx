@@ -5,7 +5,7 @@ import { z } from 'zod/v4'
 import * as Sentry from '@sentry/electron/renderer'
 import log from 'electron-log/renderer'
 import { trackEvent } from '../lib/analytics'
-import { shouldShowAfterDismissal } from '../lib/hubspot'
+import { shouldShowAfterDismissal, DISMISS_DAYS } from '../lib/hubspot'
 import { useHubSpotForm } from '../hooks/use-hubspot-form'
 import { useNewsletterModal } from '../contexts/newsletter-modal-context'
 import {
@@ -23,7 +23,6 @@ import {
   PrivacyFooter,
 } from './hubspot-form-parts'
 import { APP_DISPLAY_NAME, HUBSPOT_NEWSLETTER_FORM_ID } from '@common/app-info'
-const DISMISS_DAYS = 15
 
 const emailSchema = z.email('Please enter a valid email address')
 

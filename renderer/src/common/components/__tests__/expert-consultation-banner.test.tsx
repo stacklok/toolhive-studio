@@ -108,9 +108,9 @@ describe('ExpertConsultationBanner', () => {
       ).not.toBeInTheDocument()
     })
 
-    it('does not render when dismissed less than 30 days ago', async () => {
+    it('does not render when dismissed less than 60 days ago', async () => {
       const recentDismissal = new Date(
-        Date.now() - 10 * 24 * 60 * 60 * 1000
+        Date.now() - 30 * 24 * 60 * 60 * 1000
       ).toISOString()
       window.electronAPI.getExpertConsultationState = vi
         .fn()
@@ -128,9 +128,9 @@ describe('ExpertConsultationBanner', () => {
       ).not.toBeInTheDocument()
     })
 
-    it('renders when dismissed more than 30 days ago', async () => {
+    it('renders when dismissed more than 60 days ago', async () => {
       const oldDismissal = new Date(
-        Date.now() - 35 * 24 * 60 * 60 * 1000
+        Date.now() - 75 * 24 * 60 * 60 * 1000
       ).toISOString()
       window.electronAPI.getExpertConsultationState = vi
         .fn()
