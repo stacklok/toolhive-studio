@@ -320,7 +320,7 @@ importers:
         specifier: 42.5.0
         version: 42.5.0
       electron-winstaller:
-        specifier: ^5.4.1
+        specifier: ^5.4.2
         version: 5.4.3
       eslint:
         specifier: ^9.39.4
@@ -9042,7 +9042,7 @@ snapshots:
       env-paths: 3.0.0
       graceful-fs: 4.2.11
       progress: 2.0.3
-      semver: 7.8.0
+      semver: 7.8.4
       sumchecker: 3.0.1
     optionalDependencies:
       undici: 7.28.0
