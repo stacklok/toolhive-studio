@@ -317,8 +317,8 @@ importers:
         specifier: ^17.4.2
         version: 17.4.2
       electron:
-        specifier: 42.5.0
-        version: 42.5.0
+        specifier: 42.5.2
+        version: 42.5.2
       electron-winstaller:
         specifier: ^5.4.2
         version: 5.4.3
@@ -4655,8 +4655,8 @@ packages:
     resolution: {integrity: sha512-1F3vYtQI1WVEPH0mmiu72Ol7qXXKj2x9S9S7tgs2QylYu8A/yOlhocC38UPu1+luMwjvGJBl0X8TnNP/O42sxA==}
     engines: {node: '>=8.0.0'}
 
-  electron@42.5.0:
-    resolution: {integrity: sha512-cYEKS9XFz+c9fAB4jI0x49yz1FFzB55r3q96wu9YkwwJMv7t9202IE/ltlgy6yitl/J4M7C8JQcmUqdzDvPl/w==}
+  electron@42.5.2:
+    resolution: {integrity: sha512-nEoyciv2iC6gTvCbkQ3eP5tjAOo28wfm0adZaMYTns92MyODHeD1TlrGt4E35d4tJfDlmv+BHOuz0QIkJ63c6w==}
     engines: {node: '>= 22.12.0'}
     hasBin: true
 
@@ -12909,7 +12909,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  electron@42.5.0:
+  electron@42.5.2:
     dependencies:
       '@electron-internal/extract-zip': 1.0.4
       '@electron/get': 5.0.0
