@@ -17,7 +17,7 @@ export function TooltipInfoIcon({
         type="button"
         aria-label={ariaLabel}
         data-testid="tooltip-info-icon"
-        className="focus-visible:ring-ring inline-flex items-center
+        className="focus-visible:ring-ring inline-flex shrink-0 items-center
           justify-center rounded-full outline-none focus-visible:ring-2
           focus-visible:ring-offset-1"
       >
