@@ -57,8 +57,8 @@ function SecretRow({
                   required={secret.required}
                   htmlFor={`secrets.${index}.value`}
                   className={cn(
-                    `text-muted-foreground !border-input h-full items-center
-                    font-mono !ring-0`
+                    `text-muted-foreground !border-input h-full min-w-0
+                    items-center font-mono wrap-anywhere !ring-0`
                   )}
                 >
                   {secret.name}
@@ -145,8 +145,8 @@ function EnvVarRow({
                   required={envVar.required}
                   htmlFor={`envVar.${index}.value`}
                   className={cn(
-                    `text-muted-foreground !border-input flex h-full
-                    items-center gap-2 font-mono !ring-0`
+                    `text-muted-foreground !border-input flex h-full min-w-0
+                    items-center gap-2 font-mono wrap-anywhere !ring-0`
                   )}
                 >
                   {envVar.name}
