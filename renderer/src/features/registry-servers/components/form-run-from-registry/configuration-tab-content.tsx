@@ -143,7 +143,7 @@ function EnvVarRow({
               <FormControl>
                 <FormLabel
                   required={envVar.required}
-                  htmlFor={`envVar.${index}.value`}
+                  htmlFor={`envVars.${index}.value`}
                   className={cn(
                     `text-muted-foreground !border-input flex h-full min-w-0
                     items-center gap-2 font-mono wrap-anywhere !ring-0`
