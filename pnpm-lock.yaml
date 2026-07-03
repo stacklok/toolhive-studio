@@ -320,7 +320,7 @@ importers:
         specifier: 42.5.2
         version: 42.5.2
       electron-winstaller:
-        specifier: ^5.4.2
+        specifier: ^5.4.3
         version: 5.4.3
       eslint:
         specifier: ^9.39.4
