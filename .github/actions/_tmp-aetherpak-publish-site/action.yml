@@ -1,0 +1,212 @@
+# ============================================================================
+# TEMPORARY VENDORED COPY — DO NOT MERGE TO main
+#
+# Vendored for local iteration while validating the aetherpak flatpak
+# publishing pipeline (see PR #2301 / #2427). Delete this directory once
+# validation is done; production usage should reference the upstream action
+# pinned by commit SHA, as on-release.yml already does.
+#
+# Source: https://github.com/aetherpak/actions/tree/main/publish-site (MIT
+# License), vendored from commit d2112669ceaa09afb7c2b96e9e9844866a6c8e78
+# (the same commit on-release.yml pins).
+#
+# Changes from upstream:
+#   - Uses the local ../_tmp-aetherpak-setup-cli instead of aetherpak/setup-cli@v1.
+#   - No dry-run gating needed here: `aetherpak build-site` only writes to a
+#     local output directory and does a read-only GET against pages-url plus
+#     read-only digest-existence checks during --reconcile (verified by
+#     reading pkg/site/site.go at v0.14.0) — it never mutates the registry or
+#     any remote host. Left otherwise unchanged, with a bit of extra logging.
+# ============================================================================
+name: '[TEMP] AetherPak Publish Site (vendored)'
+description: 'Aggregate per-cell records into the static site (index, refs, landing, signatures).'
+
+inputs:
+  records-dir:
+    description: 'Directory holding per-cell record subdirs (one per (app, arch)).'
+    required: false
+    default: '_records'
+  pages-url:
+    description: 'Public URL the index is served from. Required to seed the cumulative index.'
+    required: true
+  site-dir:
+    description: 'Output directory for the website files.'
+    required: false
+    default: '_site'
+  insecure-registry:
+    description: 'Pass --insecure to reconcile (use only for local test registries).'
+    required: false
+    default: 'false'
+  remote-name:
+    description: "Flatpak remote name and .flatpakrepo filename. Defaults to '<owner>-<repo>'."
+    required: false
+    default: ''
+  landing-page:
+    description: 'Write the static landing page (index.html).'
+    required: false
+    default: 'true'
+  runtime-repo:
+    description: 'RuntimeRepo URL written into each .flatpakref.'
+    required: false
+    default: 'https://dl.flathub.org/repo/flathub.flatpakrepo'
+  repo-title:
+    description: "Title for the .flatpakrepo. Empty defers to aetherpak.yaml's repo_title, then the CLI default."
+    required: false
+    default: ''
+  repo-homepage:
+    description: "Homepage for the .flatpakrepo. Empty defers to aetherpak.yaml's repo_homepage, then the pages URL."
+    required: false
+    default: ''
+  index-template:
+    description: "Path to a custom HTML index template. Empty defers to aetherpak.yaml's branding.index_template, then the CLI default."
+    required: false
+    default: ''
+  signing:
+    description: 'Signing mode: auto (export key iff present), gpg (require), off.'
+    required: false
+    default: 'auto'
+  gpg-private-key:
+    description: 'ASCII-armored GPG private key. Used only to export the public material.'
+    required: false
+    default: ''
+  gpg-private-key-passphrase:
+    description: 'Passphrase, if protected.'
+    required: false
+    default: ''
+  upload-pages-artifact:
+    description: 'Whether to upload the generated files as a GitHub Pages artifact.'
+    required: false
+    default: 'true'
+  pages-artifact-name:
+    description: 'The name of the uploaded GitHub Pages artifact.'
+    required: false
+    default: 'github-pages'
+  site-subpath:
+    description: 'Optional subdirectory under site-dir to structure the repository files (e.g. flatpak).'
+    required: false
+    default: ''
+  cli-version:
+    description: 'aetherpak CLI version to install if missing (ignored if already on PATH).'
+    required: false
+    default: 'v0.14.0'
+
+outputs:
+  signing-path:
+    description: "'gpg' when keys were exported, else 'off'."
+    value: ${{ steps.target.outputs.sign == 'true' && 'gpg' || 'off' }}
+  public-key-url:
+    description: 'Public URL of the exported public key, or empty.'
+    value: ${{ steps.target.outputs.public-key-url }}
+  signature-lookaside-url:
+    description: 'Public URL of the signature lookaside directory, or empty.'
+    value: ${{ steps.target.outputs.signature-lookaside-url }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up aetherpak CLI (vendored, checksum-verified)
+      uses: ./.github/actions/_tmp-aetherpak-setup-cli
+      with:
+        version: ${{ inputs.cli-version }}
+        install-dependencies: 'false'
+
+    - name: Diagnostics
+      shell: bash
+      env:
+        GPG_KEY: ${{ inputs.gpg-private-key }}
+        GPG_PASS: ${{ inputs.gpg-private-key-passphrase }}
+      run: |
+        set -euo pipefail
+        ARGS=()
+        if [ -n "$GPG_KEY" ]; then
+          keyfile="$(mktemp)"
+          chmod 600 "$keyfile"
+          trap 'rm -f "$keyfile"' EXIT
+          printf '%s' "$GPG_KEY" > "$keyfile"
+          ARGS+=(--gpg-key "$keyfile")
+          [ -n "$GPG_PASS" ] && ARGS+=(--gpg-key-passphrase "$GPG_PASS")
+        fi
+        aetherpak status "${ARGS[@]}" || echo "::warning::aetherpak status reported issues; see diagnostics above"
+
+    - name: Resolve target and signing gate
+      id: target
+      shell: bash
+      env:
+        INPUT_REMOTE_NAME: ${{ inputs.remote-name }}
+        MODE: ${{ inputs.signing }}
+        KEY: ${{ inputs.gpg-private-key }}
+        PAGES_URL: ${{ inputs.pages-url }}
+      run: |
+        set -euo pipefail
+        RNAME="${INPUT_REMOTE_NAME:-$GITHUB_REPOSITORY}"
+        RNAME="$(printf '%s' "$RNAME" | tr '[:upper:]' '[:lower:]' | sed 's#[^a-z0-9_-]#-#g')"
+        echo "remote-name=$RNAME" >> "$GITHUB_OUTPUT"
+        NO_SIGN=false
+        ALLOW_UNSIGNED=false
+        case "$MODE" in
+          off) SIGN=false; NO_SIGN=true; ALLOW_UNSIGNED=true ;;
+          gpg) [ -n "$KEY" ] || { echo "::error::signing=gpg requires gpg-private-key"; exit 1; }; SIGN=true ;;
+          auto) [ -n "$KEY" ] && SIGN=true || { SIGN=false; ALLOW_UNSIGNED=true; } ;;
+          *) echo "::error::signing must be auto|gpg|off"; exit 1 ;;
+        esac
+        echo "sign=$SIGN" >> "$GITHUB_OUTPUT"
+        echo "no-sign=$NO_SIGN" >> "$GITHUB_OUTPUT"
+        echo "allow-unsigned=$ALLOW_UNSIGNED" >> "$GITHUB_OUTPUT"
+        if [ "$SIGN" = "true" ]; then
+          PAGES="${PAGES_URL%/}"
+          if [ -n "${{ inputs.site-subpath }}" ]; then
+            PAGES="${PAGES}/${{ inputs.site-subpath }}"
+          fi
+          echo "public-key-url=${PAGES}/sigs/key.asc" >> "$GITHUB_OUTPUT"
+          echo "signature-lookaside-url=${PAGES}/sigs" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Build site
+      shell: bash
+      env:
+        RECORDS_DIR: ${{ inputs.records-dir }}
+        PAGES_URL: ${{ inputs.pages-url }}
+        SITE_DIR: ${{ inputs.site-dir }}
+        INSECURE: ${{ inputs.insecure-registry }}
+        REMOTE_NAME: ${{ steps.target.outputs.remote-name }}
+        REPO_TITLE: ${{ inputs.repo-title }}
+        REPO_HOMEPAGE: ${{ inputs.repo-homepage }}
+        AETHERPAK_INDEX_TEMPLATE: ${{ inputs.index-template }}
+        RUNTIME_REPO: ${{ inputs.runtime-repo }}
+        LANDING: ${{ inputs.landing-page }}
+        SIGN: ${{ steps.target.outputs.sign }}
+        GPG_KEY: ${{ inputs.gpg-private-key }}
+      run: |
+        set -euo pipefail
+        RESOLVED_PAGES_URL="${PAGES_URL%/}"
+        RESOLVED_SITE_DIR="${SITE_DIR}"
+        if [ -n "${{ inputs.site-subpath }}" ]; then
+          RESOLVED_PAGES_URL="${PAGES_URL%/}/${{ inputs.site-subpath }}"
+          RESOLVED_SITE_DIR="${SITE_DIR%/}/${{ inputs.site-subpath }}"
+        fi
+        echo "Resolved pages URL for index seeding: $RESOLVED_PAGES_URL"
+        echo "Resolved site output dir: $RESOLVED_SITE_DIR"
+        ARGS=(--records-dir "$RECORDS_DIR" --pages-url "$RESOLVED_PAGES_URL" --site-dir "$RESOLVED_SITE_DIR"
+          --remote-name "$REMOTE_NAME" --runtime-repo "$RUNTIME_REPO" --reconcile)
+        [ -n "$REPO_TITLE" ] && ARGS+=(--repo-title "$REPO_TITLE")
+        [ -n "$REPO_HOMEPAGE" ] && ARGS+=(--repo-homepage "$REPO_HOMEPAGE")
+        [ "$INSECURE" = "true" ] && ARGS+=(--insecure)
+        [ "$LANDING" = "true" ] && ARGS+=(--landing-page)
+        if [ "$SIGN" = "true" ]; then
+          keyfile="$(mktemp)"
+          chmod 600 "$keyfile"
+          trap 'rm -f "$keyfile"' EXIT
+          printf '%s' "$GPG_KEY" > "$keyfile"
+          ARGS+=(--gpg-key "$keyfile")
+        fi
+        [ "${{ steps.target.outputs.no-sign }}" = "true" ] && ARGS+=(--no-sign)
+        [ "${{ steps.target.outputs.allow-unsigned }}" = "true" ] && ARGS+=(--allow-unsigned)
+        echo "Running: aetherpak build-site ${ARGS[*]}"
+        aetherpak build-site "${ARGS[@]}"
+
+    - name: Upload Pages artifact
+      if: ${{ inputs.upload-pages-artifact == 'true' }}
+      uses: actions/upload-pages-artifact@v5
+      with:
+        path: ${{ inputs.site-dir }}
+        name: ${{ inputs.pages-artifact-name }}

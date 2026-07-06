@@ -1,0 +1,277 @@
+# ============================================================================
+# TEMPORARY VENDORED COPY — DO NOT MERGE TO main
+#
+# Vendored for local iteration while validating the aetherpak flatpak
+# publishing pipeline (see PR #2301 / #2427). Delete this directory once
+# validation is done; production usage should reference the upstream action
+# pinned by commit SHA, as on-release.yml already does.
+#
+# Source: https://github.com/aetherpak/actions/tree/main/publish-oci (MIT
+# License), vendored from commit d2112669ceaa09afb7c2b96e9e9844866a6c8e78
+# (the same commit on-release.yml pins).
+#
+# Changes from upstream:
+#   - Uses the local ../_tmp-aetherpak-setup-cli instead of aetherpak/setup-cli@v1.
+#   - Added a `dry-run` input. When true, everything runs identically up to
+#     and including resolving refs/coordinates, but the actual `aetherpak
+#     push-oci` invocation (the only network-mutating call in this action) is
+#     replaced with printing the command that would have run.
+# ============================================================================
+name: '[TEMP] AetherPak Publish OCI (vendored, dry-run capable)'
+description: 'Push an OSTree-built or bundle-imported Flatpak as a signed OCI image and emit a per-cell record. Parallel-safe.'
+
+inputs:
+  repo-path:
+    description: 'Path to the OSTree repository containing the built application.'
+    required: false
+    default: '_repo'
+  bundle-path:
+    description: 'Optional pre-built .flatpak bundle to import into repo-path.'
+    required: false
+    default: ''
+  app-id:
+    description: "Reverse-DNS application ID. Resolved from the repo's ref when empty."
+    required: false
+    default: ''
+  branch:
+    description: 'Flatpak channel. Resolution: explicit input > repo ref branch > git-ref default.'
+    required: false
+    default: ''
+  arch:
+    description: "CPU architecture (e.g. x86_64). Resolved from the repo's ref when empty."
+    required: false
+    default: ''
+  registry:
+    description: 'The registry host (default: ghcr.io).'
+    required: false
+    default: 'ghcr.io'
+  insecure-registry:
+    description: 'Skip TLS verification for the OCI registry.'
+    required: false
+    default: 'false'
+  oci-repository:
+    description: 'Target registry repository path without host (defaults to GITHUB_REPOSITORY).'
+    required: false
+    default: ''
+  registry-token:
+    description: 'Registry auth token for skopeo login. Empty skips login.'
+    required: false
+    default: ${{ github.token }}
+  signing:
+    description: 'Image signing mode: auto (sign iff a key is set), gpg (require), or off.'
+    required: false
+    default: 'auto'
+  gpg-private-key:
+    description: "ASCII-armored GPG private key. Empty disables signing under 'auto'."
+    required: false
+    default: ''
+  gpg-private-key-passphrase:
+    description: 'Passphrase for the GPG private key, if protected.'
+    required: false
+    default: ''
+  records-dir:
+    description: 'Directory where the per-cell record subtree is written.'
+    required: false
+    default: '_records'
+  cli-version:
+    description: 'aetherpak CLI version to install if missing (ignored if already on PATH).'
+    required: false
+    default: 'v0.14.0'
+  dry-run:
+    description: '[TEMP addition] If true, skip the actual OCI push and print what would have run.'
+    required: false
+    default: 'false'
+
+outputs:
+  cell-dir:
+    description: "Path to this cell's record subdir (<records-dir>/<app-id>-<arch>)."
+    value: ${{ steps.push.outputs.cell-dir }}
+  signing-path:
+    description: "'gpg' when signed, else 'off'."
+    value: ${{ steps.signing.outputs.sign == 'true' && 'gpg' || 'off' }}
+  app-id:
+    description: 'Resolved Reverse-DNS Application ID.'
+    value: ${{ steps.vars.outputs.app-id }}
+  branch:
+    description: 'Resolved Flatpak branch.'
+    value: ${{ steps.vars.outputs.branch }}
+  arch:
+    description: 'Resolved application architecture.'
+    value: ${{ steps.vars.outputs.arch }}
+  repo-path:
+    description: 'OSTree repo path containing the application.'
+    value: ${{ inputs.repo-path }}
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up aetherpak CLI (vendored, checksum-verified)
+      uses: ./.github/actions/_tmp-aetherpak-setup-cli
+      with:
+        version: ${{ inputs.cli-version }}
+
+    - name: Signing gate
+      id: signing
+      shell: bash
+      env:
+        MODE: ${{ inputs.signing }}
+        KEY: ${{ inputs.gpg-private-key }}
+      run: |
+        set -euo pipefail
+        NO_SIGN=false
+        ALLOW_UNSIGNED=false
+        case "$MODE" in
+          off) SIGN=false; NO_SIGN=true; ALLOW_UNSIGNED=true ;;
+          gpg) [ -n "$KEY" ] || { echo "::error::signing=gpg but gpg-private-key is empty"; exit 1; }; SIGN=true ;;
+          auto) [ -n "$KEY" ] && SIGN=true || { SIGN=false; ALLOW_UNSIGNED=true; } ;;
+          *) echo "::error::signing must be auto|gpg|off"; exit 1 ;;
+        esac
+        echo "sign=$SIGN" >> "$GITHUB_OUTPUT"
+        echo "no-sign=$NO_SIGN" >> "$GITHUB_OUTPUT"
+        echo "allow-unsigned=$ALLOW_UNSIGNED" >> "$GITHUB_OUTPUT"
+
+    - name: Import bundle
+      if: ${{ inputs.bundle-path != '' }}
+      shell: bash
+      env:
+        BUNDLE: ${{ inputs.bundle-path }}
+        REPO: ${{ inputs.repo-path }}
+        BRANCH: ${{ inputs.branch }}
+        ARCH: ${{ inputs.arch }}
+        APP: ${{ inputs.app-id }}
+      run: |
+        set -euo pipefail
+        ARGS=()
+        if [ -n "$BUNDLE" ]; then
+          while IFS= read -r line || [ -n "$line" ]; do
+            IFS=',' read -r -a subpaths <<< "$line"
+            for p in "${subpaths[@]}"; do
+              p=$(echo "$p" | xargs)
+              [ -n "$p" ] && ARGS+=(--bundle-path "$p")
+            done
+          done <<< "$BUNDLE"
+        fi
+        [ -n "$BRANCH" ] && ARGS+=(--branch "$BRANCH")
+        [ -n "$ARCH" ] && ARGS+=(--arch "$ARCH")
+        [ -n "$REPO" ] && ARGS+=(--repo-path "$REPO")
+        [ -n "$APP" ] && ARGS+=(--app-id "$APP")
+        echo "Running: aetherpak import ${ARGS[*]}"
+        aetherpak import "${ARGS[@]}"
+
+    - name: Restore OSTree repo layout
+      if: ${{ inputs.bundle-path == '' }}
+      shell: bash
+      env:
+        REPO: ${{ inputs.repo-path }}
+      run: |
+        set -euo pipefail
+        mkdir -p "$REPO/refs/heads" "$REPO/refs/mirrors" "$REPO/refs/remotes"
+
+    - name: Resolve coordinates
+      id: vars
+      shell: bash
+      env:
+        REPO: ${{ inputs.repo-path }}
+        IN_APP: ${{ inputs.app-id }}
+        IN_ARCH: ${{ inputs.arch }}
+        IN_BRANCH: ${{ inputs.branch }}
+      run: |
+        set -euo pipefail
+        APP="$IN_APP"; ARCH="$IN_ARCH"; BRANCH="$IN_BRANCH"
+        if [ -z "$APP" ] || [ -z "$ARCH" ] || [ -z "$BRANCH" ]; then
+          tmp="$(mktemp)"
+          aetherpak inspect-repo --repo-path "$REPO" --output-file "$tmp"
+          [ -n "$APP" ] || APP="$(sed -n 's/^app-id=//p' "$tmp")"
+          [ -n "$ARCH" ] || ARCH="$(sed -n 's/^arch=//p' "$tmp")"
+          [ -n "$BRANCH" ] || BRANCH="$(sed -n 's/^branch=//p' "$tmp")"
+        fi
+        {
+          echo "app-id=$APP"
+          echo "arch=$ARCH"
+          echo "branch=$BRANCH"
+        } >> "$GITHUB_OUTPUT"
+        echo "Resolved coordinates: app-id=$APP arch=$ARCH branch=$BRANCH"
+
+    - name: Push OCI image
+      id: push
+      shell: bash
+      env:
+        REGISTRY: ${{ inputs.registry }}
+        OCI_REPOSITORY: ${{ inputs.oci-repository }}
+        REPO: ${{ inputs.repo-path }}
+        RECORDS_DIR: ${{ inputs.records-dir }}
+        INSECURE: ${{ inputs.insecure-registry }}
+        SIGN: ${{ steps.signing.outputs.sign }}
+        GPG_KEY: ${{ inputs.gpg-private-key }}
+        OCI_USERNAME: ${{ github.actor }}
+        OCI_PASSWORD: ${{ inputs.registry-token }}
+        AETHERPAK_GPG_PASSPHRASE: ${{ inputs.gpg-private-key-passphrase }}
+        DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        set -euo pipefail
+
+        refs=$(ostree refs --repo="$REPO" | grep '^app/' || true)
+        if [ -z "$refs" ]; then
+          echo "::error::No application refs found in OSTree repository."
+          exit 1
+        fi
+
+        pushed_any=false
+        IN_APP="${{ inputs.app-id }}"
+        IN_ARCH="${{ inputs.arch }}"
+        IN_BRANCH="${{ inputs.branch }}"
+
+        while read -r ref; do
+          [ -z "$ref" ] && continue
+
+          IFS='/' read -r _ ref_app ref_arch ref_branch <<< "$ref"
+
+          if [ -n "$IN_APP" ] && [ "$IN_APP" != "$ref_app" ]; then
+            continue
+          fi
+          if [ -n "$IN_ARCH" ] && [ "$IN_ARCH" != "$ref_arch" ]; then
+            continue
+          fi
+          if [ -n "$IN_BRANCH" ] && [ "$IN_BRANCH" != "$ref_branch" ]; then
+            continue
+          fi
+
+          echo "Pushing cell: $ref_app ($ref_arch) on channel $ref_branch"
+
+          REPO_NAME="${OCI_REPOSITORY:-$GITHUB_REPOSITORY}"
+          REPO_NAME="$(printf '%s' "$REPO_NAME" | tr '[:upper:]' '[:lower:]')"
+          ARGS=(--app "$ref_app" --arch "$ref_arch" --branch "$ref_branch"
+            --registry "$REGISTRY" --oci-repository "$REPO_NAME"
+            --repo-path "$REPO" --records-dir "$RECORDS_DIR"
+            --output-file "$GITHUB_OUTPUT")
+
+          [ "$INSECURE" = "true" ] && ARGS+=(--insecure)
+          if [ "$SIGN" = "true" ]; then
+            keyfile="$(mktemp)"
+            chmod 600 "$keyfile"
+            printf '%s' "$GPG_KEY" > "$keyfile"
+            ARGS+=(--gpg-key "$keyfile")
+          fi
+          [ "${{ steps.signing.outputs.no-sign }}" = "true" ] && ARGS+=(--no-sign)
+          [ "${{ steps.signing.outputs.allow-unsigned }}" = "true" ] && ARGS+=(--allow-unsigned)
+
+          if [ "$DRY_RUN" = "true" ]; then
+            echo "::notice::[dry-run] would run: aetherpak push-oci ${ARGS[*]}"
+            echo "::notice::[dry-run] would push to: ${REGISTRY}/${REPO_NAME}:${ref_app}-${ref_branch}-${ref_arch}"
+            # Deliberately does NOT fabricate a records-dir entry: a real
+            # per-cell record (image digest, size, etc.) only exists after an
+            # actual push, and faking one risks masking real behavior behind
+            # made-up data. Downstream publish-site will just see zero
+            # records in dry-run mode, which is itself a useful signal (does
+            # the template/CLI handle an empty index without crashing?).
+          else
+            aetherpak push-oci "${ARGS[@]}"
+          fi
+          [ "$SIGN" = "true" ] && rm -f "$keyfile"
+          pushed_any=true
+        done <<< "$refs"
+
+        if [ "$pushed_any" = "false" ]; then
+          echo "::error::No refs matched the specified app-id/arch/branch filters."
+          exit 1
+        fi

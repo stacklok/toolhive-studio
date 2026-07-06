@@ -1,0 +1,169 @@
+# ============================================================================
+# TEMPORARY VENDORED COPY — DO NOT MERGE TO main
+#
+# Vendored for local iteration while validating the aetherpak flatpak
+# publishing pipeline (see PR #2301 / #2427) without depending on the mutable
+# `aetherpak/setup-cli@v1` tag. Delete this directory once validation is done;
+# production usage should continue to reference the upstream action pinned by
+# commit SHA (or a permanently-vendored, checksum-verified replacement — see
+# discussion in #2427).
+#
+# Source: https://github.com/aetherpak/setup-cli (MIT License)
+# Vendored from tag: v1 (resolved at time of copy to a specific commit; see
+# git history of this file for exact provenance)
+#
+# Changes from upstream:
+#   - Added SHA256 checksum verification of the downloaded release archive
+#     (upstream has none — this was the main gap this vendored copy exists
+#     to close). Checksums below were computed locally by downloading
+#     https://github.com/aetherpak/cli/releases/download/v0.14.0/aetherpak-linux-{amd64,arm64}.tar.gz
+#     and running sha256sum, i.e. verified against the actual release asset,
+#     not copied from any third-party source.
+#   - Hardcoded cli-version to v0.14.0 (matches what on-release.yml already
+#     pins via cli-version input) instead of supporting "latest".
+# ============================================================================
+name: '[TEMP] AetherPak Setup CLI (vendored, checksum-verified)'
+description: 'Download AetherPak CLI binary (checksum-verified) and install dependencies on Linux.'
+outputs:
+  version:
+    description: 'Resolved version tag of AetherPak CLI'
+    value: ${{ steps.download.outputs.version }}
+  path:
+    description: 'Directory where the AetherPak CLI binary is installed'
+    value: ${{ steps.download.outputs.path }}
+inputs:
+  version:
+    description: 'Version of AetherPak CLI to install. Must have a known checksum below.'
+    required: false
+    default: 'v0.14.0'
+  repo:
+    description: 'GitHub repository for AetherPak CLI releases'
+    required: false
+    default: 'aetherpak/cli'
+  install-dependencies:
+    description: 'Trigger installation of missing host dependencies (flatpak, ostree, flatpak-builder)'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Verify OS compatibility
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" != "Linux" ]; then
+          echo "::error::AetherPak Setup CLI action only supports Linux runners."
+          exit 1
+        fi
+
+    - name: Ensure tooling
+      if: ${{ inputs.install-dependencies == 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        MISSING=""
+        command -v flatpak >/dev/null 2>&1 || MISSING="$MISSING flatpak"
+        command -v ostree  >/dev/null 2>&1 || MISSING="$MISSING ostree"
+        command -v flatpak-builder >/dev/null 2>&1 || MISSING="$MISSING flatpak-builder"
+        command -v patch >/dev/null 2>&1 || MISSING="$MISSING patch"
+        command -v unzip >/dev/null 2>&1 || MISSING="$MISSING unzip"
+        command -v bzip2 >/dev/null 2>&1 || MISSING="$MISSING bzip2"
+        command -v zstd  >/dev/null 2>&1 || MISSING="$MISSING zstd"
+
+        NEED_DBUS="false"
+        command -v dbus-run-session >/dev/null 2>&1 || NEED_DBUS="true"
+
+        if [ -n "$MISSING" ] || [ "$NEED_DBUS" = "true" ]; then
+          SUDO=""
+          command -v sudo >/dev/null 2>&1 && SUDO="sudo"
+          if command -v apt-get >/dev/null 2>&1; then
+            export DEBIAN_FRONTEND=noninteractive
+            PKGS="$MISSING"
+            if [ "$NEED_DBUS" = "true" ]; then
+              PKGS="$PKGS dbus"
+            fi
+            $SUDO apt-get update && $SUDO apt-get install -y $PKGS
+          elif command -v microdnf >/dev/null 2>&1; then
+            PKGS="$MISSING"
+            if [ "$NEED_DBUS" = "true" ]; then
+              PKGS="$PKGS dbus-daemon"
+            fi
+            $SUDO microdnf install -y --setopt=install_weak_deps=0 --nodocs $PKGS
+          elif command -v dnf >/dev/null 2>&1; then
+            PKGS="$MISSING"
+            if [ "$NEED_DBUS" = "true" ]; then
+              PKGS="$PKGS dbus-daemon"
+            fi
+            $SUDO dnf install -y --setopt=install_weak_deps=0 --nodocs $PKGS
+          else
+            PKGS="$MISSING"
+            if [ "$NEED_DBUS" = "true" ]; then
+              PKGS="$PKGS dbus-run-session (dbus/dbus-daemon)"
+            fi
+            echo "::warning::Missing dependencies ($PKGS) could not be installed because a supported package manager (apt-get, microdnf, dnf) is not available. Please install them manually."
+          fi
+        fi
+
+    - name: Download and verify AetherPak CLI
+      id: download
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        set -euo pipefail
+
+        case "$(echo "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')" in
+          x64|amd64) ARCH="amd64" ;;
+          arm64) ARCH="arm64" ;;
+          *)
+            echo "::error::Unsupported CPU architecture: $RUNNER_ARCH. Only x86_64/amd64 and arm64 are supported."
+            exit 1
+            ;;
+        esac
+
+        OS="linux"
+        EXT="tar.gz"
+        TAG="${{ inputs.version }}"
+
+        # Checksums pinned by us: computed locally via sha256sum on the actual
+        # release assets, not sourced from the aetherpak repo itself.
+        case "${TAG}-${ARCH}" in
+          "v0.14.0-amd64") EXPECTED_SHA256="43d9e67f511a2988da791d0506ffee51d6dd9b9096c0975e246f2e21994a9f96" ;;
+          "v0.14.0-arm64") EXPECTED_SHA256="434350fd1c319fcb8e3b8581664458d8a42226cea81097567934e1b2f648fabb" ;;
+          *)
+            echo "::error::No pinned checksum for version=$TAG arch=$ARCH. This vendored action only trusts known-verified versions. Add a checksum entry (computed yourself from the real release asset) before using a new version."
+            exit 1
+            ;;
+        esac
+
+        echo "Resolved version tag: $TAG"
+
+        ARCHIVE_NAME="aetherpak-${OS}-${ARCH}.${EXT}"
+        BINARY_INTERNAL="aetherpak-${OS}-${ARCH}"
+
+        INSTALL_DIR="$RUNNER_TEMP/aetherpak-bin"
+        mkdir -p "$INSTALL_DIR"
+
+        DOWNLOAD_DIR="$(mktemp -d)"
+        trap 'rm -rf "$DOWNLOAD_DIR"' EXIT
+
+        echo "Downloading $ARCHIVE_NAME from ${{ inputs.repo }}@$TAG..."
+        URL="https://github.com/${{ inputs.repo }}/releases/download/${TAG}/${ARCHIVE_NAME}"
+        curl -fL -o "$DOWNLOAD_DIR/$ARCHIVE_NAME" "$URL"
+
+        ACTUAL_SHA256="$(sha256sum "$DOWNLOAD_DIR/$ARCHIVE_NAME" | awk '{print $1}')"
+        if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
+          echo "::error::Checksum mismatch for $ARCHIVE_NAME. Expected $EXPECTED_SHA256, got $ACTUAL_SHA256. Refusing to use this binary."
+          exit 1
+        fi
+        echo "Checksum verified: $ACTUAL_SHA256"
+
+        tar -xzf "$DOWNLOAD_DIR/$ARCHIVE_NAME" -C "$INSTALL_DIR"
+        mv "$INSTALL_DIR/$BINARY_INTERNAL" "$INSTALL_DIR/aetherpak"
+        chmod +x "$INSTALL_DIR/aetherpak"
+
+        echo "$INSTALL_DIR" >> "$GITHUB_PATH"
+        echo "Successfully installed aetherpak $TAG to $INSTALL_DIR and added to GITHUB_PATH"
+
+        echo "version=$TAG" >> "$GITHUB_OUTPUT"
+        echo "path=$INSTALL_DIR" >> "$GITHUB_OUTPUT"
