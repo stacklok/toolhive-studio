@@ -141,7 +141,7 @@
     "@tanstack/react-query-devtools": "^5.101.2",
     "@tanstack/react-router": "^1.170.16",
     "@tanstack/react-router-devtools": "^1.167.0",
-    "@tanstack/react-virtual": "^3.14.4",
+    "@tanstack/react-virtual": "^3.14.5",
     "ai": "^6.0.219",
     "ai-sdk-ollama": "^3.8.8",
     "better-sqlite3": "^12.11.1",
