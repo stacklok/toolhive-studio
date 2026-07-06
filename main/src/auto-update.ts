@@ -1,4 +1,11 @@
-import { app, autoUpdater, dialog, ipcMain, type BrowserWindow } from 'electron'
+import {
+  app,
+  autoUpdater,
+  dialog,
+  ipcMain,
+  shell,
+  type BrowserWindow,
+} from 'electron'
 import { updateElectronApp, UpdateSourceType } from 'update-electron-app'
 import * as Sentry from '@sentry/electron/main'
 import { stopAllServers } from './graceful-exit'
@@ -9,7 +16,7 @@ import { getAppVersion, pollWindowReady } from './util'
 import { delay } from '../../utils/delay'
 import log from './logger'
 import { setQuittingState, setTearingDownState } from './app-state'
-import { RELEASES_BASE_URL } from '@common/app-info'
+import { getGitHubReleaseUrl, RELEASES_BASE_URL } from '@common/app-info'
 import Store from 'electron-store'
 import { fetchLatestRelease } from './utils/toolhive-version'
 import { writeSetting } from './db/writers/settings-writer'
@@ -299,10 +306,11 @@ async function handleUpdateDownloaded({
   }
 
   // Phase 2: Show dialog and wait for user decision (user interaction time)
+  const releaseNotesUrl = getGitHubReleaseUrl(releaseName)
   const dialogOpts = {
     type: 'info' as const,
-    buttons: ['Restart', 'Later'],
-    cancelId: 1,
+    buttons: ['Restart', 'View Release Notes', 'Later'],
+    cancelId: 2,
     defaultId: 0,
     title: `Release ${releaseName}`,
     message:
@@ -316,11 +324,18 @@ async function handleUpdateDownloaded({
     icon: undefined,
   }
 
-  let userChoice: 'restart' | 'later' | 'error' = 'error'
+  let userChoice: 'restart' | 'release-notes' | 'later' | 'error' = 'error'
 
   try {
     const returnValue = await dialog.showMessageBox(mainWindow, dialogOpts)
-    userChoice = returnValue.response === 0 ? 'restart' : 'later'
+    if (returnValue.response === 0) {
+      userChoice = 'restart'
+    } else if (returnValue.response === 1) {
+      userChoice = 'release-notes'
+      shell.openExternal(releaseNotesUrl)
+    } else {
+      userChoice = 'later'
+    }
   } catch (error) {
     log.error('[update] Dialog error in update-downloaded handler:', error)
     userChoice = 'error'
