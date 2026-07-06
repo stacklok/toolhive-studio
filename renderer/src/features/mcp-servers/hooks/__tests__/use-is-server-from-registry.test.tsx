@@ -125,6 +125,34 @@ describe('useIsServerFromRegistry', () => {
       })
     })
 
+    it('does not report drift when the running semver tag is newer than the registry tag', async () => {
+      const wrapper = createWrapper()
+
+      mockedGetApiV1BetaWorkloadsByName.override((data) => ({
+        ...data,
+        image: 'mcr.microsoft.com/playwright/mcp:v0.0.77',
+      }))
+      mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+        servers: [
+          createRegistryImage({
+            image: 'mcr.microsoft.com/playwright/mcp:v0.0.70',
+            tools: ['browser-navigate'],
+          }),
+        ],
+      }))
+
+      const { result } = renderHook(
+        () => useIsServerFromRegistry('playwright'),
+        { wrapper }
+      )
+
+      await waitFor(() => {
+        expect(result.current.isFromRegistry).toBe(true)
+        expect(result.current.registryTools).toEqual(['browser-navigate'])
+        expect(result.current.drift).toBeNull()
+      })
+    })
+
     it('identifies a server from registry with image without tag', async () => {
       const wrapper = createWrapper()
 

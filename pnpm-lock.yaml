@@ -195,6 +195,9 @@ importers:
       regexp.escape:
         specifier: ^2.0.1
         version: 2.0.1
+      semver:
+        specifier: ^7.8.4
+        version: 7.8.4
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -304,6 +307,9 @@ importers:
       '@types/regexp.escape':
         specifier: ^2.0.0
         version: 2.0.0
+      '@types/semver':
+        specifier: ^7.7.1
+        version: 7.7.1
       '@types/unzipper':
         specifier: ^0.10.11
         version: 0.10.11
@@ -3412,6 +3418,9 @@ packages:
 
   '@types/responselike@1.0.3':
     resolution: {integrity: sha512-H/+L+UkTV33uf49PH5pCAUBVPNj2nDBXTN+qS1dOwyyg24l3CcicicCA7ca+HMvJBZcFgl5r8e+RR6elsb4Lyw==}
+
+  '@types/semver@7.7.1':
+    resolution: {integrity: sha512-FmgJfu+MOcQ370SD0ev7EI8TlCAfKYU+B4m5T3yXc1CiRN94g/SZPtsCkk506aUDtlMnFZvasDwHHUcZUEaYuA==}
 
   '@types/set-cookie-parser@2.4.10':
     resolution: {integrity: sha512-GGmQVGpQWUe5qglJozEjZV/5dyxbOOZ0LHe/lqyWssB88Y4svNfst0uqBVscdDeIKl5Jy5+aPSvy7mI9tYRguw==}
@@ -6859,11 +6868,6 @@ packages:
     resolution: {integrity: sha512-BR7VvDCVHO+q2xBEWskxS6DJE1qRnb7DxzUrogb71CWoSficBxYsiAGd+Kl0mmq/MprG9yArRkyrQxTO6XjMzA==}
     hasBin: true
 
-  semver@7.8.0:
-    resolution: {integrity: sha512-AcM7dV/5ul4EekoQ29Agm5vri8JNqRyj39o0qpX6vDF2GZrtutZl5RwgD1XnZjiTAfncsJhMI48QQH3sN87YNA==}
-    engines: {node: '>=10'}
-    hasBin: true
-
   semver@7.8.4:
     resolution: {integrity: sha512-rUCObTnP32Q08R2uuIrt7r9PlEonuTmtuXYcW6s5kjdlj3xbnwe+21yXptAUYcMAABLkYYTtnmzb3w3EDZfueA==}
     engines: {node: '>=10'}
@@ -8592,7 +8596,7 @@ snapshots:
       fs-extra: 10.1.0
       listr2: 7.0.2
       log-symbols: 4.1.0
-      semver: 7.8.0
+      semver: 7.8.4
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'
@@ -8621,7 +8625,7 @@ snapshots:
       fs-extra: 10.1.0
       log-symbols: 4.1.0
       parse-author: 2.0.0
-      semver: 7.8.0
+      semver: 7.8.4
     transitivePeerDependencies:
       - supports-color
 
@@ -8658,7 +8662,7 @@ snapshots:
       log-symbols: 4.1.0
       node-fetch: 2.7.0
       rechoir: 0.8.0
-      semver: 7.8.0
+      semver: 7.8.4
       source-map-support: 0.5.21
       username: 5.1.0
     transitivePeerDependencies:
@@ -8957,7 +8961,7 @@ snapshots:
       prettier: 3.9.4
       resedit: 2.0.3
       resolve: 1.22.12
-      semver: 7.8.0
+      semver: 7.8.4
       yargs-parser: 21.1.1
     transitivePeerDependencies:
       - supports-color
@@ -11417,6 +11421,8 @@ snapshots:
   '@types/responselike@1.0.3':
     dependencies:
       '@types/node': 24.13.2
+
+  '@types/semver@7.7.1': {}
 
   '@types/set-cookie-parser@2.4.10':
     dependencies:
@@ -15431,8 +15437,6 @@ snapshots:
   semver@5.7.2: {}
 
   semver@6.3.1: {}
-
-  semver@7.8.0: {}
 
   semver@7.8.4: {}
 

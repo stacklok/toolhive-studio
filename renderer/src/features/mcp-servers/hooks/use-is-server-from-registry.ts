@@ -3,6 +3,7 @@ import {
   getApiV1BetaWorkloadsByNameOptions,
 } from '@common/api/generated/@tanstack/react-query.gen'
 import { useQuery } from '@tanstack/react-query'
+import { gt as semverGt, valid as semverValid } from 'semver'
 import type {
   RegistryImageMetadata,
   RegistryRemoteServerMetadata,
@@ -25,6 +26,19 @@ function getImageTag(image: string | undefined): string {
   if (!image) return ''
   const lastColonIndex = image.lastIndexOf(':')
   return lastColonIndex !== -1 ? image.slice(lastColonIndex + 1) : ''
+}
+
+function hasRegistryTagUpdate(registryTag: string, localTag: string): boolean {
+  if (registryTag === localTag) return false
+
+  const registryVersion = semverValid(registryTag)
+  const localVersion = semverValid(localTag)
+
+  if (registryVersion && localVersion) {
+    return semverGt(registryVersion, localVersion)
+  }
+
+  return true
 }
 
 export function useIsServerFromRegistry(serverName: string) {
@@ -68,7 +82,7 @@ export function useIsServerFromRegistry(serverName: string) {
 
   const hasTagDrift =
     registryTag !== undefined && localTag !== undefined
-      ? registryTag !== localTag
+      ? hasRegistryTagUpdate(registryTag, localTag)
       : false
 
   const drift = hasTagDrift
