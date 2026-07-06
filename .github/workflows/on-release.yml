@@ -183,6 +183,14 @@ jobs:
           APPLE_ISSUER_ID: ${{ env.APPLE_ISSUER_ID }}
           APPLE_KEY_ID: ${{ env.APPLE_KEY_ID }}
 
+      - name: Upload flatpak bundle as artifact (Linux only)
+        if: runner.os == 'Linux'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: flatpak-bundle-${{ matrix.arch == 'arm64' && 'aarch64' || 'x86_64' }}
+          path: out/make/**/*.flatpak
+          retention-days: 1
+
       - name: Copy macOS update manifest to stable path
         id: macos-manifest
         if: runner.os == 'macOS' && vars.AWS_ROLE_ARN != ''
@@ -249,10 +257,58 @@ jobs:
             --distribution-id "$DIST_ID" \
             --paths "/${CHANNEL}/latest/${PLATFORM}/${ARCH}/*"
 
+  publish-flatpak:
+    name: Publish Flatpak
+    needs: [build-and-release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Download flatpak bundles
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e0baa8db40025c1464 # v8
+        with:
+          pattern: flatpak-bundle-*
+          path: _bundles
+
+      - name: Push Flatpak OCI to GHCR
+        uses: aetherpak/actions/publish-oci@d2112669ceaa09afb7c2b96e9e9844866a6c8e78
+        with:
+          bundle-path: _bundles/**/*.flatpak
+          branch: ${{ github.event.release.prerelease == true && 'beta' || 'stable' }}
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+          gpg-private-key: ${{ secrets.AETHERPAK_GPG_PRIVATE_KEY }}
+          gpg-private-key-passphrase: ${{ secrets.AETHERPAK_GPG_PRIVATE_KEY_PASSPHRASE }}
+          records-dir: _records
+
+      - name: Build site index
+        uses: aetherpak/actions/publish-site@d2112669ceaa09afb7c2b96e9e9844866a6c8e78
+        with:
+          records-dir: _records
+          pages-url: https://stacklok.github.io/toolhive-studio
+          site-subpath: flatpak
+          remote-name: toolhive
+          index-template: .github/workflows/templates/stacklok.html
+          upload-pages-artifact: "false"
+          site-dir: _site
+          signing: auto
+          gpg-private-key: ${{ secrets.AETHERPAK_GPG_PRIVATE_KEY }}
+          gpg-private-key-passphrase: ${{ secrets.AETHERPAK_GPG_PRIVATE_KEY_PASSPHRASE }}
+
+      - name: Upload site artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: aetherpak-site
+          path: _site
+          retention-days: 7
+
   mirror-pages:
     name: Mirror release to GitHub Pages
-    needs: [build-and-release]
-    if: ${{ always() && needs.build-and-release.result == 'success' }}
+    needs: [build-and-release, publish-flatpak]
+    if: ${{ always() && needs.build-and-release.result == 'success' && needs.publish-flatpak.result == 'success' }}
     uses: ./.github/workflows/mirror-to-gh-pages.yml
     with:
       tag: ${{ github.ref_name }}
