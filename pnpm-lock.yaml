@@ -320,8 +320,8 @@ importers:
         specifier: 42.5.2
         version: 42.5.2
       electron-winstaller:
-        specifier: ^5.4.3
-        version: 5.4.3
+        specifier: ^5.4.4
+        version: 5.4.4
       eslint:
         specifier: ^9.39.4
         version: 9.39.4(jiti@2.7.0)
@@ -4661,8 +4661,8 @@ packages:
   electron-to-chromium@1.5.353:
     resolution: {integrity: sha512-kOrWphBi8TOZyiJZqsgqIle0lw+tzmnQK83pV9dZUd01Nm2POECSyFQMAuarzZdYqQW7FH9RaYOuaRo3h+bQ3w==}
 
-  electron-winstaller@5.4.3:
-    resolution: {integrity: sha512-1F3vYtQI1WVEPH0mmiu72Ol7qXXKj2x9S9S7tgs2QylYu8A/yOlhocC38UPu1+luMwjvGJBl0X8TnNP/O42sxA==}
+  electron-winstaller@5.4.4:
+    resolution: {integrity: sha512-j9ETcBGJaXxAY/b6UBpR7LZfjdU4BAO+yvr4ifqHEdyuc3UNCy91PDGkWKY5UQ4coHNYfnwFggrqD6QPeFGAlg==}
     engines: {node: '>=8.0.0'}
 
   electron@42.5.2:
@@ -8873,7 +8873,7 @@ snapshots:
       '@electron-forge/shared-types': 7.11.2
       fs-extra: 10.1.0
     optionalDependencies:
-      electron-winstaller: 5.4.3
+      electron-winstaller: 5.4.4
     transitivePeerDependencies:
       - supports-color
 
@@ -12917,7 +12917,7 @@ snapshots:
 
   electron-to-chromium@1.5.353: {}
 
-  electron-winstaller@5.4.3:
+  electron-winstaller@5.4.4:
     dependencies:
       '@electron/asar': 3.4.1
       debug: 4.4.3
