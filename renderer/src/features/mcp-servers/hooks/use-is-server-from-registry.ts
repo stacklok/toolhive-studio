@@ -38,6 +38,7 @@ function hasRegistryTagUpdate(registryTag: string, localTag: string): boolean {
     return semverGt(registryVersion, localVersion)
   }
 
+  // Non-semver tags keep the previous "any difference is drift" behavior.
   return true
 }
 
