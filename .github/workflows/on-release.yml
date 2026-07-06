@@ -292,7 +292,7 @@ jobs:
           site-subpath: flatpak
           remote-name: toolhive
           index-template: .github/workflows/templates/stacklok.html
-          upload-pages-artifact: "false"
+          upload-pages-artifact: 'false'
           site-dir: _site
           signing: auto
           gpg-private-key: ${{ secrets.AETHERPAK_GPG_PRIVATE_KEY }}
