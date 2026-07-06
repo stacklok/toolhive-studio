@@ -85,10 +85,10 @@ inputs:
     description: 'Optional subdirectory under site-dir to structure the repository files (e.g. flatpak).'
     required: false
     default: ''
-  cli-version:
-    description: 'aetherpak CLI version to install if missing (ignored if already on PATH).'
+  cli-ref:
+    description: 'Commit SHA of aetherpak/cli to build (passed through to the vendored setup-cli action).'
     required: false
-    default: 'v0.14.0'
+    default: 'e9388a1d41021dcf0ac75feb0a2e50dba87ca81c'
 
 outputs:
   signing-path:
@@ -104,10 +104,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set up aetherpak CLI (vendored, checksum-verified)
+    - name: Set up aetherpak CLI (vendored, built from pinned source commit)
       uses: ./.github/actions/_tmp-aetherpak-setup-cli
       with:
-        version: ${{ inputs.cli-version }}
+        cli-ref: ${{ inputs.cli-ref }}
         install-dependencies: 'false'
 
     - name: Diagnostics

@@ -73,10 +73,10 @@ inputs:
     description: 'Directory where the per-cell record subtree is written.'
     required: false
     default: '_records'
-  cli-version:
-    description: 'aetherpak CLI version to install if missing (ignored if already on PATH).'
+  cli-ref:
+    description: 'Commit SHA of aetherpak/cli to build (passed through to the vendored setup-cli action).'
     required: false
-    default: 'v0.14.0'
+    default: 'e9388a1d41021dcf0ac75feb0a2e50dba87ca81c'
   dry-run:
     description: '[TEMP addition] If true, skip the actual OCI push and print what would have run.'
     required: false
@@ -105,10 +105,10 @@ outputs:
 runs:
   using: 'composite'
   steps:
-    - name: Set up aetherpak CLI (vendored, checksum-verified)
+    - name: Set up aetherpak CLI (vendored, built from pinned source commit)
       uses: ./.github/actions/_tmp-aetherpak-setup-cli
       with:
-        version: ${{ inputs.cli-version }}
+        cli-ref: ${{ inputs.cli-ref }}
 
     - name: Signing gate
       id: signing

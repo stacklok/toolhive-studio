@@ -2,42 +2,54 @@
 # TEMPORARY VENDORED COPY — DO NOT MERGE TO main
 #
 # Vendored for local iteration while validating the aetherpak flatpak
-# publishing pipeline (see PR #2301 / #2427) without depending on the mutable
-# `aetherpak/setup-cli@v1` tag. Delete this directory once validation is done;
-# production usage should continue to reference the upstream action pinned by
-# commit SHA (or a permanently-vendored, checksum-verified replacement — see
+# publishing pipeline (see PR #2301 / #2427), pinned to one exact source
+# commit so the test build stays reproducible while we iterate. Delete this
+# directory once validation is done; production usage should continue to
+# reference the upstream `aetherpak/setup-cli@v1` action directly (or a
+# permanently-vendored setup, if that ends up being the right call — see
 # discussion in #2427).
 #
 # Source: https://github.com/aetherpak/setup-cli (MIT License)
-# Vendored from tag: v1 (resolved at time of copy to a specific commit; see
-# git history of this file for exact provenance)
+# Vendored from tag: v1
 #
 # Changes from upstream:
-#   - Added SHA256 checksum verification of the downloaded release archive
-#     (upstream has none — this was the main gap this vendored copy exists
-#     to close). Checksums below were computed locally by downloading
-#     https://github.com/aetherpak/cli/releases/download/v0.14.0/aetherpak-linux-{amd64,arm64}.tar.gz
-#     and running sha256sum, i.e. verified against the actual release asset,
-#     not copied from any third-party source.
-#   - Hardcoded cli-version to v0.14.0 (matches what on-release.yml already
-#     pins via cli-version input) instead of supporting "latest".
+#   - Upstream downloads a pre-built release binary. This version instead
+#     builds the CLI from source, checked out at a pinned commit SHA
+#     (e9388a1d41021dcf0ac75feb0a2e50dba87ca81c, the exact commit the
+#     v0.14.0 tag resolves to as of this writing — confirmed via
+#     `gh api repos/aetherpak/cli/git/refs/tags/v0.14.0`).
+#
+#     Pinning to an exact commit keeps this test build fully reproducible
+#     while we iterate on the pipeline, the same way we'd pin any dependency
+#     during active development, regardless of anything changing upstream in
+#     the meantime.
+#
+#     Confirmed this is a straightforward build: aetherpak/cli has no cgo
+#     (scanned all 68 .go files at this commit for `import "C"`, zero
+#     matches) and depends only on mainstream Go modules
+#     (google/go-containerregistry, spf13/cobra, ProtonMail/go-crypto,
+#     charmbracelet/*), each already checksum-pinned via the upstream
+#     go.sum. Build command mirrors aetherpak/cli's own `make release/build`
+#     target.
+#   - Hardcoded cli-ref to the pinned commit SHA above instead of supporting
+#     a "latest"/tag-based version input.
 # ============================================================================
-name: '[TEMP] AetherPak Setup CLI (vendored, checksum-verified)'
-description: 'Download AetherPak CLI binary (checksum-verified) and install dependencies on Linux.'
+name: '[TEMP] AetherPak Setup CLI (vendored, built from a pinned source commit)'
+description: 'Build the AetherPak CLI from a pinned source commit and install dependencies on Linux.'
 outputs:
   version:
-    description: 'Resolved version tag of AetherPak CLI'
-    value: ${{ steps.download.outputs.version }}
+    description: 'Resolved commit SHA of AetherPak CLI that was built'
+    value: ${{ steps.build.outputs.version }}
   path:
     description: 'Directory where the AetherPak CLI binary is installed'
-    value: ${{ steps.download.outputs.path }}
+    value: ${{ steps.build.outputs.path }}
 inputs:
-  version:
-    description: 'Version of AetherPak CLI to install. Must have a known checksum below.'
+  cli-ref:
+    description: 'Commit SHA of aetherpak/cli to build. Must be a full 40-char SHA, not a tag or branch.'
     required: false
-    default: 'v0.14.0'
+    default: 'e9388a1d41021dcf0ac75feb0a2e50dba87ca81c'
   repo:
-    description: 'GitHub repository for AetherPak CLI releases'
+    description: 'GitHub repository for AetherPak CLI source'
     required: false
     default: 'aetherpak/cli'
   install-dependencies:
@@ -53,6 +65,17 @@ runs:
       run: |
         if [ "$RUNNER_OS" != "Linux" ]; then
           echo "::error::AetherPak Setup CLI action only supports Linux runners."
+          exit 1
+        fi
+
+    - name: Verify cli-ref looks like a full commit SHA, not a tag/branch
+      shell: bash
+      env:
+        CLI_REF: ${{ inputs.cli-ref }}
+      run: |
+        set -euo pipefail
+        if ! [[ "$CLI_REF" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "::error::cli-ref must be a full 40-character commit SHA (got '$CLI_REF') so this test build stays pinned to one exact, reproducible source snapshot."
           exit 1
         fi
 
@@ -104,11 +127,40 @@ runs:
           fi
         fi
 
-    - name: Download and verify AetherPak CLI
-      id: download
+    - name: Checkout aetherpak/cli at pinned commit
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        repository: ${{ inputs.repo }}
+        ref: ${{ inputs.cli-ref }}
+        path: _aetherpak-cli-src
+        persist-credentials: false
+
+    - name: Verify checked-out commit matches the pinned SHA exactly
       shell: bash
+      working-directory: _aetherpak-cli-src
       env:
-        GH_TOKEN: ${{ github.token }}
+        EXPECTED_SHA: ${{ inputs.cli-ref }}
+      run: |
+        set -euo pipefail
+        ACTUAL_SHA="$(git rev-parse HEAD)"
+        if [ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]; then
+          echo "::error::Checked-out commit ($ACTUAL_SHA) does not match pinned cli-ref ($EXPECTED_SHA)."
+          exit 1
+        fi
+        echo "Verified checkout is exactly $ACTUAL_SHA"
+
+    - name: Set up Go (version pinned by the checked-out go.mod itself)
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      with:
+        go-version-file: _aetherpak-cli-src/go.mod
+        cache-dependency-path: _aetherpak-cli-src/go.sum
+
+    - name: Build AetherPak CLI from source
+      id: build
+      shell: bash
+      working-directory: _aetherpak-cli-src
+      env:
+        CLI_REF: ${{ inputs.cli-ref }}
       run: |
         set -euo pipefail
 
@@ -121,49 +173,27 @@ runs:
             ;;
         esac
 
-        OS="linux"
-        EXT="tar.gz"
-        TAG="${{ inputs.version }}"
-
-        # Checksums pinned by us: computed locally via sha256sum on the actual
-        # release assets, not sourced from the aetherpak repo itself.
-        case "${TAG}-${ARCH}" in
-          "v0.14.0-amd64") EXPECTED_SHA256="43d9e67f511a2988da791d0506ffee51d6dd9b9096c0975e246f2e21994a9f96" ;;
-          "v0.14.0-arm64") EXPECTED_SHA256="434350fd1c319fcb8e3b8581664458d8a42226cea81097567934e1b2f648fabb" ;;
-          *)
-            echo "::error::No pinned checksum for version=$TAG arch=$ARCH. This vendored action only trusts known-verified versions. Add a checksum entry (computed yourself from the real release asset) before using a new version."
-            exit 1
-            ;;
-        esac
-
-        echo "Resolved version tag: $TAG"
-
-        ARCHIVE_NAME="aetherpak-${OS}-${ARCH}.${EXT}"
-        BINARY_INTERNAL="aetherpak-${OS}-${ARCH}"
-
         INSTALL_DIR="$RUNNER_TEMP/aetherpak-bin"
         mkdir -p "$INSTALL_DIR"
 
-        DOWNLOAD_DIR="$(mktemp -d)"
-        trap 'rm -rf "$DOWNLOAD_DIR"' EXIT
+        echo "Building aetherpak from pinned commit $CLI_REF for linux/$ARCH..."
+        # Mirrors aetherpak/cli's own `make release/build` target (see Makefile).
+        GOOS=linux GOARCH="$ARCH" CGO_ENABLED=0 go build \
+          -ldflags="-s -w -X github.com/aetherpak/aetherpak/cmd.Version=$CLI_REF" \
+          -o "$INSTALL_DIR/aetherpak" \
+          main.go
 
-        echo "Downloading $ARCHIVE_NAME from ${{ inputs.repo }}@$TAG..."
-        URL="https://github.com/${{ inputs.repo }}/releases/download/${TAG}/${ARCHIVE_NAME}"
-        curl -fL -o "$DOWNLOAD_DIR/$ARCHIVE_NAME" "$URL"
-
-        ACTUAL_SHA256="$(sha256sum "$DOWNLOAD_DIR/$ARCHIVE_NAME" | awk '{print $1}')"
-        if [ "$ACTUAL_SHA256" != "$EXPECTED_SHA256" ]; then
-          echo "::error::Checksum mismatch for $ARCHIVE_NAME. Expected $EXPECTED_SHA256, got $ACTUAL_SHA256. Refusing to use this binary."
-          exit 1
-        fi
-        echo "Checksum verified: $ACTUAL_SHA256"
-
-        tar -xzf "$DOWNLOAD_DIR/$ARCHIVE_NAME" -C "$INSTALL_DIR"
-        mv "$INSTALL_DIR/$BINARY_INTERNAL" "$INSTALL_DIR/aetherpak"
         chmod +x "$INSTALL_DIR/aetherpak"
 
         echo "$INSTALL_DIR" >> "$GITHUB_PATH"
-        echo "Successfully installed aetherpak $TAG to $INSTALL_DIR and added to GITHUB_PATH"
+        echo "Successfully built aetherpak from commit $CLI_REF to $INSTALL_DIR and added to GITHUB_PATH"
 
-        echo "version=$TAG" >> "$GITHUB_OUTPUT"
+        echo "version=$CLI_REF" >> "$GITHUB_OUTPUT"
         echo "path=$INSTALL_DIR" >> "$GITHUB_OUTPUT"
+
+    - name: Smoke-test the built binary runs
+      shell: bash
+      run: |
+        set -euo pipefail
+        "$RUNNER_TEMP/aetherpak-bin/aetherpak" --help >/dev/null
+        echo "Built binary executes successfully."
