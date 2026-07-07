@@ -214,7 +214,7 @@ describe('generateThreadTitle', () => {
           model: fakeModel,
           messages: fakeConvertedMessages,
           maxOutputTokens: 20,
-          system: expect.stringContaining('6 words or fewer'),
+          instructions: expect.stringContaining('6 words or fewer'),
         })
       )
     })

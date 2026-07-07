@@ -72,7 +72,7 @@ export async function generateThreadTitle(
 
     const { text } = await generateText({
       model,
-      system: TITLE_SYSTEM_PROMPT,
+      instructions: TITLE_SYSTEM_PROMPT,
       messages: await convertToModelMessages(contextMessages),
       maxOutputTokens: 20,
     })
