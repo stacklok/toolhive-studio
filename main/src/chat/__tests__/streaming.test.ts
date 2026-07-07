@@ -74,7 +74,11 @@ vi.mock('../../logger', () => ({
 }))
 
 vi.mock('../providers', () => ({
-  CHAT_PROVIDERS: [{ id: 'openai', name: 'OpenAI' }],
+  CHAT_PROVIDERS: [
+    { id: 'openai', name: 'OpenAI' },
+    { id: 'google', name: 'Google' },
+    { id: 'openrouter', name: 'OpenRouter' },
+  ],
 }))
 
 vi.mock('../mcp-tools', () => ({
@@ -437,5 +441,42 @@ describe('handleChatStreamRealtime — AI SDK v7 UI stream wiring', () => {
         allowSystemInMessages: true,
       })
     )
+  })
+
+  it('passes sanitizeSchemas to createMcpTools only for Gemini-compatible providers', async () => {
+    mockGetAgent.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'TOOLHIVE INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(
+      makeRequest({ provider: 'openai', model: 'gpt-4o' }),
+      'stream-openai',
+      fakeSender
+    )
+    expect(mockCreateMcpTools).toHaveBeenCalledWith('thread-1', {
+      sanitizeSchemas: false,
+    })
+
+    mockCreateMcpTools.mockClear()
+
+    await handleChatStreamRealtime(
+      makeRequest({ provider: 'google', model: 'gemini-2.5-flash' }),
+      'stream-google',
+      fakeSender
+    )
+    expect(mockCreateMcpTools).toHaveBeenCalledWith('thread-1', {
+      sanitizeSchemas: true,
+    })
+
+    mockCreateMcpTools.mockClear()
+
+    await handleChatStreamRealtime(
+      makeRequest({ provider: 'openrouter', model: 'google/gemini-2.5-flash' }),
+      'stream-openrouter-google',
+      fakeSender
+    )
+    expect(mockCreateMcpTools).toHaveBeenCalledWith('thread-1', {
+      sanitizeSchemas: true,
+    })
   })
 })

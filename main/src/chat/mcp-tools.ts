@@ -188,24 +188,31 @@ function getToolParameters(inputSchema: unknown): Record<string, unknown> {
  * union `type` arrays), and re-wrap. Tools whose schema can't be resolved
  * synchronously are returned unchanged.
  */
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return (
+    value != null &&
+    (typeof value === 'object' || typeof value === 'function') &&
+    typeof (value as { then?: unknown }).then === 'function'
+  )
+}
+
 function resolveRawJsonSchema(inputSchema: unknown): unknown | null {
   if (
     !inputSchema ||
     typeof inputSchema !== 'object' ||
-    Array.isArray(inputSchema)
+    Array.isArray(inputSchema) ||
+    isThenable(inputSchema)
   ) {
     return null
   }
 
   const candidate = inputSchema as Record<string, unknown>
-  if ('then' in candidate) return null
-
   const wrapped = candidate.jsonSchema
   if (
     wrapped &&
     typeof wrapped === 'object' &&
     !Array.isArray(wrapped) &&
-    !('then' in (wrapped as Record<string, unknown>))
+    !isThenable(wrapped)
   ) {
     return wrapped
   }
@@ -217,7 +224,7 @@ function resolveRawJsonSchema(inputSchema: unknown): unknown | null {
       raw &&
       typeof raw === 'object' &&
       !Array.isArray(raw) &&
-      !('then' in (raw as Record<string, unknown>))
+      !isThenable(raw)
     ) {
       return raw
     }
@@ -310,7 +317,10 @@ export async function getMcpServerTools(
 }
 
 // Create MCP tools for AI SDK
-export async function createMcpTools(threadId?: string): Promise<{
+export async function createMcpTools(
+  threadId?: string,
+  options?: { sanitizeSchemas?: boolean }
+): Promise<{
   tools: ToolSet
   clients: Awaited<ReturnType<typeof createMCPClient>>[]
   enabledTools: Record<string, string[]>
@@ -335,7 +345,9 @@ export async function createMcpTools(threadId?: string): Promise<{
     if (!isMcpToolDefinition(toolDef)) return false
     const ui = extractToolUiMeta(toolDef)
     if (shouldSkipAppOnlyTool(ui)) return false
-    mcpTools[toolName] = withSanitizedInputSchema(toolDef)
+    mcpTools[toolName] = options?.sanitizeSchemas
+      ? withSanitizedInputSchema(toolDef)
+      : toolDef
     if (ui?.resourceUri) {
       nextCachedUiMetadata[toolName] = {
         resourceUri: ui.resourceUri,

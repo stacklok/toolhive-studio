@@ -53,13 +53,11 @@ describe('addUsage', () => {
       totalTokens: 30,
     })
 
-    expect(addUsage(stepOne, stepTwo)).toEqual(
-      usage({
-        inputTokens: 120,
-        outputTokens: 60,
-        totalTokens: 180,
-      })
-    )
+    expect(addUsage(stepOne, stepTwo)).toEqual({
+      inputTokens: 120,
+      outputTokens: 60,
+      totalTokens: 180,
+    })
   })
 
   it('accumulates AI SDK v7 token detail fields across steps', () => {
@@ -116,13 +114,11 @@ describe('addUsage', () => {
         usage({ inputTokens: 1, outputTokens: 2, totalTokens: 3 }),
         usage({ inputTokens: 4, outputTokens: 5, totalTokens: 9 })
       )
-    ).toEqual(
-      usage({
-        inputTokens: 5,
-        outputTokens: 7,
-        totalTokens: 12,
-      })
-    )
+    ).toEqual({
+      inputTokens: 5,
+      outputTokens: 7,
+      totalTokens: 12,
+    })
   })
 })
 

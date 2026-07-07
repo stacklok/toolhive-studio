@@ -22,35 +22,57 @@ export function addUsage(
 ): LanguageModelUsage | null {
   if (!next) return acc
   if (!acc) return { ...next }
+  const inputTokenDetails = buildInputTokenDetails(acc, next)
+  const outputTokenDetails = buildOutputTokenDetails(acc, next)
   return {
     inputTokens: addCount(acc.inputTokens, next.inputTokens),
     outputTokens: addCount(acc.outputTokens, next.outputTokens),
     totalTokens: addCount(acc.totalTokens, next.totalTokens),
-    inputTokenDetails: {
-      noCacheTokens: addCount(
-        acc.inputTokenDetails?.noCacheTokens,
-        next.inputTokenDetails?.noCacheTokens
-      ),
-      cacheReadTokens: addCount(
-        acc.inputTokenDetails?.cacheReadTokens,
-        next.inputTokenDetails?.cacheReadTokens
-      ),
-      cacheWriteTokens: addCount(
-        acc.inputTokenDetails?.cacheWriteTokens,
-        next.inputTokenDetails?.cacheWriteTokens
-      ),
-    },
-    outputTokenDetails: {
-      textTokens: addCount(
-        acc.outputTokenDetails?.textTokens,
-        next.outputTokenDetails?.textTokens
-      ),
-      reasoningTokens: addCount(
-        acc.outputTokenDetails?.reasoningTokens,
-        next.outputTokenDetails?.reasoningTokens
-      ),
-    },
+    ...(inputTokenDetails ? { inputTokenDetails } : {}),
+    ...(outputTokenDetails ? { outputTokenDetails } : {}),
+  } as LanguageModelUsage
+}
+
+function buildInputTokenDetails(
+  acc: LanguageModelUsage,
+  next: LanguageModelUsage
+): LanguageModelUsage['inputTokenDetails'] | undefined {
+  const details = {
+    noCacheTokens: addCount(
+      acc.inputTokenDetails?.noCacheTokens,
+      next.inputTokenDetails?.noCacheTokens
+    ),
+    cacheReadTokens: addCount(
+      acc.inputTokenDetails?.cacheReadTokens,
+      next.inputTokenDetails?.cacheReadTokens
+    ),
+    cacheWriteTokens: addCount(
+      acc.inputTokenDetails?.cacheWriteTokens,
+      next.inputTokenDetails?.cacheWriteTokens
+    ),
   }
+  return Object.values(details).some((value) => value != null)
+    ? details
+    : undefined
+}
+
+function buildOutputTokenDetails(
+  acc: LanguageModelUsage,
+  next: LanguageModelUsage
+): LanguageModelUsage['outputTokenDetails'] | undefined {
+  const details = {
+    textTokens: addCount(
+      acc.outputTokenDetails?.textTokens,
+      next.outputTokenDetails?.textTokens
+    ),
+    reasoningTokens: addCount(
+      acc.outputTokenDetails?.reasoningTokens,
+      next.outputTokenDetails?.reasoningTokens
+    ),
+  }
+  return Object.values(details).some((value) => value != null)
+    ? details
+    : undefined
 }
 
 export function getCacheReadTokens(
