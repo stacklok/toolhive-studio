@@ -919,10 +919,6 @@ export type GithubComStacklokToolhivePkgClientClientApp =
   | 'windsurf'
   | 'windsurf-jetbrains'
   | 'amp-cli'
-  | 'amp-vscode'
-  | 'amp-cursor'
-  | 'amp-vscode-insider'
-  | 'amp-windsurf'
   | 'lm-studio'
   | 'goose'
   | 'trae'
@@ -949,6 +945,10 @@ export type GithubComStacklokToolhivePkgClientClientAppStatus = {
    * Registered indicates whether the client is registered in the ToolHive configuration
    */
   registered?: boolean
+  /**
+   * SupportsPlugins indicates whether ToolHive can install plugins for this client
+   */
+  supports_plugins?: boolean
   /**
    * SupportsSkills indicates whether ToolHive can install skills for this client
    */
@@ -1080,6 +1080,7 @@ export type GithubComStacklokToolhivePkgCoreWorkload = {
 
 export type GithubComStacklokToolhivePkgGroupsGroup = {
   name?: string
+  plugins?: Array<string>
   registered_clients?: Array<string>
   skills?: Array<string>
 }
@@ -1223,6 +1224,8 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * (host.docker.internal, gateway.docker.internal, 172.17.0.1). These are
    * blocked by default in the egress proxy even when InsecureAllowAll is set.
    * Only applicable to Docker deployments with network isolation enabled.
+   * Gateway access is port-independent: it ignores the permission profile's
+   * allowed ports, so once enabled the gateway is reachable on any port.
    */
   allow_docker_gateway?: boolean
   /**
