@@ -104,7 +104,7 @@ jobs:
 
       - name: Download aetherpak site artifact
         if: steps.release.outputs.prerelease != 'true'
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e0baa8db40025c1464 # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: aetherpak-site
           path: .
