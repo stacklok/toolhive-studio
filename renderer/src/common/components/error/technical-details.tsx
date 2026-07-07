@@ -51,7 +51,7 @@ function CopyButton({ getText }: CopyButtonProps) {
       title={copied ? 'Copied!' : 'Copy error report'}
     >
       {copied ? (
-        <Check className="size-3.5 text-green-600" />
+        <Check className="text-success size-3.5" />
       ) : (
         <Copy className="size-3.5" />
       )}

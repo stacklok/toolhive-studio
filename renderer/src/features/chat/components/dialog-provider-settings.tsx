@@ -480,15 +480,15 @@ export function DialogProviderSettings({
                               <div
                                 className={`rounded-md border p-3 ${
                                   validationStatus[pk.provider.id]?.valid
-                                    ? 'border-green-500/20 bg-green-500/10'
-                                    : 'border-red-500/20 bg-red-500/10'
+                                    ? 'border-success/20 bg-success/10'
+                                    : 'border-destructive/20 bg-destructive/10'
                                 }`}
                               >
                                 <p
                                   className={`text-sm ${
                                     validationStatus[pk.provider.id]?.valid
-                                      ? 'text-green-600 dark:text-green-500'
-                                      : 'text-red-600 dark:text-red-500'
+                                      ? 'text-success'
+                                      : 'text-destructive'
                                   }`}
                                 >
                                   {validationStatus[pk.provider.id]?.valid
@@ -503,8 +503,8 @@ export function DialogProviderSettings({
                               (isLocalServerProvider(pk)
                                 ? pk.endpointURL.trim() !== ''
                                 : true) && (
-                                <div className="rounded-md border border-yellow-500/20 bg-yellow-500/10 p-3">
-                                  <p className="text-sm text-yellow-600 dark:text-yellow-500">
+                                <div className="border-warning/20 bg-warning/10 rounded-md border p-3">
+                                  <p className="text-warning text-sm">
                                     {pk.provider.id === 'ollama' ||
                                     pk.provider.id === 'lmstudio'
                                       ? `${pk.provider.name} server is not running or no models are installed. Please start ${pk.provider.name} and ensure you have models available, then click the refresh button above.`

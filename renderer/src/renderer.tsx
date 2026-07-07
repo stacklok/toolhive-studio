@@ -18,6 +18,16 @@ import './common/lib/feature-flags'
 // Import OS design devtools to bind OsDesign.setMac/setWindows/reset to window
 import './common/lib/os-design'
 
+// Inject brand color overrides before mounting React so the first paint
+// shows the branded palette (no FOUC). CSS is sourced from the main process.
+const brandingCss = window.electronAPI?.branding?.css
+if (brandingCss) {
+  const styleEl = document.createElement('style')
+  styleEl.id = 'brand-theme'
+  styleEl.textContent = brandingCss
+  document.head.appendChild(styleEl)
+}
+
 initSentry()
 
 if (!window.electronAPI || !window.electronAPI.apiFetch) {

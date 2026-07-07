@@ -27,7 +27,7 @@ const tabsListVariants = cva(
     variants: {
       variant: {
         default: 'bg-muted h-9 rounded-lg p-[3px]',
-        pill: 'h-auto rounded-full bg-zinc-200 p-1 dark:bg-zinc-800',
+        pill: 'bg-muted h-auto rounded-full p-1',
       },
     },
     defaultVariants: {

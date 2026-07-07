@@ -112,17 +112,16 @@ export function SkillBuildResultCard({ result }: { result: SkillBuildResult }) {
   return (
     <>
       <div
-        className="my-3 overflow-hidden rounded-xl border border-emerald-500/25
-          bg-linear-to-br from-emerald-500/5 via-transparent to-transparent
+        className="border-success/25 from-success/5 my-3 overflow-hidden
+          rounded-xl border bg-linear-to-br via-transparent to-transparent
           shadow-sm"
         data-testid="skill-build-result-card"
       >
         <div className="flex flex-col gap-4 p-4">
           <div className="flex items-start gap-3">
             <div
-              className="flex size-11 shrink-0 items-center justify-center
-                rounded-xl bg-emerald-500/15 text-emerald-600
-                dark:text-emerald-400"
+              className="bg-success/15 text-success flex size-11 shrink-0
+                items-center justify-center rounded-xl"
             >
               <PackageIcon className="size-5" />
             </div>
@@ -131,7 +130,7 @@ export function SkillBuildResultCard({ result }: { result: SkillBuildResult }) {
                 className="text-muted-foreground flex items-center gap-1.5
                   text-xs font-medium tracking-wide uppercase"
               >
-                <CheckCircle2Icon className="size-3.5 text-emerald-500" />
+                <CheckCircle2Icon className="text-success size-3.5" />
                 Skill built
               </div>
               <h4

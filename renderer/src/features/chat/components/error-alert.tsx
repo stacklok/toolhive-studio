@@ -34,8 +34,8 @@ export function ErrorAlert({ error, className = '' }: ErrorAlertProps) {
         <AlertDescription className="pr-8">
           <Separator className="my-2 flex-wrap" />
           <p
-            className="max-h-20 max-w-full overflow-auto font-mono text-xs
-              text-gray-300"
+            className="text-muted-foreground max-h-20 max-w-full overflow-auto
+              font-mono text-xs"
           >
             {error}
           </p>
