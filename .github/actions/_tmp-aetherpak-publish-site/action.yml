@@ -1,10 +1,12 @@
 # ============================================================================
-# TEMPORARY VENDORED COPY — DO NOT MERGE TO main
+# INTENTIONALLY VENDORED — decoupled from tagged releases for now
 #
-# Vendored for local iteration while validating the aetherpak flatpak
-# publishing pipeline (see PR #2301 / #2427). Delete this directory once
-# validation is done; production usage should reference the upstream action
-# pinned by commit SHA, as on-release.yml already does.
+# Vendored so we can iterate on the aetherpak flatpak publish + Pages
+# pipeline (see PR #2301 / #2427) in follow-up PRs without cutting real
+# ToolHive Studio releases (which trigger real auto-updates and binary
+# signing) just to test changes here.
+#
+# See discussion in #2427/#2429.
 #
 # Source: https://github.com/aetherpak/actions/tree/main/publish-site (MIT
 # License), vendored from commit d2112669ceaa09afb7c2b96e9e9844866a6c8e78

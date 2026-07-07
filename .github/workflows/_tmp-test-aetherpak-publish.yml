@@ -1,10 +1,10 @@
 # ============================================================================
-# TEMPORARY — DO NOT MERGE TO main
+# INTENTIONALLY MERGED FOR NOW — decoupled from tagged releases
 #
-# Scratch workflow to validate the aetherpak flatpak publish + Pages pipeline
+# Workflow to validate the aetherpak flatpak publish + Pages pipeline
 # introduced in #2301, without cutting a real release (which would trigger
-# the real on-release.yml and auto-update real users) and without needing
-# the production GPG signing secrets.
+# the real on-release.yml, real auto-updates, and binary signing) and
+# without needing the production GPG signing secrets.
 #
 # - Manual trigger only (workflow_dispatch). Never runs on push/PR/release.
 # - Reuses a flatpak bundle artifact that a normal PR build already produced
@@ -21,8 +21,8 @@
 #   from the real "flatpak" subpath and "latest/" release manifest via
 #   destination_dir, verified against peaceiris/actions-gh-pages source).
 #
-# Delete this file and the .github/actions/_tmp-aetherpak-* directories once
-# validation is complete.
+# This keeps the pipeline decoupled from tagged releases while we iterate on
+# it in follow-up PRs. See discussion in #2427/#2429.
 # ============================================================================
 name: '[TEMP] Test AetherPak Flatpak Publish'
 

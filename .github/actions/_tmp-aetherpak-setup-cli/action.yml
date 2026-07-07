@@ -1,13 +1,13 @@
 # ============================================================================
-# TEMPORARY VENDORED COPY — DO NOT MERGE TO main
+# INTENTIONALLY VENDORED — decoupled from tagged releases for now
 #
-# Vendored for local iteration while validating the aetherpak flatpak
-# publishing pipeline (see PR #2301 / #2427), pinned to one exact source
-# commit so the test build stays reproducible while we iterate. Delete this
-# directory once validation is done; production usage should continue to
-# reference the upstream `aetherpak/setup-cli@v1` action directly (or a
-# permanently-vendored setup, if that ends up being the right call — see
-# discussion in #2427).
+# Vendored so we can iterate on the aetherpak flatpak publish + Pages
+# pipeline (see PR #2301 / #2427) in follow-up PRs without cutting real
+# ToolHive Studio releases (which trigger real auto-updates and binary
+# signing) just to test changes here. Pinned to one exact source commit so
+# builds stay reproducible while we iterate.
+#
+# See discussion in #2427/#2429.
 #
 # Source: https://github.com/aetherpak/setup-cli (MIT License)
 # Vendored from tag: v1
