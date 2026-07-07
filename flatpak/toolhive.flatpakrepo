@@ -1,0 +1,5 @@
+[Flatpak Repo]
+Title=Flatpak Repository
+Url=oci+https://stacklok.github.io/toolhive-studio/flatpak
+Homepage=https://stacklok.github.io/toolhive-studio/flatpak
+Comment=Flatpak repository powered by AetherPak (Pages index + OCI registry blobs)

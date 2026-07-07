@@ -1,0 +1,8 @@
+[Flatpak Ref]
+Title=ToolHive
+Name=com.stacklok.ToolHive
+Branch=stable
+Url=oci+https://ghcr.io/stacklok/toolhive-studio
+IsRuntime=false
+SuggestRemoteName=toolhive
+RuntimeRepo=https://dl.flathub.org/repo/flathub.flatpakrepo
