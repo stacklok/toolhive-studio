@@ -1,7 +1,4 @@
-import {
-  experimental_createMCPClient as createMCPClient,
-  type experimental_MCPClientConfig as MCPClientConfig,
-} from '@ai-sdk/mcp'
+import { createMCPClient, type MCPClientConfig } from '@ai-sdk/mcp'
 import { type Tool } from 'ai'
 import { Experimental_StdioMCPTransport as StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
@@ -13,49 +10,6 @@ import log from '../logger'
 export interface McpToolDefinition {
   description?: string
   inputSchema: Tool['inputSchema']
-}
-
-/**
- * Normalize a JSON Schema in place for Gemini's stricter validator. Drops
- * non-string `enum`s (Gemini allows `enum` only on strings) and collapses
- * union `type` arrays to a single type (`'null'` becomes `nullable: true`),
- * both of which Gemini otherwise rejects.
- */
-export function sanitizeMcpJsonSchema(node: unknown): void {
-  if (!node || typeof node !== 'object') return
-  if (Array.isArray(node)) {
-    for (const item of node) sanitizeMcpJsonSchema(item)
-    return
-  }
-  const obj = node as Record<string, unknown>
-  if (
-    Array.isArray(obj.enum) &&
-    !obj.enum.every((value) => typeof value === 'string')
-  ) {
-    delete obj.enum
-  }
-  if (Array.isArray(obj.type)) {
-    const types = obj.type.filter(
-      (t): t is string => typeof t === 'string' && t !== 'null'
-    )
-    if (obj.type.includes('null')) obj.nullable = true
-    obj.type = types[0] ?? 'string'
-  }
-  for (const key of Object.keys(obj)) sanitizeMcpJsonSchema(obj[key])
-}
-
-/** Sanitize a tool's JSON Schema, whether wrapped (`inputSchema.jsonSchema`)
- * or bare (`inputSchema`). Mutates in place; safe on any tool. */
-export function sanitizeToolInputSchema(tool: unknown): void {
-  if (!tool || typeof tool !== 'object') return
-  const inputSchema = (tool as { inputSchema?: unknown }).inputSchema
-  if (!inputSchema || typeof inputSchema !== 'object') return
-  const wrapped = (inputSchema as { jsonSchema?: unknown }).jsonSchema
-  if (wrapped && typeof wrapped === 'object') {
-    sanitizeMcpJsonSchema(wrapped)
-  } else {
-    sanitizeMcpJsonSchema(inputSchema)
-  }
 }
 
 export function isMcpToolDefinition(obj: unknown): obj is McpToolDefinition {
@@ -115,6 +69,8 @@ export function createTransport(workload: CoreWorkload): MCPClientConfig {
         transport: {
           type: 'http' as const,
           url: urlString,
+          // AI SDK v7 defaults redirect to 'error' (SSRF protection). ToolHive
+          // proxies are localhost and do not redirect; keep the secure default.
         },
       }
     },
@@ -203,16 +159,14 @@ export async function getWorkloadAvailableTools(
       const rawTools = await mcpClient.tools<'automatic'>()
 
       // Filter and validate tools using type guard
-      const serverMcpTools = Object.entries(rawTools)
-        .filter(([, defTool]) => isMcpToolDefinition(defTool))
-        .reduce<Record<string, McpToolDefinition>>((prev, [name, def]) => {
-          if (!def || !name) return prev
-          prev[name] = {
-            description: def.description,
-            inputSchema: def.inputSchema as Tool['inputSchema'],
-          }
-          return prev
-        }, {})
+      const serverMcpTools: Record<string, McpToolDefinition> = {}
+      for (const [name, defTool] of Object.entries(rawTools)) {
+        if (!name || !isMcpToolDefinition(defTool)) continue
+        serverMcpTools[name] = {
+          description: defTool.description,
+          inputSchema: defTool.inputSchema as Tool['inputSchema'],
+        }
+      }
       await mcpClient.close()
       return serverMcpTools
     }
