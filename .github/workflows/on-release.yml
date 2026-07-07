@@ -273,6 +273,7 @@ jobs:
         with:
           pattern: flatpak-bundle-*
           path: _bundles
+          merge-multiple: true
 
       - name: Push Flatpak OCI to GHCR
         uses: aetherpak/actions/publish-oci@d2112669ceaa09afb7c2b96e9e9844866a6c8e78
