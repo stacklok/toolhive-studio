@@ -1,12 +1,11 @@
-import type { UIMessage } from 'ai'
-import type { LanguageModelV2Usage } from '@ai-sdk/provider'
+import type { UIMessage, LanguageModelUsage } from 'ai'
 
 // Define message metadata schema for type safety
 interface MessageMetadata {
   createdAt?: number
   model?: string
   providerId?: string
-  totalUsage?: LanguageModelV2Usage
+  totalUsage?: LanguageModelUsage
   responseTime?: number
   finishReason?: string
 }

@@ -85,6 +85,69 @@ describe('TokenUsage', () => {
     ).toBeGreaterThan(0)
   })
 
+  it('shows reasoning and cached token counts from AI SDK v7 usage details', async () => {
+    useModelPricingMock.mockReturnValue({
+      pricing: { input: 3, output: 15, cache_read: 0.3 },
+    })
+    render(
+      <TokenUsage
+        usage={{
+          inputTokens: 1000,
+          outputTokens: 500,
+          totalTokens: 1500,
+          inputTokenDetails: {
+            noCacheTokens: 600,
+            cacheReadTokens: 400,
+            cacheWriteTokens: undefined,
+          },
+          outputTokenDetails: {
+            textTokens: 450,
+            reasoningTokens: 50,
+          },
+        }}
+        providerId="anthropic"
+        model="claude-sonnet-4-5"
+      />
+    )
+
+    await userEvent.hover(screen.getByText('= 1500'))
+
+    expect(
+      (await screen.findAllByText(/Reasoning tokens:/)).length
+    ).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Cached input tokens:/).length).toBeGreaterThan(
+      0
+    )
+  })
+
+  it('shows reasoning and cached token counts from legacy v6 usage fields', async () => {
+    useModelPricingMock.mockReturnValue({
+      pricing: { input: 3, output: 15, cache_read: 0.3 },
+    })
+    render(
+      <TokenUsage
+        usage={{
+          inputTokens: 1000,
+          outputTokens: 500,
+          totalTokens: 1500,
+          cachedInputTokens: 400,
+          reasoningTokens: 50,
+        }}
+        providerId="anthropic"
+        model="claude-sonnet-4-5"
+      />
+    )
+
+    await userEvent.hover(screen.getByText('= 1500'))
+
+    expect(
+      (await screen.findAllByText(/Reasoning tokens:/)).length
+    ).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Cached input tokens:/).length).toBeGreaterThan(
+      0
+    )
+  })
+
   it('keeps the existing token breakdown tooltip when pricing is missing', async () => {
     useModelPricingMock.mockReturnValue({ pricing: undefined })
     render(

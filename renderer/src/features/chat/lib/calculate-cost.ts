@@ -1,5 +1,5 @@
-import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import type { ModelCost } from '../hooks/use-model-pricing'
+import { getCacheReadTokens, type PersistedLanguageModelUsage } from './usage'
 
 export interface CostBreakdown {
   inputCost: number
@@ -11,12 +11,12 @@ export interface CostBreakdown {
 const toMillions = (tokens: number): number => tokens / 1_000_000
 
 export function calculateCost(
-  usage: LanguageModelV2Usage,
+  usage: PersistedLanguageModelUsage,
   pricing: ModelCost
 ): CostBreakdown {
   const inputTokens = Math.max(0, usage.inputTokens ?? 0)
   const outputTokens = Math.max(0, usage.outputTokens ?? 0)
-  const cachedInputTokens = Math.max(0, usage.cachedInputTokens ?? 0)
+  const cachedInputTokens = Math.max(0, getCacheReadTokens(usage))
 
   const hasCacheRate = pricing.cache_read !== undefined
   const billableInputTokens = hasCacheRate

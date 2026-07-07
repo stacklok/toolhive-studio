@@ -101,6 +101,7 @@ export function AssistantMessage({
               }
 
               case 'file':
+              case 'reasoning-file':
                 return (
                   <div
                     key={`file-${index}`}
