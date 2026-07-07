@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { asSchema } from 'ai'
 
 // ---------------------------------------------------------------------------
 // Hoisted mock factories — must be defined before vi.mock() calls
@@ -74,8 +75,6 @@ vi.mock('../../utils/mcp-tools', async (importOriginal) => {
   return {
     // Keep the real validator so fixtures need to be shaped correctly
     isMcpToolDefinition: original.isMcpToolDefinition,
-    // Keep the real sanitizer so registerTool can normalize schemas
-    sanitizeToolInputSchema: original.sanitizeToolInputSchema,
     buildRawTransport: mockBuildRawTransport,
     createTransport: mockCreateTransport,
     getWorkloadAvailableTools: mockGetWorkloadAvailableTools,
@@ -91,7 +90,7 @@ vi.mock('@sentry/electron/main', () => ({
 }))
 
 vi.mock('@ai-sdk/mcp', () => ({
-  experimental_createMCPClient: mockCreateMCPClient,
+  createMCPClient: mockCreateMCPClient,
 }))
 
 vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
@@ -485,6 +484,162 @@ describe('createMcpTools', () => {
     expect(clients).toHaveLength(0)
     expect(enabledTools).toEqual({})
     expect(Sentry.addBreadcrumb).not.toHaveBeenCalled()
+  })
+
+  it('sanitizes dangling required entries in MCP tool input schemas when sanitizeSchemas is enabled', async () => {
+    const workload = makeWorkload()
+    const toolWithDanglingRequired = makeToolDef({
+      inputSchema: {
+        type: 'object',
+        properties: { title: { type: 'string' } },
+        required: ['title', 'ghost'],
+      },
+    })
+
+    mockGetApiV1BetaWorkloads.mockResolvedValue({
+      data: { workloads: [workload] },
+    })
+    mockGetEnabledMcpTools.mockResolvedValue({
+      'test-server': ['schema-tool'],
+    })
+    mockAiMcpClient.tools.mockResolvedValue({
+      'schema-tool': toolWithDanglingRequired,
+    })
+
+    const { tools } = await createMcpTools(undefined, {
+      sanitizeSchemas: true,
+    })
+    const registered = tools['schema-tool']
+    expect(registered).toBeDefined()
+
+    const schema = asSchema(registered!.inputSchema).jsonSchema as {
+      required?: string[]
+    }
+    expect(schema.required).toEqual(['title'])
+  })
+
+  it('leaves MCP tool input schemas unchanged when sanitizeSchemas is disabled', async () => {
+    const workload = makeWorkload()
+    const toolWithBooleanEnum = makeToolDef({
+      inputSchema: {
+        type: 'object',
+        properties: {
+          delete: { type: 'boolean', enum: [true] },
+        },
+      },
+    })
+
+    mockGetApiV1BetaWorkloads.mockResolvedValue({
+      data: { workloads: [workload] },
+    })
+    mockGetEnabledMcpTools.mockResolvedValue({
+      'test-server': ['enum-tool'],
+    })
+    mockAiMcpClient.tools.mockResolvedValue({
+      'enum-tool': toolWithBooleanEnum,
+    })
+
+    const { tools } = await createMcpTools(undefined, {
+      sanitizeSchemas: false,
+    })
+    const registered = tools['enum-tool']
+    expect(registered).toBeDefined()
+
+    expect(registered!.inputSchema).toEqual(toolWithBooleanEnum.inputSchema)
+  })
+
+  it('sanitizes schemas with JSON Schema if/then keywords when sanitizeSchemas is enabled', async () => {
+    const workload = makeWorkload()
+    const toolWithConditionalSchema = makeToolDef({
+      inputSchema: {
+        type: 'object',
+        properties: {
+          flag: { type: 'boolean', enum: [true] },
+        },
+        if: { properties: { flag: { const: true } } },
+        then: { required: ['flag'] },
+      },
+    })
+
+    mockGetApiV1BetaWorkloads.mockResolvedValue({
+      data: { workloads: [workload] },
+    })
+    mockGetEnabledMcpTools.mockResolvedValue({
+      'test-server': ['conditional-tool'],
+    })
+    mockAiMcpClient.tools.mockResolvedValue({
+      'conditional-tool': toolWithConditionalSchema,
+    })
+
+    const { tools } = await createMcpTools(undefined, {
+      sanitizeSchemas: true,
+    })
+    const registered = tools['conditional-tool']
+    expect(registered).toBeDefined()
+
+    const schema = asSchema(registered!.inputSchema).jsonSchema as {
+      properties: { flag: Record<string, unknown> }
+      if: Record<string, unknown>
+      then: Record<string, unknown>
+    }
+    expect(schema.properties.flag).toEqual({ type: 'boolean' })
+    expect(schema.if).toEqual({ properties: { flag: { const: true } } })
+    expect(schema.then).toEqual({ required: ['flag'] })
+  })
+
+  it('drops non-string enum values from MCP tool input schemas when sanitizeSchemas is enabled', async () => {
+    const workload = makeWorkload()
+    const toolWithBooleanEnum = makeToolDef({
+      inputSchema: {
+        type: 'object',
+        properties: {
+          issue_fields: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                delete: { type: 'boolean', enum: [true] },
+              },
+              required: ['delete'],
+            },
+          },
+        },
+      },
+    })
+
+    mockGetApiV1BetaWorkloads.mockResolvedValue({
+      data: { workloads: [workload] },
+    })
+    mockGetEnabledMcpTools.mockResolvedValue({
+      'test-server': ['enum-tool'],
+    })
+    mockAiMcpClient.tools.mockResolvedValue({
+      'enum-tool': toolWithBooleanEnum,
+    })
+
+    const { tools } = await createMcpTools(undefined, {
+      sanitizeSchemas: true,
+    })
+    const registered = tools['enum-tool']
+    expect(registered).toBeDefined()
+
+    const schema = asSchema(registered!.inputSchema).jsonSchema as {
+      properties: {
+        issue_fields: {
+          items: {
+            properties: {
+              delete: Record<string, unknown>
+            }
+          }
+        }
+      }
+    }
+    expect(schema.properties.issue_fields.items.properties.delete).toEqual({
+      type: 'boolean',
+    })
+    expect(
+      'enum' in schema.properties.issue_fields.items.properties.delete
+    ).toBe(false)
   })
 
   it('replaces cachedUiMetadata after each successful discovery', async () => {

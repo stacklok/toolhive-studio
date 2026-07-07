@@ -46,3 +46,7 @@ overrides:
 
 patchedDependencies:
   electron-installer-redhat@3.4.0: patches/electron-installer-redhat@3.4.0.patch
+
+minimumReleaseAgeExclude:
+  # Temporary until @openrouter/ai-sdk-provider@3.0.0 clears release-age threshold
+  - '@openrouter/ai-sdk-provider@3.0.0'

@@ -1,12 +1,13 @@
 import {
   ToolLoopAgent,
-  stepCountIs,
+  isStepCount,
   type UIMessage,
+  type LanguageModelUsage,
   convertToModelMessages,
   createIdGenerator,
+  toUIMessageStream,
 } from 'ai'
 import * as Sentry from '@sentry/electron/main'
-import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import log from '../logger'
 import { CHAT_PROVIDERS } from './providers'
 import { createMcpTools, getCachedUiMetadata } from './mcp-tools'
@@ -16,34 +17,7 @@ import { updateThreadMessages } from './threads-storage'
 import { createModelFromRequest } from './utils'
 import { getAgent, resolveAgentForThread } from './agents/registry'
 import { createBuiltinAgentTools } from './agents/builtin-agent-tools'
-
-/** Sum two optional token counts, returning undefined only when both are. */
-function addCount(
-  a: number | undefined,
-  b: number | undefined
-): number | undefined {
-  if (a == null && b == null) return undefined
-  return (a ?? 0) + (b ?? 0)
-}
-
-/** Accumulate per-step usage into a running total. The right-hand value
- * has the AI SDK's `LanguageModelUsage` shape but we use the
- * `LanguageModelV2Usage` keys we already persist in message metadata. */
-function addUsage(
-  acc: LanguageModelV2Usage | null,
-  next: LanguageModelV2Usage | undefined | null
-): LanguageModelV2Usage | null {
-  if (!next) return acc
-  if (!acc) return { ...next }
-  return {
-    ...acc,
-    inputTokens: addCount(acc.inputTokens, next.inputTokens),
-    outputTokens: addCount(acc.outputTokens, next.outputTokens),
-    totalTokens: addCount(acc.totalTokens, next.totalTokens),
-    reasoningTokens: addCount(acc.reasoningTokens, next.reasoningTokens),
-    cachedInputTokens: addCount(acc.cachedInputTokens, next.cachedInputTokens),
-  } as LanguageModelV2Usage
-}
+import { addUsage, getCacheReadTokens, getReasoningTokens } from './usage'
 
 /** Gemini's function-declaration validator rejects schema constructs other
  * providers accept. True for Google directly or a `google/*` OpenRouter model. */
@@ -160,7 +134,9 @@ export async function handleChatStreamRealtime(
             instructions,
             tools: hasTools ? combinedTools : undefined,
             toolChoice: hasTools ? 'auto' : undefined,
-            stopWhen: stepCountIs(50),
+            stopWhen: isStepCount(50),
+            // Persisted threads may include legacy `{ role: 'system' }` messages.
+            allowSystemInMessages: true,
           })
 
           const result = await agent.stream({
@@ -201,10 +177,10 @@ export async function handleChatStreamRealtime(
           // emit one `finish-step` per step; we sum these so the running
           // assistant message metadata exposes a live `totalUsage` value
           // that the UI renders before the final `finish` chunk arrives.
-          let runningUsage: LanguageModelV2Usage | null = null
+          let runningUsage: LanguageModelUsage | null = null
 
-          // Use the AI SDK's built-in UI message stream
-          const uiMessageStream = result.toUIMessageStream({
+          const uiMessageStream = toUIMessageStream({
+            stream: result.stream,
             originalMessages: request.messages,
             generateMessageId: createIdGenerator({
               prefix: 'msg',
@@ -221,10 +197,7 @@ export async function handleChatStreamRealtime(
                 }
               }
               if (part.type === 'finish-step') {
-                runningUsage = addUsage(
-                  runningUsage,
-                  part.usage as unknown as LanguageModelV2Usage
-                )
+                runningUsage = addUsage(runningUsage, part.usage)
                 return {
                   ...(runningUsage ? { totalUsage: runningUsage } : {}),
                 }
@@ -285,9 +258,9 @@ export async function handleChatStreamRealtime(
                             'streaming.output_ai_t': totalUsage.outputTokens,
                             'streaming.total_ai_t': totalUsage.totalTokens,
                             'streaming.reasoning_ai_t':
-                              totalUsage.reasoningTokens,
+                              getReasoningTokens(totalUsage),
                             'streaming.cached_input_ai_t':
-                              totalUsage.cachedInputTokens,
+                              getCacheReadTokens(totalUsage),
                           }
                         : {}),
                       'streaming.response_time': responseTime,
@@ -311,13 +284,13 @@ export async function handleChatStreamRealtime(
                 }
               }
             },
-            onFinish: async ({
+            onEnd: async ({
               messages: finalMessages,
             }: {
               messages: UIMessage<{
                 createdAt?: number
                 model?: string
-                totalUsage?: LanguageModelV2Usage
+                totalUsage?: LanguageModelUsage
                 responseTime?: number
                 finishReason?: string
               }>[]

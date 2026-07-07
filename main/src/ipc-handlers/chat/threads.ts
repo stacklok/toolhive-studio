@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import type { LanguageModelV2Usage } from '@ai-sdk/provider'
+import type { LanguageModelUsage } from 'ai'
 import type { UIMessage } from 'ai'
 import {
   createThread,
@@ -30,7 +30,7 @@ export function register() {
       initialMessages?: UIMessage<{
         createdAt?: number
         model?: string
-        totalUsage?: LanguageModelV2Usage
+        totalUsage?: LanguageModelUsage
         responseTime?: number
         finishReason?: string
       }>[]
@@ -62,7 +62,7 @@ export function register() {
       message: UIMessage<{
         createdAt?: number
         model?: string
-        totalUsage?: LanguageModelV2Usage
+        totalUsage?: LanguageModelUsage
         responseTime?: number
         finishReason?: string
       }>
@@ -76,7 +76,7 @@ export function register() {
       messages: UIMessage<{
         createdAt?: number
         model?: string
-        totalUsage?: LanguageModelV2Usage
+        totalUsage?: LanguageModelUsage
         responseTime?: number
         finishReason?: string
       }>[]

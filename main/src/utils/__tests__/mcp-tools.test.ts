@@ -1,9 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import {
-  createTransport,
-  sanitizeMcpJsonSchema,
-  sanitizeToolInputSchema,
-} from '../mcp-tools'
+import { createTransport } from '../mcp-tools'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
 
@@ -212,92 +208,5 @@ describe('createTransport', () => {
       expect(config.name).toBe('pure-stdio')
       expect(config.transport).toBeInstanceOf(Experimental_StdioMCPTransport)
     })
-  })
-})
-
-describe('sanitizeMcpJsonSchema', () => {
-  it('drops non-string enums (e.g. boolean) while keeping the property', () => {
-    // Mirrors the GitHub `issue_write` schema Gemini rejected:
-    // issue_fields.items.properties.delete = { type: 'boolean', enum: [true] }
-    const schema = {
-      type: 'object',
-      properties: {
-        issue_fields: {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              delete: { type: 'boolean', enum: [true] },
-            },
-            required: ['delete'],
-          },
-        },
-      },
-    }
-
-    sanitizeMcpJsonSchema(schema)
-
-    const del = schema.properties.issue_fields.items.properties.delete
-    expect('enum' in del).toBe(false)
-    // The property and any `required` reference to it remain intact.
-    expect(del.type).toBe('boolean')
-    expect(schema.properties.issue_fields.items.required).toEqual(['delete'])
-  })
-
-  it('preserves string enums', () => {
-    const schema = {
-      type: 'object',
-      properties: {
-        state: { type: 'string', enum: ['open', 'closed'] },
-      },
-    }
-
-    sanitizeMcpJsonSchema(schema)
-
-    expect(schema.properties.state.enum).toEqual(['open', 'closed'])
-  })
-
-  it('collapses union type arrays to the first concrete type', () => {
-    // Mirrors the GitHub `issue_write` schema Gemini rejected:
-    // issue_fields.items.properties.value = { type: ['string','number','boolean'] }
-    const value: Record<string, unknown> = {
-      type: ['string', 'number', 'boolean'],
-      description: 'v',
-    }
-    sanitizeMcpJsonSchema({ type: 'object', properties: { value } })
-
-    expect(value.type).toBe('string')
-    expect('nullable' in value).toBe(false)
-  })
-
-  it('maps a "null" union member to nullable', () => {
-    const value: Record<string, unknown> = { type: ['null', 'number'] }
-    sanitizeMcpJsonSchema({ type: 'object', properties: { value } })
-
-    expect(value.type).toBe('number')
-    expect(value.nullable).toBe(true)
-  })
-
-  it('falls back to "string" when a union has no concrete type', () => {
-    const value: Record<string, unknown> = { type: ['null'] }
-    sanitizeMcpJsonSchema({ type: 'object', properties: { value } })
-
-    expect(value.type).toBe('string')
-    expect(value.nullable).toBe(true)
-  })
-
-  it('sanitizes through jsonSchema()-wrapped tool inputSchema', () => {
-    const tool = {
-      inputSchema: {
-        jsonSchema: {
-          type: 'object',
-          properties: { flag: { type: 'boolean', enum: [true] } },
-        },
-      },
-    }
-
-    sanitizeToolInputSchema(tool)
-
-    expect('enum' in tool.inputSchema.jsonSchema.properties.flag).toBe(false)
   })
 })

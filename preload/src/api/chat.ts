@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import type { LanguageModelV2Usage } from '@ai-sdk/provider'
+import type { LanguageModelUsage } from 'ai'
 import type { UIMessage } from 'ai'
 import type {
   AvailableServer,
@@ -431,7 +431,7 @@ export interface ChatAPI {
       UIMessage<{
         createdAt?: number
         model?: string
-        totalUsage?: LanguageModelV2Usage
+        totalUsage?: LanguageModelUsage
         responseTime?: number
         finishReason?: string
       }>[]

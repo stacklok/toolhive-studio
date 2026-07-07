@@ -6,6 +6,7 @@ const mockConvertToModelMessages = vi.hoisted(() =>
   vi.fn().mockResolvedValue([])
 )
 const mockStepCountIs = vi.hoisted(() => vi.fn(() => 'step-count-marker'))
+const mockToUIMessageStream = vi.hoisted(() => vi.fn().mockReturnValue({}))
 const mockCreateIdGenerator = vi.hoisted(() => vi.fn(() => () => 'msg_1'))
 
 const mockCreateModelFromRequest = vi.hoisted(() =>
@@ -40,9 +41,10 @@ vi.mock('ai', () => ({
     }
     stream = (...args: unknown[]) => mockAgentStream(...args)
   },
-  stepCountIs: mockStepCountIs,
+  isStepCount: mockStepCountIs,
   convertToModelMessages: mockConvertToModelMessages,
   createIdGenerator: mockCreateIdGenerator,
+  toUIMessageStream: mockToUIMessageStream,
 }))
 
 vi.mock('@sentry/electron/main', () => ({
@@ -72,7 +74,11 @@ vi.mock('../../logger', () => ({
 }))
 
 vi.mock('../providers', () => ({
-  CHAT_PROVIDERS: [{ id: 'openai', name: 'OpenAI' }],
+  CHAT_PROVIDERS: [
+    { id: 'openai', name: 'OpenAI' },
+    { id: 'google', name: 'Google' },
+    { id: 'openrouter', name: 'OpenRouter' },
+  ],
 }))
 
 vi.mock('../mcp-tools', () => ({
@@ -138,7 +144,7 @@ function fakeAgent(
 beforeEach(() => {
   vi.clearAllMocks()
   mockAgentStream.mockResolvedValue({
-    toUIMessageStream: vi.fn().mockReturnValue({}),
+    stream: {},
   })
   mockCreateMcpTools.mockResolvedValue({
     tools: {},
@@ -293,8 +299,6 @@ describe('handleChatStreamRealtime — error message mapping', () => {
     mockGetAgent.mockReturnValue(
       fakeAgent('builtin.toolhive-assistant', 'TOOLHIVE INSTRUCTIONS')
     )
-    const toUIMessageStream = vi.fn().mockReturnValue({})
-    mockAgentStream.mockResolvedValue({ toUIMessageStream })
 
     await handleChatStreamRealtime(
       makeRequest({ agentId: 'builtin.toolhive-assistant' }),
@@ -302,8 +306,8 @@ describe('handleChatStreamRealtime — error message mapping', () => {
       fakeSender
     )
 
-    expect(toUIMessageStream).toHaveBeenCalled()
-    const opts = toUIMessageStream.mock.calls[0]![0] as {
+    expect(mockToUIMessageStream).toHaveBeenCalled()
+    const opts = mockToUIMessageStream.mock.calls[0]![0] as {
       onError: (error: unknown) => string
     }
     expect(opts.onError(new Error('high demand, try later'))).toBe(
@@ -316,5 +320,163 @@ describe('handleChatStreamRealtime — error message mapping', () => {
       })
     ).toBe('This model is currently experiencing high demand.')
     expect(opts.onError({ code: 'UNKNOWN' })).toBe('An error occurred.')
+  })
+})
+
+describe('handleChatStreamRealtime — AI SDK v7 UI stream wiring', () => {
+  it('uses standalone toUIMessageStream with result.stream and onEnd callback', async () => {
+    mockGetAgent.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'TOOLHIVE INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(
+      makeRequest({ agentId: 'builtin.toolhive-assistant' }),
+      'stream-v7',
+      fakeSender
+    )
+
+    expect(mockToUIMessageStream).toHaveBeenCalledWith(
+      expect.objectContaining({
+        stream: {},
+        onEnd: expect.any(Function),
+      })
+    )
+    expect(mockToUIMessageStream.mock.calls[0]![0]).not.toHaveProperty(
+      'onFinish'
+    )
+  })
+
+  it('accumulates per-step usage into totalUsage metadata and finish payload', async () => {
+    mockGetAgent.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'TOOLHIVE INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(
+      makeRequest({ agentId: 'builtin.toolhive-assistant' }),
+      'stream-usage',
+      fakeSender
+    )
+
+    const opts = mockToUIMessageStream.mock.calls[0]![0] as {
+      messageMetadata: (args: {
+        part: unknown
+      }) => Record<string, unknown> | undefined
+    }
+
+    const stepOne = opts.messageMetadata({
+      part: {
+        type: 'finish-step',
+        usage: {
+          inputTokens: 100,
+          outputTokens: 50,
+          totalTokens: 150,
+          inputTokenDetails: { cacheReadTokens: 20 },
+          outputTokenDetails: { reasoningTokens: 5 },
+        },
+      },
+    })
+    expect(stepOne?.totalUsage).toEqual({
+      inputTokens: 100,
+      outputTokens: 50,
+      totalTokens: 150,
+      inputTokenDetails: { cacheReadTokens: 20 },
+      outputTokenDetails: { reasoningTokens: 5 },
+    })
+
+    const stepTwo = opts.messageMetadata({
+      part: {
+        type: 'finish-step',
+        usage: {
+          inputTokens: 10,
+          outputTokens: 5,
+          totalTokens: 15,
+          inputTokenDetails: { cacheReadTokens: 4 },
+          outputTokenDetails: { reasoningTokens: 1 },
+        },
+      },
+    })
+    expect(stepTwo?.totalUsage).toEqual({
+      inputTokens: 110,
+      outputTokens: 55,
+      totalTokens: 165,
+      inputTokenDetails: { cacheReadTokens: 24 },
+      outputTokenDetails: { reasoningTokens: 6 },
+    })
+
+    const finish = opts.messageMetadata({
+      part: {
+        type: 'finish',
+        finishReason: 'stop',
+        totalUsage: {
+          inputTokens: 110,
+          outputTokens: 55,
+          totalTokens: 165,
+          inputTokenDetails: { cacheReadTokens: 24 },
+          outputTokenDetails: { reasoningTokens: 6 },
+        },
+      },
+    })
+    expect(finish).toEqual(
+      expect.objectContaining({
+        totalUsage: stepTwo?.totalUsage,
+        finishReason: 'stop',
+        responseTime: expect.any(Number),
+      })
+    )
+  })
+
+  it('sets allowSystemInMessages on ToolLoopAgent for legacy persisted threads', async () => {
+    mockGetAgent.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'TOOLHIVE INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(
+      makeRequest({ agentId: 'builtin.toolhive-assistant' }),
+      'stream-system',
+      fakeSender
+    )
+
+    expect(mockToolLoopAgentCtor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        allowSystemInMessages: true,
+      })
+    )
+  })
+
+  it('passes sanitizeSchemas to createMcpTools only for Gemini-compatible providers', async () => {
+    mockGetAgent.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'TOOLHIVE INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(
+      makeRequest({ provider: 'openai', model: 'gpt-4o' }),
+      'stream-openai',
+      fakeSender
+    )
+    expect(mockCreateMcpTools).toHaveBeenCalledWith('thread-1', {
+      sanitizeSchemas: false,
+    })
+
+    mockCreateMcpTools.mockClear()
+
+    await handleChatStreamRealtime(
+      makeRequest({ provider: 'google', model: 'gemini-2.5-flash' }),
+      'stream-google',
+      fakeSender
+    )
+    expect(mockCreateMcpTools).toHaveBeenCalledWith('thread-1', {
+      sanitizeSchemas: true,
+    })
+
+    mockCreateMcpTools.mockClear()
+
+    await handleChatStreamRealtime(
+      makeRequest({ provider: 'openrouter', model: 'google/gemini-2.5-flash' }),
+      'stream-openrouter-google',
+      fakeSender
+    )
+    expect(mockCreateMcpTools).toHaveBeenCalledWith('thread-1', {
+      sanitizeSchemas: true,
+    })
   })
 })

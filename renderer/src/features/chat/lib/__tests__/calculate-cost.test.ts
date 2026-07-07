@@ -38,6 +38,28 @@ describe('calculateCost', () => {
     )
   })
 
+  it('reads cacheReadTokens from AI SDK v7 inputTokenDetails', () => {
+    const result = calculateCost(
+      {
+        inputTokens: 1000,
+        outputTokens: 500,
+        totalTokens: 1500,
+        inputTokenDetails: {
+          noCacheTokens: 600,
+          cacheReadTokens: 400,
+          cacheWriteTokens: undefined,
+        },
+        outputTokenDetails: {
+          textTokens: undefined,
+          reasoningTokens: undefined,
+        },
+      },
+      { input: 3, output: 15, cache_read: 0.3 }
+    )
+    expect(result.inputCost).toBeCloseTo((600 / 1_000_000) * 3)
+    expect(result.cachedCost).toBeCloseTo((400 / 1_000_000) * 0.3)
+  })
+
   it('falls back to full input rate when cache_read is missing', () => {
     const result = calculateCost(
       {

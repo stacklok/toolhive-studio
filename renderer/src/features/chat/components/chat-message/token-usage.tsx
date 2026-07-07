@@ -1,5 +1,4 @@
 import { Zap, ArrowRight, Hash, Info } from 'lucide-react'
-import type { LanguageModelV2Usage } from '@ai-sdk/provider'
 import {
   Tooltip,
   TooltipContent,
@@ -8,9 +7,14 @@ import {
 } from '@/common/components/ui/tooltip'
 import { useModelPricing } from '../../hooks/use-model-pricing'
 import { calculateCost, formatUsd } from '../../lib/calculate-cost'
+import {
+  getCacheReadTokens,
+  getReasoningTokens,
+  type PersistedLanguageModelUsage,
+} from '../../lib/usage'
 
 interface TokenUsageProps {
-  usage: LanguageModelV2Usage
+  usage: PersistedLanguageModelUsage
   responseTime?: number
   providerId?: string
   model?: string
@@ -51,8 +55,8 @@ export function TokenUsage({
   const inputTokens = safeNumber(usage.inputTokens)
   const outputTokens = safeNumber(usage.outputTokens)
   const totalTokens = safeNumber(usage.totalTokens)
-  const reasoningTokens = safeNumber(usage.reasoningTokens)
-  const cachedInputTokens = safeNumber(usage.cachedInputTokens)
+  const reasoningTokens = safeNumber(getReasoningTokens(usage))
+  const cachedInputTokens = safeNumber(getCacheReadTokens(usage))
 
   const hasUsageData = totalTokens > 0 || inputTokens > 0 || outputTokens > 0
   const isLMStudio = providerId === 'lmstudio'

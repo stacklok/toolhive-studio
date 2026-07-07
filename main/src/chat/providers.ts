@@ -1,6 +1,6 @@
 import { createOpenAI } from '@ai-sdk/openai'
 import { createAnthropic } from '@ai-sdk/anthropic'
-import { createGoogleGenerativeAI } from '@ai-sdk/google'
+import { createGoogle } from '@ai-sdk/google'
 import { createXai } from '@ai-sdk/xai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { createOllama } from 'ai-sdk-ollama'
@@ -65,7 +65,7 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
     name: 'Google',
     models: CHAT_PROVIDER_INFO.find((p) => p.id === 'google')?.models || [],
     createModel: (modelId: string, apiKey: string) => {
-      const google = createGoogleGenerativeAI({ apiKey })
+      const google = createGoogle({ apiKey })
       return google(modelId)
     },
   },
@@ -75,7 +75,8 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
     models: CHAT_PROVIDER_INFO.find((p) => p.id === 'xai')?.models || [],
     createModel: (modelId: string, apiKey: string) => {
       const xai = createXai({ apiKey })
-      return xai(modelId)
+      // AI SDK v7 defaults xai() to the Responses API; keep Chat Completions.
+      return xai.chat(modelId)
     },
   },
   {

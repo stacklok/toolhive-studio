@@ -1,5 +1,4 @@
-import type { LanguageModelV2Usage } from '@ai-sdk/provider'
-import type { UIMessage, LanguageModel } from 'ai'
+import type { LanguageModelUsage, UIMessage, LanguageModel } from 'ai'
 import type { LocalProviderId, ChatProviderInfo } from './constants'
 
 // Define message metadata schema for type safety
@@ -7,7 +6,7 @@ interface MessageMetadata {
   createdAt?: number
   model?: string
   providerId?: string
-  totalUsage?: LanguageModelV2Usage
+  totalUsage?: LanguageModelUsage
   responseTime?: number
   finishReason?: string
 }

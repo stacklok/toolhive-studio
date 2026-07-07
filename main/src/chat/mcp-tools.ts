@@ -1,6 +1,6 @@
 import * as Sentry from '@sentry/electron/main'
-import { experimental_createMCPClient as createMCPClient } from '@ai-sdk/mcp'
-import type { ToolSet } from 'ai'
+import { createMCPClient } from '@ai-sdk/mcp'
+import { asSchema, jsonSchema, type JSONSchema7, type ToolSet } from 'ai'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 import {
   ReadResourceResultSchema,
@@ -22,8 +22,8 @@ import {
   createTransport,
   getWorkloadAvailableTools,
   isMcpToolDefinition,
-  sanitizeToolInputSchema,
 } from '../utils/mcp-tools'
+import { sanitizeJsonSchema } from '../utils/sanitize-json-schema'
 import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
 import { readAllMcpAppUiMetadata } from '../db/readers/mcp-app-ui-metadata-reader'
 import { replaceAllMcpAppUiMetadata } from '../db/writers/mcp-app-ui-metadata-writer'
@@ -180,6 +180,83 @@ function getToolParameters(inputSchema: unknown): Record<string, unknown> {
   return {}
 }
 
+/**
+ * Returns a copy of an MCP tool whose `inputSchema` has been sanitized so
+ * strict function-calling validators (Google Gemini) accept it. MCP tools
+ * wrap their JSON Schema in a `Schema` object (from `jsonSchema()`); we read
+ * the raw schema (prune dangling `required`, drop non-string `enum`s, collapse
+ * union `type` arrays), and re-wrap. Tools whose schema can't be resolved
+ * synchronously are returned unchanged.
+ */
+function isThenable(value: unknown): value is PromiseLike<unknown> {
+  return (
+    value != null &&
+    (typeof value === 'object' || typeof value === 'function') &&
+    typeof (value as { then?: unknown }).then === 'function'
+  )
+}
+
+function resolveRawJsonSchema(inputSchema: unknown): unknown | null {
+  if (
+    !inputSchema ||
+    typeof inputSchema !== 'object' ||
+    Array.isArray(inputSchema) ||
+    isThenable(inputSchema)
+  ) {
+    return null
+  }
+
+  const candidate = inputSchema as Record<string, unknown>
+  const wrapped = candidate.jsonSchema
+  if (
+    wrapped &&
+    typeof wrapped === 'object' &&
+    !Array.isArray(wrapped) &&
+    !isThenable(wrapped)
+  ) {
+    return wrapped
+  }
+
+  try {
+    const schema = asSchema(inputSchema as Parameters<typeof asSchema>[0])
+    const raw = schema.jsonSchema
+    if (
+      raw &&
+      typeof raw === 'object' &&
+      !Array.isArray(raw) &&
+      !isThenable(raw)
+    ) {
+      return raw
+    }
+  } catch {
+    // MCP fixtures and some clients expose bare JSON Schema objects.
+    return candidate
+  }
+
+  return null
+}
+
+function withSanitizedInputSchema(tool: McpToolDefinition): McpToolDefinition {
+  const { inputSchema } = tool
+  if (!inputSchema || typeof inputSchema !== 'object') return tool
+  try {
+    const raw = resolveRawJsonSchema(inputSchema)
+    if (raw) {
+      const sanitized = sanitizeJsonSchema(raw) as JSONSchema7
+      return {
+        ...tool,
+        inputSchema: jsonSchema(sanitized),
+      }
+    }
+    log.warn(
+      `[MCP SANITIZE] unresolved schema shape for tool: ${JSON.stringify(inputSchema).slice(0, 200)}`
+    )
+  } catch (error) {
+    log.warn('[MCP SANITIZE] error reading schema:', error)
+  }
+  return tool
+}
+
 // Get MCP server tools information
 export async function getMcpServerTools(
   serverName: string,
@@ -268,10 +345,9 @@ export async function createMcpTools(
     if (!isMcpToolDefinition(toolDef)) return false
     const ui = extractToolUiMeta(toolDef)
     if (shouldSkipAppOnlyTool(ui)) return false
-    // Only Gemini needs schema normalization; other providers handle the
-    // original schema (and keep richer constructs like union types).
-    if (options?.sanitizeSchemas) sanitizeToolInputSchema(toolDef)
-    mcpTools[toolName] = toolDef
+    mcpTools[toolName] = options?.sanitizeSchemas
+      ? withSanitizedInputSchema(toolDef)
+      : toolDef
     if (ui?.resourceUri) {
       nextCachedUiMetadata[toolName] = {
         resourceUri: ui.resourceUri,
