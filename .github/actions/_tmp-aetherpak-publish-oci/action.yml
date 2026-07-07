@@ -16,6 +16,14 @@
 #     and including resolving refs/coordinates, but the actual `aetherpak
 #     push-oci` invocation (the only network-mutating call in this action) is
 #     replaced with printing the command that would have run.
+#   - Fixed a pre-existing issue also present upstream: `registry-token`'s
+#     default was `${{ github.token }}`, but action.yml input defaults are
+#     plain strings, not expressions (confirmed against GitHub's own docs —
+#     only `outputs.*.value` supports expressions). A caller that omits
+#     registry-token would get the literal text `${{ github.token }}` rather
+#     than a real token. Changed the default to empty and moved the fallback
+#     to the actual step's env mapping (`inputs.registry-token || github.token`),
+#     which does support expressions. Worth flagging upstream.
 # ============================================================================
 name: '[TEMP] AetherPak Publish OCI (vendored, dry-run capable)'
 description: 'Push an OSTree-built or bundle-imported Flatpak as a signed OCI image and emit a per-cell record. Parallel-safe.'
@@ -54,9 +62,9 @@ inputs:
     required: false
     default: ''
   registry-token:
-    description: 'Registry auth token for skopeo login. Empty skips login.'
+    description: 'Registry auth token for the OCI push. Empty falls back to github.token.'
     required: false
-    default: ${{ github.token }}
+    default: ''
   signing:
     description: 'Image signing mode: auto (sign iff a key is set), gpg (require), or off.'
     required: false
@@ -204,7 +212,7 @@ runs:
         SIGN: ${{ steps.signing.outputs.sign }}
         GPG_KEY: ${{ inputs.gpg-private-key }}
         OCI_USERNAME: ${{ github.actor }}
-        OCI_PASSWORD: ${{ inputs.registry-token }}
+        OCI_PASSWORD: ${{ inputs.registry-token || github.token }}
         AETHERPAK_GPG_PASSPHRASE: ${{ inputs.gpg-private-key-passphrase }}
         DRY_RUN: ${{ inputs.dry-run }}
       run: |
