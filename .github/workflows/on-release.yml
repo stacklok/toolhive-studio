@@ -269,7 +269,7 @@ jobs:
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
 
       - name: Download flatpak bundles
-        uses: actions/download-artifact@fa0a91b85d4f404e444e00e0baa8db40025c1464 # v8
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: flatpak-bundle-*
           path: _bundles
