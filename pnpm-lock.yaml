@@ -196,8 +196,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1
       semver:
-        specifier: ^7.8.4
-        version: 7.8.4
+        specifier: ^7.8.5
+        version: 7.8.5
       sonner:
         specifier: ^2.0.7
         version: 2.0.7(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
@@ -6873,6 +6873,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.8.5:
+    resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   send@1.2.1:
     resolution: {integrity: sha512-1gnZf7DFcoIcajTjTwjwuDjzuz4PPcY2StKPlsGAQ1+YH20IRVrBaXSWmdjowTJ6u8Rc01PoYOGHXfP1mYcZNQ==}
     engines: {node: '>= 18'}
@@ -8596,7 +8601,7 @@ snapshots:
       fs-extra: 10.1.0
       listr2: 7.0.2
       log-symbols: 4.1.0
-      semver: 7.8.4
+      semver: 7.8.5
     transitivePeerDependencies:
       - '@minify-html/node'
       - '@swc/core'
@@ -8625,7 +8630,7 @@ snapshots:
       fs-extra: 10.1.0
       log-symbols: 4.1.0
       parse-author: 2.0.0
-      semver: 7.8.4
+      semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
 
@@ -8662,7 +8667,7 @@ snapshots:
       log-symbols: 4.1.0
       node-fetch: 2.7.0
       rechoir: 0.8.0
-      semver: 7.8.4
+      semver: 7.8.5
       source-map-support: 0.5.21
       username: 5.1.0
     transitivePeerDependencies:
@@ -8828,7 +8833,7 @@ snapshots:
       '@malept/cross-spawn-promise': 2.0.0
       debug: 4.4.3
       fs-extra: 10.1.0
-      semver: 7.8.4
+      semver: 7.8.5
       username: 5.1.0
     transitivePeerDependencies:
       - supports-color
@@ -8914,7 +8919,7 @@ snapshots:
       env-paths: 3.0.0
       graceful-fs: 4.2.11
       progress: 2.0.3
-      semver: 7.8.4
+      semver: 7.8.5
       sumchecker: 3.0.1
     optionalDependencies:
       undici: 7.28.0
@@ -8961,7 +8966,7 @@ snapshots:
       prettier: 3.9.4
       resedit: 2.0.3
       resolve: 1.22.12
-      semver: 7.8.4
+      semver: 7.8.5
       yargs-parser: 21.1.1
     transitivePeerDependencies:
       - supports-color
@@ -11516,7 +11521,7 @@ snapshots:
       '@typescript-eslint/visitor-keys': 8.62.1
       debug: 4.4.3
       minimatch: 10.2.5
-      semver: 7.8.4
+      semver: 7.8.5
       tinyglobby: 0.2.17
       ts-api-utils: 2.5.0(typescript@6.0.3)
       typescript: 6.0.3
@@ -12175,7 +12180,7 @@ snapshots:
       dot-prop: 9.0.0
       env-paths: 3.0.0
       json-schema-typed: 8.0.2
-      semver: 7.8.4
+      semver: 7.8.5
       uint8array-extras: 1.5.0
 
   confbox@0.2.4: {}
@@ -12578,7 +12583,7 @@ snapshots:
       glob: 7.2.3
       lodash: 4.18.1
       parse-author: 2.0.0
-      semver: 7.8.4
+      semver: 7.8.5
       tmp-promise: 3.0.3
     optionalDependencies:
       '@types/fs-extra': 9.0.13
@@ -12645,7 +12650,7 @@ snapshots:
       debug: 4.4.3
       fs-extra: 7.0.1
       lodash: 4.18.1
-      semver: 7.8.4
+      semver: 7.8.5
       temp: 0.9.4
     optionalDependencies:
       '@electron/windows-sign': 1.2.2
@@ -13324,7 +13329,7 @@ snapshots:
       es6-error: 4.1.1
       matcher: 3.0.0
       roarr: 2.15.4
-      semver: 7.8.4
+      semver: 7.8.5
       serialize-error: 7.0.1
     optional: true
 
@@ -14083,7 +14088,7 @@ snapshots:
 
   make-dir@4.0.0:
     dependencies:
-      semver: 7.8.4
+      semver: 7.8.5
 
   map-age-cleaner@0.1.3:
     dependencies:
@@ -14651,15 +14656,15 @@ snapshots:
 
   node-abi@3.92.0:
     dependencies:
-      semver: 7.8.4
+      semver: 7.8.5
 
   node-abi@4.31.0:
     dependencies:
-      semver: 7.8.4
+      semver: 7.8.5
 
   node-api-version@0.2.1:
     dependencies:
-      semver: 7.8.4
+      semver: 7.8.5
 
   node-fetch@2.7.0:
     dependencies:
@@ -14672,7 +14677,7 @@ snapshots:
       graceful-fs: 4.2.11
       nopt: 9.0.0
       proc-log: 6.1.0
-      semver: 7.8.4
+      semver: 7.8.5
       tar: 7.5.19
       tinyglobby: 0.2.17
       undici: 6.27.0
@@ -15440,6 +15445,8 @@ snapshots:
 
   semver@7.8.4: {}
 
+  semver@7.8.5: {}
+
   send@1.2.1:
     dependencies:
       debug: 4.4.3
@@ -15506,7 +15513,7 @@ snapshots:
     dependencies:
       color: 4.2.3
       detect-libc: 2.1.2
-      semver: 7.8.4
+      semver: 7.8.5
     optionalDependencies:
       '@img/sharp-darwin-arm64': 0.33.5
       '@img/sharp-darwin-x64': 0.33.5
