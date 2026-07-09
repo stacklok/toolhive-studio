@@ -23,6 +23,7 @@ jobs:
       pr_number: ${{ steps.pr-info.outputs.pr_number }}
       pr_sha: ${{ steps.pr-info.outputs.pr_sha }}
       sign_windows: ${{ steps.parse-flags.outputs.sign_windows }}
+      sign_windows_digicert: ${{ steps.parse-flags.outputs.sign_windows_digicert }}
       prerelease: ${{ steps.parse-flags.outputs.prerelease }}
       comment_id: ${{ steps.react.outputs.comment_id }}
     steps:
@@ -32,12 +33,21 @@ jobs:
         with:
           script: |
             const comment = context.payload.comment.body;
-            const signWindows = comment.includes('--sign-windows');
-            const prerelease = comment.includes('--prerelease');
+            const flags = comment.split(/\s+/);
+            const signWindowsDigicert = flags.includes('--sign-windows-digicert');
+            const signWindowsAzure = flags.includes('--sign-windows');
+            const signWindows = signWindowsAzure && !signWindowsDigicert;
+            const prerelease = flags.includes('--prerelease');
             core.setOutput('sign_windows', signWindows ? 'true' : 'false');
+            core.setOutput('sign_windows_digicert', signWindowsDigicert ? 'true' : 'false');
             core.setOutput('prerelease', prerelease ? 'true' : 'false');
-            if (signWindows) {
-              core.info('🔐 Windows signing enabled via --sign-windows flag');
+            if (signWindowsDigicert) {
+              core.info('🔐 Windows signing enabled via --sign-windows-digicert flag (DigiCert KeyLocker)');
+              if (signWindowsAzure) {
+                core.warning('Both --sign-windows and --sign-windows-digicert were specified; using DigiCert and skipping Azure');
+              }
+            } else if (signWindows) {
+              core.info('🔐 Windows signing enabled via --sign-windows flag (Azure Trusted Signing)');
             }
             if (prerelease) {
               core.info('🧪 Pre-release build enabled via --prerelease flag');
@@ -134,14 +144,16 @@ jobs:
     needs: check-trigger
     runs-on: ${{ matrix.os }}
     # Activate the `artifact-signing` environment only for the Windows matrix
-    # row when Windows signing is requested. The Azure OIDC federated
-    # credential is scoped to
+    # row when Azure Trusted Signing is requested (`--sign-windows`). The Azure
+    # OIDC federated credential is scoped to
     # `repo:stacklok/toolhive-studio:environment:artifact-signing`, so only
     # the Windows signing job should run in that environment for the token
-    # exchange to succeed. Scoping to `matrix.platform == 'win32'` keeps the
-    # Linux/macOS matrix rows out of the environment so they don't receive
-    # environment-scoped signing secrets or trigger environment approvals.
-    # Leaving it empty for non-signing builds keeps them free of approvals.
+    # exchange to succeed. DigiCert signing (`--sign-windows-digicert`) uses
+    # repo-level SM_* secrets and does not need this environment. Scoping to
+    # `matrix.platform == 'win32'` keeps the Linux/macOS matrix rows out of
+    # the environment so they don't receive environment-scoped signing secrets
+    # or trigger environment approvals. Leaving it empty for non-signing builds
+    # keeps them free of approvals.
     environment: ${{ needs.check-trigger.outputs.sign_windows == 'true' && matrix.platform == 'win32' && 'artifact-signing' || '' }}
     strategy:
       fail-fast: false
@@ -210,6 +222,16 @@ jobs:
           azure-account-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_ACCOUNT_NAME }}
           azure-certificate-profile-name: ${{ secrets.AZURE_ARTIFACT_SIGNING_CERTIFICATE_PROFILE_NAME }}
 
+      - name: Setup Windows code signing (DigiCert KeyLocker)
+        uses: ./.github/actions/setup-windows-codesign
+        if: runner.os == 'Windows' && needs.check-trigger.outputs.sign_windows_digicert == 'true'
+        with:
+          sm-host: ${{ secrets.SM_HOST }}
+          sm-api-key: ${{ secrets.SM_API_KEY }}
+          sm-client-cert-file-b64: ${{ secrets.SM_CLIENT_CERT_FILE_B64 }}
+          sm-client-cert-password: ${{ secrets.SM_CLIENT_CERT_PASSWORD }}
+          sm-code-signing-cert-sha1-hash: ${{ secrets.SM_CODE_SIGNING_CERT_SHA1_HASH }}
+
       - name: Setup Flatpak (Linux only)
         uses: ./.github/actions/setup-flatpak
         if: runner.os == 'Linux'
@@ -266,13 +288,19 @@ jobs:
             const runUrl = `${{ steps.run-url.outputs.url }}`;
             const buildResult = '${{ needs.build.result }}';
             const triggeredBy = '${{ github.event.comment.user.login }}';
-            const signWindows = '${{ needs.check-trigger.outputs.sign_windows }}' === 'true';
+            const signWindowsAzure = '${{ needs.check-trigger.outputs.sign_windows }}' === 'true';
+            const signWindowsDigicert = '${{ needs.check-trigger.outputs.sign_windows_digicert }}' === 'true';
+            const windowsSigningProvider = signWindowsDigicert
+              ? 'DigiCert KeyLocker'
+              : signWindowsAzure
+                ? 'Azure Trusted Signing'
+                : null;
 
             // Marker to identify bot comments for this workflow
             const marker = '<!-- build-test-bot -->';
 
-            const windowsSignedNote = signWindows
-              ? 'macOS builds are signed (not notarized). Windows builds are signed and timestamped. Linux builds are unsigned.'
+            const windowsSignedNote = windowsSigningProvider
+              ? `macOS builds are signed (not notarized). Windows builds are signed and timestamped via ${windowsSigningProvider}. Linux builds are unsigned.`
               : 'macOS builds are signed (not notarized). Windows and Linux builds are unsigned.';
 
             let body;
@@ -285,8 +313,8 @@ jobs:
                 '|----------|--------------|--------|',
                 '| macOS | arm64 | :white_check_mark: Ready |',
                 '| macOS | x64 | :white_check_mark: Ready |',
-                '| Windows | arm64 | :white_check_mark: Ready' + (signWindows ? ' (signed)' : '') + ' |',
-                '| Windows | x64 | :white_check_mark: Ready' + (signWindows ? ' (signed)' : '') + ' |',
+                '| Windows | arm64 | :white_check_mark: Ready' + (windowsSigningProvider ? ` (signed via ${windowsSigningProvider})` : '') + ' |',
+                '| Windows | x64 | :white_check_mark: Ready' + (windowsSigningProvider ? ` (signed via ${windowsSigningProvider})` : '') + ' |',
                 '| Linux | arm64 | :white_check_mark: Ready |',
                 '| Linux | x64 | :white_check_mark: Ready |',
                 '',
