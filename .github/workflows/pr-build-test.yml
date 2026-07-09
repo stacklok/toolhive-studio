@@ -33,15 +33,17 @@ jobs:
         with:
           script: |
             const comment = context.payload.comment.body;
-            const signWindowsDigicert = comment.includes('--sign-windows-digicert');
-            const signWindows = comment.includes('--sign-windows') && !signWindowsDigicert;
-            const prerelease = comment.includes('--prerelease');
+            const flags = comment.split(/\s+/);
+            const signWindowsDigicert = flags.includes('--sign-windows-digicert');
+            const signWindowsAzure = flags.includes('--sign-windows');
+            const signWindows = signWindowsAzure && !signWindowsDigicert;
+            const prerelease = flags.includes('--prerelease');
             core.setOutput('sign_windows', signWindows ? 'true' : 'false');
             core.setOutput('sign_windows_digicert', signWindowsDigicert ? 'true' : 'false');
             core.setOutput('prerelease', prerelease ? 'true' : 'false');
             if (signWindowsDigicert) {
               core.info('🔐 Windows signing enabled via --sign-windows-digicert flag (DigiCert KeyLocker)');
-              if (comment.includes('--sign-windows')) {
+              if (signWindowsAzure) {
                 core.warning('Both --sign-windows and --sign-windows-digicert were specified; using DigiCert and skipping Azure');
               }
             } else if (signWindows) {
