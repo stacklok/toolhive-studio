@@ -33,7 +33,7 @@ auditConfig:
 
 overrides:
   '@electron/rebuild': ^4.1.0
-  fast-xml-builder: '>=1.2.0'
+  fast-xml-builder: '>=1.2.1'
   fast-xml-parser: 5.9.3
   js-yaml: '>=4.2.0'
   '@opentelemetry/core': '>=2.9.0'
