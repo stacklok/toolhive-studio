@@ -74,7 +74,7 @@
     "@vitejs/plugin-react": "^6.0.3",
     "@vitest/coverage-v8": "^4.1.10",
     "dotenv": "^17.4.2",
-    "electron": "43.0.0",
+    "electron": "43.1.0",
     "electron-winstaller": "^5.4.4",
     "eslint": "^9.39.4",
     "eslint-plugin-react-hooks": "~7.1.1",
