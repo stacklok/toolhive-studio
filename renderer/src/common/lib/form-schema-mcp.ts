@@ -205,10 +205,6 @@ const createProxyConfigSchema = () => {
   })
 }
 
-const isValidIpv4Address = (value: string) =>
-  /^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/.test(value) &&
-  value.split('.').every((octet) => Number(octet) >= 0 && Number(octet) <= 255)
-
 export const addNetworkValidation = (ctx: z.RefinementCtx, data: unknown) => {
   const networkData = data as {
     networkAccess?: NetworkAccessMode
@@ -228,8 +224,7 @@ export const addNetworkValidation = (ctx: z.RefinementCtx, data: unknown) => {
   networkData.allowedHosts?.forEach((host, index) => {
     if (
       host.value.trim() !== '' &&
-      !/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(host.value) &&
-      !isValidIpv4Address(host.value)
+      !/^\.?([a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}$/.test(host.value)
     ) {
       ctx.addIssue({
         code: 'custom',

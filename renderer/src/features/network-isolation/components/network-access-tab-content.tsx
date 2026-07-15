@@ -169,7 +169,8 @@ export function NetworkAccessTabContent<
                     label="Allowed hosts"
                     inputLabelPrefix="Host"
                     addButtonText="Add a host"
-                    tooltipContent={`Specify domain names or IP addresses. To include subdomains, use a leading period (".")`}
+                    tooltipContent={`Specify domain names. To include subdomains, use a leading period (".")`}
+                    collapseWhenEmpty
                     form={form}
                     className="mt-6"
                   >
@@ -220,6 +221,7 @@ export function NetworkAccessTabContent<
                     label="Allowed ports"
                     inputLabelPrefix="Port"
                     addButtonText="Add a port"
+                    collapseWhenEmpty
                     form={form}
                     className="mt-6"
                   >

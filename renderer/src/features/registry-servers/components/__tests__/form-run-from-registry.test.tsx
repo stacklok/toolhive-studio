@@ -1063,12 +1063,11 @@ describe('Allowed Hosts field', () => {
     const switchLabel = screen.getByLabelText('Selected destinations')
     await userEvent.click(switchLabel)
     // Add a host
-    const addHostButton = screen.getByRole('button', { name: /add a host/i })
-    await userEvent.click(addHostButton)
+    await userEvent.click(screen.getByRole('button', { name: /add a host/i }))
     const hostInput1 = screen.getByLabelText('Host 1')
     await userEvent.type(hostInput1, 'foo.bar.com')
     // Add another host
-    await userEvent.click(addHostButton)
+    await userEvent.click(screen.getByRole('button', { name: /add a host/i }))
     const hostInput2 = screen.getByLabelText('Host 2')
     await userEvent.type(hostInput2, '.example.com')
     // Remove the first host
@@ -1130,21 +1129,6 @@ describe('Allowed Hosts field', () => {
     if (hostInputRef) {
       await userEvent.clear(hostInputRef)
       await userEvent.type(hostInputRef, '.example.com')
-      await userEvent.tab()
-      await userEvent.click(
-        screen.getByRole('button', { name: /install server/i })
-      )
-      await waitFor(() => {
-        expect(
-          screen.queryByText(/invalid host format/i)
-        ).not.toBeInTheDocument()
-      })
-    }
-    // Valid IPv4 address
-    hostInputRef = screen.queryByLabelText('Host 1')
-    if (hostInputRef) {
-      await userEvent.clear(hostInputRef)
-      await userEvent.type(hostInputRef, '192.168.1.10')
       await userEvent.tab()
       await userEvent.click(
         screen.getByRole('button', { name: /install server/i })
@@ -1236,10 +1220,9 @@ describe('Allowed Hosts field', () => {
     // Should be empty by default
     expect(screen.queryByLabelText('Host 1')).not.toBeInTheDocument()
     // Add two hosts
-    const addHostButton = screen.getByRole('button', { name: /add a host/i })
-    await userEvent.click(addHostButton)
+    await userEvent.click(screen.getByRole('button', { name: /add a host/i }))
     await userEvent.type(screen.getByLabelText('Host 1'), 'foo.bar.com')
-    await userEvent.click(addHostButton)
+    await userEvent.click(screen.getByRole('button', { name: /add a host/i }))
     await userEvent.type(screen.getByLabelText('Host 2'), 'google.com')
     // Both should be present
     expect(screen.getByLabelText('Host 1')).toBeInTheDocument()

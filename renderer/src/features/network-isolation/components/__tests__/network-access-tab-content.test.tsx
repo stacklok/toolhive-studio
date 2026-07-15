@@ -231,7 +231,7 @@ describe('NetworkAccessTabContent', () => {
       expect(screen.queryByText('Allowed ports')).not.toBeInTheDocument()
     })
 
-    it('renders host and port fields when selected destinations is chosen', async () => {
+    it('shows titles with collapsed add-host/add-port triggers, but no input rows, when selected destinations is chosen', async () => {
       const routerWithProxy = createTestRouter(() => (
         <TestWrapper initialValues={{ networkAccess: 'proxy' }} />
       ))
@@ -250,6 +250,35 @@ describe('NetworkAccessTabContent', () => {
         expect(screen.getByText('Allowed hosts')).toBeInTheDocument()
       })
       expect(screen.getByText('Allowed ports')).toBeInTheDocument()
+      expect(screen.getByText('Add a host')).toBeInTheDocument()
+      expect(screen.getByText('Add a port')).toBeInTheDocument()
+      expect(screen.queryByLabelText('Host 1')).not.toBeInTheDocument()
+      expect(screen.queryByLabelText('Port 1')).not.toBeInTheDocument()
+    })
+
+    it('reveals the Host/Port input rows only after their add button is pressed', async () => {
+      const routerWithProxy = createTestRouter(() => (
+        <TestWrapper
+          initialValues={{
+            networkAccess: 'proxy',
+            allowedDestinations: 'selected',
+          }}
+        />
+      ))
+
+      renderRoute(routerWithProxy)
+
+      await waitFor(() => {
+        expect(screen.getByText('Add a host')).toBeInTheDocument()
+      })
+
+      await userEvent.click(screen.getByText('Add a host'))
+
+      await waitFor(() => {
+        expect(screen.getByLabelText('Host 1')).toBeInTheDocument()
+      })
+      // Ports remain collapsed until its own add button is pressed
+      expect(screen.queryByLabelText('Port 1')).not.toBeInTheDocument()
     })
 
     it('allows adding a host when restricted to selected destinations', async () => {
