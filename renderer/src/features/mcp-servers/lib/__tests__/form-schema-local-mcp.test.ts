@@ -20,7 +20,8 @@ it('passes with valid docker image', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -49,7 +50,8 @@ it('passes with valid docker image', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   })
@@ -74,7 +76,8 @@ it('passes with valid npx command', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -99,7 +102,8 @@ it('passes with valid npx command', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   })
@@ -124,7 +128,8 @@ it('passes with valid uvx command', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -150,7 +155,8 @@ it('passes with valid uvx command', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   })
@@ -262,7 +268,8 @@ it('passes when name contains valid characters', () => {
     cmd_arguments: ['-y', '--oauth-setup'],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -289,7 +296,8 @@ it('fails when transport is empty', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
 
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
@@ -326,7 +334,8 @@ it('fails when transport is invalid', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
 
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
@@ -423,7 +432,8 @@ it('fails when envVars is missing name', () => {
     cmd_arguments: ['-y', '--oauth-setup'],
     envVars: [{ value: 'some-value' }], // Missing name
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
@@ -459,7 +469,8 @@ it('fails when envVars is missing value', () => {
     cmd_arguments: ['-y', '--oauth-setup'],
     envVars: [{ name: 'SOME_KEY' }], // Missing value
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
@@ -517,7 +528,8 @@ it('fails when secrets is missing key', () => {
     cmd_arguments: ['-y', '--oauth-setup'],
     envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [{ value: { secret: 'foo-bar', isFromStore: false } }],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
@@ -552,7 +564,8 @@ it('fails when secrets is missing value', () => {
     cmd_arguments: ['-y', '--oauth-setup'],
     envVars: [{ name: 'GITHUB_ORG', value: 'stacklok' }],
     secrets: [{ name: 'GITHUB_PERSONAL_ACCESS_TOKEN' }], // Missing value
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
@@ -594,7 +607,8 @@ it('fails when secrets is missing inner secret value', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
@@ -641,7 +655,8 @@ it('fails when secrets is missing `isFromStore`', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
   expect(z.treeifyError(result.error!), `${result.error}`).toStrictEqual(
@@ -719,7 +734,8 @@ it('package_manager > fails when protocol is empty', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
 
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
@@ -756,7 +772,8 @@ it('package_manager > fails when protocol is invalid', () => {
         },
       },
     ],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
   }
 
   const result = getFormSchemaLocalMcp([]).safeParse(invalidInput)
@@ -821,7 +838,8 @@ it('passes when name matches editingServerName even if name already exists', () 
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -852,7 +870,8 @@ it('fails when name matches different existing server name even with editingServ
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -887,7 +906,8 @@ it('passes when name is unique even with editingServerName set', () => {
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -913,7 +933,8 @@ it('passes with valid proxy_port at lower boundary (1024)', () => {
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -934,7 +955,8 @@ it('passes with valid proxy_port at upper boundary (65535)', () => {
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -955,7 +977,8 @@ it('fails when proxy_port is below 1024', () => {
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -982,7 +1005,8 @@ it('fails when proxy_port is above 65535', () => {
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -1009,7 +1033,8 @@ it('passes when proxy_port is undefined (optional)', () => {
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -1030,7 +1055,8 @@ it('passes with valid proxy_mode sse', () => {
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -1051,7 +1077,8 @@ it('passes with valid proxy_mode streamable-http', () => {
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }
@@ -1071,7 +1098,8 @@ it('proxy_mode is undefined when not provided', () => {
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: 'none',
+    allowedDestinations: 'anywhere',
     allowedHosts: [],
     allowedPorts: [],
   }

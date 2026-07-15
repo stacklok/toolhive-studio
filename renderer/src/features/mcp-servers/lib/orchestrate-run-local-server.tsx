@@ -10,6 +10,10 @@ import type {
 } from '@common/api/registry-types'
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
 import { getProxyModeOrDefault } from '@/common/lib/proxy-mode'
+import {
+  ALLOWED_DESTINATIONS,
+  NETWORK_ACCESS_MODES,
+} from '@/common/lib/form-schema-mcp'
 import type { FormSchemaLocalMcp } from './form-schema-local-mcp'
 
 /**
@@ -56,7 +60,6 @@ export function prepareCreateWorkloadData(
     Array<{ name: string; value?: string }> | undefined
   const allowedHosts = data.allowedHosts as Array<{ value: string }> | undefined
   const allowedPorts = data.allowedPorts as Array<{ value: string }> | undefined
-  const networkIsolation = data.networkIsolation as boolean | undefined
   const volumes = data.volumes as
     | Array<{ host: string; container: string; accessMode?: 'ro' | 'rw' }>
     | undefined
@@ -64,29 +67,43 @@ export function prepareCreateWorkloadData(
   request.cmd_arguments = cmd_arguments || []
   request.env_vars = mapEnvVars(envVars || [])
   request.secrets = secrets
-  const permission_profile = networkIsolation
-    ? {
-        network: {
-          outbound: {
-            allow_host:
-              allowedHosts
-                ?.map(({ value }: { value: string }) => value)
-                .filter((host: string) => host.trim() !== '') ?? [],
-            allow_port:
-              allowedPorts
-                ?.map(({ value }: { value: string }) => parseInt(value, 10))
-                .filter((port: number) => !isNaN(port)) ?? [],
-            insecure_allow_all: false,
-          } as PermissionsOutboundNetworkPermissions,
-        },
-      }
-    : undefined
+
+  const filteredHosts =
+    allowedHosts
+      ?.map(({ value }: { value: string }) => value)
+      .filter((host: string) => host.trim() !== '') ?? []
+  const filteredPorts =
+    allowedPorts
+      ?.map(({ value }: { value: string }) => parseInt(value, 10))
+      .filter((port: number) => !isNaN(port)) ?? []
+
+  const permission_profile =
+    data.networkAccess === NETWORK_ACCESS_MODES.Proxy
+      ? {
+          network: {
+            outbound: {
+              allow_host:
+                data.allowedDestinations === ALLOWED_DESTINATIONS.Selected
+                  ? filteredHosts
+                  : [],
+              allow_port:
+                data.allowedDestinations === ALLOWED_DESTINATIONS.Selected
+                  ? filteredPorts
+                  : [],
+              insecure_allow_all:
+                data.allowedDestinations === ALLOWED_DESTINATIONS.Anywhere,
+            } as PermissionsOutboundNetworkPermissions,
+          },
+        }
+      : data.networkAccess === NETWORK_ACCESS_MODES.Host
+        ? { network: { mode: 'host' } }
+        : undefined
 
   const sendProxyMode = data.transport === 'stdio'
 
   return {
     ...request,
-    network_isolation: networkIsolation,
+    network_isolation: data.networkAccess === NETWORK_ACCESS_MODES.Proxy,
     permission_profile,
     volumes: getVolumes(volumes ?? []),
     tools: data.tools || undefined,
@@ -124,7 +141,9 @@ export function convertWorkloadToFormData(
     cmd_arguments: [],
     envVars: [],
     secrets: [],
-    networkIsolation: false,
+    networkAccess: NETWORK_ACCESS_MODES.None,
+    allowedDestinations: ALLOWED_DESTINATIONS.Anywhere,
+    allowHostAccess: false,
     allowedHosts: [],
     allowedPorts: [],
     volumes: [],
@@ -203,7 +222,18 @@ export function convertCreateRequestToFormData(
       ([name, value]: [string, string]) => ({ name, value })
     ),
     secrets,
-    networkIsolation: createRequest.network_isolation || false,
+    networkAccess:
+      createRequest.permission_profile?.network?.mode === 'host'
+        ? NETWORK_ACCESS_MODES.Host
+        : createRequest.network_isolation
+          ? NETWORK_ACCESS_MODES.Proxy
+          : NETWORK_ACCESS_MODES.None,
+    allowedDestinations:
+      createRequest.permission_profile?.network?.outbound
+        ?.insecure_allow_all === false
+        ? ALLOWED_DESTINATIONS.Selected
+        : ALLOWED_DESTINATIONS.Anywhere,
+    allowHostAccess: false,
     allowedHosts:
       createRequest.permission_profile?.network?.outbound?.allow_host?.map(
         (value: string) => ({ value })
@@ -260,6 +290,37 @@ export function prepareUpdateLocalWorkloadData(
 
   const sendProxyMode = data.transport === 'stdio'
 
+  const filteredHosts =
+    data.allowedHosts
+      ?.map((host) => host.value)
+      .filter((host) => host.trim() !== '') ?? []
+  const filteredPorts =
+    data.allowedPorts
+      ?.map((port) => parseInt(port.value, 10))
+      .filter((port) => !isNaN(port)) ?? []
+
+  const permission_profile =
+    data.networkAccess === NETWORK_ACCESS_MODES.Proxy
+      ? {
+          network: {
+            outbound: {
+              allow_host:
+                data.allowedDestinations === ALLOWED_DESTINATIONS.Selected
+                  ? filteredHosts
+                  : [],
+              allow_port:
+                data.allowedDestinations === ALLOWED_DESTINATIONS.Selected
+                  ? filteredPorts
+                  : [],
+              insecure_allow_all:
+                data.allowedDestinations === ALLOWED_DESTINATIONS.Anywhere,
+            } as PermissionsOutboundNetworkPermissions,
+          },
+        }
+      : data.networkAccess === NETWORK_ACCESS_MODES.Host
+        ? { network: { mode: 'host' } }
+        : undefined
+
   return {
     image,
     transport: data.transport,
@@ -270,20 +331,8 @@ export function prepareUpdateLocalWorkloadData(
     cmd_arguments: data.cmd_arguments || [],
     env_vars: mapEnvVars(data.envVars),
     secrets,
-    network_isolation: data.networkIsolation,
-    permission_profile: data.networkIsolation
-      ? {
-          network: {
-            outbound: {
-              allow_host: data.allowedHosts?.map((host) => host.value),
-              allow_port: data.allowedPorts?.map((port) =>
-                parseInt(port.value, 10)
-              ),
-              insecure_allow_all: false,
-            } as PermissionsOutboundNetworkPermissions,
-          },
-        }
-      : undefined,
+    network_isolation: data.networkAccess === NETWORK_ACCESS_MODES.Proxy,
+    permission_profile,
     volumes: getVolumes(data.volumes ?? []),
     tools: data.tools || undefined,
     tools_override: data.tools_override || undefined,

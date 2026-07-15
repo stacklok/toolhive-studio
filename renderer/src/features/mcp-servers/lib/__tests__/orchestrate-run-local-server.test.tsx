@@ -28,7 +28,8 @@ describe('prepareCreateWorkloadData', () => {
       ],
       secrets: [],
       cmd_arguments: ['--debug', '--port', '8080'],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -66,7 +67,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -104,7 +106,8 @@ describe('prepareCreateWorkloadData', () => {
       ],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -131,7 +134,8 @@ describe('prepareCreateWorkloadData', () => {
       ],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [
@@ -166,7 +170,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -188,7 +193,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: ['--flag1', '--flag2=value', '--flag3'],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -214,7 +220,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -225,7 +232,7 @@ describe('prepareCreateWorkloadData', () => {
     expect(result.secrets).toEqual([])
   })
 
-  it('includes network isolation data when enabled', () => {
+  it('includes network isolation data when enabled with selected destinations', () => {
     const data: FormSchemaLocalMcp = {
       image: 'test-image',
       name: 'test-server',
@@ -236,7 +243,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: true,
+      networkAccess: 'proxy',
+      allowedDestinations: 'selected',
       allowedHosts: [{ value: 'example.com' }, { value: '.subdomain.com' }],
       allowedPorts: [{ value: '8080' }, { value: '443' }],
       volumes: [],
@@ -256,7 +264,7 @@ describe('prepareCreateWorkloadData', () => {
     })
   })
 
-  it('excludes network isolation data when disabled', () => {
+  it('sets insecure_allow_all when isolating with anywhere destinations', () => {
     const data: FormSchemaLocalMcp = {
       image: 'test-image',
       name: 'test-server',
@@ -267,7 +275,66 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'proxy',
+      allowedDestinations: 'anywhere',
+      allowedHosts: [{ value: 'example.com' }],
+      allowedPorts: [{ value: '8080' }],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.network_isolation).toBe(true)
+    expect(result.permission_profile).toEqual({
+      network: {
+        outbound: {
+          allow_host: [],
+          allow_port: [],
+          insecure_allow_all: true,
+        },
+      },
+    })
+  })
+
+  it('sends host networking mode when network access is set to host', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkAccess: 'host',
+      allowedDestinations: 'anywhere',
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.network_isolation).toBe(false)
+    expect(result.permission_profile).toEqual({
+      network: { mode: 'host' },
+    })
+  })
+
+  it('excludes network isolation data when set to no isolation', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [{ value: 'example.com' }],
       allowedPorts: [{ value: '8080' }],
       volumes: [],
@@ -290,7 +357,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [{ value: 'example.com' }],
       allowedPorts: [{ value: '8080' }],
       volumes: [],
@@ -311,7 +379,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [{ value: 'invalid-host.com' }],
       allowedPorts: [{ value: '999999' }],
       volumes: [],
@@ -336,7 +405,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -359,7 +429,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -381,7 +452,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -413,7 +485,9 @@ describe('convertWorkloadToFormData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
+      allowHostAccess: false,
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -443,7 +517,9 @@ describe('convertWorkloadToFormData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
+      allowHostAccess: false,
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -563,7 +639,9 @@ describe('convertCreateRequestToFormData', () => {
           value: { secret: 'secret-key', isFromStore: true },
         },
       ],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
+      allowHostAccess: false,
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -595,7 +673,9 @@ describe('convertCreateRequestToFormData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
+      allowHostAccess: false,
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -637,7 +717,7 @@ describe('convertCreateRequestToFormData', () => {
     expect(result.secrets[0]?.value.isFromStore).toBe(false)
   })
 
-  it('converts network isolation settings', () => {
+  it('converts network isolation settings with selected destinations', () => {
     const createRequest: V1CreateRequest = {
       name: 'test-server',
       image: 'test-image',
@@ -655,12 +735,50 @@ describe('convertCreateRequestToFormData', () => {
 
     const result = convertCreateRequestToFormData(createRequest)
 
-    expect(result.networkIsolation).toBe(true)
+    expect(result.networkAccess).toBe('proxy')
+    expect(result.allowedDestinations).toBe('selected')
     expect(result.allowedHosts).toEqual([
       { value: 'example.com' },
       { value: 'api.test.com' },
     ])
     expect(result.allowedPorts).toEqual([{ value: '80' }, { value: '443' }])
+  })
+
+  it('converts network isolation settings with anywhere destinations', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'test-server',
+      image: 'test-image',
+      network_isolation: true,
+      permission_profile: {
+        network: {
+          outbound: {
+            allow_host: [],
+            allow_port: [],
+            insecure_allow_all: true,
+          },
+        },
+      },
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.networkAccess).toBe('proxy')
+    expect(result.allowedDestinations).toBe('anywhere')
+  })
+
+  it('converts host networking mode', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'test-server',
+      image: 'test-image',
+      network_isolation: false,
+      permission_profile: {
+        network: { mode: 'host' },
+      },
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.networkAccess).toBe('host')
   })
 
   it('converts volumes correctly', () => {
@@ -775,7 +893,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
         { name: 'LOG_LEVEL', value: 'info' },
       ],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -813,7 +932,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -836,7 +956,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: true,
+      networkAccess: 'proxy',
+      allowedDestinations: 'selected',
       allowedHosts: [{ value: 'api.example.com' }],
       allowedPorts: [{ value: '443' }, { value: '80' }],
       volumes: [],
@@ -856,6 +977,32 @@ describe('prepareUpdateLocalWorkloadData', () => {
     })
   })
 
+  it('sends host networking mode when network access is set to host', () => {
+    const data: FormSchemaLocalMcp = {
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      type: 'docker_image',
+      group: 'default',
+      image: 'test-image',
+      cmd_arguments: [],
+      envVars: [],
+      secrets: [],
+      networkAccess: 'host',
+      allowedDestinations: 'anywhere',
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareUpdateLocalWorkloadData(data)
+
+    expect(result.network_isolation).toBe(false)
+    expect(result.permission_profile).toEqual({
+      network: { mode: 'host' },
+    })
+  })
+
   it('filters out empty environment variables', () => {
     const data: FormSchemaLocalMcp = {
       name: 'test-server',
@@ -871,7 +1018,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
         { name: 'WHITESPACE_VAR', value: '   ' },
       ],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -893,7 +1041,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [
@@ -921,7 +1070,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -943,7 +1093,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -966,7 +1117,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -988,7 +1140,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -1012,7 +1165,8 @@ describe('prepareUpdateLocalWorkloadData', () => {
       cmd_arguments: [],
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],

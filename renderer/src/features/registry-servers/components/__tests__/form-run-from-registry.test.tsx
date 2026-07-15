@@ -284,8 +284,8 @@ describe('FormRunFromRegistry', () => {
     )
     await waitFor(() => {
       expect(
-        mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkIsolation
-      ).toBe(false)
+        mockInstallServerMutation.mock.calls[0]?.[0]?.data?.networkAccess
+      ).toBe('proxy')
     })
   })
 
@@ -391,7 +391,9 @@ describe('FormRunFromRegistry', () => {
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
             ],
-            networkIsolation: false,
+            networkAccess: 'proxy',
+            allowedDestinations: 'anywhere',
+            allowHostAccess: false,
             allowedHosts: [],
             allowedPorts: [],
             volumes: [
@@ -454,7 +456,9 @@ describe('FormRunFromRegistry', () => {
             secrets: [
               { name: 'SECRET', value: { isFromStore: false, secret: '' } },
             ],
-            networkIsolation: false,
+            networkAccess: 'proxy',
+            allowedDestinations: 'anywhere',
+            allowHostAccess: false,
             allowedHosts: [],
             allowedPorts: [],
           }),
@@ -980,12 +984,10 @@ describe('FormRunFromRegistry', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
     // Switch to Network Isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
     await userEvent.click(networkTab)
     // Enable network isolation
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
+    const switchLabel = screen.getByLabelText('Selected destinations')
     await userEvent.click(switchLabel)
     // Do not add any ports
     // Submit
@@ -1001,7 +1003,8 @@ describe('FormRunFromRegistry', () => {
           data: expect.objectContaining({
             name: 'foo-bar-server',
             allowedPorts: [],
-            networkIsolation: true,
+            networkAccess: 'proxy',
+            allowedDestinations: 'selected',
           }),
         }),
         expect.any(Object)
@@ -1026,12 +1029,10 @@ describe('Allowed Hosts field', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
     // Switch to the Network Isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
     await userEvent.click(networkTab)
     // Enable network isolation
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
+    const switchLabel = screen.getByLabelText('Selected destinations')
     await userEvent.click(switchLabel)
     // Add a host so the input and label are rendered
     await userEvent.click(screen.getByRole('button', { name: /add a host/i }))
@@ -1057,11 +1058,9 @@ describe('Allowed Hosts field', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
+    const switchLabel = screen.getByLabelText('Selected destinations')
     await userEvent.click(switchLabel)
     // Add a host
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
@@ -1096,11 +1095,9 @@ describe('Allowed Hosts field', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
+    const switchLabel = screen.getByLabelText('Selected destinations')
     await userEvent.click(switchLabel)
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostButton)
@@ -1173,11 +1170,9 @@ describe('Allowed Hosts field', () => {
         initialSelectionEnd: REGISTRY_SERVER.name?.length,
       }
     )
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
+    const switchLabel = screen.getByLabelText('Selected destinations')
     await userEvent.click(switchLabel)
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostButton)
@@ -1196,7 +1191,8 @@ describe('Allowed Hosts field', () => {
           data: expect.objectContaining({
             name: 'my-network-server',
             allowedHosts: [{ value: 'foo.bar.com' }],
-            networkIsolation: true,
+            networkAccess: 'proxy',
+            allowedDestinations: 'selected',
           }),
         }),
         expect.any(Object)
@@ -1218,11 +1214,9 @@ describe('Allowed Hosts field', () => {
     await waitFor(() => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
+    const switchLabel = screen.getByLabelText('Selected destinations')
     await userEvent.click(switchLabel)
     // Should be empty by default
     expect(screen.queryByLabelText('Host 1')).not.toBeInTheDocument()
@@ -1267,14 +1261,14 @@ describe('Allowed Hosts field', () => {
       }
     )
 
-    // Go to network isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    // Go to network access tab
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
     await userEvent.click(networkTab)
 
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
+    const selectedDestinationsRadio = screen.getByLabelText(
+      'Selected destinations'
     )
-    await userEvent.click(switchLabel)
+    await userEvent.click(selectedDestinationsRadio)
 
     const addHostButton = screen.getByRole('button', { name: /add a host/i })
     await userEvent.click(addHostButton)
@@ -1286,7 +1280,7 @@ describe('Allowed Hosts field', () => {
     const portInput = screen.getByLabelText('Port 1')
     await userEvent.type(portInput, '99999')
 
-    // Verify validation errors appear when network isolation is enabled
+    // Verify validation errors appear when destinations are restricted
     await waitFor(() => {
       expect(screen.getByText('Invalid host format')).toBeInTheDocument()
       expect(
@@ -1294,8 +1288,8 @@ describe('Allowed Hosts field', () => {
       ).toBeInTheDocument()
     })
 
-    // Disable network isolation
-    await userEvent.click(switchLabel)
+    // Disable network isolation entirely
+    await userEvent.click(screen.getByLabelText('No isolation'))
 
     // Verify validation errors disappear when network isolation is disabled
     await waitFor(() => {
@@ -1322,7 +1316,7 @@ describe('Allowed Hosts field', () => {
             name: 'my-test-server',
             allowedHosts: [{ value: 'fake-invalid-host-format' }],
             allowedPorts: [{ value: '99999' }],
-            networkIsolation: false,
+            networkAccess: 'none',
           }),
         }),
         expect.any(Object)
@@ -1352,11 +1346,9 @@ describe('Network Isolation Tab Activation', () => {
     const configTab = screen.getByRole('tab', { name: /configuration/i })
     expect(configTab).toHaveAttribute('aria-selected', 'true')
     // Enable network isolation and add an invalid host
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
     await userEvent.click(networkTab)
-    const switchLabel = screen.getByLabelText(
-      'Enable outbound network filtering'
-    )
+    const switchLabel = screen.getByLabelText('Selected destinations')
     await userEvent.click(switchLabel)
     // Add a host and enter an invalid value
     const addHostBtn = screen.getByRole('button', { name: /add a host/i })
@@ -1394,7 +1386,7 @@ describe('Network Isolation Tab Activation', () => {
       expect(screen.getByRole('dialog')).toBeVisible()
     })
     // Switch to the network isolation tab
-    const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
     await userEvent.click(networkTab)
     expect(networkTab).toHaveAttribute('aria-selected', 'true')
     // Try to submit the form (should trigger validation error on configuration tab)
@@ -1646,7 +1638,9 @@ describe('Storage Volumes', () => {
                 },
               },
             ],
-            networkIsolation: false,
+            networkAccess: 'proxy',
+            allowedDestinations: 'anywhere',
+            allowHostAccess: false,
             allowedHosts: [],
             allowedPorts: [],
             volumes: [

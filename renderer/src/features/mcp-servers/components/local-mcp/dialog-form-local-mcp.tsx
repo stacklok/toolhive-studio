@@ -10,6 +10,7 @@ import {
 import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-local-server'
 import { useUpdateServer } from '../../hooks/use-update-server'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
+import { cn } from '@/common/lib/utils'
 import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
 import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
 import { useRunCustomServer } from '../../hooks/use-run-custom-server'
@@ -20,7 +21,7 @@ import {
   useFormTabState,
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
-import { NetworkIsolationTabContent } from '../network-isolation-tab-content'
+import { NetworkAccessTabContent } from '@/features/network-isolation/components/network-access-tab-content'
 import { FormFieldsArrayVolumes } from '../form-fields-array-custom-volumes'
 import { FormFieldsBase } from './form-fields-base'
 import {
@@ -55,7 +56,9 @@ const FIELD_TAB_MAP = {
   secrets: 'configuration',
   allowedHosts: 'network-isolation',
   allowedPorts: 'network-isolation',
-  networkIsolation: 'network-isolation',
+  networkAccess: 'network-isolation',
+  allowedDestinations: 'network-isolation',
+  allowHostAccess: 'network-isolation',
   volumes: 'configuration',
   tools: 'configuration',
   tools_override: 'configuration',
@@ -72,7 +75,9 @@ const DEFAULT_FORM_VALUES = {
   protocol: '',
   package_name: '',
   target_port: 0,
-  networkIsolation: false,
+  networkAccess: 'proxy',
+  allowedDestinations: 'anywhere',
+  allowHostAccess: false,
   allowedHosts: [],
   allowedPorts: [],
   volumes: [{ host: '', container: '', accessMode: 'rw' as const }],
@@ -319,12 +324,20 @@ export function DialogFormLocalMcp({
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="configuration">Configuration</TabsTrigger>
                 <TabsTrigger value="network-isolation">
-                  Network Isolation
+                  Network access
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            {activeTab === 'configuration' && (
-              <div className="flex-1 space-y-4 overflow-y-auto px-6">
+            <div className="grid flex-1 overflow-y-auto">
+              <div
+                className={cn(
+                  'col-start-1 row-start-1 space-y-4 px-6',
+                  activeTab === 'configuration'
+                    ? 'visible'
+                    : 'pointer-events-none invisible'
+                )}
+                inert={activeTab !== 'configuration'}
+              >
                 <FormFieldsBase
                   form={form}
                   isEditing={isEditing}
@@ -334,12 +347,18 @@ export function DialogFormLocalMcp({
                 <FormFieldsArrayCustomEnvVars form={form} />
                 <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
               </div>
-            )}
-            {activeTab === 'network-isolation' && (
-              <div className="flex-1 overflow-y-auto">
-                <NetworkIsolationTabContent form={form} />
+              <div
+                className={cn(
+                  'col-start-1 row-start-1',
+                  activeTab === 'network-isolation'
+                    ? 'visible'
+                    : 'pointer-events-none invisible'
+                )}
+                inert={activeTab !== 'network-isolation'}
+              >
+                <NetworkAccessTabContent form={form} />
               </div>
-            )}
+            </div>
           </div>
         )}
       </>
