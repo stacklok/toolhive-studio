@@ -493,6 +493,13 @@ export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
   dcr_config?: GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig
   identity_from_token?: GithubComStacklokToolhivePkgAuthserverIdentityFromTokenRunConfig
   /**
+   * InsecureAllowHTTP permits plain-HTTP authorization and token endpoint URLs
+   * for this upstream. Only for in-cluster development environments (e.g. an
+   * OAuth2 provider served over HTTP in a kind cluster) where TLS is not
+   * available. Never set this in production.
+   */
+  insecure_allow_http?: boolean
+  /**
    * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
    * When not specified, defaults to `{issuer}/oauth/callback`.
    */
@@ -544,6 +551,13 @@ export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
    * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
    */
   client_secret_file?: string
+  /**
+   * InsecureAllowHTTP permits a plain-HTTP issuer URL and HTTP discovery
+   * endpoints for this upstream. Only for in-cluster development environments
+   * (e.g. Dex served over HTTP in a kind cluster) where TLS is not available.
+   * Never set this in production.
+   */
+  insecure_allow_http?: boolean
   /**
    * IssuerURL is the OIDC issuer URL for automatic endpoint discovery.
    * Must be a valid HTTPS URL.
