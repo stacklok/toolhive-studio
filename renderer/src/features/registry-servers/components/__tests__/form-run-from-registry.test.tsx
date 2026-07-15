@@ -1140,6 +1140,21 @@ describe('Allowed Hosts field', () => {
         ).not.toBeInTheDocument()
       })
     }
+    // Valid IPv4 address
+    hostInputRef = screen.queryByLabelText('Host 1')
+    if (hostInputRef) {
+      await userEvent.clear(hostInputRef)
+      await userEvent.type(hostInputRef, '192.168.1.10')
+      await userEvent.tab()
+      await userEvent.click(
+        screen.getByRole('button', { name: /install server/i })
+      )
+      await waitFor(() => {
+        expect(
+          screen.queryByText(/invalid host format/i)
+        ).not.toBeInTheDocument()
+      })
+    }
   })
 
   it('includes allowedHosts in the API payload when submitting the form', async () => {
@@ -1321,6 +1336,91 @@ describe('Allowed Hosts field', () => {
         }),
         expect.any(Object)
       )
+    })
+  })
+})
+
+describe('Network access defaults from registry permissions', () => {
+  it('defaults to Anywhere when the registry entry explicitly allows all outbound traffic', async () => {
+    const server = {
+      ...REGISTRY_SERVER,
+      permissions: {
+        network: {
+          outbound: { insecure_allow_all: true },
+        },
+      },
+    }
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
+    await userEvent.click(networkTab)
+    await waitFor(() => {
+      expect(screen.getByLabelText('Anywhere')).toBeChecked()
+    })
+  })
+
+  it('defaults to Selected destinations when the registry entry explicitly declares an empty allow-list', async () => {
+    const server = {
+      ...REGISTRY_SERVER,
+      permissions: {
+        network: {
+          outbound: {
+            allow_host: [],
+            allow_port: [],
+            insecure_allow_all: false,
+          },
+        },
+      },
+    }
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
+    await userEvent.click(networkTab)
+    await waitFor(() => {
+      expect(screen.getByLabelText('Selected destinations')).toBeChecked()
+    })
+  })
+
+  it('defaults to Host networking when the registry entry declares network mode "host"', async () => {
+    const server = {
+      ...REGISTRY_SERVER,
+      permissions: {
+        network: { mode: 'host' },
+      },
+    }
+    renderWithProviders(
+      <FormRunFromRegistry
+        isOpen={true}
+        onOpenChange={vi.fn()}
+        server={server}
+        actionsSubmitLabel="Install server"
+      />
+    )
+    await waitFor(() => {
+      expect(screen.getByRole('dialog')).toBeVisible()
+    })
+    const networkTab = screen.getByRole('tab', { name: /network access/i })
+    await userEvent.click(networkTab)
+    await waitFor(() => {
+      expect(screen.getByLabelText('Host networking (Advanced)')).toBeChecked()
     })
   })
 })

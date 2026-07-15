@@ -21,8 +21,13 @@ export function prepareCreateWorkloadData(
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
   // Extract and transform network access fields
-  const { allowedHosts, allowedPorts, networkAccess, allowedDestinations } =
-    data
+  const {
+    allowedHosts,
+    allowedPorts,
+    networkAccess,
+    allowedDestinations,
+    allowHostAccess,
+  } = data
   const filteredHosts =
     allowedHosts
       ?.map(({ value }: { value: string }) => value)
@@ -68,6 +73,10 @@ export function prepareCreateWorkloadData(
     target_port: server.target_port,
     network_isolation: networkAccess === NETWORK_ACCESS_MODES.Proxy,
     permission_profile,
+    allow_docker_gateway:
+      networkAccess === NETWORK_ACCESS_MODES.Proxy
+        ? allowHostAccess
+        : undefined,
     volumes,
     // Tag the request as a registry install so the API records the source
     // registry on the workload. `name` is the workload name (user-editable

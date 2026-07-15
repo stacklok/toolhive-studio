@@ -105,6 +105,10 @@ export function prepareCreateWorkloadData(
     ...request,
     network_isolation: data.networkAccess === NETWORK_ACCESS_MODES.Proxy,
     permission_profile,
+    allow_docker_gateway:
+      data.networkAccess === NETWORK_ACCESS_MODES.Proxy
+        ? data.allowHostAccess
+        : undefined,
     volumes: getVolumes(volumes ?? []),
     tools: data.tools || undefined,
     tools_override: data.tools_override || undefined,
@@ -230,10 +234,10 @@ export function convertCreateRequestToFormData(
           : NETWORK_ACCESS_MODES.None,
     allowedDestinations:
       createRequest.permission_profile?.network?.outbound
-        ?.insecure_allow_all === false
-        ? ALLOWED_DESTINATIONS.Selected
-        : ALLOWED_DESTINATIONS.Anywhere,
-    allowHostAccess: false,
+        ?.insecure_allow_all === true
+        ? ALLOWED_DESTINATIONS.Anywhere
+        : ALLOWED_DESTINATIONS.Selected,
+    allowHostAccess: createRequest.allow_docker_gateway ?? false,
     allowedHosts:
       createRequest.permission_profile?.network?.outbound?.allow_host?.map(
         (value: string) => ({ value })
@@ -333,6 +337,10 @@ export function prepareUpdateLocalWorkloadData(
     secrets,
     network_isolation: data.networkAccess === NETWORK_ACCESS_MODES.Proxy,
     permission_profile,
+    allow_docker_gateway:
+      data.networkAccess === NETWORK_ACCESS_MODES.Proxy
+        ? data.allowHostAccess
+        : undefined,
     volumes: getVolumes(data.volumes ?? []),
     tools: data.tools || undefined,
     tools_override: data.tools_override || undefined,

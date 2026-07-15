@@ -20,6 +20,10 @@ import {
   getFormSchemaRegistryMcp,
   type FormSchemaRegistryMcp,
 } from '../../lib/form-schema-registry-mcp'
+import {
+  ALLOWED_DESTINATIONS,
+  NETWORK_ACCESS_MODES,
+} from '@/common/lib/form-schema-mcp'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
@@ -136,12 +140,15 @@ export function FormRunFromRegistry({
         name: e.name || '',
         value: e.default || '',
       })),
-      networkAccess: 'proxy',
+      networkAccess:
+        server?.permissions?.network?.mode === 'host'
+          ? NETWORK_ACCESS_MODES.Host
+          : NETWORK_ACCESS_MODES.Proxy,
       allowedDestinations:
-        server?.permissions?.network?.outbound?.allow_host?.length ||
-        server?.permissions?.network?.outbound?.allow_port?.length
-          ? 'selected'
-          : 'anywhere',
+        server?.permissions?.network?.outbound === undefined ||
+        server.permissions.network.outbound.insecure_allow_all === true
+          ? ALLOWED_DESTINATIONS.Anywhere
+          : ALLOWED_DESTINATIONS.Selected,
       allowHostAccess: false,
       allowedHosts: server?.permissions?.network?.outbound?.allow_host
         ? server.permissions.network.outbound.allow_host.map((host) => ({

@@ -257,6 +257,27 @@ describe('prepareCreateWorkloadData', () => {
     })
   })
 
+  it('sends allow_docker_gateway when host access is enabled under proxy isolation', () => {
+    const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
+      name: 'test-server',
+      group: 'default',
+      cmd_arguments: [],
+      secrets: [],
+      envVars: [],
+      networkAccess: 'proxy',
+      allowedDestinations: 'anywhere',
+      allowHostAccess: true,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(REGISTRY_SERVER, data)
+
+    expect(result.allow_docker_gateway).toBe(true)
+  })
+
   it('excludes network isolation data when disabled', () => {
     const data: FormSchemaRegistryMcp = {
       proxy_mode: 'streamable-http',

@@ -2321,6 +2321,13 @@ export type PkgApiV1CreateGroupResponse = {
  */
 export type PkgApiV1CreateRequest = {
   /**
+   * Whether to permit outbound connections to Docker gateway addresses
+   * (host.docker.internal, gateway.docker.internal, 172.17.0.1). These are
+   * blocked by default in the egress proxy even when network isolation is on.
+   * Only applicable to Docker deployments with network isolation enabled.
+   */
+  allow_docker_gateway?: boolean
+  /**
    * Authorization configuration
    */
   authz_config?: string
@@ -2916,6 +2923,13 @@ export type PkgApiV1ToolOverride = {
  * Request to update an existing workload (name cannot be changed)
  */
 export type PkgApiV1UpdateRequest = {
+  /**
+   * Whether to permit outbound connections to Docker gateway addresses
+   * (host.docker.internal, gateway.docker.internal, 172.17.0.1). These are
+   * blocked by default in the egress proxy even when network isolation is on.
+   * Only applicable to Docker deployments with network isolation enabled.
+   */
+  allow_docker_gateway?: boolean
   /**
    * Authorization configuration
    */

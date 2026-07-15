@@ -322,6 +322,54 @@ describe('prepareCreateWorkloadData', () => {
     })
   })
 
+  it('sends allow_docker_gateway when host access is enabled under proxy isolation', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkAccess: 'proxy',
+      allowedDestinations: 'anywhere',
+      allowHostAccess: true,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.allow_docker_gateway).toBe(true)
+  })
+
+  it('omits allow_docker_gateway when network access is not proxy', () => {
+    const data: FormSchemaLocalMcp = {
+      image: 'test-image',
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      type: 'docker_image',
+      group: 'default',
+      envVars: [],
+      secrets: [],
+      cmd_arguments: [],
+      networkAccess: 'host',
+      allowedDestinations: 'anywhere',
+      allowHostAccess: true,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(data)
+
+    expect(result.allow_docker_gateway).toBeUndefined()
+  })
+
   it('excludes network isolation data when set to no isolation', () => {
     const data: FormSchemaLocalMcp = {
       image: 'test-image',
@@ -640,7 +688,7 @@ describe('convertCreateRequestToFormData', () => {
         },
       ],
       networkAccess: 'none',
-      allowedDestinations: 'anywhere',
+      allowedDestinations: 'selected',
       allowHostAccess: false,
       allowedHosts: [],
       allowedPorts: [],
@@ -674,7 +722,7 @@ describe('convertCreateRequestToFormData', () => {
       envVars: [],
       secrets: [],
       networkAccess: 'none',
-      allowedDestinations: 'anywhere',
+      allowedDestinations: 'selected',
       allowHostAccess: false,
       allowedHosts: [],
       allowedPorts: [],
@@ -683,6 +731,19 @@ describe('convertCreateRequestToFormData', () => {
       protocol: 'npx',
       package_name: 'my-package',
     })
+  })
+
+  it('reads allow_docker_gateway back into allowHostAccess', () => {
+    const createRequest: V1CreateRequest = {
+      name: 'docker-server',
+      image: 'ghcr.io/test/server',
+      transport: 'stdio',
+      allow_docker_gateway: true,
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.allowHostAccess).toBe(true)
   })
 
   it('handles invalid transport gracefully', () => {
@@ -764,6 +825,29 @@ describe('convertCreateRequestToFormData', () => {
 
     expect(result.networkAccess).toBe('proxy')
     expect(result.allowedDestinations).toBe('anywhere')
+  })
+
+  it('treats an omitted insecure_allow_all as selected destinations, not anywhere', () => {
+    // Simulates a backend response where a `false` boolean was dropped via
+    // JSON omitempty, rather than explicitly set to `false`.
+    const createRequest: V1CreateRequest = {
+      name: 'test-server',
+      image: 'test-image',
+      network_isolation: true,
+      permission_profile: {
+        network: {
+          outbound: {
+            allow_host: ['example.com'],
+            allow_port: [443],
+          },
+        },
+      },
+    }
+
+    const result = convertCreateRequestToFormData(createRequest)
+
+    expect(result.networkAccess).toBe('proxy')
+    expect(result.allowedDestinations).toBe('selected')
   })
 
   it('converts host networking mode', () => {
@@ -943,6 +1027,30 @@ describe('prepareUpdateLocalWorkloadData', () => {
 
     expect(result.image).toBe('uvx://updated-package')
     expect(result.transport).toBe('stdio')
+  })
+
+  it('sends allow_docker_gateway when host access is enabled under proxy isolation', () => {
+    const data: FormSchemaLocalMcp = {
+      name: 'test-server',
+      transport: 'stdio',
+      proxy_mode: 'streamable-http',
+      type: 'docker_image',
+      group: 'default',
+      image: 'test-image',
+      cmd_arguments: [],
+      envVars: [],
+      secrets: [],
+      networkAccess: 'proxy',
+      allowedDestinations: 'anywhere',
+      allowHostAccess: true,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareUpdateLocalWorkloadData(data)
+
+    expect(result.allow_docker_gateway).toBe(true)
   })
 
   it('includes network isolation settings when enabled', () => {
