@@ -1030,6 +1030,19 @@ export type GithubComStacklokToolhivePkgContainerTemplatesRuntimeConfig = {
    * Examples: "golang:1.26-alpine", "node:24-alpine", "python:3.14-slim"
    */
   builder_image?: string
+  /**
+   * RuntimeEnv contains environment variables to inject into the Dockerfile's
+   * final runtime stage. Unlike BuildEnv (pkg/container/templates.TemplateData.BuildEnv),
+   * which only affects the builder stage, these variables are baked into the
+   * shipped image and are present in the running container's process
+   * environment at startup. Use this for values a packaged MCP server reads at
+   * process start (e.g. feature flags, cache backend selection), not for
+   * build-time package manager configuration.
+   * Keys must be uppercase with underscores, values are validated for safety.
+   */
+  runtime_env?: {
+    [key: string]: string
+  }
 }
 
 export type GithubComStacklokToolhivePkgCoreWorkload = {
