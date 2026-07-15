@@ -49,7 +49,7 @@ export function NetworkAccessTabContent<
 
   return (
     <div className="p-6">
-      <Label className="mb-2 block">Network access</Label>
+      <Label className="mb-4 block">Network access</Label>
       <Controller
         control={form.control}
         name={'networkAccess' as Path<TFieldValues>}
@@ -117,7 +117,7 @@ export function NetworkAccessTabContent<
             name={'allowedDestinations' as Path<TFieldValues>}
             render={({ field }) => (
               <div className="mb-6">
-                <Label className="mb-2 block">Allowed destinations</Label>
+                <Label className="mb-4 block">Allowed destinations</Label>
                 <RadioGroup onValueChange={field.onChange} value={field.value}>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem
