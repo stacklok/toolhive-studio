@@ -134,7 +134,11 @@ export function DialogFormRemoteMcp({
 
   const form = useForm<FormSchemaRemoteMcp>({
     resolver: zodV4Resolver(
-      getFormSchemaRemoteMcp(workloads, serverToEdit || undefined)
+      getFormSchemaRemoteMcp(
+        workloads,
+        serverToEdit || undefined,
+        availableSecrets
+      )
     ),
     defaultValues: { ...DEFAULT_FORM_VALUES, group: groupName },
     reValidateMode: 'onChange',

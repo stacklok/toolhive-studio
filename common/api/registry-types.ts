@@ -10,6 +10,7 @@ import type {
   PkgApiV1ListServersResponse as BaseV1ListServersResponse,
   PkgApiV1CreateRequest as BaseV1CreateRequest,
   PkgApiV1UpdateRequest as BaseV1UpdateRequest,
+  GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter,
 } from './generated/types.gen'
 
 export type PermissionsInboundNetworkPermissions = {
@@ -85,8 +86,10 @@ export type RegistryProvenance = {
 
 export type RegistryOAuthConfig = {
   authorize_url?: string
+  bearer_token?: SecretsSecretParameter | string
   callback_port?: number
   client_id?: string
+  client_secret?: SecretsSecretParameter | string
   issuer?: string
   oauth_params?: { [key: string]: string }
   resource?: string

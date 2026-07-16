@@ -1,10 +1,13 @@
 import { useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import type { RegistryRemoteServerMetadata } from '@common/api/registry-types'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
+import {
+  getApiV1BetaSecretsDefaultKeysOptions,
+  getApiV1BetaWorkloadsOptions,
+} from '@common/api/generated/@tanstack/react-query.gen'
 import { LoadingStateAlert } from '../../../common/components/secrets/loading-state-alert'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
@@ -48,6 +51,39 @@ const DEFAULT_FORM_VALUES: FormSchemaRemoteMcp = {
   group: 'default',
 }
 
+function getMissingSecretStoreReference(
+  data: FormSchemaRemoteMcp,
+  availableSecrets?: { keys?: Array<{ key?: string }> }
+) {
+  if (!availableSecrets) return undefined
+
+  const availableSecretKeys = new Set(
+    availableSecrets.keys
+      ?.map((secret) => secret.key)
+      .filter((key): key is string => Boolean(key)) ?? []
+  )
+  const authSecret =
+    data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
+      ? data.oauth_config.bearer_token
+      : data.oauth_config.client_secret
+
+  if (
+    authSecret?.value.isFromStore &&
+    authSecret.value.secret &&
+    !availableSecretKeys.has(authSecret.value.secret)
+  ) {
+    return {
+      field:
+        data.auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken
+          ? 'oauth_config.bearer_token'
+          : 'oauth_config.client_secret',
+      secret: authSecret.value.secret,
+    } as const
+  }
+
+  return undefined
+}
+
 interface FormRunFromRegistryProps {
   server: RegistryRemoteServerMetadata | null
   isOpen: boolean
@@ -81,6 +117,7 @@ export function DialogFormRemoteRegistryMcp({
     secretsCount: number
   } | null>(null)
   const { checkServerStatus } = useCheckServerStatus()
+  const queryClient = useQueryClient()
   const handleSecrets = (completedCount: number, secretsCount: number) => {
     setLoadingSecrets((prev) => ({
       ...prev,
@@ -104,6 +141,10 @@ export function DialogFormRemoteRegistryMcp({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
     retry: false,
   })
+  const { data: availableSecrets } = useQuery({
+    ...getApiV1BetaSecretsDefaultKeysOptions(),
+    retry: false,
+  })
 
   const workloads = data?.workloads ?? []
 
@@ -111,7 +152,9 @@ export function DialogFormRemoteRegistryMcp({
   const groups = groupsData?.groups ?? []
 
   const form = useForm<FormSchemaRemoteMcp>({
-    resolver: zodV4Resolver(getFormSchemaRemoteMcp(workloads)),
+    resolver: zodV4Resolver(
+      getFormSchemaRemoteMcp(workloads, undefined, availableSecrets)
+    ),
     defaultValues: DEFAULT_FORM_VALUES,
     reValidateMode: 'onChange',
     mode: 'onChange',
@@ -125,8 +168,24 @@ export function DialogFormRemoteRegistryMcp({
   const onSubmitForm = async (data: FormSchemaRemoteMcp) => {
     if (!server) return
 
-    setIsSubmitting(true)
     if (error) setError(null)
+
+    const secretsForValidation =
+      availableSecrets ??
+      (await queryClient.fetchQuery(getApiV1BetaSecretsDefaultKeysOptions()))
+    const missingSecret = getMissingSecretStoreReference(
+      data,
+      secretsForValidation
+    )
+    if (missingSecret) {
+      form.setError(missingSecret.field, {
+        type: 'manual',
+        message: `Secret "${missingSecret.secret}" was not found in the secrets store`,
+      })
+      return
+    }
+
+    setIsSubmitting(true)
 
     const submissionData = hardcodedGroup
       ? { ...data, group: hardcodedGroup }

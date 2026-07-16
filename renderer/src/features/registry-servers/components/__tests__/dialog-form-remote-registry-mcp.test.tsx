@@ -290,6 +290,61 @@ describe('DialogFormRemoteRegistryMcp', () => {
     })
   })
 
+  it('blocks install when registry OAuth client_secret is missing from the secret store', async () => {
+    const user = userEvent.setup({ delay: null })
+    const mockInstallServerMutation = vi.fn()
+
+    mockUseRunRemoteServer.mockReturnValue({
+      installServerMutation: mockInstallServerMutation,
+      isErrorSecrets: false,
+      isPendingSecrets: false,
+    })
+
+    const serverWithMissingSecret: RegistryRemoteServerMetadata = {
+      ...mockServer,
+      oauth_config: {
+        authorize_url: 'https://api.example.com/authorize',
+        token_url: 'https://api.example.com/token',
+        client_id: 'client_id',
+        client_secret: {
+          name: 'CLIENT_SECRET',
+          target: 'CLIENT_SECRET',
+        },
+      },
+    }
+
+    renderWithProviders(
+      <Wrapper>
+        <DialogFormRemoteRegistryMcp
+          server={serverWithMissingSecret}
+          isOpen
+          closeDialog={vi.fn()}
+          actionsSubmitLabel="Install server"
+        />
+      </Wrapper>
+    )
+
+    await waitFor(() => {
+      expect(screen.getAllByDisplayValue('CLIENT_SECRET')).toHaveLength(2)
+    })
+
+    const submitButton = screen.getByRole('button', { name: 'Install server' })
+    await waitFor(() => {
+      expect(submitButton).toBeEnabled()
+    })
+
+    await user.click(submitButton)
+
+    await waitFor(() => {
+      expect(mockInstallServerMutation).not.toHaveBeenCalled()
+      expect(
+        screen.getByText(
+          'Secret "CLIENT_SECRET" was not found in the secrets store'
+        )
+      ).toBeInTheDocument()
+    })
+  })
+
   it('displays OAuth2 fields when OAuth2 is selected', async () => {
     const user = userEvent.setup({ delay: null })
     renderWithProviders(
