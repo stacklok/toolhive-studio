@@ -40,7 +40,8 @@ describe('prepareCreateWorkloadData', () => {
       ],
       secrets: [],
       cmd_arguments: ['--debug', '--port', '8080'],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -79,7 +80,8 @@ describe('prepareCreateWorkloadData', () => {
       group: 'default',
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -111,7 +113,8 @@ describe('prepareCreateWorkloadData', () => {
       group: 'default',
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -136,7 +139,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -155,7 +159,8 @@ describe('prepareCreateWorkloadData', () => {
       envVars: [],
       secrets: [],
       cmd_arguments: undefined,
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -179,7 +184,8 @@ describe('prepareCreateWorkloadData', () => {
       group: 'default',
       envVars: [],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -203,7 +209,8 @@ describe('prepareCreateWorkloadData', () => {
         { name: 'REQUIRED_VAR', value: 'some-value' },
       ],
       secrets: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [],
       allowedPorts: [],
       volumes: [],
@@ -229,7 +236,8 @@ describe('prepareCreateWorkloadData', () => {
       cmd_arguments: [],
       secrets: [],
       envVars: [],
-      networkIsolation: true,
+      networkAccess: 'proxy',
+      allowedDestinations: 'selected',
       allowedHosts: [{ value: 'example.com' }, { value: '.subdomain.com' }],
       allowedPorts: [{ value: '8080' }, { value: '443' }],
       volumes: [],
@@ -249,6 +257,27 @@ describe('prepareCreateWorkloadData', () => {
     })
   })
 
+  it('sends allow_docker_gateway when host access is enabled under proxy isolation', () => {
+    const data: FormSchemaRegistryMcp = {
+      proxy_mode: 'streamable-http',
+      name: 'test-server',
+      group: 'default',
+      cmd_arguments: [],
+      secrets: [],
+      envVars: [],
+      networkAccess: 'proxy',
+      allowedDestinations: 'anywhere',
+      allowHostAccess: true,
+      allowedHosts: [],
+      allowedPorts: [],
+      volumes: [],
+    }
+
+    const result = prepareCreateWorkloadData(REGISTRY_SERVER, data)
+
+    expect(result.allow_docker_gateway).toBe(true)
+  })
+
   it('excludes network isolation data when disabled', () => {
     const data: FormSchemaRegistryMcp = {
       proxy_mode: 'streamable-http',
@@ -257,7 +286,8 @@ describe('prepareCreateWorkloadData', () => {
       cmd_arguments: [],
       secrets: [],
       envVars: [],
-      networkIsolation: false,
+      networkAccess: 'none',
+      allowedDestinations: 'anywhere',
       allowedHosts: [{ value: 'example.com' }],
       allowedPorts: [{ value: '8080' }],
       volumes: [],

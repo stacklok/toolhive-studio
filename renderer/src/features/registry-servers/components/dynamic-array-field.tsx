@@ -47,6 +47,12 @@ interface DynamicArrayFieldProps<
    * Tailwind class names to configure the grid layout
    */
   gridConfig: string
+  /**
+   * When true and the array is empty, render only a compact "add" button
+   * instead of the label/tooltip/empty list, so the full field only
+   * appears once the user has added an entry.
+   */
+  collapseWhenEmpty?: boolean
   form: UseFormReturn<TFieldValues>
   children: (args: {
     idx: number
@@ -72,6 +78,7 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
   addButtonText = 'Add',
   gridConfig,
   columnHeaders,
+  collapseWhenEmpty = false,
   form,
   children,
   className,
@@ -131,22 +138,47 @@ export function DynamicArrayField<TFieldValues extends FieldValues>({
     [focusInput, form, name]
   )
 
+  const header = (
+    <div className="flex flex-col items-start gap-2">
+      <div className="flex items-center gap-2">
+        <FormLabel htmlFor={`${name}-0`}>{label}</FormLabel>
+        {tooltipContent && (
+          <Tooltip>
+            <TooltipTrigger asChild autoFocus={false}>
+              <InfoIcon className="text-muted-foreground size-4 rounded-full" />
+            </TooltipTrigger>
+            <TooltipContent>{tooltipContent}</TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+      {description && <FormDescription>{description}</FormDescription>}
+    </div>
+  )
+
+  if (collapseWhenEmpty && fields.length === 0) {
+    return (
+      <div className={cn('w-full', className)}>
+        {header}
+        <Button
+          type="button"
+          variant="secondary"
+          className="mt-3 w-fit"
+          onClick={() => {
+            append({
+              value: '',
+            } as TFieldValues[ArrayPath<TFieldValues>][number])
+          }}
+        >
+          <Plus />
+          {addButtonText}
+        </Button>
+      </div>
+    )
+  }
+
   return (
     <div className={cn('w-full', className)}>
-      <div className="flex flex-col items-start gap-2">
-        <div className="flex items-center gap-2">
-          <FormLabel htmlFor={`${name}-0`}>{label}</FormLabel>
-          {tooltipContent && (
-            <Tooltip>
-              <TooltipTrigger asChild autoFocus={false}>
-                <InfoIcon className="text-muted-foreground size-4 rounded-full" />
-              </TooltipTrigger>
-              <TooltipContent>{tooltipContent}</TooltipContent>
-            </Tooltip>
-          )}
-        </div>
-        {description && <FormDescription>{description}</FormDescription>}
-      </div>
+      {header}
 
       <div className={cn('mt-3 grid auto-rows-auto gap-2', gridConfig)}>
         {columnHeaders &&

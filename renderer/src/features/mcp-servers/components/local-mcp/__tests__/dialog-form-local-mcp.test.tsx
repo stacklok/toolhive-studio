@@ -318,7 +318,9 @@ describe('DialogFormLocalMcp', () => {
             envVars: [],
             secrets: [],
             cmd_arguments: [],
-            networkIsolation: false,
+            networkAccess: 'proxy',
+            allowedDestinations: 'anywhere',
+            allowHostAccess: false,
             allowedHosts: [],
             allowedPorts: [],
             target_port: 0,
@@ -724,7 +726,7 @@ describe('DialogFormLocalMcp', () => {
   })
 
   describe('Network Isolation', () => {
-    it('submits correct payload with network isolation enabled', async () => {
+    it('submits correct payload with selected destinations restricted to specific hosts/ports', async () => {
       const mockInstallServerMutation = vi.fn()
       mockUseRunCustomServer.mockReturnValue({
         installServerMutation: mockInstallServerMutation,
@@ -757,13 +759,10 @@ describe('DialogFormLocalMcp', () => {
         'ghcr.io/test/server'
       )
 
-      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      const networkTab = screen.getByRole('tab', { name: /network access/i })
       await userEvent.click(networkTab)
 
-      const switchLabel = screen.getByLabelText(
-        'Enable outbound network filtering'
-      )
-      await userEvent.click(switchLabel)
+      await userEvent.click(screen.getByLabelText('Selected destinations'))
 
       const addHostBtn = screen.getByRole('button', { name: /add a host/i })
       await userEvent.click(addHostBtn)
@@ -789,7 +788,8 @@ describe('DialogFormLocalMcp', () => {
         type: 'docker_image',
         transport: 'stdio',
         image: 'ghcr.io/test/server',
-        networkIsolation: true,
+        networkAccess: 'proxy',
+        allowedDestinations: 'selected',
         allowedHosts: [{ value: 'example.com' }],
         allowedPorts: [{ value: '8080' }],
       })
@@ -828,6 +828,10 @@ describe('DialogFormLocalMcp', () => {
         'ghcr.io/test/server'
       )
 
+      const networkTab = screen.getByRole('tab', { name: /network access/i })
+      await userEvent.click(networkTab)
+      await userEvent.click(screen.getByLabelText('No isolation'))
+
       await userEvent.click(
         screen.getByRole('button', { name: 'Install server' })
       )
@@ -842,7 +846,7 @@ describe('DialogFormLocalMcp', () => {
         type: 'docker_image',
         transport: 'stdio',
         image: 'ghcr.io/test/server',
-        networkIsolation: false,
+        networkAccess: 'none',
       })
     })
 
@@ -863,7 +867,7 @@ describe('DialogFormLocalMcp', () => {
         expect(screen.getByRole('dialog')).toBeVisible()
       })
 
-      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      const networkTab = screen.getByRole('tab', { name: /network access/i })
       await userEvent.click(networkTab)
       expect(networkTab).toHaveAttribute('aria-selected', 'true')
 
@@ -918,12 +922,9 @@ describe('DialogFormLocalMcp', () => {
         'ghcr.io/test/server'
       )
 
-      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      const networkTab = screen.getByRole('tab', { name: /network access/i })
       await userEvent.click(networkTab)
-      const switchLabel = screen.getByLabelText(
-        'Enable outbound network filtering'
-      )
-      await userEvent.click(switchLabel)
+      await userEvent.click(screen.getByLabelText('Selected destinations'))
 
       const addHostBtn = screen.getByRole('button', { name: /add a host/i })
       await userEvent.click(addHostBtn)
@@ -958,7 +959,7 @@ describe('DialogFormLocalMcp', () => {
         expect(screen.getByRole('dialog')).toBeVisible()
       })
 
-      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      const networkTab = screen.getByRole('tab', { name: /network access/i })
       await userEvent.click(networkTab)
       expect(networkTab).toHaveAttribute('aria-selected', 'true')
 
@@ -970,7 +971,7 @@ describe('DialogFormLocalMcp', () => {
       expect(configTab).toHaveAttribute('aria-selected', 'true')
     })
 
-    it('shows alert when network isolation is enabled but no hosts or ports are configured', async () => {
+    it('shows alert when destinations are restricted but no hosts or ports are configured', async () => {
       renderWithProviders(
         <Wrapper>
           <DialogFormLocalMcp
@@ -985,13 +986,10 @@ describe('DialogFormLocalMcp', () => {
         expect(screen.getByRole('dialog')).toBeVisible()
       })
 
-      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      const networkTab = screen.getByRole('tab', { name: /network access/i })
       await userEvent.click(networkTab)
 
-      const switchLabel = screen.getByLabelText(
-        'Enable outbound network filtering'
-      )
-      await userEvent.click(switchLabel)
+      await userEvent.click(screen.getByLabelText('Selected destinations'))
 
       await waitFor(() => {
         expect(
@@ -1015,7 +1013,7 @@ describe('DialogFormLocalMcp', () => {
       })
     })
 
-    it('skip allowedHosts and allowedPorts validation when network isolation is disabled', async () => {
+    it('skips allowedHosts and allowedPorts validation when destinations is set back to anywhere', async () => {
       const mockInstallServerMutation = vi.fn()
       mockUseRunCustomServer.mockReturnValue({
         installServerMutation: mockInstallServerMutation,
@@ -1048,14 +1046,11 @@ describe('DialogFormLocalMcp', () => {
         'ghcr.io/test/server'
       )
 
-      const networkTab = screen.getByRole('tab', { name: /network isolation/i })
+      const networkTab = screen.getByRole('tab', { name: /network access/i })
       await userEvent.click(networkTab)
 
-      // Enable network isolation first
-      const switchLabel = screen.getByLabelText(
-        'Enable outbound network filtering'
-      )
-      await userEvent.click(switchLabel)
+      // Restrict to selected destinations first, to reveal the allow-list fields
+      await userEvent.click(screen.getByLabelText('Selected destinations'))
 
       const addHostBtn = screen.getByRole('button', { name: /add a host/i })
       await userEvent.click(addHostBtn)
@@ -1074,8 +1069,8 @@ describe('DialogFormLocalMcp', () => {
         ).toBeInTheDocument()
       })
 
-      // Disable network isolation
-      await userEvent.click(switchLabel)
+      // Switch back to allowing all destinations
+      await userEvent.click(screen.getByLabelText('Anywhere'))
 
       await waitFor(() => {
         expect(
@@ -1101,7 +1096,8 @@ describe('DialogFormLocalMcp', () => {
               type: 'docker_image',
               image: 'ghcr.io/test/server',
               transport: 'stdio',
-              networkIsolation: false,
+              networkAccess: 'proxy',
+              allowedDestinations: 'anywhere',
               allowedHosts: [{ value: '232342' }],
               allowedPorts: [{ value: '99999' }],
             }),

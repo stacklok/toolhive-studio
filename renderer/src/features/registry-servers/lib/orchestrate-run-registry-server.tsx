@@ -5,6 +5,10 @@ import type {
   V1CreateRequest,
 } from '@common/api/registry-types'
 import { getVolumes, mapEnvVars } from '@/common/lib/utils'
+import {
+  ALLOWED_DESTINATIONS,
+  NETWORK_ACCESS_MODES,
+} from '@/common/lib/form-schema-mcp'
 import type { FormSchemaRegistryMcp } from './form-schema-registry-mcp'
 
 /**
@@ -16,25 +20,44 @@ export function prepareCreateWorkloadData(
   data: FormSchemaRegistryMcp,
   secrets: SecretsSecretParameter[] = []
 ): V1CreateRequest {
-  // Extract and transform network isolation fields
-  const { allowedHosts, allowedPorts, networkIsolation } = data
-  const permission_profile = networkIsolation
-    ? {
-        network: {
-          outbound: {
-            allow_host:
-              allowedHosts
-                ?.map(({ value }: { value: string }) => value)
-                .filter((host: string) => host.trim() !== '') ?? [],
-            allow_port:
-              allowedPorts
-                ?.map(({ value }: { value: string }) => parseInt(value, 10))
-                .filter((port: number) => !isNaN(port)) ?? [],
-            insecure_allow_all: false,
-          } as PermissionsOutboundNetworkPermissions,
-        },
-      }
-    : undefined
+  // Extract and transform network access fields
+  const {
+    allowedHosts,
+    allowedPorts,
+    networkAccess,
+    allowedDestinations,
+    allowHostAccess,
+  } = data
+  const filteredHosts =
+    allowedHosts
+      ?.map(({ value }: { value: string }) => value)
+      .filter((host: string) => host.trim() !== '') ?? []
+  const filteredPorts =
+    allowedPorts
+      ?.map(({ value }: { value: string }) => parseInt(value, 10))
+      .filter((port: number) => !isNaN(port)) ?? []
+
+  const permission_profile =
+    networkAccess === NETWORK_ACCESS_MODES.Proxy
+      ? {
+          network: {
+            outbound: {
+              allow_host:
+                allowedDestinations === ALLOWED_DESTINATIONS.Selected
+                  ? filteredHosts
+                  : [],
+              allow_port:
+                allowedDestinations === ALLOWED_DESTINATIONS.Selected
+                  ? filteredPorts
+                  : [],
+              insecure_allow_all:
+                allowedDestinations === ALLOWED_DESTINATIONS.Anywhere,
+            } as PermissionsOutboundNetworkPermissions,
+          },
+        }
+      : networkAccess === NETWORK_ACCESS_MODES.Host
+        ? { network: { mode: 'host' } }
+        : undefined
 
   const volumes = getVolumes(data.volumes ?? [])
 
@@ -48,8 +71,12 @@ export function prepareCreateWorkloadData(
     secrets,
     cmd_arguments: data.cmd_arguments || [],
     target_port: server.target_port,
-    network_isolation: networkIsolation,
+    network_isolation: networkAccess === NETWORK_ACCESS_MODES.Proxy,
     permission_profile,
+    allow_docker_gateway:
+      networkAccess === NETWORK_ACCESS_MODES.Proxy
+        ? allowHostAccess
+        : undefined,
     volumes,
     // Tag the request as a registry install so the API records the source
     // registry on the workload. `name` is the workload name (user-editable

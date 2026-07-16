@@ -4,11 +4,12 @@ import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import type { RegistryImageMetadata } from '@common/api/registry-types'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
+import { cn } from '@/common/lib/utils'
 import { groupEnvVars } from '../../lib/group-env-vars'
 import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
 import { LoadingStateAlert } from '../../../../common/components/secrets/loading-state-alert'
-import { NetworkIsolationTabContent } from '../../../network-isolation/components/network-isolation-tab-content'
+import { NetworkAccessTabContent } from '@/features/network-isolation/components/network-access-tab-content'
 import { ConfigurationTabContent } from './configuration-tab-content'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 import {
@@ -19,6 +20,10 @@ import {
   getFormSchemaRegistryMcp,
   type FormSchemaRegistryMcp,
 } from '../../lib/form-schema-registry-mcp'
+import {
+  ALLOWED_DESTINATIONS,
+  NETWORK_ACCESS_MODES,
+} from '@/common/lib/form-schema-mcp'
 import { AlertErrorFormSubmission } from '@/common/components/workloads/alert-error-form-submission'
 import { DialogWorkloadFormWrapper } from '@/common/components/workloads/dialog-workload-form-wrapper'
 import { useCheckServerStatus } from '@/common/hooks/use-check-server-status'
@@ -38,7 +43,9 @@ const FIELD_TAB_MAP = {
   envVars: 'configuration',
   allowedHosts: 'network-isolation',
   allowedPorts: 'network-isolation',
-  networkIsolation: 'network-isolation',
+  networkAccess: 'network-isolation',
+  allowedDestinations: 'network-isolation',
+  allowHostAccess: 'network-isolation',
   volumes: 'configuration',
   tools_override: 'configuration',
 } as const satisfies FieldTabMapping<Tab, Field>
@@ -133,7 +140,16 @@ export function FormRunFromRegistry({
         name: e.name || '',
         value: e.default || '',
       })),
-      networkIsolation: false,
+      networkAccess:
+        server?.permissions?.network?.mode === 'host'
+          ? NETWORK_ACCESS_MODES.Host
+          : NETWORK_ACCESS_MODES.Proxy,
+      allowedDestinations:
+        server?.permissions?.network?.outbound === undefined ||
+        server.permissions.network.outbound.insecure_allow_all === true
+          ? ALLOWED_DESTINATIONS.Anywhere
+          : ALLOWED_DESTINATIONS.Selected,
+      allowHostAccess: false,
       allowedHosts: server?.permissions?.network?.outbound?.allow_host
         ? server.permissions.network.outbound.allow_host.map((host) => ({
             value: host,
@@ -245,21 +261,37 @@ export function FormRunFromRegistry({
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="configuration">Configuration</TabsTrigger>
               <TabsTrigger value="network-isolation">
-                Network Isolation
+                Network access
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          {activeTab === 'configuration' && (
-            <ConfigurationTabContent
-              form={form}
-              groupedEnvVars={groupedEnvVars}
-            />
-          )}
-          {activeTab === 'network-isolation' && (
-            <div className="flex-1 overflow-y-auto">
-              <NetworkIsolationTabContent form={form} />
+          <div className="grid flex-1 overflow-y-auto">
+            <div
+              className={cn(
+                'col-start-1 row-start-1',
+                activeTab === 'configuration'
+                  ? 'visible'
+                  : 'pointer-events-none invisible'
+              )}
+              inert={activeTab !== 'configuration'}
+            >
+              <ConfigurationTabContent
+                form={form}
+                groupedEnvVars={groupedEnvVars}
+              />
             </div>
-          )}
+            <div
+              className={cn(
+                'col-start-1 row-start-1',
+                activeTab === 'network-isolation'
+                  ? 'visible'
+                  : 'pointer-events-none invisible'
+              )}
+              inert={activeTab !== 'network-isolation'}
+            >
+              <NetworkAccessTabContent form={form} />
+            </div>
+          </div>
         </div>
       )}
     </DialogWorkloadFormWrapper>

@@ -12,6 +12,23 @@ export const REMOTE_MCP_AUTH_TYPES = {
 export type RemoteMcpAuthType =
   (typeof REMOTE_MCP_AUTH_TYPES)[keyof typeof REMOTE_MCP_AUTH_TYPES]
 
+export const NETWORK_ACCESS_MODES = {
+  None: 'none',
+  Host: 'host',
+  Proxy: 'proxy',
+} as const
+
+export type NetworkAccessMode =
+  (typeof NETWORK_ACCESS_MODES)[keyof typeof NETWORK_ACCESS_MODES]
+
+export const ALLOWED_DESTINATIONS = {
+  Anywhere: 'anywhere',
+  Selected: 'selected',
+} as const
+
+export type AllowedDestinations =
+  (typeof ALLOWED_DESTINATIONS)[keyof typeof ALLOWED_DESTINATIONS]
+
 const remoteMcpAuthTypeSchema = z.enum([
   REMOTE_MCP_AUTH_TYPES.AutoDiscovered,
   REMOTE_MCP_AUTH_TYPES.OAuth2,
@@ -72,7 +89,16 @@ const createCommandArgumentsSchema = () => {
 
 const createNetworkConfigSchema = () => {
   return z.object({
-    networkIsolation: z.boolean(),
+    networkAccess: z.enum([
+      NETWORK_ACCESS_MODES.None,
+      NETWORK_ACCESS_MODES.Host,
+      NETWORK_ACCESS_MODES.Proxy,
+    ]),
+    allowedDestinations: z.enum([
+      ALLOWED_DESTINATIONS.Anywhere,
+      ALLOWED_DESTINATIONS.Selected,
+    ]),
+    allowHostAccess: z.boolean().optional(),
     allowedHosts: z
       .array(
         z.object({
@@ -181,12 +207,16 @@ const createProxyConfigSchema = () => {
 
 export const addNetworkValidation = (ctx: z.RefinementCtx, data: unknown) => {
   const networkData = data as {
-    networkIsolation?: boolean
+    networkAccess?: NetworkAccessMode
+    allowedDestinations?: AllowedDestinations
     allowedHosts?: Array<{ value: string }>
     allowedPorts?: Array<{ value: string }>
   }
-  // Skip validation if network isolation is disabled
-  if (!networkData.networkIsolation) {
+  // Skip validation unless the user is restricting the proxy to selected destinations
+  if (
+    networkData.networkAccess !== NETWORK_ACCESS_MODES.Proxy ||
+    networkData.allowedDestinations !== ALLOWED_DESTINATIONS.Selected
+  ) {
     return
   }
 
