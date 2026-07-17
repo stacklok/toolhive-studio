@@ -7,6 +7,7 @@ import log from '../../logger'
 import type { ChatUIMessage } from '../types'
 import type { ThreadMessage } from '../threads/types'
 import { ThreadsService } from '../threads/threads-service'
+import { StreamConflictError } from '../runtime/errors'
 
 /**
  * Throttled DB persistence cadence (ms).
@@ -121,7 +122,7 @@ export function shutdownAllActiveStreams(): void {
   }
 }
 
-export function initStreamRegistryPersistence(
+function initStreamRegistryPersistence(
   persistMessages: PersistMessagesSync
 ): void {
   persistMessagesImpl = persistMessages
@@ -263,7 +264,10 @@ export interface RunStreamOptions {
 function buildActiveStream(options: RunStreamOptions): ActiveStream {
   const { chatId } = options
   if (streams.has(chatId)) {
-    throw new Error(`Stream already active for chat ${chatId}`)
+    throw new StreamConflictError({
+      chatId,
+      userMessage: `Stream already active for chat ${chatId}`,
+    })
   }
   const stream: ActiveStream = {
     chatId,
@@ -703,9 +707,7 @@ async function teardownStream(
  *
  * Returns when the upstream completes or errors.
  */
-export async function runManagedStream(
-  options: RunStreamOptions
-): Promise<void> {
+async function runManagedStream(options: RunStreamOptions): Promise<void> {
   const stream = buildActiveStream(options)
 
   // Tee the upstream: one branch broadcasts to subscribers, the other
@@ -730,7 +732,7 @@ export async function runManagedStream(
  * replay chunks generated from the stream's per-block structural state
  * — enough to drop the renderer's AI SDK assembler into the same
  * `runningMessage` that the live tail is producing. */
-export function subscribeToStream(
+function subscribeToStream(
   chatId: string,
   sender: WebContents
 ): {
@@ -751,10 +753,7 @@ export function subscribeToStream(
 
 /** Detach a renderer without affecting the upstream — the LLM call keeps
  * running so the user can return to the thread later. */
-export function unsubscribeFromStream(
-  chatId: string,
-  sender: WebContents
-): void {
+function unsubscribeFromStream(chatId: string, sender: WebContents): void {
   const stream = streams.get(chatId)
   if (!stream) return
   stream.subscribers.delete(sender)
@@ -762,7 +761,7 @@ export function unsubscribeFromStream(
 
 /** Cancel the in-flight LLM call for `chatId` (if any). The active
  * stream's iterator will throw, triggering the standard error path. */
-export function cancelStream(chatId: string): boolean {
+function cancelStream(chatId: string): boolean {
   const stream = streams.get(chatId)
   if (!stream) return false
   try {
@@ -773,7 +772,7 @@ export function cancelStream(chatId: string): boolean {
   return true
 }
 
-export function getActiveStreamId(chatId: string): string | null {
+function getActiveStreamId(chatId: string): string | null {
   const stream = streams.get(chatId)
   return stream?.status === 'streaming' ? stream.streamId : null
 }
@@ -781,7 +780,7 @@ export function getActiveStreamId(chatId: string): string | null {
 /** Returns the set of chat IDs currently streaming. Used by the
  * renderer on mount to seed sidebar indicators when streams started
  * before this renderer subscribed. */
-export function getStreamingChatIds(): string[] {
+function getStreamingChatIds(): string[] {
   const ids: string[] = []
   for (const [chatId, stream] of streams.entries()) {
     if (stream.status === 'streaming') ids.push(chatId)
@@ -791,7 +790,7 @@ export function getStreamingChatIds(): string[] {
 
 /** Cache the latest tool UI metadata for a stream so late subscribers
  * receive it without an extra round-trip. */
-export function setToolUiMetadata(
+function setToolUiMetadata(
   chatId: string,
   metadata: Record<string, unknown>
 ): void {

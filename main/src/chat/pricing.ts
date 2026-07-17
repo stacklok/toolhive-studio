@@ -1,8 +1,6 @@
 import { runChatPromise, runChatSync } from './runtime'
 import { PricingService } from './pricing/pricing-service'
 
-export type { PricingMap } from './pricing/pricing-service'
-
 export async function getPricingMap() {
   return runChatPromise(PricingService.getPricingMap())
 }

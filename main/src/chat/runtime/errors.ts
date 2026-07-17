@@ -96,7 +96,7 @@ export function getDomainUserMessage(error: ChatDomainError): string {
   return error.userMessage
 }
 
-export function getErrorMessage(error: unknown): string {
+function getErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message
   if (typeof error === 'string') return error
   if (error && typeof error === 'object' && 'message' in error) {

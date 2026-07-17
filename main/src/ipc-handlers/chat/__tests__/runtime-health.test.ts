@@ -22,13 +22,6 @@ vi.mock('electron-store', () => ({
   },
 }))
 
-vi.mock('../../../chat/runtime/adapters', () => ({
-  unavailableResult: vi.fn((error?: string) => ({
-    success: false,
-    error: error ?? 'unavailable',
-  })),
-}))
-
 vi.mock('electron', () => ({
   ipcMain: {
     handle: vi.fn(),
@@ -50,17 +43,18 @@ vi.mock('../../../logger', () => ({
   },
 }))
 
-vi.mock('../../../chat/runtime/health', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('../../../chat/runtime/health')>()
-  return {
-    ...actual,
-    isChatRuntimeReady: vi.fn(() => true),
-  }
-})
+const mockGetChatRuntimeStatus = vi.hoisted(() =>
+  vi.fn(() => ({
+    health: 'ready' as const,
+    reason: undefined,
+  }))
+)
+
+vi.mock('../../../chat/runtime/lifecycle', () => ({
+  getChatRuntimeStatus: mockGetChatRuntimeStatus,
+}))
 
 import { registerChatHealthHandler } from '../../../ipc-handlers/chat/runtime-health'
-import { isChatRuntimeReady } from '../../../chat/runtime/health'
 import { ipcMain } from 'electron'
 
 describe('chat runtime IPC boundary', () => {
@@ -76,8 +70,18 @@ describe('chat runtime IPC boundary', () => {
     registerChatHealthHandler()
     const handler = vi.mocked(ipcMain.handle).mock.calls.at(-1)?.[1]
     expect(handler).toBeTypeOf('function')
-    const result = await (handler as () => Promise<{ ready: boolean }>)()
-    expect(result).toEqual({ ready: true })
-    expect(isChatRuntimeReady).toHaveBeenCalled()
+    const result = await (
+      handler as () => Promise<{
+        ready: boolean
+        health: string
+        reason?: string
+      }>
+    )()
+    expect(result).toEqual({
+      ready: true,
+      health: 'ready',
+      reason: undefined,
+    })
+    expect(mockGetChatRuntimeStatus).toHaveBeenCalled()
   })
 })

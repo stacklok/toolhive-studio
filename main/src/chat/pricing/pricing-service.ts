@@ -26,7 +26,7 @@ interface ProviderEntry {
 }
 
 type ModelsDevApi = Record<string, ProviderEntry>
-export type PricingMap = Record<string, Record<string, ModelCost>>
+type PricingMap = Record<string, Record<string, ModelCost>>
 
 interface CacheFile {
   fetchedAt: number

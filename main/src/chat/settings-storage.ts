@@ -5,13 +5,9 @@ import type {
   ChatSettingsProvider,
   ChatSettingsSelectedModel,
 } from './settings/settings-service'
-import { getLegacyChatSettingsStore } from './settings/legacy-store-access'
 import { CHAT_PROVIDER_INFO } from './constants'
 
 type ProviderId = (typeof CHAT_PROVIDER_INFO)[number]['id']
-
-// Kept for one-time reconciliation migration; remove after migration grace period
-export const chatSettingsStore = getLegacyChatSettingsStore()
 
 export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
   return runChatSync(SettingsService.getChatSettings(providerId))
@@ -86,8 +82,4 @@ export function handleSaveSettings(
   return runChatToResultSync(
     SettingsService.handleSaveSettings(providerId, settings).pipe(Effect.as({}))
   )
-}
-
-export async function reconcileEnabledMcpTools(): Promise<void> {
-  await runChatPromise(SettingsService.reconcileEnabledMcpTools())
 }

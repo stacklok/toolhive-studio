@@ -1,4 +1,3 @@
-import { getLegacyThreadsStore } from './settings/legacy-store-access'
 import { Effect } from 'effect'
 import type { LanguageModelUsage } from 'ai'
 import type { UIMessage } from 'ai'
@@ -7,9 +6,6 @@ import { ThreadsService } from './threads/threads-service'
 import type { ChatSettingsThread, ThreadMessage } from './threads/types'
 
 export type { ChatSettingsThread } from './threads/types'
-
-// Kept for one-time reconciliation migration; remove after migration grace period
-export const threadsStore = getLegacyThreadsStore()
 
 export function createThread(
   title?: string,

@@ -7,7 +7,7 @@ import {
 } from './health'
 import { _resetActiveStreamsForTests } from '../streaming/stream-registry-service'
 
-export async function ensureChatTestRuntime(): Promise<void> {
+async function ensureChatTestRuntime(): Promise<void> {
   await disposeChatRuntime()
   markChatRuntimeInitializing()
   try {

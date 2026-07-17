@@ -54,9 +54,3 @@ export function getLegacyChatSettingsStore(): Store<LegacyChatSettings> {
   }
   return chatSettingsStore
 }
-
-/** Test-only: reset lazy singletons between tests. */
-export function _resetLegacyStoresForTests(): void {
-  threadsStore = null
-  chatSettingsStore = null
-}

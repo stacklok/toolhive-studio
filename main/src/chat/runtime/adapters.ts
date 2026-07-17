@@ -4,12 +4,11 @@ import {
   ChatUnavailableError,
   type ChatDomainError,
   getDomainUserMessage,
-  StorageError,
 } from './errors'
 import { isChatRuntimeReady } from './health'
 import { getManagedRuntimeOrThrow, type ChatServices } from './managed-runtime'
 
-export type ResultSuccess<T> = { success: true } & T
+type ResultSuccess<T> = { success: true } & T
 export type ResultFailure = { success: false; error: string }
 export type OperationResult<
   T extends Record<string, unknown> = Record<string, unknown>,
@@ -55,7 +54,7 @@ export function runChatSync<A, E, R>(program: Effect.Effect<A, E, R>): A {
   )
 }
 
-export function runChatPromiseExit<A, E, R>(
+function runChatPromiseExit<A, E, R>(
   program: Effect.Effect<A, E, R>
 ): Promise<Exit.Exit<A, E>> {
   if (!isChatRuntimeReady()) {
@@ -151,18 +150,4 @@ function throwFromExit<A, E>(exit: Exit.Exit<A, E>): A {
   }
 
   throw new Error(Cause.pretty(exit.cause) || 'Unknown error')
-}
-
-export function mapUnknownToStorageError(
-  operation: string,
-  error: unknown
-): Effect.Effect<never, StorageError> {
-  return Effect.fail(
-    new StorageError({
-      operation,
-      cause: error,
-      userMessage:
-        error instanceof Error ? error.message : 'A storage operation failed.',
-    })
-  )
 }

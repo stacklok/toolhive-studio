@@ -5,8 +5,6 @@ import {
   proxyMcpToolCall as proxyMcpToolCallImpl,
 } from './mcp/mcp-service-impl'
 
-export type { AvailableServer } from './types'
-
 export function getCachedUiMetadata() {
   return runChatSync(McpService.getCachedUiMetadata())
 }

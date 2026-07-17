@@ -14,7 +14,7 @@ import { McpService } from '../mcp/mcp-service'
 import { ProvidersService } from '../providers/providers-service'
 import { TitleService } from '../streaming/title-service'
 
-export const ChatLiveLayer = Layer.mergeAll(
+const ChatLiveLayer = Layer.mergeAll(
   ChatLoggerLayer,
   ChatLogLevelLayer,
   ThreadsRepository.Default,
@@ -58,11 +58,4 @@ export async function disposeChatRuntime(): Promise<void> {
   const runtime = managedRuntime
   managedRuntime = null
   await runtime.dispose()
-}
-
-export function getChatRuntimeForTests(): ManagedRuntime.ManagedRuntime<
-  ChatServices,
-  never
-> | null {
-  return managedRuntime
 }

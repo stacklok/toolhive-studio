@@ -52,12 +52,6 @@ export function bindMcpUiMetadataCache(cache: McpUiMetadataCache): void {
   runtimeMetadataCache = cache
 }
 
-export function resetMcpUiMetadataCacheForTests(): void {
-  runtimeMetadataCache = null
-  cachedUiMetadata = {}
-  uiMetadataLoaded = false
-}
-
 function ensureUiMetadataLoaded(): void {
   if (runtimeMetadataCache) return
   if (uiMetadataLoaded) return

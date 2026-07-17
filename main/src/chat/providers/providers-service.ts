@@ -9,7 +9,7 @@ import { CHAT_PROVIDERS } from './providers-catalog'
 import { ProviderError } from '../runtime/errors'
 import { SettingsService } from '../settings/settings-service'
 
-export function discoverToolSupportedModels(): {
+function discoverToolSupportedModels(): {
   providers: Array<{
     id: string
     name: string
