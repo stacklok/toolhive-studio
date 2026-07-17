@@ -1,7 +1,7 @@
 import { Effect } from 'effect'
 import type { LanguageModelUsage } from 'ai'
 import type { UIMessage } from 'ai'
-import { runChatSync, runChatToResultSync } from './runtime'
+import { runChatSyncOr, runChatToResultSync } from './runtime'
 import { ThreadsService } from './threads/threads-service'
 import type { ChatSettingsThread, ThreadMessage } from './threads/types'
 
@@ -20,11 +20,11 @@ export function createThread(
 }
 
 export function getThread(threadId: string): ChatSettingsThread | null {
-  return runChatSync(ThreadsService.getThread(threadId))
+  return runChatSyncOr(ThreadsService.getThread(threadId), null)
 }
 
 export function getAllThreads(): ChatSettingsThread[] {
-  return runChatSync(ThreadsService.getAllThreads())
+  return runChatSyncOr(ThreadsService.getAllThreads(), [])
 }
 
 export function updateThread(
@@ -71,7 +71,7 @@ export function deleteThread(threadId: string): {
 }
 
 export function getActiveThreadId(): string | undefined {
-  return runChatSync(ThreadsService.getActiveThreadId())
+  return runChatSyncOr(ThreadsService.getActiveThreadId(), undefined)
 }
 
 export function setActiveThreadId(threadId: string | undefined): {
@@ -90,5 +90,5 @@ export function clearAllThreads(): { success: boolean; error?: string } {
 }
 
 export function getThreadCount(): number {
-  return runChatSync(ThreadsService.getThreadCount())
+  return runChatSyncOr(ThreadsService.getThreadCount(), 0)
 }

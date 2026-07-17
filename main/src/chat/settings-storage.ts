@@ -1,16 +1,45 @@
 import { Effect } from 'effect'
-import { runChatSync, runChatPromise, runChatToResultSync } from './runtime'
+import { runChatSyncOr, runChatPromiseOr, runChatToResultSync } from './runtime'
 import { SettingsService } from './settings/settings-service'
 import type {
   ChatSettingsProvider,
   ChatSettingsSelectedModel,
 } from './settings/settings-service'
-import { CHAT_PROVIDER_INFO } from './constants'
+import {
+  CHAT_PROVIDER_INFO,
+  LOCAL_PROVIDER_IDS,
+  type LocalProviderId,
+} from './constants'
 
 type ProviderId = (typeof CHAT_PROVIDER_INFO)[number]['id']
 
+function isLocalProvider(
+  providerId: ProviderId
+): providerId is LocalProviderId {
+  return LOCAL_PROVIDER_IDS.includes(providerId as LocalProviderId)
+}
+
+function defaultChatSettings(providerId: ProviderId): ChatSettingsProvider {
+  if (isLocalProvider(providerId)) {
+    return { providerId, endpointURL: '', enabledTools: [] }
+  }
+  return {
+    providerId,
+    apiKey: '',
+    enabledTools: [],
+  }
+}
+
+const EMPTY_SELECTED_MODEL: ChatSettingsSelectedModel = {
+  provider: '',
+  model: '',
+}
+
 export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
-  return runChatSync(SettingsService.getChatSettings(providerId))
+  return runChatSyncOr(
+    SettingsService.getChatSettings(providerId),
+    defaultChatSettings(providerId)
+  )
 }
 
 export function clearChatSettings(providerId?: ProviderId): {
@@ -23,7 +52,7 @@ export function clearChatSettings(providerId?: ProviderId): {
 }
 
 export function getSelectedModel(): ChatSettingsSelectedModel {
-  return runChatSync(SettingsService.getSelectedModel())
+  return runChatSyncOr(SettingsService.getSelectedModel(), EMPTY_SELECTED_MODEL)
 }
 
 export function saveSelectedModel(
@@ -47,15 +76,15 @@ export function saveEnabledMcpTools(
 }
 
 export async function getEnabledMcpTools(): Promise<Record<string, string[]>> {
-  return runChatPromise(SettingsService.getEnabledMcpTools())
+  return runChatPromiseOr(SettingsService.getEnabledMcpTools(), {})
 }
 
 export async function getEnabledMcpServersFromTools(): Promise<string[]> {
-  return runChatPromise(SettingsService.getEnabledMcpServersFromTools())
+  return runChatPromiseOr(SettingsService.getEnabledMcpServersFromTools(), [])
 }
 
 export function getEnabledSkills(): string[] {
-  return runChatSync(SettingsService.getEnabledSkills())
+  return runChatSyncOr(SettingsService.getEnabledSkills(), [])
 }
 
 export function setSkillEnabled(
@@ -70,7 +99,7 @@ export function setSkillEnabled(
 export function pruneEnabledSkillsTo(
   installedNames: readonly string[]
 ): number {
-  return runChatSync(SettingsService.pruneEnabledSkillsTo(installedNames))
+  return runChatSyncOr(SettingsService.pruneEnabledSkillsTo(installedNames), 0)
 }
 
 export function handleSaveSettings(

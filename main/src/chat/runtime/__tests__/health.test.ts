@@ -8,7 +8,8 @@ import {
   getChatUnavailableReason,
 } from '../health'
 import { CHAT_UNAVAILABLE_USER_MESSAGE, ChatUnavailableError } from '../errors'
-import { unavailableResult } from '../adapters'
+import { Effect } from 'effect'
+import { unavailableResult, runChatSyncOr, runChatPromiseOr } from '../adapters'
 
 describe('chat runtime health', () => {
   beforeEach(() => {
@@ -46,5 +47,17 @@ describe('chat runtime adapters', () => {
       userMessage: CHAT_UNAVAILABLE_USER_MESSAGE,
     })
     expect(error.userMessage).toBe(CHAT_UNAVAILABLE_USER_MESSAGE)
+  })
+
+  it('runChatSyncOr returns the fallback when the runtime is unavailable', () => {
+    markChatRuntimeUnavailable('runtime_not_ready')
+    expect(runChatSyncOr(Effect.succeed('ok'), 'fallback')).toBe('fallback')
+  })
+
+  it('runChatPromiseOr resolves to the fallback when the runtime is unavailable', async () => {
+    markChatRuntimeUnavailable('runtime_not_ready')
+    await expect(
+      runChatPromiseOr(Effect.succeed('ok'), 'fallback')
+    ).resolves.toBe('fallback')
   })
 })

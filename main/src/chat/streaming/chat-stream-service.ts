@@ -38,7 +38,7 @@ export class ChatStreamService extends Effect.Service<ChatStreamService>()(
               )
 
               yield* Effect.addFinalizer(() => Fiber.interrupt(fiber))
-              return yield* Fiber.await(fiber)
+              return yield* Fiber.join(fiber)
             })
           ),
       }

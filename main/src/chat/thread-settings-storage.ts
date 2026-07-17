@@ -1,11 +1,14 @@
 import { Effect } from 'effect'
-import { runChatSync, runChatToResultSync } from './runtime'
+import { runChatSyncOr, runChatToResultSync } from './runtime'
 import { ThreadSettingsService } from './settings/thread-settings-service'
 
 export function getThreadSelectedModel(
   threadId: string
 ): { provider: string; model: string } | null {
-  return runChatSync(ThreadSettingsService.getThreadSelectedModel(threadId))
+  return runChatSyncOr(
+    ThreadSettingsService.getThreadSelectedModel(threadId),
+    null
+  )
 }
 
 export function setThreadSelectedModel(
@@ -25,7 +28,10 @@ export function setThreadSelectedModel(
 export function getThreadEnabledMcpTools(
   threadId: string
 ): Record<string, string[]> {
-  return runChatSync(ThreadSettingsService.getThreadEnabledMcpTools(threadId))
+  return runChatSyncOr(
+    ThreadSettingsService.getThreadEnabledMcpTools(threadId),
+    {}
+  )
 }
 
 export function setThreadEnabledMcpTools(
@@ -43,7 +49,10 @@ export function setThreadEnabledMcpTools(
 }
 
 export function getThreadEnabledSkills(threadId: string): string[] {
-  return runChatSync(ThreadSettingsService.getThreadEnabledSkills(threadId))
+  return runChatSyncOr(
+    ThreadSettingsService.getThreadEnabledSkills(threadId),
+    []
+  )
 }
 
 export function setThreadEnabledSkill(

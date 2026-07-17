@@ -54,6 +54,30 @@ export function runChatSync<A, E, R>(program: Effect.Effect<A, E, R>): A {
   )
 }
 
+/** Like `runChatSync`, but returns `fallback` when the runtime is unavailable. */
+export function runChatSyncOr<A, E, R>(
+  program: Effect.Effect<A, E, R>,
+  fallback: A
+): A {
+  if (!isChatRuntimeReady()) return fallback
+  return throwFromExit(
+    getManagedRuntimeOrThrow().runSyncExit(
+      program as Effect.Effect<A, E, ChatServices>
+    )
+  )
+}
+
+/** Like `runChatPromise`, but resolves to `fallback` when the runtime is unavailable. */
+export function runChatPromiseOr<A, E, R>(
+  program: Effect.Effect<A, E, R>,
+  fallback: A
+): Promise<A> {
+  if (!isChatRuntimeReady()) return Promise.resolve(fallback)
+  return getManagedRuntimeOrThrow()
+    .runPromiseExit(program as Effect.Effect<A, E, ChatServices>)
+    .then(throwFromExit)
+}
+
 function runChatPromiseExit<A, E, R>(
   program: Effect.Effect<A, E, R>
 ): Promise<Exit.Exit<A, E>> {
