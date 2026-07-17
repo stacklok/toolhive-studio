@@ -2077,11 +2077,11 @@ export type ModelPackage = {
    */
   packageArguments?: Array<ModelArgument>
   /**
-   * RegistryBaseURL is the base URL of the package registry (used by npm, pypi, nuget; not used by oci, mcpb)
+   * RegistryBaseURL is the base URL of the package registry (used by npm, pypi, nuget, cargo; not used by oci, mcpb)
    */
   registryBaseUrl?: string
   /**
-   * RegistryType indicates how to download packages (e.g., "npm", "pypi", "oci", "nuget", "mcpb")
+   * RegistryType indicates how to download packages (e.g., "npm", "pypi", "cargo", "oci", "nuget", "mcpb")
    */
   registryType?: string
   /**
