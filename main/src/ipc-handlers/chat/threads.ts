@@ -13,12 +13,14 @@ import {
   updateThreadMessages,
   getActiveThreadId,
   setActiveThreadId,
+  type ChatSettingsThread,
+} from '../../chat/threads-storage'
+import {
   createChatThread,
   getThreadMessagesForTransport,
   getThreadInfo,
   ensureThreadExists,
-  type ChatSettingsThread,
-} from '../../chat'
+} from '../../chat/thread-integration'
 import { generateThreadTitle } from '../../chat/generate-thread-title'
 
 export function register() {

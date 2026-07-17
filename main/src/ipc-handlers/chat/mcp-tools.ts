@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import { getMcpServerTools } from '../../chat'
+import { getMcpServerTools } from '../../chat/mcp-tools'
 import {
   getEnabledMcpTools,
   getEnabledMcpServersFromTools,
