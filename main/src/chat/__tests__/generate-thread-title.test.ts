@@ -1,4 +1,6 @@
+import '../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { installChatTestRuntimeHooks } from '../runtime/test-runtime'
 
 // ---------------------------------------------------------------------------
 // Hoisted mock factories — must be defined before vi.mock() calls
@@ -6,7 +8,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 const mockGenerateText = vi.hoisted(() => vi.fn())
 const mockConvertToModelMessages = vi.hoisted(() => vi.fn())
 const mockGetThread = vi.hoisted(() => vi.fn())
-const mockUpdateThread = vi.hoisted(() => vi.fn())
+const mockWriteThread = vi.hoisted(() => vi.fn())
 const mockReadSelectedModel = vi.hoisted(() => vi.fn())
 const mockReadChatProvider = vi.hoisted(() => vi.fn())
 const mockCreateModelFromRequest = vi.hoisted(() => vi.fn())
@@ -20,9 +22,30 @@ vi.mock('ai', () => ({
   convertToModelMessages: mockConvertToModelMessages,
 }))
 
-vi.mock('../threads-storage', () => ({
-  getThread: mockGetThread,
-  updateThread: mockUpdateThread,
+vi.mock('../../db/readers/threads-reader', () => ({
+  readThread: mockGetThread,
+  readAllThreads: vi.fn(() => []),
+  readActiveThreadId: vi.fn(),
+  readThreadCount: vi.fn(() => 0),
+  readThreadSelectedModel: vi.fn(() => null),
+  readThreadEnabledMcpTools: vi.fn(() => ({})),
+  readThreadEnabledSkills: vi.fn(() => []),
+}))
+
+vi.mock('../../db/writers/threads-writer', () => ({
+  writeThread: mockWriteThread,
+  deleteThreadFromDb: vi.fn(),
+  clearAllThreadsFromDb: vi.fn(),
+  writeActiveThread: vi.fn(),
+  writeThreadSelectedModel: vi.fn(),
+  writeThreadEnabledMcpTools: vi.fn(),
+  writeThreadEnabledSkills: vi.fn(),
+}))
+
+vi.mock('../../db/readers/agents-reader', () => ({
+  readThreadAgentId: vi.fn(() => null),
+  readAgent: vi.fn(),
+  readAllAgents: vi.fn(() => []),
 }))
 
 vi.mock('../../db/readers/chat-settings-reader', () => ({
@@ -34,16 +57,7 @@ vi.mock('../utils', () => ({
   createModelFromRequest: mockCreateModelFromRequest,
 }))
 
-vi.mock('../providers', () => ({
-  CHAT_PROVIDERS: [
-    { id: 'openai', name: 'OpenAI' },
-    { id: 'ollama', name: 'Ollama' },
-  ],
-}))
-
-vi.mock('../constants', () => ({
-  LOCAL_PROVIDER_IDS: ['ollama', 'lmstudio'],
-}))
+vi.mock('../constants', async (importOriginal) => importOriginal())
 
 vi.mock('../../logger', () => ({
   default: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
@@ -53,6 +67,8 @@ vi.mock('../../logger', () => ({
 // Subject under test (imported after mocks)
 // ---------------------------------------------------------------------------
 import { generateThreadTitle } from '../generate-thread-title'
+
+installChatTestRuntimeHooks()
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -104,7 +120,7 @@ describe('generateThreadTitle', () => {
         success: false,
         error: 'Thread not found',
       })
-      expect(mockUpdateThread).not.toHaveBeenCalled()
+      expect(mockWriteThread).not.toHaveBeenCalled()
     })
 
     it('returns failure when thread has no user message', async () => {
@@ -151,19 +167,25 @@ describe('generateThreadTitle', () => {
         success: false,
         error: 'Empty title generated',
       })
-      expect(mockUpdateThread).not.toHaveBeenCalled()
+      expect(mockWriteThread).not.toHaveBeenCalled()
     })
 
     it('returns failure with error message when generateText throws', async () => {
       mockGenerateText.mockRejectedValue(new Error('API timeout'))
       const result = await generateThreadTitle('thread-1')
-      expect(result).toMatchObject({ success: false, error: 'API timeout' })
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Failed to generate thread title.',
+      })
     })
 
     it('returns failure with "Unknown error" for non-Error throws', async () => {
       mockGenerateText.mockRejectedValue('some string error')
       const result = await generateThreadTitle('thread-1')
-      expect(result).toMatchObject({ success: false, error: 'Unknown error' })
+      expect(result).toMatchObject({
+        success: false,
+        error: 'Failed to generate thread title.',
+      })
     })
   })
 
@@ -179,13 +201,16 @@ describe('generateThreadTitle', () => {
       })
     })
 
-    it('calls updateThread with title and titleEditedByUser: false', async () => {
+    it('calls writeThread with title and titleEditedByUser: false', async () => {
       mockGenerateText.mockResolvedValue({ text: 'Auto Title' })
       await generateThreadTitle('thread-1')
-      expect(mockUpdateThread).toHaveBeenCalledWith('thread-1', {
-        title: 'Auto Title',
-        titleEditedByUser: false,
-      })
+      expect(mockWriteThread).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'thread-1',
+          title: 'Auto Title',
+          titleEditedByUser: false,
+        })
+      )
     })
 
     it('strips trailing punctuation from the title', async () => {

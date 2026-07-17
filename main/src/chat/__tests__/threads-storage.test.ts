@@ -1,4 +1,6 @@
+import '../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { installChatTestRuntimeHooks } from '../runtime/test-runtime'
 
 const mockWriteThread = vi.hoisted(() => vi.fn())
 const mockWriteActiveThread = vi.hoisted(() => vi.fn())
@@ -9,13 +11,25 @@ vi.mock('../../db/writers/threads-writer', () => ({
   deleteThreadFromDb: vi.fn(),
   clearAllThreadsFromDb: vi.fn(),
   writeActiveThread: mockWriteActiveThread,
+  writeThreadSelectedModel: vi.fn(),
+  writeThreadEnabledMcpTools: vi.fn(),
+  writeThreadEnabledSkills: vi.fn(),
 }))
 
 vi.mock('../../db/readers/threads-reader', () => ({
   readThread: mockReadThread,
-  readAllThreads: vi.fn(),
+  readAllThreads: vi.fn(() => []),
   readActiveThreadId: vi.fn(),
-  readThreadCount: vi.fn(),
+  readThreadCount: vi.fn(() => 0),
+  readThreadSelectedModel: vi.fn(() => null),
+  readThreadEnabledMcpTools: vi.fn(() => ({})),
+  readThreadEnabledSkills: vi.fn(() => []),
+}))
+
+vi.mock('../../db/readers/agents-reader', () => ({
+  readThreadAgentId: vi.fn(() => null),
+  readAgent: vi.fn(),
+  readAllAgents: vi.fn(() => []),
 }))
 
 vi.mock('../../logger', () => ({
@@ -26,7 +40,20 @@ vi.mock('electron-store', () => ({
   default: class FakeStore {},
 }))
 
+vi.mock('electron', () => ({
+  app: {
+    getPath: vi.fn(() => '/tmp'),
+    on: vi.fn(),
+    once: vi.fn(),
+  },
+  webContents: {
+    getAllWebContents: vi.fn(() => []),
+  },
+}))
+
 import { createThread } from '../threads-storage'
+
+installChatTestRuntimeHooks()
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -42,7 +69,6 @@ describe('createThread', () => {
     expect(result.threadId).toMatch(/^thread_/)
     expect(mockWriteThread).toHaveBeenCalledTimes(1)
     expect(mockWriteActiveThread).toHaveBeenCalledWith(result.threadId)
-    // Generated path skips the existence guard.
     expect(mockReadThread).not.toHaveBeenCalled()
   })
 
@@ -59,8 +85,6 @@ describe('createThread', () => {
   })
 
   it('refuses to overwrite an existing row when an explicit id collides', () => {
-    // writeThread is INSERT OR REPLACE — without this guard the prior
-    // thread's messages would be silently nuked.
     mockReadThread.mockReturnValue({
       id: 'thread_draft_42',
       messages: [{ id: 'm1', role: 'user', parts: [] }],

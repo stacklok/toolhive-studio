@@ -1,14 +1,10 @@
+import '../../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { installChatTestRuntimeHooks } from '../../runtime/test-runtime'
 import type Database from 'better-sqlite3'
 import { createTestDb } from '../../../db/__tests__/test-helpers'
 
 let testDb: Database.Database
-
-vi.mock('@sentry/electron/main', () => ({
-  startSpan: vi.fn((_opts: unknown, cb: (span: unknown) => unknown) =>
-    cb({ setStatus: vi.fn(), setAttribute: vi.fn(), setAttributes: vi.fn() })
-  ),
-}))
 
 vi.mock('../../../db/database', () => ({
   getDb: () => testDb,
@@ -39,6 +35,8 @@ import {
 import { BUILTIN_AGENT_IDS, DEFAULT_AGENT_ID } from '@common/types/agents'
 import { writeThread } from '../../../db/writers/threads-writer'
 import { writeAgent } from '../../../db/writers/agents-writer'
+
+installChatTestRuntimeHooks()
 
 beforeEach(() => {
   testDb = createTestDb()

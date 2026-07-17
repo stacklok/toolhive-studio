@@ -1,32 +1,56 @@
+import '../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { WebContents } from 'electron'
+import { installChatTestRuntimeHooks } from '../runtime/test-runtime'
 
-const mockUpdateThreadMessages = vi.hoisted(() =>
-  vi.fn(() => ({ success: true }) as { success: boolean; error?: string })
+const mockWriteThread = vi.hoisted(() => vi.fn())
+const mockReadThread = vi.hoisted(() =>
+  vi.fn((id: string) => ({
+    id,
+    messages: [],
+    lastEditTimestamp: 0,
+    createdAt: 0,
+  }))
 )
 
-// Captures `before-quit` listeners so tests can fire them on demand.
-const { beforeQuitListeners } = vi.hoisted(() => ({
-  beforeQuitListeners: [] as Array<() => void>,
+vi.mock('../../db/writers/threads-writer', () => ({
+  writeThread: mockWriteThread,
+  deleteThreadFromDb: vi.fn(),
+  clearAllThreadsFromDb: vi.fn(),
+  writeActiveThread: vi.fn(),
+  writeThreadSelectedModel: vi.fn(),
+  writeThreadEnabledMcpTools: vi.fn(),
+  writeThreadEnabledSkills: vi.fn(),
 }))
 
-vi.mock('../threads-storage', () => ({
-  updateThreadMessages: mockUpdateThreadMessages,
+vi.mock('../../db/readers/threads-reader', () => ({
+  readThread: mockReadThread,
+  readAllThreads: vi.fn(() => []),
+  readActiveThreadId: vi.fn(),
+  readThreadCount: vi.fn(() => 0),
+  readThreadSelectedModel: vi.fn(() => null),
+  readThreadEnabledMcpTools: vi.fn(() => ({})),
+  readThreadEnabledSkills: vi.fn(() => []),
+}))
+
+vi.mock('../../db/readers/agents-reader', () => ({
+  readThreadAgentId: vi.fn(() => null),
+  readAgent: vi.fn(),
+  readAllAgents: vi.fn(() => []),
 }))
 
 vi.mock('../../logger', () => ({
   default: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
-// Local `electron` mock. `vitest:electron` exposes the real `app`, so
-// without this the module-level `app.on('before-quit', ...)` would
-// leak across test files. Also captures the registered listener for
-// the shutdown test and stubs `webContents` so broadcasts no-op.
+vi.mock('electron-store', () => ({
+  default: class FakeStore {},
+}))
+
 vi.mock('electron', () => ({
   app: {
-    on: vi.fn((event: string, listener: () => void) => {
-      if (event === 'before-quit') beforeQuitListeners.push(listener)
-    }),
+    getPath: vi.fn(() => '/tmp'),
+    on: vi.fn(),
     once: vi.fn(),
   },
   webContents: {
@@ -43,7 +67,10 @@ import {
   subscribeToStream,
   unsubscribeFromStream,
 } from '../active-streams'
+import { shutdownAllActiveStreams } from '../streaming/stream-registry-service'
 import type { ChatUIMessage } from '../types'
+
+installChatTestRuntimeHooks()
 
 interface FakeSender {
   send: ReturnType<typeof vi.fn>
@@ -90,10 +117,14 @@ const initialUserMessages: ChatUIMessage[] = [
 beforeEach(() => {
   vi.useFakeTimers()
   _resetActiveStreamsForTests()
-  mockUpdateThreadMessages.mockReset()
-  mockUpdateThreadMessages.mockImplementation(() => ({ success: true }))
-  // `beforeQuitListeners` is intentionally not reset — registration
-  // happens once at import time and the listeners are idempotent.
+  mockWriteThread.mockReset()
+  mockReadThread.mockReset()
+  mockReadThread.mockImplementation((id: string) => ({
+    id,
+    messages: [],
+    lastEditTimestamp: 0,
+    createdAt: 0,
+  }))
 })
 
 afterEach(() => {
@@ -230,9 +261,9 @@ describe('active-streams registry', () => {
     controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
     await flushMicrotasks()
 
-    expect(mockUpdateThreadMessages).not.toHaveBeenCalled()
+    expect(mockWriteThread).not.toHaveBeenCalled()
     await vi.advanceTimersByTimeAsync(300)
-    expect(mockUpdateThreadMessages).toHaveBeenCalled()
+    expect(mockWriteThread).toHaveBeenCalled()
 
     controller.close()
     await run
@@ -260,10 +291,10 @@ describe('active-streams registry', () => {
 
     await run
 
-    expect(mockUpdateThreadMessages).toHaveBeenCalled()
-    const lastCall = mockUpdateThreadMessages.mock.calls.at(-1) as
-      unknown[] | undefined
-    expect(lastCall?.[0]).toBe('thread-5')
+    expect(mockWriteThread).toHaveBeenCalled()
+    const lastCall = mockWriteThread.mock.calls.at(-1) as
+      [{ id?: string }] | undefined
+    expect(lastCall?.[0]?.id).toBe('thread-5')
   })
 
   it('cancelStream aborts the underlying controller', async () => {
@@ -321,10 +352,9 @@ describe('active-streams registry', () => {
   })
 
   it('broadcasts chat:stream:persist-error once when the snapshot write fails', async () => {
-    mockUpdateThreadMessages.mockImplementation(() => ({
-      success: false,
-      error: 'disk full',
-    }))
+    mockWriteThread.mockImplementation(() => {
+      throw new Error('disk full')
+    })
 
     const sender = makeSender()
     const { stream, controller } = createControllableStream<unknown>()
@@ -564,7 +594,7 @@ describe('active-streams registry', () => {
     await run
   })
 
-  it('aborts every active stream on before-quit', async () => {
+  it('aborts every active stream on runtime shutdown', async () => {
     const sender = makeSender()
     const { stream: s1 } = createControllableStream<unknown>()
     const { stream: s2 } = createControllableStream<unknown>()
@@ -588,8 +618,7 @@ describe('active-streams registry', () => {
       initialSender: asWebContents(sender),
     })
 
-    expect(beforeQuitListeners.length).toBeGreaterThan(0)
-    for (const listener of beforeQuitListeners) listener()
+    shutdownAllActiveStreams()
 
     expect(ac1.signal.aborted).toBe(true)
     expect(ac2.signal.aborted).toBe(true)

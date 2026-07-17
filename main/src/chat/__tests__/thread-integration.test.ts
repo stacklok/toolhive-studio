@@ -1,16 +1,44 @@
+import '../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { installChatTestRuntimeHooks } from '../runtime/test-runtime'
 
-const mockCreateThread = vi.hoisted(() => vi.fn())
-const mockGetThread = vi.hoisted(() => vi.fn())
-const mockSetActiveThreadId = vi.hoisted(() => vi.fn())
+const mockWriteThread = vi.hoisted(() => vi.fn())
+const mockWriteActiveThread = vi.hoisted(() => vi.fn())
+const mockReadThread = vi.hoisted(() => vi.fn())
 
-vi.mock('../threads-storage', () => ({
-  createThread: mockCreateThread,
-  getThread: mockGetThread,
-  setActiveThreadId: mockSetActiveThreadId,
+vi.mock('../../db/writers/threads-writer', () => ({
+  writeThread: mockWriteThread,
+  deleteThreadFromDb: vi.fn(),
+  clearAllThreadsFromDb: vi.fn(),
+  writeActiveThread: mockWriteActiveThread,
+  writeThreadSelectedModel: vi.fn(),
+  writeThreadEnabledMcpTools: vi.fn(),
+  writeThreadEnabledSkills: vi.fn(),
+}))
+
+vi.mock('../../db/readers/threads-reader', () => ({
+  readThread: mockReadThread,
+  readAllThreads: vi.fn(() => []),
+  readActiveThreadId: vi.fn(),
+  readThreadCount: vi.fn(() => 0),
+  readThreadSelectedModel: vi.fn(() => null),
+  readThreadEnabledMcpTools: vi.fn(() => ({})),
+  readThreadEnabledSkills: vi.fn(() => []),
+}))
+
+vi.mock('../../db/readers/agents-reader', () => ({
+  readThreadAgentId: vi.fn(() => null),
+  readAgent: vi.fn(),
+  readAllAgents: vi.fn(() => []),
+}))
+
+vi.mock('../../logger', () => ({
+  default: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
 import { ensureThreadExists } from '../thread-integration'
+
+installChatTestRuntimeHooks()
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -18,7 +46,7 @@ beforeEach(() => {
 
 describe('ensureThreadExists', () => {
   it('returns the existing thread id and sets it active when the row already exists', () => {
-    mockGetThread.mockReturnValue({
+    mockReadThread.mockReturnValue({
       id: 'existing-thread',
       messages: [],
       lastEditTimestamp: 0,
@@ -32,16 +60,12 @@ describe('ensureThreadExists', () => {
       threadId: 'existing-thread',
       isNew: false,
     })
-    expect(mockSetActiveThreadId).toHaveBeenCalledWith('existing-thread')
-    expect(mockCreateThread).not.toHaveBeenCalled()
+    expect(mockWriteActiveThread).toHaveBeenCalledWith('existing-thread')
+    expect(mockWriteThread).not.toHaveBeenCalled()
   })
 
   it('promotes a draft id by creating the row with that exact id', () => {
-    mockGetThread.mockReturnValue(null)
-    mockCreateThread.mockReturnValue({
-      success: true,
-      threadId: 'draft-id',
-    })
+    mockReadThread.mockReturnValue(null)
 
     const result = ensureThreadExists('draft-id')
 
@@ -50,31 +74,32 @@ describe('ensureThreadExists', () => {
       threadId: 'draft-id',
       isNew: true,
     })
-    expect(mockCreateThread).toHaveBeenCalledWith(undefined, [], 'draft-id')
+    expect(mockWriteThread).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'draft-id', messages: [] })
+    )
+    expect(mockWriteActiveThread).toHaveBeenCalledWith('draft-id')
   })
 
   it('falls back to a generated id when none is provided', () => {
-    mockGetThread.mockReturnValue(null)
-    mockCreateThread.mockReturnValue({
-      success: true,
-      threadId: 'generated',
-    })
+    mockReadThread.mockReturnValue(null)
 
     const result = ensureThreadExists(undefined, 'My title')
 
     expect(result).toEqual({
       success: true,
-      threadId: 'generated',
+      threadId: expect.stringMatching(/^thread_/),
       isNew: true,
     })
-    expect(mockCreateThread).toHaveBeenCalledWith('My title', [], undefined)
+    expect(mockWriteThread).toHaveBeenCalledWith(
+      expect.objectContaining({ title: 'My title', messages: [] })
+    )
+    expect(mockWriteActiveThread).toHaveBeenCalledWith(result.threadId)
   })
 
   it('surfaces createThread failures', () => {
-    mockGetThread.mockReturnValue(null)
-    mockCreateThread.mockReturnValue({
-      success: false,
-      error: 'disk full',
+    mockReadThread.mockReturnValue(null)
+    mockWriteThread.mockImplementation(() => {
+      throw new Error('disk full')
     })
 
     const result = ensureThreadExists('draft-id')
