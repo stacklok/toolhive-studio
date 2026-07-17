@@ -43,7 +43,7 @@ export type ChatServices = Layer.Layer.Success<typeof ChatLiveLayer>
 
 export type ChatRuntime = ManagedRuntime.ManagedRuntime<ChatServices, never>
 
-export { getManagedRuntime, getManagedRuntimeInstance } from './runtime-ref'
+export { getManagedRuntime } from './runtime-ref'
 
 export function getManagedRuntimeOrThrow(): ChatRuntime {
   const runtime = getManagedRuntimeInstance()
