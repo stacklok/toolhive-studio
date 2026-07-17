@@ -151,32 +151,17 @@ export class ThreadsService extends Effect.Service<ThreadsService>()(
               }
             }
 
-            const created = yield* Effect.gen(function* () {
-              const id = threadId ?? generateThreadId()
-              if (threadId) {
-                const existing = yield* repo.readThread(threadId)
-                if (existing) {
-                  return yield* Effect.fail(
-                    new ThreadAlreadyExistsError({
-                      threadId,
-                      userMessage: `Thread ${threadId} already exists`,
-                    })
-                  )
-                }
-              }
-              const now = Date.now()
-              yield* repo.writeThread({
-                id,
-                title,
-                messages: [],
-                lastEditTimestamp: now,
-                createdAt: now,
-              })
-              yield* repo.writeActiveThread(id)
-              return { threadId: id }
+            const id = threadId ?? generateThreadId()
+            const now = Date.now()
+            yield* repo.writeThread({
+              id,
+              title,
+              messages: [],
+              lastEditTimestamp: now,
+              createdAt: now,
             })
-
-            return { threadId: created.threadId, isNew: true as const }
+            yield* repo.writeActiveThread(id)
+            return { threadId: id, isNew: true as const }
           }),
 
         getThreadInfo: (threadId: string) =>

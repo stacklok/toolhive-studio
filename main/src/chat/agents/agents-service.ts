@@ -13,7 +13,7 @@ import {
 } from '@common/types/agents'
 import { APP_ASSISTANT_NAME } from '@common/app-info'
 import { getBuiltinAgentSeeds } from '../agents/builtin-prompts'
-import { StorageError } from '../runtime/errors'
+import { StorageError, ValidationError } from '../runtime/errors'
 import { chatLogError, chatLogInfo } from '../runtime/logging'
 import { ThreadsRepository } from '../threads/threads-repository'
 
@@ -169,7 +169,7 @@ export class AgentsService extends Effect.Service<AgentsService>()(
           ),
 
         createCustomAgent: (input: CreateAgentInput) =>
-          Effect.sync(() => {
+          wrapSync('createCustomAgent', () => {
             const now = Date.now()
             const agent: AgentConfig = {
               id: generateCustomId(),
@@ -189,12 +189,16 @@ export class AgentsService extends Effect.Service<AgentsService>()(
           }),
 
         updateAgent: (id: string, input: UpdateAgentInput) =>
-          Effect.sync(() => {
-            const existing = readAgent(id)
+          Effect.gen(function* () {
+            const existing = yield* wrapSync('readAgent', () => readAgent(id))
             if (!existing) return null
             if (existing.kind === 'builtin') {
-              throw new Error(
-                'Built-in agents cannot be edited. Duplicate the agent to create a customisable copy.'
+              return yield* Effect.fail(
+                new ValidationError({
+                  field: 'id',
+                  userMessage:
+                    'Built-in agents cannot be edited. Duplicate the agent to create a customisable copy.',
+                })
               )
             }
 
@@ -231,13 +235,13 @@ export class AgentsService extends Effect.Service<AgentsService>()(
               delete next.defaultModel
             }
 
-            writeAgent(next)
+            yield* wrapSync('writeAgent', () => writeAgent(next))
             return next
           }),
 
         deleteAgent: (id: string) =>
-          Effect.sync(() => {
-            const existing = readAgent(id)
+          Effect.gen(function* () {
+            const existing = yield* wrapSync('readAgent', () => readAgent(id))
             if (!existing) {
               return { success: false as const, error: 'Agent not found' }
             }
@@ -247,13 +251,13 @@ export class AgentsService extends Effect.Service<AgentsService>()(
                 error: 'Built-in agents cannot be deleted',
               }
             }
-            deleteAgentFromDb(id)
+            yield* wrapSync('deleteAgent', () => deleteAgentFromDb(id))
             return { success: true as const }
           }),
 
         duplicateAgent: (id: string) =>
-          Effect.sync(() => {
-            const source = readAgent(id)
+          Effect.gen(function* () {
+            const source = yield* wrapSync('readAgent', () => readAgent(id))
             if (!source) return null
             const now = Date.now()
             const copy: AgentConfig = {
@@ -269,7 +273,7 @@ export class AgentsService extends Effect.Service<AgentsService>()(
               createdAt: now,
               updatedAt: now,
             }
-            writeAgent(copy)
+            yield* wrapSync('writeAgent', () => writeAgent(copy))
             return copy
           }),
 

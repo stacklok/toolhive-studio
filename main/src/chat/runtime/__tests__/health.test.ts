@@ -9,7 +9,18 @@ import {
 } from '../health'
 import { CHAT_UNAVAILABLE_USER_MESSAGE, ChatUnavailableError } from '../errors'
 import { Effect } from 'effect'
-import { unavailableResult, runChatSyncOr, runChatPromiseOr } from '../adapters'
+import {
+  unavailableResult,
+  runChatSyncOr,
+  runChatPromiseOr,
+  runChatSync,
+} from '../adapters'
+import {
+  disposeChatRuntime,
+  getManagedRuntime,
+  initializeChatRuntime,
+} from '../managed-runtime'
+import { shutdownChatRuntime } from '../lifecycle'
 
 describe('chat runtime health', () => {
   beforeEach(() => {
@@ -59,5 +70,33 @@ describe('chat runtime adapters', () => {
     await expect(
       runChatPromiseOr(Effect.succeed('ok'), 'fallback')
     ).resolves.toBe('fallback')
+  })
+
+  it('getManagedRuntime is null while initializing even after construct', async () => {
+    markChatRuntimeInitializing()
+    await initializeChatRuntime()
+    expect(getManagedRuntime()).toBeNull()
+    markChatRuntimeReady()
+    expect(getManagedRuntime()).not.toBeNull()
+    await disposeChatRuntime()
+    markChatRuntimeUnavailable('runtime_disposed')
+  })
+
+  it('runChatSync maps missing runtime to ChatUnavailableError, not a raw init error', async () => {
+    markChatRuntimeReady()
+    await disposeChatRuntime()
+    expect(() => runChatSync(Effect.succeed('ok'))).toThrow(
+      CHAT_UNAVAILABLE_USER_MESSAGE
+    )
+    markChatRuntimeUnavailable('runtime_disposed')
+  })
+
+  it('shutdown marks unavailable before dispose completes', async () => {
+    await initializeChatRuntime()
+    markChatRuntimeReady()
+    await shutdownChatRuntime()
+    expect(isChatRuntimeReady()).toBe(false)
+    expect(getChatUnavailableReason()).toBe('runtime_disposed')
+    expect(getManagedRuntime()).toBeNull()
   })
 })

@@ -5,8 +5,8 @@ import {
   type ChatDomainError,
   getDomainUserMessage,
 } from './errors'
-import { isChatRuntimeReady } from './health'
-import { getManagedRuntimeOrThrow, type ChatServices } from './managed-runtime'
+import type { ChatServices } from './managed-runtime'
+import { getManagedRuntime } from './runtime-ref'
 
 type ResultSuccess<T> = { success: true } & T
 export type ResultFailure = { success: false; error: string }
@@ -14,90 +14,83 @@ export type OperationResult<
   T extends Record<string, unknown> = Record<string, unknown>,
 > = ResultSuccess<T> | ResultFailure
 
+const DOMAIN_ERROR_TAGS = new Set<ChatDomainError['_tag']>([
+  'ChatUnavailableError',
+  'StorageError',
+  'ThreadNotFoundError',
+  'ThreadAlreadyExistsError',
+  'ProviderError',
+  'McpDiscoveryError',
+  'McpServerUnavailableError',
+  'StreamConflictError',
+  'ValidationError',
+])
+
 export function unavailableResult(
   error = CHAT_UNAVAILABLE_USER_MESSAGE
 ): ResultFailure {
   return { success: false, error }
 }
 
-export function runChatPromise<A, E, R>(
-  program: Effect.Effect<A, E, R>
-): Promise<A> {
-  if (!isChatRuntimeReady()) {
-    return Promise.reject(
-      toThrownError(
-        new ChatUnavailableError({
-          reason: 'runtime_not_ready',
-          userMessage: CHAT_UNAVAILABLE_USER_MESSAGE,
-        })
-      )
-    )
-  }
-  return getManagedRuntimeOrThrow()
-    .runPromiseExit(program as Effect.Effect<A, E, ChatServices>)
-    .then(throwFromExit)
+function unavailableError(): ChatUnavailableError {
+  return new ChatUnavailableError({
+    reason: 'runtime_not_ready',
+    userMessage: CHAT_UNAVAILABLE_USER_MESSAGE,
+  })
 }
 
-export function runChatSync<A, E, R>(program: Effect.Effect<A, E, R>): A {
-  if (!isChatRuntimeReady()) {
-    throw toThrownError(
-      new ChatUnavailableError({
-        reason: 'runtime_not_ready',
-        userMessage: CHAT_UNAVAILABLE_USER_MESSAGE,
-      })
-    )
+export function runChatPromise<A, E>(
+  program: Effect.Effect<A, E, ChatServices>
+): Promise<A> {
+  const runtime = getManagedRuntime()
+  if (!runtime) {
+    return Promise.reject(toThrownError(unavailableError()))
   }
-  return throwFromExit(
-    getManagedRuntimeOrThrow().runSyncExit(
-      program as Effect.Effect<A, E, ChatServices>
-    )
-  )
+  return runtime.runPromiseExit(program).then(throwFromExit)
+}
+
+export function runChatSync<A, E>(
+  program: Effect.Effect<A, E, ChatServices>
+): A {
+  const runtime = getManagedRuntime()
+  if (!runtime) {
+    throw toThrownError(unavailableError())
+  }
+  return throwFromExit(runtime.runSyncExit(program))
 }
 
 /** Like `runChatSync`, but returns `fallback` when the runtime is unavailable. */
-export function runChatSyncOr<A, E, R>(
-  program: Effect.Effect<A, E, R>,
+export function runChatSyncOr<A, E>(
+  program: Effect.Effect<A, E, ChatServices>,
   fallback: A
 ): A {
-  if (!isChatRuntimeReady()) return fallback
-  return throwFromExit(
-    getManagedRuntimeOrThrow().runSyncExit(
-      program as Effect.Effect<A, E, ChatServices>
-    )
-  )
+  const runtime = getManagedRuntime()
+  if (!runtime) return fallback
+  return throwFromExit(runtime.runSyncExit(program))
 }
 
 /** Like `runChatPromise`, but resolves to `fallback` when the runtime is unavailable. */
-export function runChatPromiseOr<A, E, R>(
-  program: Effect.Effect<A, E, R>,
+export function runChatPromiseOr<A, E>(
+  program: Effect.Effect<A, E, ChatServices>,
   fallback: A
 ): Promise<A> {
-  if (!isChatRuntimeReady()) return Promise.resolve(fallback)
-  return getManagedRuntimeOrThrow()
-    .runPromiseExit(program as Effect.Effect<A, E, ChatServices>)
-    .then(throwFromExit)
+  const runtime = getManagedRuntime()
+  if (!runtime) return Promise.resolve(fallback)
+  return runtime.runPromiseExit(program).then(throwFromExit)
 }
 
-function runChatPromiseExit<A, E, R>(
-  program: Effect.Effect<A, E, R>
+function runChatPromiseExit<A, E>(
+  program: Effect.Effect<A, E, ChatServices>
 ): Promise<Exit.Exit<A, E>> {
-  if (!isChatRuntimeReady()) {
-    return Promise.resolve(
-      Exit.fail(
-        new ChatUnavailableError({
-          reason: 'runtime_not_ready',
-          userMessage: CHAT_UNAVAILABLE_USER_MESSAGE,
-        }) as E
-      )
-    )
+  const runtime = getManagedRuntime()
+  if (!runtime) {
+    return Promise.resolve(Exit.fail(unavailableError() as E))
   }
-  return getManagedRuntimeOrThrow().runPromiseExit(
-    program as Effect.Effect<A, E, ChatServices>
-  )
+  return runtime.runPromiseExit(program)
 }
 
-export async function runChatToResult<A extends Record<string, unknown>, E, R>(
-  program: Effect.Effect<A, E, R>
+export async function runChatToResult<A extends Record<string, unknown>, E>(
+  program: Effect.Effect<A, E, ChatServices>
 ): Promise<OperationResult<A>> {
   const exit = await runChatPromiseExit(program)
   if (Exit.isSuccess(exit)) {
@@ -115,16 +108,15 @@ export async function runChatToResult<A extends Record<string, unknown>, E, R>(
   }
 }
 
-export function runChatToResultSync<A extends Record<string, unknown>, E, R>(
-  program: Effect.Effect<A, E, R>
+export function runChatToResultSync<A extends Record<string, unknown>, E>(
+  program: Effect.Effect<A, E, ChatServices>
 ): OperationResult<A> {
-  if (!isChatRuntimeReady()) {
+  const runtime = getManagedRuntime()
+  if (!runtime) {
     return unavailableResult()
   }
 
-  const exit = getManagedRuntimeOrThrow().runSyncExit(
-    program as Effect.Effect<A, E, ChatServices>
-  )
+  const exit = runtime.runSyncExit(program)
   if (Exit.isSuccess(exit)) {
     return { success: true, ...exit.value }
   }
@@ -145,7 +137,10 @@ function isDomainError(error: unknown): error is ChatDomainError {
     typeof error === 'object' &&
     error !== null &&
     '_tag' in error &&
-    typeof (error as { _tag: unknown })._tag === 'string'
+    typeof (error as { _tag: unknown })._tag === 'string' &&
+    DOMAIN_ERROR_TAGS.has((error as { _tag: ChatDomainError['_tag'] })._tag) &&
+    'userMessage' in error &&
+    typeof (error as { userMessage: unknown }).userMessage === 'string'
   )
 }
 

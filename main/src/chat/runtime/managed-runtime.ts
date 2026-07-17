@@ -3,8 +3,10 @@ import { ChatLoggerLayer, ChatLogLevelLayer } from './logging'
 import { ThreadsRepository } from '../threads/threads-repository'
 import { ThreadsService } from '../threads/threads-service'
 import { LegacyStoreService } from '../settings/legacy-store-service'
-import { SettingsRepository } from '../settings/settings-service'
-import { SettingsService } from '../settings/settings-service'
+import {
+  SettingsRepository,
+  SettingsService,
+} from '../settings/settings-service'
 import { ThreadSettingsService } from '../settings/thread-settings-service'
 import { AgentsService } from '../agents/agents-service'
 import { PricingService } from '../pricing/pricing-service'
@@ -13,6 +15,11 @@ import { ChatStreamService } from '../streaming/chat-stream-service'
 import { McpService } from '../mcp/mcp-service'
 import { ProvidersService } from '../providers/providers-service'
 import { TitleService } from '../streaming/title-service'
+import {
+  getManagedRuntimeInstance,
+  setManagedRuntime,
+  type AnyChatRuntime,
+} from './runtime-ref'
 
 const ChatLiveLayer = Layer.mergeAll(
   ChatLoggerLayer,
@@ -34,28 +41,28 @@ const ChatLiveLayer = Layer.mergeAll(
 
 export type ChatServices = Layer.Layer.Success<typeof ChatLiveLayer>
 
-let managedRuntime: ManagedRuntime.ManagedRuntime<ChatServices, never> | null =
-  null
+export type ChatRuntime = ManagedRuntime.ManagedRuntime<ChatServices, never>
 
-export function getManagedRuntimeOrThrow(): ManagedRuntime.ManagedRuntime<
-  ChatServices,
-  never
-> {
-  if (!managedRuntime) {
+export { getManagedRuntime, getManagedRuntimeInstance } from './runtime-ref'
+
+export function getManagedRuntimeOrThrow(): ChatRuntime {
+  const runtime = getManagedRuntimeInstance()
+  if (!runtime) {
     throw new Error('Chat runtime has not been initialized')
   }
-  return managedRuntime
+  return runtime as ChatRuntime
 }
 
 export async function initializeChatRuntime(): Promise<void> {
-  if (managedRuntime) return
-  managedRuntime = ManagedRuntime.make(ChatLiveLayer)
-  await managedRuntime.runPromise(Effect.void)
+  if (getManagedRuntimeInstance()) return
+  const runtime = ManagedRuntime.make(ChatLiveLayer) as AnyChatRuntime
+  setManagedRuntime(runtime)
+  await runtime.runPromise(Effect.void)
 }
 
 export async function disposeChatRuntime(): Promise<void> {
-  if (!managedRuntime) return
-  const runtime = managedRuntime
-  managedRuntime = null
+  const runtime = getManagedRuntimeInstance()
+  if (!runtime) return
+  setManagedRuntime(null)
   await runtime.dispose()
 }

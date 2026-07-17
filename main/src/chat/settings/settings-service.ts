@@ -26,7 +26,7 @@ import {
   LOCAL_PROVIDER_IDS,
   type LocalProviderId,
 } from '../constants'
-import { StorageError } from '../runtime/errors'
+import { StorageError, ValidationError } from '../runtime/errors'
 import { chatLogInfo, chatLogWarning } from '../runtime/logging'
 
 type ProviderId = (typeof CHAT_PROVIDER_INFO)[number]['id']
@@ -35,11 +35,13 @@ export type ChatSettingsProvider =
   | {
       providerId: 'ollama' | 'lmstudio'
       endpointURL: string
+      /** Legacy field kept for IPC shape; MCP tool enablement is stored separately. */
       enabledTools: string[]
     }
   | {
       providerId: Exclude<ProviderId, 'ollama' | 'lmstudio'>
       apiKey: string
+      /** Legacy field kept for IPC shape; MCP tool enablement is stored separately. */
       enabledTools: string[]
     }
 
@@ -303,6 +305,8 @@ export class SettingsService extends Effect.Service<SettingsService>()(
             }
           }).pipe(Effect.catchAll(() => Effect.void)),
 
+        // Persists provider credentials only. `enabledTools` on ChatSettingsProvider
+        // is retained for IPC compatibility and is not written here.
         saveChatSettings: (
           providerId: ProviderId,
           settings: ChatSettingsProvider
@@ -327,6 +331,15 @@ export class SettingsService extends Effect.Service<SettingsService>()(
             | { endpointURL: string; enabledTools: string[] }
         ) =>
           Effect.gen(function* () {
+            if (!providerId.trim()) {
+              return yield* Effect.fail(
+                new ValidationError({
+                  field: 'providerId',
+                  userMessage: 'Provider id is required.',
+                })
+              )
+            }
+
             const providerIdTyped = providerId as ProviderId
             const credentialValue =
               providerIdTyped === 'ollama' || providerIdTyped === 'lmstudio'
@@ -338,9 +351,7 @@ export class SettingsService extends Effect.Service<SettingsService>()(
                   : ''
 
             if (!credentialValue.trim()) {
-              yield* providerIdTyped
-                ? repo.deleteProvider(providerIdTyped)
-                : repo.clearAllProviders()
+              yield* repo.deleteProvider(providerIdTyped)
               return
             }
 

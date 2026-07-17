@@ -8,6 +8,7 @@ import type { ChatUIMessage } from '../types'
 import type { ThreadMessage } from '../threads/types'
 import { ThreadsService } from '../threads/threads-service'
 import { StreamConflictError } from '../runtime/errors'
+import { getManagedRuntime } from '../runtime/runtime-ref'
 
 /**
  * Throttled DB persistence cadence (ms).
@@ -824,7 +825,14 @@ export class StreamRegistryService extends Effect.Service<StreamRegistryService>
       const threads = yield* ThreadsService
 
       initStreamRegistryPersistence((chatId, messages) => {
-        const exit = Effect.runSyncExit(
+        const runtime = getManagedRuntime()
+        if (!runtime) {
+          return {
+            success: false,
+            error: 'Chat runtime is unavailable',
+          }
+        }
+        const exit = runtime.runSyncExit(
           threads.updateThreadMessages(chatId, messages)
         )
         if (exit._tag === 'Success') {
