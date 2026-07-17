@@ -900,6 +900,32 @@ describe('createMcpTools', () => {
     )
   })
 
+  it('continues partial discovery when one enabled server fails and another succeeds', async () => {
+    const workloadA = makeWorkload({ name: 'server-a' })
+    const workloadB = makeWorkload({ name: 'server-b' })
+    mockGetApiV1BetaWorkloads.mockResolvedValue({
+      data: { workloads: [workloadA, workloadB] },
+    })
+    mockReadEnabledMcpTools.mockReturnValue({
+      'server-a': ['tool-a'],
+      'server-b': ['tool-b'],
+    })
+    mockCreateMCPClient
+      .mockRejectedValueOnce(new Error('conn refused'))
+      .mockResolvedValueOnce(mockAiMcpClient)
+    mockAiMcpClient.tools.mockResolvedValue({ 'tool-b': makeToolDef() })
+
+    const { tools, clients } = await createMcpTools()
+
+    expect(tools).toHaveProperty('tool-b')
+    expect(tools).not.toHaveProperty('tool-a')
+    expect(clients).toHaveLength(1)
+    expect(log.error).toHaveBeenCalledWith(
+      'Failed to create MCP client for server-a:',
+      expect.any(Error)
+    )
+  })
+
   it('logs a warning when an enabled tool is not found on the server', async () => {
     const workload = makeWorkload()
     mockGetApiV1BetaWorkloads.mockResolvedValue({

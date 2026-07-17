@@ -316,6 +316,60 @@ describe('active-streams registry', () => {
     expect(cancelStream('missing')).toBe(false)
   })
 
+  it('persists a partial snapshot when a stream is cancelled mid-flight', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+    const abortController = new AbortController()
+
+    const run = runManagedStream({
+      chatId: 'thread-cancel-persist',
+      streamId: 'stream-cancel-persist',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController,
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
+    await flushMicrotasks()
+
+    expect(mockWriteThread).not.toHaveBeenCalled()
+    expect(cancelStream('thread-cancel-persist')).toBe(true)
+
+    controller.error(
+      new DOMException('The operation was aborted', 'AbortError')
+    )
+    await run
+
+    expect(mockWriteThread).toHaveBeenCalled()
+    expect(getActiveStreamId('thread-cancel-persist')).toBeNull()
+  })
+
+  it('shutdownAllActiveStreams flushes a pending debounced snapshot', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    runManagedStream({
+      chatId: 'thread-shutdown-flush',
+      streamId: 'stream-shutdown-flush',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
+    await flushMicrotasks()
+
+    expect(mockWriteThread).not.toHaveBeenCalled()
+    shutdownAllActiveStreams()
+    expect(mockWriteThread).toHaveBeenCalled()
+  })
+
   it('rejects a second stream for the same chatId while one is still running', async () => {
     const sender = makeSender()
     const { stream: streamA, controller: controllerA } =

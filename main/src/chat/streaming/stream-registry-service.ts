@@ -2,7 +2,7 @@ import { webContents as webContentsApi } from 'electron'
 import type { WebContents } from 'electron'
 import type { AsyncIterableStream, InferUIMessageChunk } from 'ai'
 import { readUIMessageStream } from 'ai'
-import { Effect, Cause } from 'effect'
+import { Effect, Cause, Fiber, Ref } from 'effect'
 import log from '../../logger'
 import type { ChatUIMessage } from '../types'
 import type { ThreadMessage } from '../threads/types'
@@ -96,24 +96,38 @@ interface ActiveStream {
   toolParts: Map<string, ToolPartReplay>
 }
 
-const streams = new Map<string, ActiveStream>()
-
 type PersistMessagesSync = (
   chatId: string,
   messages: ThreadMessage[]
 ) => { success: boolean; error?: string }
 
-let persistMessagesImpl: PersistMessagesSync = () => ({
-  success: false,
-  error: 'Stream registry not initialized',
-})
+/** Runtime-owned registry state (initialized by StreamRegistryService). */
+interface StreamRegistryRuntime {
+  /** Service-owned stream map; kept in sync with `streamsRef`. */
+  streams: Map<string, ActiveStream>
+  streamsRef: Ref.Ref<Map<string, ActiveStream>>
+  persistMessages: PersistMessagesSync
+  isShuttingDown: boolean
+}
 
-/** True when the current process is shutting down. */
-let isShuttingDown = false
+let activeRegistry: StreamRegistryRuntime | null = null
+
+function requireRegistry(): StreamRegistryRuntime {
+  if (!activeRegistry) {
+    throw new Error('Stream registry has not been initialized')
+  }
+  return activeRegistry
+}
+
+function getStreams(): Map<string, ActiveStream> {
+  return activeRegistry?.streams ?? new Map()
+}
 
 export function shutdownAllActiveStreams(): void {
-  isShuttingDown = true
-  for (const stream of streams.values()) {
+  const registry = activeRegistry
+  if (!registry) return
+  registry.isShuttingDown = true
+  for (const stream of registry.streams.values()) {
     flushPersist(stream)
     try {
       stream.abortController.abort()
@@ -121,12 +135,6 @@ export function shutdownAllActiveStreams(): void {
       // already aborted
     }
   }
-}
-
-function initStreamRegistryPersistence(
-  persistMessages: PersistMessagesSync
-): void {
-  persistMessagesImpl = persistMessages
 }
 
 function safeSend(
@@ -197,7 +205,12 @@ function flushPersist(stream: ActiveStream) {
   if (!stream.pendingWrite) return
   stream.pendingWrite = false
   try {
-    const result = persistMessagesImpl(stream.chatId, buildSnapshot(stream))
+    const persist = activeRegistry?.persistMessages
+    if (!persist) {
+      reportPersistFailure(stream, 'Stream registry not initialized')
+      return
+    }
+    const result = persist(stream.chatId, buildSnapshot(stream))
     if (!result.success) {
       log.warn(
         `[ACTIVE_STREAMS] Snapshot write failed for ${stream.chatId}: ${result.error}`
@@ -217,7 +230,7 @@ function flushPersist(stream: ActiveStream) {
 }
 
 function schedulePersist(stream: ActiveStream, force: boolean) {
-  if (isShuttingDown) return
+  if (activeRegistry?.isShuttingDown) return
   stream.pendingWrite = true
   if (force) {
     flushPersist(stream)
@@ -263,8 +276,9 @@ export interface RunStreamOptions {
 /** Register a fresh stream in the global map. Throws if a stream for
  * this chat is already running — the caller surfaces the error. */
 function buildActiveStream(options: RunStreamOptions): ActiveStream {
+  const registry = requireRegistry()
   const { chatId } = options
-  if (streams.has(chatId)) {
+  if (registry.streams.has(chatId)) {
     throw new StreamConflictError({
       chatId,
       userMessage: `Stream already active for chat ${chatId}`,
@@ -288,7 +302,7 @@ function buildActiveStream(options: RunStreamOptions): ActiveStream {
     reasoningParts: new Map(),
     toolParts: new Map(),
   }
-  streams.set(chatId, stream)
+  registry.streams.set(chatId, stream)
   attachInitialSender(
     stream,
     options.initialSender,
@@ -689,7 +703,7 @@ async function teardownStream(
   stream: ActiveStream,
   onComplete: (() => void | Promise<void>) | undefined
 ): Promise<void> {
-  streams.delete(stream.chatId)
+  getStreams().delete(stream.chatId)
   if (!onComplete) return
   try {
     await onComplete()
@@ -708,9 +722,10 @@ async function teardownStream(
  *
  * Returns when the upstream completes or errors.
  */
-async function runManagedStream(options: RunStreamOptions): Promise<void> {
-  const stream = buildActiveStream(options)
-
+async function runManagedStreamPump(
+  options: RunStreamOptions,
+  stream: ActiveStream
+): Promise<void> {
   // Tee the upstream: one branch broadcasts to subscribers, the other
   // feeds an assembler that yields running UIMessage snapshots.
   const [chunkBranch, assemblerBranch] = (
@@ -741,7 +756,7 @@ function subscribeToStream(
   replayChunks: ChatUIMessageChunk[]
   toolUiMetadata: Record<string, unknown> | null
 } | null {
-  const stream = streams.get(chatId)
+  const stream = getStreams().get(chatId)
   if (!stream || stream.status !== 'streaming') return null
   if (sender.isDestroyed()) return null
   stream.subscribers.add(sender)
@@ -755,7 +770,7 @@ function subscribeToStream(
 /** Detach a renderer without affecting the upstream — the LLM call keeps
  * running so the user can return to the thread later. */
 function unsubscribeFromStream(chatId: string, sender: WebContents): void {
-  const stream = streams.get(chatId)
+  const stream = getStreams().get(chatId)
   if (!stream) return
   stream.subscribers.delete(sender)
 }
@@ -763,7 +778,7 @@ function unsubscribeFromStream(chatId: string, sender: WebContents): void {
 /** Cancel the in-flight LLM call for `chatId` (if any). The active
  * stream's iterator will throw, triggering the standard error path. */
 function cancelStream(chatId: string): boolean {
-  const stream = streams.get(chatId)
+  const stream = getStreams().get(chatId)
   if (!stream) return false
   try {
     stream.abortController.abort()
@@ -774,7 +789,7 @@ function cancelStream(chatId: string): boolean {
 }
 
 function getActiveStreamId(chatId: string): string | null {
-  const stream = streams.get(chatId)
+  const stream = getStreams().get(chatId)
   return stream?.status === 'streaming' ? stream.streamId : null
 }
 
@@ -783,7 +798,7 @@ function getActiveStreamId(chatId: string): string | null {
  * before this renderer subscribed. */
 function getStreamingChatIds(): string[] {
   const ids: string[] = []
-  for (const [chatId, stream] of streams.entries()) {
+  for (const [chatId, stream] of getStreams().entries()) {
     if (stream.status === 'streaming') ids.push(chatId)
   }
   return ids
@@ -795,7 +810,7 @@ function setToolUiMetadata(
   chatId: string,
   metadata: Record<string, unknown>
 ): void {
-  const stream = streams.get(chatId)
+  const stream = getStreams().get(chatId)
   if (!stream) return
   stream.toolUiMetadata = metadata
   broadcast(stream, 'chat:stream:tool-ui-metadata', metadata)
@@ -803,18 +818,58 @@ function setToolUiMetadata(
 
 /** Remove a destroyed renderer from every subscriber set. */
 export function purgeSender(sender: WebContents): void {
-  for (const stream of streams.values()) {
+  for (const stream of getStreams().values()) {
     stream.subscribers.delete(sender)
   }
 }
 
 /** Test-only helper. */
 export function _resetActiveStreamsForTests(): void {
-  for (const stream of streams.values()) {
+  const registry = activeRegistry
+  if (!registry) return
+  for (const stream of registry.streams.values()) {
     if (stream.persistTimer) clearTimeout(stream.persistTimer)
   }
-  streams.clear()
-  isShuttingDown = false
+  registry.streams.clear()
+  registry.isShuttingDown = false
+}
+
+function makePersistMessages(
+  updateThreadMessages: (
+    chatId: string,
+    messages: ThreadMessage[]
+  ) => Effect.Effect<unknown, unknown, unknown>
+): PersistMessagesSync {
+  return (chatId, messages) => {
+    const runtime = getManagedRuntime()
+    if (!runtime) {
+      return {
+        success: false,
+        error: 'Chat runtime is unavailable',
+      }
+    }
+    const exit = runtime.runSyncExit(updateThreadMessages(chatId, messages))
+    if (exit._tag === 'Success') {
+      return { success: true }
+    }
+    const failure = Cause.failureOption(exit.cause)
+    const errorMessage =
+      failure._tag === 'Some'
+        ? typeof failure.value === 'object' &&
+          failure.value !== null &&
+          'userMessage' in failure.value &&
+          typeof (failure.value as { userMessage: unknown }).userMessage ===
+            'string'
+          ? (failure.value as { userMessage: string }).userMessage
+          : failure.value instanceof Error
+            ? failure.value.message
+            : 'Failed to persist thread messages'
+        : Cause.pretty(exit.cause) || 'Failed to persist thread messages'
+    return {
+      success: false,
+      error: errorMessage,
+    }
+  }
 }
 
 export class StreamRegistryService extends Effect.Service<StreamRegistryService>()(
@@ -823,44 +878,48 @@ export class StreamRegistryService extends Effect.Service<StreamRegistryService>
     accessors: true,
     effect: Effect.gen(function* () {
       const threads = yield* ThreadsService
+      const streamsMap = new Map<string, ActiveStream>()
+      const streamsRef = yield* Ref.make(streamsMap)
+      const persistMessages = makePersistMessages(
+        threads.updateThreadMessages.bind(threads)
+      )
 
-      initStreamRegistryPersistence((chatId, messages) => {
-        const runtime = getManagedRuntime()
-        if (!runtime) {
-          return {
-            success: false,
-            error: 'Chat runtime is unavailable',
-          }
-        }
-        const exit = runtime.runSyncExit(
-          threads.updateThreadMessages(chatId, messages)
-        )
-        if (exit._tag === 'Success') {
-          return { success: true }
-        }
-        const failure = Cause.failureOption(exit.cause)
-        const errorMessage =
-          failure._tag === 'Some'
-            ? 'userMessage' in failure.value &&
-              typeof failure.value.userMessage === 'string'
-              ? failure.value.userMessage
-              : failure.value instanceof Error
-                ? failure.value.message
-                : 'Failed to persist thread messages'
-            : Cause.pretty(exit.cause) || 'Failed to persist thread messages'
-        return {
-          success: false,
-          error: errorMessage,
-        }
-      })
+      activeRegistry = {
+        streams: streamsMap,
+        streamsRef,
+        persistMessages,
+        isShuttingDown: false,
+      }
 
       return {
         runManagedStream: (options: RunStreamOptions) =>
-          Effect.tryPromise({
-            try: () => runManagedStream(options),
-            catch: (cause) =>
-              cause instanceof Error ? cause : new Error(String(cause)),
-          }),
+          Effect.scoped(
+            Effect.gen(function* () {
+              const stream = yield* Effect.try({
+                try: () => buildActiveStream(options),
+                catch: (cause) =>
+                  cause instanceof StreamConflictError
+                    ? cause
+                    : cause instanceof Error
+                      ? cause
+                      : new Error(String(cause)),
+              })
+
+              yield* Effect.addFinalizer(() =>
+                Effect.sync(() => flushPersist(stream))
+              )
+
+              const fiber = yield* Effect.forkScoped(
+                Effect.tryPromise({
+                  try: () => runManagedStreamPump(options, stream),
+                  catch: (cause) =>
+                    cause instanceof Error ? cause : new Error(String(cause)),
+                })
+              )
+
+              yield* Fiber.join(fiber)
+            })
+          ),
         subscribeToStream: (chatId: string, sender: WebContents) =>
           Effect.sync(() => subscribeToStream(chatId, sender)),
         unsubscribeFromStream: (chatId: string, sender: WebContents) =>
