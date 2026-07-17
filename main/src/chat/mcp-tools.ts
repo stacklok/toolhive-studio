@@ -1,4 +1,4 @@
-import { runChatPromise, runChatSync } from './runtime'
+import { runChatPromiseOr, runChatSyncOr } from './runtime'
 import { McpService } from './mcp/mcp-service'
 import {
   fetchUiResource as fetchUiResourceImpl,
@@ -6,7 +6,7 @@ import {
 } from './mcp/mcp-service-impl'
 
 export function getCachedUiMetadata() {
-  return runChatSync(McpService.getCachedUiMetadata())
+  return runChatSyncOr(McpService.getCachedUiMetadata(), {})
 }
 
 export async function fetchUiResource(serverName: string, resourceUri: string) {
@@ -22,12 +22,19 @@ export async function proxyMcpToolCall(
 }
 
 export async function getMcpServerTools(serverName: string, threadId?: string) {
-  return runChatPromise(McpService.getMcpServerTools(serverName, threadId))
+  return runChatPromiseOr(
+    McpService.getMcpServerTools(serverName, threadId),
+    null
+  )
 }
 
 export async function createMcpTools(
   threadId?: string,
   options?: { sanitizeSchemas?: boolean }
 ) {
-  return runChatPromise(McpService.createMcpTools(threadId, options))
+  return runChatPromiseOr(McpService.createMcpTools(threadId, options), {
+    tools: {},
+    clients: [],
+    enabledTools: {},
+  })
 }

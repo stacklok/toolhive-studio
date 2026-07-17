@@ -1,5 +1,5 @@
 import type { WebContents } from 'electron'
-import { isChatRuntimeReady, runChatPromise, runChatSync } from './runtime'
+import { runChatPromise, runChatSyncOr } from './runtime'
 import {
   StreamRegistryService,
   purgeSender as purgeSenderImpl,
@@ -16,38 +16,42 @@ export async function runManagedStream(
 }
 
 export function subscribeToStream(chatId: string, sender: WebContents) {
-  return runChatSync(StreamRegistryService.subscribeToStream(chatId, sender))
+  return runChatSyncOr(
+    StreamRegistryService.subscribeToStream(chatId, sender),
+    null
+  )
 }
 
 export function unsubscribeFromStream(
   chatId: string,
   sender: WebContents
 ): void {
-  if (!isChatRuntimeReady()) return
-  runChatSync(StreamRegistryService.unsubscribeFromStream(chatId, sender))
+  runChatSyncOr(
+    StreamRegistryService.unsubscribeFromStream(chatId, sender),
+    undefined
+  )
 }
 
 export function cancelStream(chatId: string): boolean {
-  if (!isChatRuntimeReady()) return false
-  return runChatSync(StreamRegistryService.cancelStream(chatId))
+  return runChatSyncOr(StreamRegistryService.cancelStream(chatId), false)
 }
 
 export function getActiveStreamId(chatId: string): string | null {
-  if (!isChatRuntimeReady()) return null
-  return runChatSync(StreamRegistryService.getActiveStreamId(chatId))
+  return runChatSyncOr(StreamRegistryService.getActiveStreamId(chatId), null)
 }
 
 export function getStreamingChatIds(): string[] {
-  if (!isChatRuntimeReady()) return []
-  return runChatSync(StreamRegistryService.getStreamingChatIds())
+  return runChatSyncOr(StreamRegistryService.getStreamingChatIds(), [])
 }
 
 export function setToolUiMetadata(
   chatId: string,
   metadata: Record<string, unknown>
 ): void {
-  if (!isChatRuntimeReady()) return
-  runChatSync(StreamRegistryService.setToolUiMetadata(chatId, metadata))
+  runChatSyncOr(
+    StreamRegistryService.setToolUiMetadata(chatId, metadata),
+    undefined
+  )
 }
 
 /**

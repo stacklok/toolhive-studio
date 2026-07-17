@@ -1,6 +1,14 @@
 import { Effect } from 'effect'
-import { runChatSync, runChatPromise, runChatToResultSync } from './runtime'
+import { runChatSyncOr, runChatPromiseOr, runChatToResultSync } from './runtime'
 import { ThreadsService } from './threads/threads-service'
+
+const EMPTY_THREAD_INFO = {
+  thread: null,
+  messageCount: 0,
+  lastActivity: null,
+  hasUserMessages: false,
+  hasAssistantMessages: false,
+}
 
 export function createChatThread(title?: string): {
   success: boolean
@@ -15,11 +23,17 @@ export function createChatThread(title?: string): {
 }
 
 export async function getThreadMessagesForTransport(threadId: string) {
-  return runChatPromise(ThreadsService.getThreadMessagesForTransport(threadId))
+  return runChatPromiseOr(
+    ThreadsService.getThreadMessagesForTransport(threadId),
+    []
+  )
 }
 
 export function getThreadInfo(threadId: string) {
-  return runChatSync(ThreadsService.getThreadInfo(threadId))
+  return runChatSyncOr(
+    ThreadsService.getThreadInfo(threadId),
+    EMPTY_THREAD_INFO
+  )
 }
 
 export function ensureThreadExists(

@@ -3,25 +3,48 @@ import type {
   CreateAgentInput,
   UpdateAgentInput,
 } from '@common/types/agents'
-import { runChatSync } from '../runtime'
+import { DEFAULT_AGENT_ID } from '@common/types/agents'
+import { APP_ASSISTANT_NAME } from '@common/app-info'
+import {
+  CHAT_UNAVAILABLE_USER_MESSAGE,
+  runChatSync,
+  runChatSyncOr,
+} from '../runtime'
 import { AgentsService } from './agents-service'
+
+function unavailableAgentFallback(): AgentConfig {
+  const now = Date.now()
+  return {
+    id: DEFAULT_AGENT_ID,
+    kind: 'builtin',
+    name: APP_ASSISTANT_NAME,
+    description: '',
+    instructions: 'You are a helpful assistant.',
+    builtinToolsKey: null,
+    createdAt: now,
+    updatedAt: now,
+  }
+}
 
 export function seedBuiltinAgents(): void {
   runChatSync(AgentsService.seedBuiltinAgents())
 }
 
 export function listAgents(): AgentConfig[] {
-  return runChatSync(AgentsService.listAgents())
+  return runChatSyncOr(AgentsService.listAgents(), [])
 }
 
 export function getAgent(id: string): AgentConfig | null {
-  return runChatSync(AgentsService.getAgent(id))
+  return runChatSyncOr(AgentsService.getAgent(id), null)
 }
 
 export function resolveAgentForThread(
   threadId: string | undefined
 ): AgentConfig {
-  return runChatSync(AgentsService.resolveAgentForThread(threadId))
+  return runChatSyncOr(
+    AgentsService.resolveAgentForThread(threadId),
+    unavailableAgentFallback()
+  )
 }
 
 export function createCustomAgent(input: CreateAgentInput): AgentConfig {
@@ -39,11 +62,14 @@ export function deleteAgent(id: string): {
   success: boolean
   error?: string
 } {
-  return runChatSync(AgentsService.deleteAgent(id))
+  return runChatSyncOr(AgentsService.deleteAgent(id), {
+    success: false,
+    error: CHAT_UNAVAILABLE_USER_MESSAGE,
+  })
 }
 
 export function duplicateAgent(id: string): AgentConfig | null {
-  return runChatSync(AgentsService.duplicateAgent(id))
+  return runChatSyncOr(AgentsService.duplicateAgent(id), null)
 }
 
 export function setThreadAgent(threadId: string, agentId: string | null): void {
@@ -51,5 +77,5 @@ export function setThreadAgent(threadId: string, agentId: string | null): void {
 }
 
 export function getThreadAgentId(threadId: string): string | null {
-  return runChatSync(AgentsService.getThreadAgentId(threadId))
+  return runChatSyncOr(AgentsService.getThreadAgentId(threadId), null)
 }

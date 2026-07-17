@@ -1,4 +1,4 @@
-import { runChatPromise } from '../runtime'
+import { runChatPromiseOr } from '../runtime'
 import { ProvidersService } from './providers-service'
 import { CHAT_PROVIDER_INFO } from '../constants'
 
@@ -22,13 +22,17 @@ export async function fetchProviderModelsHandler(
   providerId: string,
   tempCredential?: string
 ): Promise<{ id: string; name: string; models: string[] } | null> {
-  return runChatPromise(
-    ProvidersService.fetchProviderModels(providerId, tempCredential)
+  return runChatPromiseOr(
+    ProvidersService.fetchProviderModels(providerId, tempCredential),
+    null
   )
 }
 
 export async function getAllProvidersHandler(): Promise<
   Array<{ id: string; name: string; models: string[] }>
 > {
-  return runChatPromise(ProvidersService.getAllProviders())
+  return runChatPromiseOr(
+    ProvidersService.getAllProviders(),
+    discoverToolSupportedModels().providers
+  )
 }
