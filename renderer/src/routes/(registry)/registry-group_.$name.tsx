@@ -43,6 +43,20 @@ function RegistryGroupDetail() {
   const hasServers =
     Object.keys(group?.servers ?? {}).length > 0 ||
     Object.keys(group?.remote_servers ?? {}).length > 0
+  const groupServers = [
+    ...Object.entries(group?.servers ?? {}).map(([key, srv]) => ({
+      key: `local-${key}`,
+      server: srv as RegistryImageMetadata,
+    })),
+    ...Object.entries(group?.remote_servers ?? {}).map(([key, srv]) => ({
+      key: `remote-${key}`,
+      server: srv as RegistryRemoteServerMetadata,
+    })),
+  ].sort((a, b) =>
+    (a.server.name ?? '').localeCompare(b.server.name ?? '', undefined, {
+      sensitivity: 'base',
+    })
+  )
 
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
@@ -73,26 +87,14 @@ function RegistryGroupDetail() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Object.entries(group?.servers ?? {}).map(
-                  ([key, srv]: [string, RegistryImageMetadata]) => (
-                    <TableRow key={`local-${key}`}>
-                      <TableCell className="text-foreground">
-                        {srv.name}
-                      </TableCell>
-                      <TableCell>{srv.description}</TableCell>
-                    </TableRow>
-                  )
-                )}
-                {Object.entries(group?.remote_servers ?? {}).map(
-                  ([key, srv]: [string, RegistryRemoteServerMetadata]) => (
-                    <TableRow key={`remote-${key}`}>
-                      <TableCell className="text-foreground">
-                        {srv.name}
-                      </TableCell>
-                      <TableCell>{srv.description}</TableCell>
-                    </TableRow>
-                  )
-                )}
+                {groupServers.map(({ key, server }) => (
+                  <TableRow key={key}>
+                    <TableCell className="text-foreground">
+                      {server.name}
+                    </TableCell>
+                    <TableCell>{server.description}</TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
