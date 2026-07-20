@@ -1,11 +1,7 @@
-export type ChatRuntimeHealth = 'initializing' | 'ready' | 'unavailable'
+type ChatRuntimeHealth = 'initializing' | 'ready' | 'unavailable'
 
 let health: ChatRuntimeHealth = 'initializing'
 let unavailableReason: string | undefined
-
-export function getChatRuntimeHealth(): ChatRuntimeHealth {
-  return health
-}
 
 export function getChatUnavailableReason(): string | undefined {
   return unavailableReason
