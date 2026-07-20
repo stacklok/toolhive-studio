@@ -1,7 +1,8 @@
-import { Cause, Effect } from 'effect'
+import { Effect } from 'effect'
 import log from '../../logger'
 import type { ChatUIMessage } from '../types'
 import type { ThreadMessage } from '../threads/types'
+import { operationResultFromExit, unavailableResult } from '../runtime/adapters'
 import { getManagedRuntimeInstance } from '../runtime/runtime-ref'
 import { broadcast } from './stream-registry-broadcast'
 import {
@@ -131,31 +132,14 @@ export function makePersistMessages(
     // flush can persist while health is already `runtime_disposing`.
     const runtime = getManagedRuntimeInstance()
     if (!runtime) {
-      return {
-        success: false,
-        error: 'Chat runtime is unavailable',
-      }
+      return unavailableResult()
     }
-    const exit = runtime.runSyncExit(updateThreadMessages(chatId, messages))
-    if (exit._tag === 'Success') {
-      return { success: true }
-    }
-    const failure = Cause.failureOption(exit.cause)
-    const errorMessage =
-      failure._tag === 'Some'
-        ? typeof failure.value === 'object' &&
-          failure.value !== null &&
-          'userMessage' in failure.value &&
-          typeof (failure.value as { userMessage: unknown }).userMessage ===
-            'string'
-          ? (failure.value as { userMessage: string }).userMessage
-          : failure.value instanceof Error
-            ? failure.value.message
-            : 'Failed to persist thread messages'
-        : Cause.pretty(exit.cause) || 'Failed to persist thread messages'
-    return {
-      success: false,
-      error: errorMessage,
-    }
+    const exit = runtime.runSyncExit(
+      updateThreadMessages(chatId, messages).pipe(Effect.as({}))
+    )
+    const result = operationResultFromExit(exit)
+    return result.success
+      ? { success: true }
+      : { success: false, error: result.error }
   }
 }

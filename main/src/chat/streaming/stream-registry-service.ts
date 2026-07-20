@@ -1,5 +1,5 @@
 import type { WebContents } from 'electron'
-import { Effect, Fiber, Ref } from 'effect'
+import { Effect, Fiber } from 'effect'
 import { ThreadsService } from '../threads/threads-service'
 import { StreamConflictError } from '../runtime/errors'
 import {
@@ -15,10 +15,10 @@ import {
 import { flushPersist, makePersistMessages } from './stream-registry-persist'
 import {
   _resetActiveStreamsForTests,
+  configureStreamRegistry,
   purgeSender,
-  setActiveRegistry,
 } from './stream-registry-state'
-import type { ActiveStream, RunStreamOptions } from './stream-registry-types'
+import type { RunStreamOptions } from './stream-registry-types'
 
 export type { RunStreamOptions } from './stream-registry-types'
 export { shutdownAllActiveStreams } from './stream-registry-persist'
@@ -33,19 +33,9 @@ export class StreamRegistryService extends Effect.Service<StreamRegistryService>
     accessors: true,
     effect: Effect.gen(function* () {
       const threads = yield* ThreadsService
-      const streamsMap = new Map<string, ActiveStream>()
-      // Keep an Effect Ref so the service owns the map; imperative helpers
-      // read the same Map instance via setActiveRegistry.
-      yield* Ref.make(streamsMap)
-      const persistMessages = makePersistMessages(
-        threads.updateThreadMessages.bind(threads)
+      configureStreamRegistry(
+        makePersistMessages(threads.updateThreadMessages.bind(threads))
       )
-
-      setActiveRegistry({
-        streams: streamsMap,
-        persistMessages,
-        isShuttingDown: false,
-      })
 
       return {
         runManagedStream: (options: RunStreamOptions) =>

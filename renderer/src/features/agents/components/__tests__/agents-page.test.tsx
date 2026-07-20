@@ -114,7 +114,7 @@ describe('AgentsPage', () => {
       id: 'custom.my-agent-copy',
       name: 'My custom agent (copy)',
     }
-    mockAgentsApi.duplicate.mockResolvedValue(copy)
+    mockAgentsApi.duplicate.mockResolvedValue({ success: true, agent: copy })
 
     renderPage()
     await screen.findByText('My custom agent')
@@ -132,8 +132,11 @@ describe('AgentsPage', () => {
 
   it('clicking duplicate does not also trigger the card open handler', async () => {
     mockAgentsApi.duplicate.mockResolvedValue({
-      ...customAgent,
-      id: 'custom.my-agent-copy',
+      success: true,
+      agent: {
+        ...customAgent,
+        id: 'custom.my-agent-copy',
+      },
     })
 
     renderPage()

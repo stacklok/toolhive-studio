@@ -108,15 +108,10 @@ export async function runChatToResult<A extends Record<string, unknown>, E>(
   }
 }
 
-export function runChatToResultSync<A extends Record<string, unknown>, E>(
-  program: Effect.Effect<A, E, ChatServices>
+/** Shared Exit → IPC result conversion used by adapters and persist helpers. */
+export function operationResultFromExit<A extends Record<string, unknown>>(
+  exit: Exit.Exit<A, unknown>
 ): OperationResult<A> {
-  const runtime = getManagedRuntime()
-  if (!runtime) {
-    return unavailableResult()
-  }
-
-  const exit = runtime.runSyncExit(program)
   if (Exit.isSuccess(exit)) {
     return { success: true, ...exit.value }
   }
@@ -130,6 +125,17 @@ export function runChatToResultSync<A extends Record<string, unknown>, E>(
     success: false,
     error: Cause.pretty(exit.cause) || 'Unknown error',
   }
+}
+
+export function runChatToResultSync<A extends Record<string, unknown>, E>(
+  program: Effect.Effect<A, E, ChatServices>
+): OperationResult<A> {
+  const runtime = getManagedRuntime()
+  if (!runtime) {
+    return unavailableResult()
+  }
+
+  return operationResultFromExit(runtime.runSyncExit(program))
 }
 
 function isDomainError(error: unknown): error is ChatDomainError {

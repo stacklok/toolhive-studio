@@ -129,7 +129,7 @@ export function recordChunkForReplay(
         if (chunk.providerMetadata) {
           part.callProviderMetadata = chunk.providerMetadata
         }
-        part.state = 'output-error'
+        part.state = 'input-error'
       }
       return
     }
@@ -245,19 +245,21 @@ function emitToolReplay(
     } as ChatUIMessageChunk)
   }
 
-  if (part.state !== 'input-streaming') {
-    if (part.input !== undefined) {
-      out.push({
-        type: 'tool-input-available',
-        toolCallId,
-        toolName: part.toolName,
-        input: part.input,
-        dynamic: part.dynamic,
-        providerExecuted: part.providerExecuted,
-        providerMetadata: part.callProviderMetadata,
-        title: part.title,
-      } as ChatUIMessageChunk)
-    }
+  if (
+    part.state !== 'input-streaming' &&
+    part.state !== 'input-error' &&
+    part.input !== undefined
+  ) {
+    out.push({
+      type: 'tool-input-available',
+      toolCallId,
+      toolName: part.toolName,
+      input: part.input,
+      dynamic: part.dynamic,
+      providerExecuted: part.providerExecuted,
+      providerMetadata: part.callProviderMetadata,
+      title: part.title,
+    } as ChatUIMessageChunk)
   }
 
   if (part.state === 'output-available') {
@@ -269,6 +271,18 @@ function emitToolReplay(
       preliminary: part.preliminary,
       providerMetadata: part.resultProviderMetadata,
       dynamic: part.dynamic,
+    } as ChatUIMessageChunk)
+  } else if (part.state === 'input-error' && part.errorText !== undefined) {
+    out.push({
+      type: 'tool-input-error',
+      toolCallId,
+      toolName: part.toolName,
+      input: part.rawInput,
+      errorText: part.errorText,
+      dynamic: part.dynamic,
+      providerExecuted: part.providerExecuted,
+      providerMetadata: part.callProviderMetadata,
+      title: part.title,
     } as ChatUIMessageChunk)
   } else if (part.state === 'output-error' && part.errorText !== undefined) {
     out.push({

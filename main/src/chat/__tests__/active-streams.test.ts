@@ -635,6 +635,68 @@ describe('active-streams registry', () => {
     await run
   })
 
+  it('replays a tool-input-error with rawInput for late subscribers', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    const run = runManagedStream({
+      chatId: 'thread-tool-input-error',
+      streamId: 'stream-tool-input-error',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({
+      type: 'tool-input-start',
+      toolCallId: 'tc1',
+      toolName: 'search',
+    })
+    controller.enqueue({
+      type: 'tool-input-error',
+      toolCallId: 'tc1',
+      toolName: 'search',
+      input: '{bad',
+      errorText: 'Invalid JSON',
+    })
+    await flushMicrotasks()
+
+    const lateSender = makeSender()
+    const resumed = subscribeToStream(
+      'thread-tool-input-error',
+      asWebContents(lateSender)
+    )
+
+    expect(resumed!.replayChunks).toEqual([
+      { type: 'start', messageId: 'asst-1' },
+      {
+        type: 'tool-input-start',
+        toolCallId: 'tc1',
+        toolName: 'search',
+        dynamic: undefined,
+        providerExecuted: undefined,
+        title: undefined,
+        providerMetadata: undefined,
+      },
+      {
+        type: 'tool-input-error',
+        toolCallId: 'tc1',
+        toolName: 'search',
+        input: '{bad',
+        errorText: 'Invalid JSON',
+        dynamic: undefined,
+        providerExecuted: undefined,
+        providerMetadata: undefined,
+        title: undefined,
+      },
+    ])
+
+    controller.close()
+    await run
+  })
+
   it('replays a tool with partial input still streaming', async () => {
     const sender = makeSender()
     const { stream, controller } = createControllableStream<unknown>()

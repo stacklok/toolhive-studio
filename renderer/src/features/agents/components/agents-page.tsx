@@ -127,15 +127,19 @@ export function AgentsPage() {
 
   const handleDuplicate = async (agent: AgentConfig) => {
     try {
-      const copy = await duplicateAgent.mutateAsync(agent.id)
+      const result = await duplicateAgent.mutateAsync(agent.id)
       trackEvent('Agents: duplicate', { source_agent_id: agent.id })
-      if (copy) {
-        toast.success(`Duplicated as "${copy.name}"`)
-        void navigate({
-          to: '/playground/agents/$agentId',
-          params: { agentId: copy.id },
-        })
+      if (!result.success || !result.agent) {
+        toast.error(
+          `Failed to duplicate agent: ${result.error ?? 'Unknown error'}`
+        )
+        return
       }
+      toast.success(`Duplicated as "${result.agent.name}"`)
+      void navigate({
+        to: '/playground/agents/$agentId',
+        params: { agentId: result.agent.id },
+      })
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error'
       toast.error(`Failed to duplicate agent: ${message}`)

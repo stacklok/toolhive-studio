@@ -5,55 +5,62 @@ import type {
   StreamRegistryRuntime,
 } from './stream-registry-types'
 
-let activeRegistry: StreamRegistryRuntime | null = null
+/**
+ * Process-lifetime stream map. Kept stable across runtime restarts so a
+ * finishing stream's teardown cannot delete a newly registered entry that
+ * reused the same chatId after a Map swap.
+ */
+const streams = new Map<string, ActiveStream>()
 
-export function setActiveRegistry(registry: StreamRegistryRuntime): void {
-  activeRegistry = registry
+let persistMessages: PersistMessagesSync | undefined
+let isShuttingDown = false
+
+export function configureStreamRegistry(persist: PersistMessagesSync): void {
+  persistMessages = persist
+  isShuttingDown = false
 }
 
 export function getActiveRegistry(): StreamRegistryRuntime | null {
-  return activeRegistry
+  if (!persistMessages) return null
+  return { streams, persistMessages, isShuttingDown }
 }
 
 export function requireRegistry(): StreamRegistryRuntime {
-  if (!activeRegistry) {
+  const registry = getActiveRegistry()
+  if (!registry) {
     throw new Error('Stream registry has not been initialized')
   }
-  return activeRegistry
+  return registry
 }
 
 export function getStreams(): Map<string, ActiveStream> {
-  return activeRegistry?.streams ?? new Map()
+  return streams
 }
 
 export function getPersistMessages(): PersistMessagesSync | undefined {
-  return activeRegistry?.persistMessages
+  return persistMessages
 }
 
 export function isRegistryShuttingDown(): boolean {
-  return activeRegistry?.isShuttingDown ?? false
+  return isShuttingDown
 }
 
 export function markRegistryShuttingDown(): void {
-  if (activeRegistry) {
-    activeRegistry.isShuttingDown = true
-  }
+  isShuttingDown = true
 }
 
 /** Remove a destroyed renderer from every subscriber set. */
 export function purgeSender(sender: WebContents): void {
-  for (const stream of getStreams().values()) {
+  for (const stream of streams.values()) {
     stream.subscribers.delete(sender)
   }
 }
 
 /** Test-only helper. */
 export function _resetActiveStreamsForTests(): void {
-  const registry = activeRegistry
-  if (!registry) return
-  for (const stream of registry.streams.values()) {
+  for (const stream of streams.values()) {
     if (stream.persistTimer) clearTimeout(stream.persistTimer)
   }
-  registry.streams.clear()
-  registry.isShuttingDown = false
+  streams.clear()
+  isShuttingDown = false
 }

@@ -31,8 +31,7 @@ export async function fetchProviderModelsHandler(
 export async function getAllProvidersHandler(): Promise<
   Array<{ id: string; name: string; models: string[] }>
 > {
-  return runChatPromiseOr(
-    ProvidersService.getAllProviders(),
-    discoverToolSupportedModels().providers
-  )
+  // Empty fallback when unavailable — do not return the static catalog, which
+  // would look like live providers during an outage.
+  return runChatPromiseOr(ProvidersService.getAllProviders(), [])
 }

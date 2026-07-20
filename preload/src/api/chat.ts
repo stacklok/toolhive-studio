@@ -153,7 +153,9 @@ export const chatApi = {
         ipcRenderer.invoke('chat:agents:update', id, input),
       delete: (id: string): Promise<{ success: boolean; error?: string }> =>
         ipcRenderer.invoke('chat:agents:delete', id),
-      duplicate: (id: string): Promise<AgentConfig | null> =>
+      duplicate: (
+        id: string
+      ): Promise<{ success: boolean; agent?: AgentConfig; error?: string }> =>
         ipcRenderer.invoke('chat:agents:duplicate', id),
       setThreadAgent: (
         threadId: string,
@@ -473,7 +475,9 @@ export interface ChatAPI {
         input: UpdateAgentInput
       ) => Promise<AgentConfig | null>
       delete: (id: string) => Promise<{ success: boolean; error?: string }>
-      duplicate: (id: string) => Promise<AgentConfig | null>
+      duplicate: (
+        id: string
+      ) => Promise<{ success: boolean; agent?: AgentConfig; error?: string }>
       setThreadAgent: (
         threadId: string,
         agentId: string | null

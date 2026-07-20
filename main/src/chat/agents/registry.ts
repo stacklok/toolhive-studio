@@ -5,6 +5,7 @@ import type {
 } from '@common/types/agents'
 import { DEFAULT_AGENT_ID } from '@common/types/agents'
 import { APP_ASSISTANT_NAME } from '@common/app-info'
+import { Effect } from 'effect'
 import {
   CHAT_UNAVAILABLE_USER_MESSAGE,
   runChatSync,
@@ -68,8 +69,25 @@ export function deleteAgent(id: string): {
   })
 }
 
-export function duplicateAgent(id: string): AgentConfig | null {
-  return runChatSyncOr(AgentsService.duplicateAgent(id), null)
+export function duplicateAgent(id: string): {
+  success: boolean
+  agent?: AgentConfig
+  error?: string
+} {
+  return runChatSyncOr(
+    AgentsService.duplicateAgent(id).pipe(
+      Effect.map(
+        (agent): { success: boolean; agent?: AgentConfig; error?: string } =>
+          agent
+            ? { success: true, agent }
+            : { success: false, error: 'Agent not found' }
+      )
+    ),
+    {
+      success: false,
+      error: CHAT_UNAVAILABLE_USER_MESSAGE,
+    }
+  )
 }
 
 export function setThreadAgent(threadId: string, agentId: string | null): void {

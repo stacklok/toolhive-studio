@@ -191,11 +191,18 @@ describe('agent registry — CRUD', () => {
   })
 
   it('duplicates any agent as a custom copy', () => {
-    const copy = duplicateAgent(BUILTIN_AGENT_IDS.toolhiveAssistant)
-    expect(copy).not.toBeNull()
-    expect(copy!.kind).toBe('custom')
-    expect(copy!.id.startsWith('custom.')).toBe(true)
-    expect(copy!.name.endsWith('(copy)')).toBe(true)
+    const result = duplicateAgent(BUILTIN_AGENT_IDS.toolhiveAssistant)
+    expect(result.success).toBe(true)
+    expect(result.agent).toBeDefined()
+    expect(result.agent!.kind).toBe('custom')
+    expect(result.agent!.id.startsWith('custom.')).toBe(true)
+    expect(result.agent!.name.endsWith('(copy)')).toBe(true)
+  })
+
+  it('returns failure when duplicating a missing agent', () => {
+    const result = duplicateAgent('custom.does-not-exist')
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('Agent not found')
   })
 })
 
