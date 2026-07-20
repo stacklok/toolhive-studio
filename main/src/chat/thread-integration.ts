@@ -1,5 +1,5 @@
 import { Effect } from 'effect'
-import { runChatSyncOr, runChatPromiseOr, runChatToResultSync } from './runtime'
+import { runChatSyncOr, runChatPromise, runChatToResultSync } from './runtime'
 import { ThreadsService } from './threads/threads-service'
 
 const EMPTY_THREAD_INFO = {
@@ -22,11 +22,13 @@ export function createChatThread(title?: string): {
   )
 }
 
+/**
+ * Fail closed when the runtime is unavailable. Soft-failing to `[]` would
+ * hydrate the renderer as an empty thread; the next send overwrites real
+ * SQLite history with a full replace.
+ */
 export async function getThreadMessagesForTransport(threadId: string) {
-  return runChatPromiseOr(
-    ThreadsService.getThreadMessagesForTransport(threadId),
-    []
-  )
+  return runChatPromise(ThreadsService.getThreadMessagesForTransport(threadId))
 }
 
 export function getThreadInfo(threadId: string) {

@@ -68,6 +68,8 @@ import {
   unsubscribeFromStream,
 } from '../active-streams'
 import { shutdownAllActiveStreams } from '../streaming/stream-registry-service'
+import { shutdownChatRuntime } from '../runtime/lifecycle'
+import { markChatRuntimeUnavailable } from '../runtime/health'
 import type { ChatUIMessage } from '../types'
 
 installChatTestRuntimeHooks()
@@ -366,6 +368,52 @@ describe('active-streams registry', () => {
     await flushMicrotasks()
 
     expect(mockWriteThread).not.toHaveBeenCalled()
+    shutdownAllActiveStreams()
+    expect(mockWriteThread).toHaveBeenCalled()
+  })
+
+  it('shutdownChatRuntime flushes pending snapshots even after health flips', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    runManagedStream({
+      chatId: 'thread-shutdown-runtime',
+      streamId: 'stream-shutdown-runtime',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
+    await flushMicrotasks()
+
+    expect(mockWriteThread).not.toHaveBeenCalled()
+    await shutdownChatRuntime()
+    expect(mockWriteThread).toHaveBeenCalled()
+  })
+
+  it('flush still works if health is marked unavailable before shutdownAllActiveStreams', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    runManagedStream({
+      chatId: 'thread-flush-after-unavail',
+      streamId: 'stream-flush-after-unavail',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
+    await flushMicrotasks()
+
+    markChatRuntimeUnavailable('runtime_disposing')
     shutdownAllActiveStreams()
     expect(mockWriteThread).toHaveBeenCalled()
   })

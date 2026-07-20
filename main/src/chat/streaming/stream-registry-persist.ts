@@ -2,7 +2,7 @@ import { Cause, Effect } from 'effect'
 import log from '../../logger'
 import type { ChatUIMessage } from '../types'
 import type { ThreadMessage } from '../threads/types'
-import { getManagedRuntime } from '../runtime/runtime-ref'
+import { getManagedRuntimeInstance } from '../runtime/runtime-ref'
 import { broadcast } from './stream-registry-broadcast'
 import {
   getActiveRegistry,
@@ -127,7 +127,9 @@ export function makePersistMessages(
   ) => Effect.Effect<unknown, unknown, unknown>
 ): PersistMessagesSync {
   return (chatId, messages) => {
-    const runtime = getManagedRuntime()
+    // Use the raw instance (not health-gated getManagedRuntime) so shutdown
+    // flush can persist while health is already `runtime_disposing`.
+    const runtime = getManagedRuntimeInstance()
     if (!runtime) {
       return {
         success: false,

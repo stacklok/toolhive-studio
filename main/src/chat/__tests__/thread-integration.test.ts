@@ -36,12 +36,34 @@ vi.mock('../../logger', () => ({
   default: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
-import { ensureThreadExists } from '../thread-integration'
+import {
+  ensureThreadExists,
+  getThreadMessagesForTransport,
+} from '../thread-integration'
+import { markChatRuntimeUnavailable } from '../runtime/health'
+import { CHAT_UNAVAILABLE_USER_MESSAGE } from '../runtime/errors'
 
 installChatTestRuntimeHooks()
 
 beforeEach(() => {
   vi.clearAllMocks()
+})
+
+describe('getThreadMessagesForTransport', () => {
+  it('rejects when the chat runtime is unavailable instead of returning []', async () => {
+    mockReadThread.mockReturnValue({
+      id: 'thread-1',
+      messages: [{ id: 'm1', role: 'user', parts: [] }],
+      lastEditTimestamp: 0,
+      createdAt: 0,
+    })
+
+    markChatRuntimeUnavailable('runtime_not_ready')
+
+    await expect(getThreadMessagesForTransport('thread-1')).rejects.toThrow(
+      CHAT_UNAVAILABLE_USER_MESSAGE
+    )
+  })
 })
 
 describe('ensureThreadExists', () => {

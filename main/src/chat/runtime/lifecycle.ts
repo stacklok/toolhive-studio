@@ -33,11 +33,14 @@ export async function bootstrapChatRuntime(): Promise<void> {
 }
 
 export async function shutdownChatRuntime(): Promise<void> {
-  // Mark unavailable before dispose so IPC adapters never observe ready=true
-  // with a null ManagedRuntime mid-teardown.
-  markChatRuntimeUnavailable('runtime_disposing')
   try {
+    // Flush active streams while the runtime is still ready so snapshot
+    // persistence can use getManagedRuntime(). Marking unavailable first
+    // would make every shutdown flush fail silently.
     shutdownAllActiveStreams()
+    // Then block new IPC work before dispose so adapters never observe
+    // ready=true with a null ManagedRuntime mid-teardown.
+    markChatRuntimeUnavailable('runtime_disposing')
     await disposeChatRuntime()
     markChatRuntimeUnavailable('runtime_disposed')
     log.info('[CHAT] Effect runtime disposed')
