@@ -152,10 +152,13 @@ describe('AgentDetailPage', () => {
 
     it('always shows the Duplicate button', async () => {
       mockAgentsApi.duplicate.mockResolvedValue({
-        ...builtinAgent,
-        id: 'custom.copy-of-toolhive',
-        kind: 'custom',
-        name: 'ToolHive Assistant (copy)',
+        success: true,
+        agent: {
+          ...builtinAgent,
+          id: 'custom.copy-of-toolhive',
+          kind: 'custom',
+          name: 'ToolHive Assistant (copy)',
+        },
       })
 
       renderDetail(builtinAgent)

@@ -1,4 +1,6 @@
+import '../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { Effect } from 'effect'
 
 const mockAgentStream = vi.hoisted(() => vi.fn())
 const mockToolLoopAgentCtor = vi.hoisted(() => vi.fn())
@@ -28,9 +30,6 @@ const mockCreateBuiltinAgentTools = vi.hoisted(() =>
 const mockRunManagedStream = vi.hoisted(() =>
   vi.fn().mockResolvedValue(undefined)
 )
-const mockUpdateThreadMessages = vi.hoisted(() =>
-  vi.fn(() => ({ success: true }))
-)
 const mockGetAgent = vi.hoisted(() => vi.fn())
 const mockResolveAgentForThread = vi.hoisted(() => vi.fn())
 
@@ -47,69 +46,61 @@ vi.mock('ai', () => ({
   toUIMessageStream: mockToUIMessageStream,
 }))
 
-vi.mock('@sentry/electron/main', () => ({
-  startSpanManual: vi.fn(
-    async (
-      _opts: unknown,
-      fn: (span: unknown, finish: () => void) => unknown
-    ) =>
-      fn(
-        {
-          spanContext: () => ({}),
-          setStatus: vi.fn(),
-          setAttribute: vi.fn(),
-          setAttributes: vi.fn(),
-        },
-        vi.fn()
-      )
-  ),
-  startSpan: vi.fn(
-    (_opts: unknown, fn: (span: { addLink: () => void }) => unknown) =>
-      fn({ addLink: vi.fn() })
-  ),
-}))
-
 vi.mock('../../logger', () => ({
   default: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
-}))
-
-vi.mock('../providers', () => ({
-  CHAT_PROVIDERS: [
-    { id: 'openai', name: 'OpenAI' },
-    { id: 'google', name: 'Google' },
-    { id: 'openrouter', name: 'OpenRouter' },
-  ],
-}))
-
-vi.mock('../mcp-tools', () => ({
-  createMcpTools: mockCreateMcpTools,
-  getCachedUiMetadata: mockGetCachedUiMetadata,
-}))
-
-vi.mock('../active-streams', () => ({
-  runManagedStream: mockRunManagedStream,
-  setToolUiMetadata: vi.fn(),
-}))
-
-vi.mock('../threads-storage', () => ({
-  updateThreadMessages: mockUpdateThreadMessages,
 }))
 
 vi.mock('../utils', () => ({
   createModelFromRequest: mockCreateModelFromRequest,
 }))
 
-vi.mock('../agents/registry', () => ({
-  getAgent: mockGetAgent,
-  resolveAgentForThread: mockResolveAgentForThread,
-}))
-
 vi.mock('../agents/builtin-agent-tools', () => ({
   createBuiltinAgentTools: mockCreateBuiltinAgentTools,
 }))
 
-import { handleChatStreamRealtime } from '../streaming'
+import { handleChatStreamRealtime as handleChatStreamRealtimeImpl } from '../streaming/chat-stream-service-impl'
 import type { ChatRequest } from '../types'
+
+function makeStreamDeps() {
+  return {
+    agents: {
+      getAgent: (id: string) => Effect.sync(() => mockGetAgent(id)),
+      resolveAgentForThread: (threadId: string) =>
+        Effect.sync(() => mockResolveAgentForThread(threadId)),
+    },
+    mcp: {
+      createMcpTools: (
+        threadId?: string,
+        options?: { sanitizeSchemas?: boolean }
+      ) =>
+        Effect.tryPromise({
+          try: () => mockCreateMcpTools(threadId, options),
+          catch: (cause) => cause as Error,
+        }),
+      getCachedUiMetadata: () => Effect.sync(() => mockGetCachedUiMetadata()),
+    },
+    registry: {
+      runManagedStream: (args: unknown) =>
+        Effect.tryPromise({
+          try: () => mockRunManagedStream(args),
+          catch: (cause) => cause as Error,
+        }),
+    },
+  }
+}
+
+async function handleChatStreamRealtime(
+  request: ChatRequest,
+  streamId: string,
+  sender: Electron.WebContents
+) {
+  return handleChatStreamRealtimeImpl(
+    makeStreamDeps() as Parameters<typeof handleChatStreamRealtimeImpl>[0],
+    request,
+    streamId,
+    sender
+  )
+}
 
 const fakeSender = { send: vi.fn() } as unknown as Electron.WebContents
 
@@ -324,7 +315,7 @@ describe('handleChatStreamRealtime — error message mapping', () => {
 })
 
 describe('handleChatStreamRealtime — AI SDK v7 UI stream wiring', () => {
-  it('uses standalone toUIMessageStream with result.stream and onEnd callback', async () => {
+  it('uses standalone toUIMessageStream without an onEnd persistence callback', async () => {
     mockGetAgent.mockReturnValue(
       fakeAgent('builtin.toolhive-assistant', 'TOOLHIVE INSTRUCTIONS')
     )
@@ -338,9 +329,9 @@ describe('handleChatStreamRealtime — AI SDK v7 UI stream wiring', () => {
     expect(mockToUIMessageStream).toHaveBeenCalledWith(
       expect.objectContaining({
         stream: {},
-        onEnd: expect.any(Function),
       })
     )
+    expect(mockToUIMessageStream.mock.calls[0]![0]).not.toHaveProperty('onEnd')
     expect(mockToUIMessageStream.mock.calls[0]![0]).not.toHaveProperty(
       'onFinish'
     )

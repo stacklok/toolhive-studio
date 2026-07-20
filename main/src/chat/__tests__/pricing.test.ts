@@ -1,4 +1,6 @@
+import '../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { installChatTestRuntimeHooks } from '../runtime/test-runtime'
 import { promises as fs } from 'node:fs'
 
 vi.mock('electron', () => ({
@@ -17,6 +19,8 @@ vi.mock('../../logger', () => ({
 }))
 
 import { getPricingMap, _resetPricingStateForTests } from '../pricing'
+
+installChatTestRuntimeHooks()
 
 const SAMPLE_API = {
   openai: {

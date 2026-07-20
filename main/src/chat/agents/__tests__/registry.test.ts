@@ -1,14 +1,10 @@
+import '../../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { installChatTestRuntimeHooks } from '../../runtime/test-runtime'
 import type Database from 'better-sqlite3'
 import { createTestDb } from '../../../db/__tests__/test-helpers'
 
 let testDb: Database.Database
-
-vi.mock('@sentry/electron/main', () => ({
-  startSpan: vi.fn((_opts: unknown, cb: (span: unknown) => unknown) =>
-    cb({ setStatus: vi.fn(), setAttribute: vi.fn(), setAttributes: vi.fn() })
-  ),
-}))
 
 vi.mock('../../../db/database', () => ({
   getDb: () => testDb,
@@ -39,6 +35,8 @@ import {
 import { BUILTIN_AGENT_IDS, DEFAULT_AGENT_ID } from '@common/types/agents'
 import { writeThread } from '../../../db/writers/threads-writer'
 import { writeAgent } from '../../../db/writers/agents-writer'
+
+installChatTestRuntimeHooks()
 
 beforeEach(() => {
   testDb = createTestDb()
@@ -193,11 +191,18 @@ describe('agent registry — CRUD', () => {
   })
 
   it('duplicates any agent as a custom copy', () => {
-    const copy = duplicateAgent(BUILTIN_AGENT_IDS.toolhiveAssistant)
-    expect(copy).not.toBeNull()
-    expect(copy!.kind).toBe('custom')
-    expect(copy!.id.startsWith('custom.')).toBe(true)
-    expect(copy!.name.endsWith('(copy)')).toBe(true)
+    const result = duplicateAgent(BUILTIN_AGENT_IDS.toolhiveAssistant)
+    expect(result.success).toBe(true)
+    expect(result.agent).toBeDefined()
+    expect(result.agent!.kind).toBe('custom')
+    expect(result.agent!.id.startsWith('custom.')).toBe(true)
+    expect(result.agent!.name.endsWith('(copy)')).toBe(true)
+  })
+
+  it('returns failure when duplicating a missing agent', () => {
+    const result = duplicateAgent('custom.does-not-exist')
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('Agent not found')
   })
 })
 

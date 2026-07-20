@@ -1,164 +1,39 @@
-import Store from 'electron-store'
-import log from '../logger'
+import { Effect } from 'effect'
 import type { LanguageModelUsage } from 'ai'
 import type { UIMessage } from 'ai'
-import type { ChatUIMessage } from './types'
-import {
-  writeThread,
-  deleteThreadFromDb,
-  clearAllThreadsFromDb,
-  writeActiveThread,
-} from '../db/writers/threads-writer'
-import {
-  readThread as readThreadFromDb,
-  readAllThreads as readAllThreadsFromDb,
-  readActiveThreadId as readActiveThreadIdFromDb,
-  readThreadCount as readThreadCountFromDb,
-} from '../db/readers/threads-reader'
+import { runChatSyncOr, runChatToResultSync } from './runtime'
+import { ThreadsService } from './threads/threads-service'
+import type { ChatSettingsThread, ThreadMessage } from './threads/types'
 
-export interface ChatSettingsThread {
-  id: string
-  title?: string
-  /** When true, auto-title generation will never overwrite this title. */
-  titleEditedByUser?: boolean
-  starred?: boolean
-  messages: ChatUIMessage[]
-  lastEditTimestamp: number
-  createdAt: number
-  /**
-   * Id of the agent that should run for this thread. When absent, the
-   * main process falls back to the default built-in agent.
-   */
-  agentId?: string | null
-  /** Per-thread selected provider id (e.g. "openai"). NULL falls back to global. */
-  selectedProvider?: string | null
-  /** Per-thread selected model id. NULL falls back to global. */
-  selectedModel?: string | null
-  /** Per-thread enabled MCP tools, keyed by server name. NULL falls back to global. */
-  enabledMcpTools?: Record<string, string[]> | null
-  /** Per-thread enabled skill names. NULL falls back to global. */
-  enabledSkills?: string[] | null
-}
-
-interface ChatSettingsThreads {
-  threads: Record<string, ChatSettingsThread>
-  activeThreadId?: string
-}
-
-// Kept for one-time reconciliation migration; remove after migration grace period
-export const threadsStore = new Store<ChatSettingsThreads>({
-  name: 'chat-threads',
-  encryptionKey: 'toolhive-threads-encryption-key',
-  clearInvalidConfig: true,
-  defaults: {
-    threads: {},
-    activeThreadId: undefined,
-  },
-})
-
-/**
- * Mirrored by `generateDraftThreadId` in
- * `renderer/src/features/chat/lib/thread-id.ts` — keep the formats in sync.
- */
-function generateThreadId(): string {
-  return `thread_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
-}
+export type { ChatSettingsThread } from './threads/types'
 
 export function createThread(
   title?: string,
-  initialMessages: ChatSettingsThread['messages'] = [],
-  /**
-   * Caller-supplied id used to promote a renderer-side draft to a real
-   * row without the URL/`useChat` id changing. Refuses to overwrite an
-   * existing row (`writeThread` is `INSERT OR REPLACE` and would nuke
-   * the prior thread's messages); callers intending an upsert must
-   * consult `getThread` first — `ensureThreadExists` already does.
-   */
+  initialMessages: ThreadMessage[] = [],
   explicitId?: string
 ): { success: boolean; threadId?: string; error?: string } {
-  try {
-    const threadId = explicitId ?? generateThreadId()
-    const now = Date.now()
-
-    if (explicitId && readThreadFromDb(threadId)) {
-      return {
-        success: false,
-        error: `Thread ${threadId} already exists`,
-      }
-    }
-
-    const newThread: ChatSettingsThread = {
-      id: threadId,
-      title,
-      messages: initialMessages,
-      lastEditTimestamp: now,
-      createdAt: now,
-    }
-
-    try {
-      writeThread(newThread)
-      writeActiveThread(threadId)
-    } catch (err) {
-      log.error('[DB] Failed to write thread:', err)
-      return {
-        success: false,
-        error: err instanceof Error ? err.message : 'Unknown error',
-      }
-    }
-
-    return { success: true, threadId }
-  } catch (error) {
-    log.error('[THREADS] Failed to create thread:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
+  return runChatToResultSync(
+    ThreadsService.createThread(title, initialMessages, explicitId).pipe(
+      Effect.map(({ threadId }) => ({ threadId }))
+    )
+  )
 }
 
 export function getThread(threadId: string): ChatSettingsThread | null {
-  try {
-    return readThreadFromDb(threadId)
-  } catch (err) {
-    log.error(`[THREADS] Failed to get thread ${threadId}:`, err)
-    return null
-  }
+  return runChatSyncOr(ThreadsService.getThread(threadId), null)
 }
 
 export function getAllThreads(): ChatSettingsThread[] {
-  try {
-    return readAllThreadsFromDb()
-  } catch (err) {
-    log.error('[THREADS] Failed to get all threads:', err)
-    return []
-  }
+  return runChatSyncOr(ThreadsService.getAllThreads(), [])
 }
 
 export function updateThread(
   threadId: string,
   updates: Partial<Omit<ChatSettingsThread, 'id' | 'createdAt'>>
 ): { success: boolean; error?: string } {
-  try {
-    const existing = readThreadFromDb(threadId)
-    if (!existing) {
-      return { success: false, error: 'Thread not found' }
-    }
-
-    const updatedThread: ChatSettingsThread = {
-      ...existing,
-      ...updates,
-      lastEditTimestamp: Date.now(),
-    }
-
-    writeThread(updatedThread)
-    return { success: true }
-  } catch (error) {
-    log.error(`[THREADS] Failed to update thread ${threadId}:`, error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
+  return runChatToResultSync(
+    ThreadsService.updateThread(threadId, updates).pipe(Effect.as({}))
+  )
 }
 
 export function addMessageToThread(
@@ -172,139 +47,48 @@ export function addMessageToThread(
     finishReason?: string
   }>
 ): { success: boolean; error?: string } {
-  try {
-    const existing = readThreadFromDb(threadId)
-    if (!existing) {
-      return { success: false, error: 'Thread not found' }
-    }
-
-    const updatedThread: ChatSettingsThread = {
-      ...existing,
-      messages: [...existing.messages, message],
-      lastEditTimestamp: Date.now(),
-    }
-
-    writeThread(updatedThread)
-    return { success: true }
-  } catch (error) {
-    log.error(`[THREADS] Failed to add message to thread ${threadId}:`, error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
+  return runChatToResultSync(
+    ThreadsService.addMessageToThread(threadId, message).pipe(Effect.as({}))
+  )
 }
 
 export function updateThreadMessages(
   threadId: string,
   messages: ChatSettingsThread['messages']
 ): { success: boolean; error?: string } {
-  try {
-    const existing = readThreadFromDb(threadId)
-    if (!existing) {
-      log.info('Thread not found')
-      return { success: false, error: 'Thread not found' }
-    }
-
-    const updatedThread: ChatSettingsThread = {
-      ...existing,
-      messages,
-      lastEditTimestamp: Date.now(),
-    }
-
-    writeThread(updatedThread)
-    return { success: true }
-  } catch (error) {
-    log.error(
-      `[THREADS] Failed to update messages in thread ${threadId}:`,
-      error
-    )
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
+  return runChatToResultSync(
+    ThreadsService.updateThreadMessages(threadId, messages).pipe(Effect.as({}))
+  )
 }
 
 export function deleteThread(threadId: string): {
   success: boolean
   error?: string
 } {
-  try {
-    const existing = readThreadFromDb(threadId)
-    if (!existing) {
-      return { success: false, error: 'Thread not found' }
-    }
-
-    deleteThreadFromDb(threadId)
-
-    // If this was the active thread, clear the active thread
-    const activeThreadId = readActiveThreadIdFromDb()
-    if (activeThreadId === threadId) {
-      writeActiveThread(undefined)
-    }
-
-    return { success: true }
-  } catch (error) {
-    log.error(`[THREADS] Failed to delete thread ${threadId}:`, error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
+  return runChatToResultSync(
+    ThreadsService.deleteThread(threadId).pipe(Effect.as({}))
+  )
 }
 
 export function getActiveThreadId(): string | undefined {
-  try {
-    return readActiveThreadIdFromDb() ?? undefined
-  } catch (error) {
-    log.error('[THREADS] Failed to get active thread ID:', error)
-    return undefined
-  }
+  return runChatSyncOr(ThreadsService.getActiveThreadId(), undefined)
 }
 
 export function setActiveThreadId(threadId: string | undefined): {
   success: boolean
   error?: string
 } {
-  try {
-    if (threadId) {
-      // Verify thread exists
-      const thread = getThread(threadId)
-      if (!thread) {
-        return { success: false, error: 'Thread not found' }
-      }
-    }
-
-    writeActiveThread(threadId)
-    return { success: true }
-  } catch (error) {
-    log.error('[THREADS] Failed to set active thread ID:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
+  return runChatToResultSync(
+    ThreadsService.setActiveThreadId(threadId).pipe(Effect.as({}))
+  )
 }
 
 export function clearAllThreads(): { success: boolean; error?: string } {
-  try {
-    clearAllThreadsFromDb()
-    return { success: true }
-  } catch (error) {
-    log.error('[THREADS] Failed to clear all threads:', error)
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    }
-  }
+  return runChatToResultSync(
+    ThreadsService.clearAllThreads().pipe(Effect.as({}))
+  )
 }
 
 export function getThreadCount(): number {
-  try {
-    return readThreadCountFromDb()
-  } catch (error) {
-    log.error('[THREADS] Failed to get thread count:', error)
-    return 0
-  }
+  return runChatSyncOr(ThreadsService.getThreadCount(), 0)
 }

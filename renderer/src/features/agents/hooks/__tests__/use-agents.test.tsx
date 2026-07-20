@@ -52,7 +52,10 @@ beforeEach(() => {
   mockAgentsApi.create.mockResolvedValue(sampleAgent)
   mockAgentsApi.update.mockResolvedValue(sampleAgent)
   mockAgentsApi.delete.mockResolvedValue({ success: true })
-  mockAgentsApi.duplicate.mockResolvedValue(sampleAgent)
+  mockAgentsApi.duplicate.mockResolvedValue({
+    success: true,
+    agent: sampleAgent,
+  })
   mockAgentsApi.getThreadAgentId.mockResolvedValue(null)
   mockChatApi.ensureThreadExists.mockResolvedValue({
     success: true,

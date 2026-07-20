@@ -16,15 +16,18 @@ import {
 import { writeShutdownServers } from './writers/shutdown-writer'
 import log from '../logger'
 import { withDbSpan } from './telemetry'
-import type { ChatSettingsThread } from '../chat/threads-storage'
+import type { ChatSettingsThread } from '../chat/threads/types'
+import {
+  getLegacyChatSettingsStore,
+  getLegacyThreadsStore,
+} from '../chat/settings/legacy-store-access'
+
 import { telemetryStore } from '../telemetry-store'
 import { autoUpdateStore } from '../auto-update'
 import { quitConfirmationStore } from '../quit-confirmation'
 import { newsletterStore } from '../newsletter'
 import { expertConsultationStore } from '../expert-consultation'
 import { featureFlagStore } from '../feature-flags/flags'
-import { chatSettingsStore } from '../chat/settings-storage'
-import { threadsStore } from '../chat/threads-storage'
 import { shutdownStore } from '../graceful-exit'
 
 const MIGRATION_SENTINEL = 'migration_from_store_complete'
@@ -75,7 +78,7 @@ function syncFeatureFlags(): void {
 }
 
 function syncChatProviders(): void {
-  const providers = chatSettingsStore.get('providers')
+  const providers = getLegacyChatSettingsStore().get('providers')
   if (!providers || typeof providers !== 'object') return
 
   for (const [providerId, settings] of Object.entries(providers)) {
@@ -91,7 +94,7 @@ function syncChatProviders(): void {
 }
 
 function syncSelectedModel(): void {
-  const selectedModel = chatSettingsStore.get('selectedModel')
+  const selectedModel = getLegacyChatSettingsStore().get('selectedModel')
   if (
     selectedModel &&
     typeof selectedModel.provider === 'string' &&
@@ -102,7 +105,7 @@ function syncSelectedModel(): void {
 }
 
 function syncEnabledMcpTools(): void {
-  const enabledMcpTools = chatSettingsStore.get('enabledMcpTools')
+  const enabledMcpTools = getLegacyChatSettingsStore().get('enabledMcpTools')
   if (!enabledMcpTools || typeof enabledMcpTools !== 'object') return
 
   for (const [serverName, tools] of Object.entries(enabledMcpTools)) {
@@ -120,6 +123,7 @@ function syncShutdownServers(): void {
 }
 
 function syncThreads(db: Database.Database): void {
+  const threadsStore = getLegacyThreadsStore()
   const threads = threadsStore.get('threads')
   if (!threads || typeof threads !== 'object') return
 

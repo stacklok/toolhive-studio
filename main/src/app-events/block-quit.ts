@@ -13,6 +13,7 @@ import { stopAllServers } from '../graceful-exit'
 import { createMainProcessFetch } from '../unix-socket-fetch'
 import { safeTrayDestroy } from '../system-tray'
 import { delay } from '../../../utils/delay'
+import { shutdownChatRuntime } from '../chat/runtime/lifecycle'
 import log from '../logger'
 
 /** Hold the quit, run teardown, then really exit. */
@@ -44,6 +45,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
   } catch (err) {
     log.error('Teardown failed: ', err)
   } finally {
+    await shutdownChatRuntime()
     // Stop the embedded ToolHive server
     stopToolhive()
 

@@ -1,5 +1,8 @@
 import { ipcMain, app } from 'electron'
-import { type ChatRequest, handleChatStreamRealtime } from '../../chat'
+import {
+  type ChatRequest,
+  handleChatStreamRealtime,
+} from '../../chat/streaming'
 import {
   cancelStream,
   getActiveStreamId,
@@ -16,7 +19,13 @@ function ensurePurgeListener() {
   if (purgeListenerInstalled) return
   purgeListenerInstalled = true
   app.on('web-contents-created', (_event, contents) => {
-    contents.once('destroyed', () => purgeSender(contents))
+    contents.once('destroyed', () => {
+      try {
+        purgeSender(contents)
+      } catch (error) {
+        log.warn('[CHAT_STREAM_IPC] Failed to purge destroyed sender:', error)
+      }
+    })
   })
 }
 

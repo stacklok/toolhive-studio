@@ -1,4 +1,6 @@
+import '../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { installChatTestRuntimeHooks } from '../runtime/test-runtime'
 
 const mockReadThread = vi.hoisted(() => vi.fn())
 const mockReadThreadSelectedModel = vi.hoisted(() => vi.fn())
@@ -36,6 +38,8 @@ import {
   getThreadEnabledSkills,
   setThreadEnabledSkill,
 } from '../thread-settings-storage'
+
+installChatTestRuntimeHooks()
 
 beforeEach(() => {
   vi.clearAllMocks()

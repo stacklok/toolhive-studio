@@ -1,32 +1,56 @@
+import '../runtime/__tests__/setup'
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import type { WebContents } from 'electron'
+import { installChatTestRuntimeHooks } from '../runtime/test-runtime'
 
-const mockUpdateThreadMessages = vi.hoisted(() =>
-  vi.fn(() => ({ success: true }) as { success: boolean; error?: string })
+const mockWriteThread = vi.hoisted(() => vi.fn())
+const mockReadThread = vi.hoisted(() =>
+  vi.fn((id: string) => ({
+    id,
+    messages: [],
+    lastEditTimestamp: 0,
+    createdAt: 0,
+  }))
 )
 
-// Captures `before-quit` listeners so tests can fire them on demand.
-const { beforeQuitListeners } = vi.hoisted(() => ({
-  beforeQuitListeners: [] as Array<() => void>,
+vi.mock('../../db/writers/threads-writer', () => ({
+  writeThread: mockWriteThread,
+  deleteThreadFromDb: vi.fn(),
+  clearAllThreadsFromDb: vi.fn(),
+  writeActiveThread: vi.fn(),
+  writeThreadSelectedModel: vi.fn(),
+  writeThreadEnabledMcpTools: vi.fn(),
+  writeThreadEnabledSkills: vi.fn(),
 }))
 
-vi.mock('../threads-storage', () => ({
-  updateThreadMessages: mockUpdateThreadMessages,
+vi.mock('../../db/readers/threads-reader', () => ({
+  readThread: mockReadThread,
+  readAllThreads: vi.fn(() => []),
+  readActiveThreadId: vi.fn(),
+  readThreadCount: vi.fn(() => 0),
+  readThreadSelectedModel: vi.fn(() => null),
+  readThreadEnabledMcpTools: vi.fn(() => ({})),
+  readThreadEnabledSkills: vi.fn(() => []),
+}))
+
+vi.mock('../../db/readers/agents-reader', () => ({
+  readThreadAgentId: vi.fn(() => null),
+  readAgent: vi.fn(),
+  readAllAgents: vi.fn(() => []),
 }))
 
 vi.mock('../../logger', () => ({
   default: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
 }))
 
-// Local `electron` mock. `vitest:electron` exposes the real `app`, so
-// without this the module-level `app.on('before-quit', ...)` would
-// leak across test files. Also captures the registered listener for
-// the shutdown test and stubs `webContents` so broadcasts no-op.
+vi.mock('electron-store', () => ({
+  default: class FakeStore {},
+}))
+
 vi.mock('electron', () => ({
   app: {
-    on: vi.fn((event: string, listener: () => void) => {
-      if (event === 'before-quit') beforeQuitListeners.push(listener)
-    }),
+    getPath: vi.fn(() => '/tmp'),
+    on: vi.fn(),
     once: vi.fn(),
   },
   webContents: {
@@ -43,7 +67,12 @@ import {
   subscribeToStream,
   unsubscribeFromStream,
 } from '../active-streams'
+import { shutdownAllActiveStreams } from '../streaming/stream-registry-service'
+import { shutdownChatRuntime } from '../runtime/lifecycle'
+import { markChatRuntimeUnavailable } from '../runtime/health'
 import type { ChatUIMessage } from '../types'
+
+installChatTestRuntimeHooks()
 
 interface FakeSender {
   send: ReturnType<typeof vi.fn>
@@ -90,10 +119,14 @@ const initialUserMessages: ChatUIMessage[] = [
 beforeEach(() => {
   vi.useFakeTimers()
   _resetActiveStreamsForTests()
-  mockUpdateThreadMessages.mockReset()
-  mockUpdateThreadMessages.mockImplementation(() => ({ success: true }))
-  // `beforeQuitListeners` is intentionally not reset — registration
-  // happens once at import time and the listeners are idempotent.
+  mockWriteThread.mockReset()
+  mockReadThread.mockReset()
+  mockReadThread.mockImplementation((id: string) => ({
+    id,
+    messages: [],
+    lastEditTimestamp: 0,
+    createdAt: 0,
+  }))
 })
 
 afterEach(() => {
@@ -230,9 +263,9 @@ describe('active-streams registry', () => {
     controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
     await flushMicrotasks()
 
-    expect(mockUpdateThreadMessages).not.toHaveBeenCalled()
+    expect(mockWriteThread).not.toHaveBeenCalled()
     await vi.advanceTimersByTimeAsync(300)
-    expect(mockUpdateThreadMessages).toHaveBeenCalled()
+    expect(mockWriteThread).toHaveBeenCalled()
 
     controller.close()
     await run
@@ -260,10 +293,10 @@ describe('active-streams registry', () => {
 
     await run
 
-    expect(mockUpdateThreadMessages).toHaveBeenCalled()
-    const lastCall = mockUpdateThreadMessages.mock.calls.at(-1) as
-      unknown[] | undefined
-    expect(lastCall?.[0]).toBe('thread-5')
+    expect(mockWriteThread).toHaveBeenCalled()
+    const lastCall = mockWriteThread.mock.calls.at(-1) as
+      [{ id?: string }] | undefined
+    expect(lastCall?.[0]?.id).toBe('thread-5')
   })
 
   it('cancelStream aborts the underlying controller', async () => {
@@ -283,6 +316,106 @@ describe('active-streams registry', () => {
     expect(cancelStream('thread-6')).toBe(true)
     expect(abortController.signal.aborted).toBe(true)
     expect(cancelStream('missing')).toBe(false)
+  })
+
+  it('persists a partial snapshot when a stream is cancelled mid-flight', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+    const abortController = new AbortController()
+
+    const run = runManagedStream({
+      chatId: 'thread-cancel-persist',
+      streamId: 'stream-cancel-persist',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController,
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
+    await flushMicrotasks()
+
+    expect(mockWriteThread).not.toHaveBeenCalled()
+    expect(cancelStream('thread-cancel-persist')).toBe(true)
+
+    controller.error(
+      new DOMException('The operation was aborted', 'AbortError')
+    )
+    await run
+
+    expect(mockWriteThread).toHaveBeenCalled()
+    expect(getActiveStreamId('thread-cancel-persist')).toBeNull()
+  })
+
+  it('shutdownAllActiveStreams flushes a pending debounced snapshot', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    runManagedStream({
+      chatId: 'thread-shutdown-flush',
+      streamId: 'stream-shutdown-flush',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
+    await flushMicrotasks()
+
+    expect(mockWriteThread).not.toHaveBeenCalled()
+    shutdownAllActiveStreams()
+    expect(mockWriteThread).toHaveBeenCalled()
+  })
+
+  it('shutdownChatRuntime flushes pending snapshots even after health flips', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    runManagedStream({
+      chatId: 'thread-shutdown-runtime',
+      streamId: 'stream-shutdown-runtime',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
+    await flushMicrotasks()
+
+    expect(mockWriteThread).not.toHaveBeenCalled()
+    await shutdownChatRuntime()
+    expect(mockWriteThread).toHaveBeenCalled()
+  })
+
+  it('flush still works if health is marked unavailable before shutdownAllActiveStreams', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    runManagedStream({
+      chatId: 'thread-flush-after-unavail',
+      streamId: 'stream-flush-after-unavail',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({ type: 'text-start', id: 't1' })
+    controller.enqueue({ type: 'text-delta', id: 't1', delta: 'partial' })
+    await flushMicrotasks()
+
+    markChatRuntimeUnavailable('runtime_disposing')
+    shutdownAllActiveStreams()
+    expect(mockWriteThread).toHaveBeenCalled()
   })
 
   it('rejects a second stream for the same chatId while one is still running', async () => {
@@ -321,10 +454,9 @@ describe('active-streams registry', () => {
   })
 
   it('broadcasts chat:stream:persist-error once when the snapshot write fails', async () => {
-    mockUpdateThreadMessages.mockImplementation(() => ({
-      success: false,
-      error: 'disk full',
-    }))
+    mockWriteThread.mockImplementation(() => {
+      throw new Error('disk full')
+    })
 
     const sender = makeSender()
     const { stream, controller } = createControllableStream<unknown>()
@@ -503,6 +635,68 @@ describe('active-streams registry', () => {
     await run
   })
 
+  it('replays a tool-input-error with rawInput for late subscribers', async () => {
+    const sender = makeSender()
+    const { stream, controller } = createControllableStream<unknown>()
+
+    const run = runManagedStream({
+      chatId: 'thread-tool-input-error',
+      streamId: 'stream-tool-input-error',
+      originalMessages: initialUserMessages,
+      uiMessageStream: stream as never,
+      abortController: new AbortController(),
+      initialSender: asWebContents(sender),
+    })
+
+    controller.enqueue({ type: 'start', messageId: 'asst-1' })
+    controller.enqueue({
+      type: 'tool-input-start',
+      toolCallId: 'tc1',
+      toolName: 'search',
+    })
+    controller.enqueue({
+      type: 'tool-input-error',
+      toolCallId: 'tc1',
+      toolName: 'search',
+      input: '{bad',
+      errorText: 'Invalid JSON',
+    })
+    await flushMicrotasks()
+
+    const lateSender = makeSender()
+    const resumed = subscribeToStream(
+      'thread-tool-input-error',
+      asWebContents(lateSender)
+    )
+
+    expect(resumed!.replayChunks).toEqual([
+      { type: 'start', messageId: 'asst-1' },
+      {
+        type: 'tool-input-start',
+        toolCallId: 'tc1',
+        toolName: 'search',
+        dynamic: undefined,
+        providerExecuted: undefined,
+        title: undefined,
+        providerMetadata: undefined,
+      },
+      {
+        type: 'tool-input-error',
+        toolCallId: 'tc1',
+        toolName: 'search',
+        input: '{bad',
+        errorText: 'Invalid JSON',
+        dynamic: undefined,
+        providerExecuted: undefined,
+        providerMetadata: undefined,
+        title: undefined,
+      },
+    ])
+
+    controller.close()
+    await run
+  })
+
   it('replays a tool with partial input still streaming', async () => {
     const sender = makeSender()
     const { stream, controller } = createControllableStream<unknown>()
@@ -564,7 +758,7 @@ describe('active-streams registry', () => {
     await run
   })
 
-  it('aborts every active stream on before-quit', async () => {
+  it('aborts every active stream on runtime shutdown', async () => {
     const sender = makeSender()
     const { stream: s1 } = createControllableStream<unknown>()
     const { stream: s2 } = createControllableStream<unknown>()
@@ -588,8 +782,7 @@ describe('active-streams registry', () => {
       initialSender: asWebContents(sender),
     })
 
-    expect(beforeQuitListeners.length).toBeGreaterThan(0)
-    for (const listener of beforeQuitListeners) listener()
+    shutdownAllActiveStreams()
 
     expect(ac1.signal.aborted).toBe(true)
     expect(ac2.signal.aborted).toBe(true)
