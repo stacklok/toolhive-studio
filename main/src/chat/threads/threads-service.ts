@@ -98,16 +98,7 @@ export class ThreadsService extends Effect.Service<ThreadsService>()(
           }),
 
         updateThreadMessages: (threadId: string, messages: ThreadMessage[]) =>
-          repo.updateMessages(threadId, messages).pipe(
-            Effect.mapError((error) =>
-              error.userMessage === 'Thread not found'
-                ? new ThreadNotFoundError({
-                    threadId,
-                    userMessage: 'Thread not found',
-                  })
-                : error
-            )
-          ),
+          repo.updateMessages(threadId, messages),
 
         deleteThread: (threadId: string) =>
           Effect.gen(function* () {
@@ -205,12 +196,14 @@ export class ThreadsService extends Effect.Service<ThreadsService>()(
             )
           ),
 
+        // Fail closed on StorageError — soft-failing to [] would hydrate the
+        // renderer as an empty thread; the next send overwrites SQLite history.
         getThreadMessagesForTransport: (threadId: string) =>
           Effect.gen(function* () {
             const thread = yield* repo.readThread(threadId)
             if (!thread?.messages?.length) return []
             return thread.messages
-          }).pipe(Effect.catchTag('StorageError', () => Effect.succeed([]))),
+          }),
       }
     }),
     dependencies: [ThreadsRepository.Default],

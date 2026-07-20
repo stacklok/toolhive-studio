@@ -8,10 +8,8 @@ import { register as registerSkills } from './skills'
 import { register as registerStreaming } from './streaming'
 import { register as registerThreads } from './threads'
 import { register as registerThreadSettings } from './thread-settings'
-import { registerChatHealthHandler } from './runtime-health'
 
 export function register() {
-  registerChatHealthHandler()
   registerProviders()
   registerStreaming()
   registerSettings()

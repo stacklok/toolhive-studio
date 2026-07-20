@@ -11,8 +11,8 @@ import {
   DEFAULT_AGENT_ID,
   LEGACY_BUILTIN_AGENT_IDS,
 } from '@common/types/agents'
-import { APP_ASSISTANT_NAME } from '@common/app-info'
 import { getBuiltinAgentSeeds } from '../agents/builtin-prompts'
+import { createDefaultAgentConfig } from './default-agent'
 import { StorageError, ValidationError } from '../runtime/errors'
 import { chatLogError, chatLogInfo } from '../runtime/logging'
 import { ThreadsRepository } from '../threads/threads-repository'
@@ -124,7 +124,7 @@ export class AgentsService extends Effect.Service<AgentsService>()(
             )
             if (fallback) return fallback
 
-            yield* Effect.sync(() => {
+            yield* wrapSync('reseedBuiltinAgents', () => {
               const now = Date.now()
               const existingById = new Map(
                 readAllAgents().map((a) => [a.id, a])
@@ -141,31 +141,11 @@ export class AgentsService extends Effect.Service<AgentsService>()(
             )
             if (retried) return retried
 
-            const now = Date.now()
-            return {
-              id: DEFAULT_AGENT_ID,
-              kind: 'builtin' as const,
-              name: APP_ASSISTANT_NAME,
-              description: '',
-              instructions: 'You are a helpful assistant.',
-              builtinToolsKey: null,
-              createdAt: now,
-              updatedAt: now,
-            }
+            return createDefaultAgentConfig()
           }).pipe(
-            Effect.catchTag('StorageError', () => {
-              const now = Date.now()
-              return Effect.succeed({
-                id: DEFAULT_AGENT_ID,
-                kind: 'builtin' as const,
-                name: APP_ASSISTANT_NAME,
-                description: '',
-                instructions: 'You are a helpful assistant.',
-                builtinToolsKey: null,
-                createdAt: now,
-                updatedAt: now,
-              })
-            })
+            Effect.catchTag('StorageError', () =>
+              Effect.succeed(createDefaultAgentConfig())
+            )
           ),
 
         createCustomAgent: (input: CreateAgentInput) =>

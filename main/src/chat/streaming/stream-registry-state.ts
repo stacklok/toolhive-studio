@@ -22,7 +22,7 @@ export function configureStreamRegistry(persist: PersistMessagesSync): void {
 
 export function getActiveRegistry(): StreamRegistryRuntime | null {
   if (!persistMessages) return null
-  return { streams, persistMessages, isShuttingDown }
+  return { streams, persistMessages }
 }
 
 export function requireRegistry(): StreamRegistryRuntime {

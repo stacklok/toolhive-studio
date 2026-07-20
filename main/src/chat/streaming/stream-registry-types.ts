@@ -94,7 +94,6 @@ export type PersistMessagesSync = (
 export interface StreamRegistryRuntime {
   streams: Map<string, ActiveStream>
   persistMessages: PersistMessagesSync
-  isShuttingDown: boolean
 }
 
 export interface RunStreamOptions {

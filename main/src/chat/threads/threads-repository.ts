@@ -19,7 +19,7 @@ import {
   readThreadEnabledSkills,
 } from '../../db/readers/threads-reader'
 import { readThreadAgentId } from '../../db/readers/agents-reader'
-import { StorageError } from '../runtime/errors'
+import { StorageError, ThreadNotFoundError } from '../runtime/errors'
 import type { ChatSettingsThread, ThreadMessage } from './types'
 
 function wrapSync<A>(
@@ -145,8 +145,8 @@ export class ThreadsRepository extends Effect.Service<ThreadsRepository>()(
           )
           if (!existing) {
             return yield* Effect.fail(
-              new StorageError({
-                operation: 'updateMessages',
+              new ThreadNotFoundError({
+                threadId,
                 userMessage: 'Thread not found',
               })
             )

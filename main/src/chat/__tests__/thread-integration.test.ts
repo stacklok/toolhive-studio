@@ -64,6 +64,16 @@ describe('getThreadMessagesForTransport', () => {
       CHAT_UNAVAILABLE_USER_MESSAGE
     )
   })
+
+  it('rejects on StorageError instead of soft-failing to []', async () => {
+    mockReadThread.mockImplementation(() => {
+      throw new Error('db locked')
+    })
+
+    await expect(getThreadMessagesForTransport('thread-1')).rejects.toThrow(
+      'db locked'
+    )
+  })
 })
 
 describe('ensureThreadExists', () => {

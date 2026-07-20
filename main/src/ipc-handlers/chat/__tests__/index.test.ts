@@ -25,9 +25,6 @@ vi.mock('../agents', () => ({ register: mocks.registerAgents }))
 vi.mock('../thread-settings', () => ({
   register: mocks.registerThreadSettings,
 }))
-vi.mock('../runtime-health', () => ({
-  registerChatHealthHandler: vi.fn(),
-}))
 
 import { register } from '../index'
 

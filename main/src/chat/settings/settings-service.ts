@@ -229,6 +229,10 @@ export class SettingsService extends Effect.Service<SettingsService>()(
         saveEnabledMcpTools: (serverName: string, toolNames: string[]) =>
           repo.writeEnabledMcpTools(serverName, toolNames),
 
+        // Returns raw DB rows. Stale server entries are pruned once at
+        // bootstrap (`reconcileEnabledMcpTools`); chat turns also skip missing
+        // workloads. Settings UI may show enabled tools for stopped servers
+        // until the next restart — intentional vs filtering on every read.
         getEnabledMcpTools: () => repo.readEnabledMcpTools(),
 
         getEnabledMcpServersFromTools: () =>
@@ -305,25 +309,8 @@ export class SettingsService extends Effect.Service<SettingsService>()(
             }
           }).pipe(Effect.catchAll(() => Effect.void)),
 
-        // Persists provider credentials only. `enabledTools` on ChatSettingsProvider
-        // is retained for IPC compatibility and is not written here.
-        saveChatSettings: (
-          providerId: ProviderId,
-          settings: ChatSettingsProvider
-        ) =>
-          Effect.gen(function* () {
-            if (isLocalProvider(providerId)) {
-              yield* repo.writeProvider(providerId, {
-                endpointURL:
-                  'endpointURL' in settings ? settings.endpointURL : '',
-              })
-            } else {
-              yield* repo.writeProvider(providerId, {
-                apiKey: 'apiKey' in settings ? settings.apiKey : '',
-              })
-            }
-          }),
-
+        // Persists provider credentials only. `enabledTools` on the IPC payload
+        // is retained for compatibility and is not written here.
         handleSaveSettings: (
           providerId: string,
           settings:
@@ -355,22 +342,6 @@ export class SettingsService extends Effect.Service<SettingsService>()(
               return
             }
 
-            const chatSettingsProvider: ChatSettingsProvider =
-              providerIdTyped === 'ollama' || providerIdTyped === 'lmstudio'
-                ? {
-                    providerId: providerIdTyped,
-                    endpointURL: credentialValue,
-                    enabledTools: settings.enabledTools,
-                  }
-                : {
-                    providerId: providerIdTyped as Exclude<
-                      ProviderId,
-                      'ollama' | 'lmstudio'
-                    >,
-                    apiKey: credentialValue,
-                    enabledTools: settings.enabledTools,
-                  }
-
             if (isLocalProvider(providerIdTyped)) {
               yield* repo.writeProvider(providerIdTyped, {
                 endpointURL: credentialValue,
@@ -380,8 +351,6 @@ export class SettingsService extends Effect.Service<SettingsService>()(
                 apiKey: credentialValue,
               })
             }
-
-            return chatSettingsProvider
           }),
       }
     }),

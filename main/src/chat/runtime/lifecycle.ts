@@ -5,8 +5,6 @@ import {
   initializeChatRuntime,
 } from './managed-runtime'
 import {
-  getChatRuntimeHealth,
-  getChatUnavailableReason,
   markChatRuntimeInitializing,
   markChatRuntimeReady,
   markChatRuntimeUnavailable,
@@ -47,12 +45,5 @@ export async function shutdownChatRuntime(): Promise<void> {
   } catch (error) {
     markChatRuntimeUnavailable('runtime_dispose_failed')
     log.error('[CHAT] Effect runtime disposal failed:', error)
-  }
-}
-
-export function getChatRuntimeStatus() {
-  return {
-    health: getChatRuntimeHealth(),
-    reason: getChatUnavailableReason(),
   }
 }

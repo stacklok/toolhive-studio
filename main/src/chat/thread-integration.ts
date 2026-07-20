@@ -23,9 +23,9 @@ export function createChatThread(title?: string): {
 }
 
 /**
- * Fail closed when the runtime is unavailable. Soft-failing to `[]` would
- * hydrate the renderer as an empty thread; the next send overwrites real
- * SQLite history with a full replace.
+ * Fail closed when the runtime is unavailable or the DB read fails.
+ * Soft-failing to `[]` would hydrate the renderer as an empty thread; the
+ * next send overwrites real SQLite history with a full replace.
  */
 export async function getThreadMessagesForTransport(threadId: string) {
   return runChatPromise(ThreadsService.getThreadMessagesForTransport(threadId))

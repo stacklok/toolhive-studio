@@ -7,7 +7,12 @@ import {
   isChatRuntimeReady,
   getChatUnavailableReason,
 } from '../health'
-import { CHAT_UNAVAILABLE_USER_MESSAGE, ChatUnavailableError } from '../errors'
+import {
+  CHAT_UNAVAILABLE_USER_MESSAGE,
+  ChatUnavailableError,
+  StreamConflictError,
+  toUserFacingProviderMessage,
+} from '../errors'
 import { Effect } from 'effect'
 import {
   unavailableResult,
@@ -58,6 +63,17 @@ describe('chat runtime adapters', () => {
       userMessage: CHAT_UNAVAILABLE_USER_MESSAGE,
     })
     expect(error.userMessage).toBe(CHAT_UNAVAILABLE_USER_MESSAGE)
+  })
+
+  it('toUserFacingProviderMessage prefers domain userMessage over empty .message', () => {
+    const error = new StreamConflictError({
+      chatId: 'thread-1',
+      userMessage: 'Stream already active for chat thread-1',
+    })
+    expect(error.message).toBe('')
+    expect(toUserFacingProviderMessage(error)).toBe(
+      'Stream already active for chat thread-1'
+    )
   })
 
   it('runChatSyncOr returns the fallback when the runtime is unavailable', () => {

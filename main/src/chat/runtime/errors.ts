@@ -97,6 +97,14 @@ export function getDomainUserMessage(error: ChatDomainError): string {
 }
 
 function getErrorMessage(error: unknown): string {
+  // Domain errors carry text in `userMessage`; Data.TaggedError only populates
+  // `.message` when `message` is passed at construction.
+  if (error && typeof error === 'object' && 'userMessage' in error) {
+    const userMessage = (error as { userMessage: unknown }).userMessage
+    if (typeof userMessage === 'string' && userMessage.length > 0) {
+      return userMessage
+    }
+  }
   if (error instanceof Error) return error.message
   if (typeof error === 'string') return error
   if (error && typeof error === 'object' && 'message' in error) {

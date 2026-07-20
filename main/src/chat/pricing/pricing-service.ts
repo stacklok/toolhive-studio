@@ -1,7 +1,7 @@
 import { app } from 'electron'
 import { promises as fs } from 'node:fs'
 import path from 'node:path'
-import { Duration, Effect, Ref, Schedule } from 'effect'
+import { Effect, Ref } from 'effect'
 import { StorageError } from '../runtime/errors'
 import { chatLogWarning } from '../runtime/logging'
 
@@ -117,11 +117,8 @@ export class PricingService extends Effect.Service<PricingService>()(
               userMessage: 'Failed to fetch model pricing.',
             }),
         }).pipe(
-          Effect.retry(
-            Schedule.exponential(Duration.millis(200)).pipe(
-              Schedule.compose(Schedule.recurs(2))
-            )
-          ),
+          // Single attempt: cold getPricingMap() awaits this path and a 3×
+          // retry with 10s timeouts could block ~30s on an unreachable host.
           Effect.tap(({ fetchedAt, pricing, data }) =>
             Effect.gen(function* () {
               yield* Ref.set(state, { fetchedAt, pricing })

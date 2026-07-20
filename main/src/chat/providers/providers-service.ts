@@ -5,25 +5,8 @@ import {
   DEFAULT_LMSTUDIO_URL,
   DEFAULT_OLLAMA_URL,
 } from '../constants'
-import { CHAT_PROVIDERS } from './providers-catalog'
 import { ProviderError } from '../runtime/errors'
 import { SettingsService } from '../settings/settings-service'
-
-function discoverToolSupportedModels(): {
-  providers: Array<{
-    id: string
-    name: string
-    models: string[]
-  }>
-} {
-  return {
-    providers: CHAT_PROVIDER_INFO.map((provider) => ({
-      id: provider.id,
-      name: provider.name,
-      models: provider.models,
-    })),
-  }
-}
 
 async function fetchOllamaModels(baseURL?: string): Promise<string[]> {
   if (!baseURL || !baseURL.trim()) return []
@@ -94,11 +77,6 @@ export class ProvidersService extends Effect.Service<ProvidersService>()(
       const settings = yield* SettingsService
 
       return {
-        getChatProviders: () => Effect.succeed(CHAT_PROVIDERS),
-
-        discoverToolSupportedModels: () =>
-          Effect.succeed(discoverToolSupportedModels()),
-
         fetchProviderModels: (providerId: string, tempCredential?: string) =>
           Effect.tryPromise({
             try: async () => {

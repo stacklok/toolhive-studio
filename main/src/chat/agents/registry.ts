@@ -3,8 +3,6 @@ import type {
   CreateAgentInput,
   UpdateAgentInput,
 } from '@common/types/agents'
-import { DEFAULT_AGENT_ID } from '@common/types/agents'
-import { APP_ASSISTANT_NAME } from '@common/app-info'
 import { Effect } from 'effect'
 import {
   CHAT_UNAVAILABLE_USER_MESSAGE,
@@ -12,20 +10,7 @@ import {
   runChatSyncOr,
 } from '../runtime'
 import { AgentsService } from './agents-service'
-
-function unavailableAgentFallback(): AgentConfig {
-  const now = Date.now()
-  return {
-    id: DEFAULT_AGENT_ID,
-    kind: 'builtin',
-    name: APP_ASSISTANT_NAME,
-    description: '',
-    instructions: 'You are a helpful assistant.',
-    builtinToolsKey: null,
-    createdAt: now,
-    updatedAt: now,
-  }
-}
+import { createDefaultAgentConfig } from './default-agent'
 
 export function seedBuiltinAgents(): void {
   runChatSync(AgentsService.seedBuiltinAgents())
@@ -44,7 +29,7 @@ export function resolveAgentForThread(
 ): AgentConfig {
   return runChatSyncOr(
     AgentsService.resolveAgentForThread(threadId),
-    unavailableAgentFallback()
+    createDefaultAgentConfig()
   )
 }
 
