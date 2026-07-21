@@ -109,12 +109,14 @@ export class TitleService extends Effect.Service<TitleService>()(
             const userFallback = fallbackTitleFromUser(userMsg)
 
             if (thread.titleEditedByUser) {
-              return { title: thread.title }
+              return { title: thread.title, updated: false }
             }
 
             if (!shouldAutoTitleThread(thread, userMsg)) {
-              return { title: thread.title ?? userFallback }
+              return { title: thread.title ?? userFallback, updated: false }
             }
+
+            let updated = false
 
             // Skip empty/hollow assistants — some providers reject them, and
             // they add no signal for a short title summary.
@@ -174,6 +176,7 @@ export class TitleService extends Effect.Service<TitleService>()(
                 title: userFallback,
                 titleEditedByUser: false,
               })
+              updated = true
             }
 
             const request = (
@@ -244,18 +247,18 @@ export class TitleService extends Effect.Service<TitleService>()(
 
             const latestThread = yield* threads.getThread(threadId)
             if (latestThread?.titleEditedByUser) {
-              return { title: latestThread.title }
+              return { title: latestThread.title, updated }
             }
 
             if (latestThread?.title?.trim() === title) {
-              return { title }
+              return { title, updated }
             }
 
             yield* threads.updateThread(threadId, {
               title,
               titleEditedByUser: false,
             })
-            return { title }
+            return { title, updated: true }
           }),
       }
     }),

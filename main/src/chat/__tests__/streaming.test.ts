@@ -40,7 +40,11 @@ const mockRunManagedStream = vi.hoisted(() =>
 const mockGetAgent = vi.hoisted(() => vi.fn())
 const mockResolveAgentForThread = vi.hoisted(() => vi.fn())
 const mockGenerateThreadTitle = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({ success: true, title: 'Generated Title' })
+  vi.fn().mockResolvedValue({
+    success: true,
+    title: 'Generated Title',
+    updated: true,
+  })
 )
 const mockBroadcastThreadUpdated = vi.hoisted(() => vi.fn())
 
@@ -504,6 +508,22 @@ describe('handleChatStreamRealtime — auto-title on stream complete', () => {
 
     expect(mockGenerateThreadTitle).toHaveBeenCalledWith('thread-1')
     expect(mockBroadcastThreadUpdated).toHaveBeenCalledWith('thread-1')
+  })
+
+  it('skips thread-updated broadcast when title generation is a no-op', async () => {
+    mockGenerateThreadTitle.mockResolvedValueOnce({
+      success: true,
+      title: 'Existing Title',
+      updated: false,
+    })
+    mockResolveAgentForThread.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'DEFAULT INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(makeRequest(), 'stream-noop', fakeSender)
+
+    expect(mockGenerateThreadTitle).toHaveBeenCalledWith('thread-1')
+    expect(mockBroadcastThreadUpdated).not.toHaveBeenCalled()
   })
 
   it('skips title generation when the stream ends in error', async () => {

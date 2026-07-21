@@ -225,6 +225,7 @@ describe('generateThreadTitle', () => {
       expect(result).toMatchObject({
         success: true,
         title: 'Patching Security Vulnerabilities',
+        updated: true,
       })
     })
 
@@ -373,6 +374,7 @@ describe('generateThreadTitle', () => {
       expect(result).toMatchObject({
         success: true,
         title: 'Existing Custom Title',
+        updated: false,
       })
       expect(mockGenerateText).not.toHaveBeenCalled()
       expect(mockWriteThread).not.toHaveBeenCalled()

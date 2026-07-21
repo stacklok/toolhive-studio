@@ -316,9 +316,11 @@ export async function handleChatStreamRealtime(
                     )
                     return
                   }
-                  // Stream `finished` was broadcast before this async work;
-                  // notify renderers again so the sidebar picks up the title.
-                  broadcastThreadUpdated(request.chatId)
+                  // Only refresh when SQLite actually changed — skip no-ops
+                  // (manual title, unchanged title, second-turn skip).
+                  if (result.updated) {
+                    broadcastThreadUpdated(request.chatId)
+                  }
                 } catch (error) {
                   log.warn(
                     `[CHAT] Auto-title threw for ${request.chatId}:`,

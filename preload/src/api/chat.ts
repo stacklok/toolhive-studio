@@ -463,6 +463,7 @@ export interface ChatAPI {
     generateThreadTitle: (threadId: string) => Promise<{
       success: boolean
       title?: string
+      updated?: boolean
       error?: string
     }>
 
