@@ -12,7 +12,8 @@
       "matchDatasources": ["github-releases"],
       "matchPackageNames": ["stacklok/toolhive"],
       "prPriority": 10,
-      "schedule": []
+      "schedule": [],
+      "minimumReleaseAge": null
     },
     {
       "description": "Group all AI SDK packages into a single PR — they are tightly coupled and should move together",
@@ -36,7 +37,7 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^utils/constants\\.ts$"],
+      "managerFilePatterns": ["/^utils/constants\\.ts$/"],
       "matchStrings": [
         "renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)(?: versioning=(?<versioning>\\S+))?\\s*\\*/\\s*export const TOOLHIVE_VERSION = process\\.env\\.THV_VERSION \\?\\? '(?<currentValue>.*?)'"
       ],
