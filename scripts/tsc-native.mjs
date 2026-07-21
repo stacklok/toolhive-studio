@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 
 const tsc = join(
   dirname(fileURLToPath(import.meta.url)),
-  '../node_modules/@typescript/native/bin/tsc',
+  '../node_modules/@typescript/native/bin/tsc'
 )
 const result = spawnSync(process.execPath, [tsc, ...process.argv.slice(2)], {
   stdio: 'inherit',
