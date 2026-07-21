@@ -14,7 +14,10 @@ import { ProviderError, ThreadNotFoundError } from '../runtime/errors'
 import { ThreadsService } from '../threads/threads-service'
 import { SettingsRepository } from '../settings/settings-service'
 import { ThreadSettingsService } from '../settings/thread-settings-service'
-import { sanitizeMessagesForModel } from './sanitize-messages-for-model'
+import {
+  isHollowAssistantMessage,
+  sanitizeMessagesForModel,
+} from './sanitize-messages-for-model'
 
 const TITLE_SYSTEM_PROMPT =
   'You are a concise assistant. Summarize the following conversation in 6 words or fewer using title case. Reply with only the title — no punctuation, no quotes, no explanation.'
@@ -60,7 +63,7 @@ export function shouldAutoTitleThread(
   if (thread.titleEditedByUser) return false
 
   const assistantCount = thread.messages.filter(
-    (m) => m.role === 'assistant'
+    (m) => m.role === 'assistant' && !isHollowAssistantMessage(m)
   ).length
   if (assistantCount > 1) return false
 
@@ -94,9 +97,6 @@ export class TitleService extends Effect.Service<TitleService>()(
             }
 
             const userMsg = thread.messages.find((m) => m.role === 'user')
-            const assistantMsg = thread.messages.find(
-              (m) => m.role === 'assistant'
-            )
             if (!userMsg) {
               return yield* Effect.fail(
                 new ProviderError({
@@ -108,24 +108,23 @@ export class TitleService extends Effect.Service<TitleService>()(
 
             const userFallback = fallbackTitleFromUser(userMsg)
 
-            if (thread.titleEditedByUser) {
-              return { title: thread.title, updated: false }
-            }
-
             if (!shouldAutoTitleThread(thread, userMsg)) {
               return { title: thread.title ?? userFallback, updated: false }
             }
 
-            let updated = false
-
             // Skip empty/hollow assistants — some providers reject them, and
             // they add no signal for a short title summary.
-            const assistantText = assistantMsg
-              ? extractMessageText(assistantMsg)
+            const nonHollowAssistant = thread.messages.find(
+              (m) => m.role === 'assistant' && !isHollowAssistantMessage(m)
+            )
+            const assistantText = nonHollowAssistant
+              ? extractMessageText(nonHollowAssistant)
               : ''
             const contextMessages = sanitizeMessagesForModel([
               userMsg,
-              ...(assistantMsg && assistantText ? [assistantMsg] : []),
+              ...(nonHollowAssistant && assistantText
+                ? [nonHollowAssistant]
+                : []),
             ])
 
             const threadModel =
@@ -169,14 +168,6 @@ export class TitleService extends Effect.Service<TitleService>()(
                   userMessage: 'Provider settings not found',
                 })
               )
-            }
-
-            if (!thread.title?.trim() && userFallback) {
-              yield* threads.updateThread(threadId, {
-                title: userFallback,
-                titleEditedByUser: false,
-              })
-              updated = true
             }
 
             const request = (
@@ -246,12 +237,15 @@ export class TitleService extends Effect.Service<TitleService>()(
             }
 
             const latestThread = yield* threads.getThread(threadId)
-            if (latestThread?.titleEditedByUser) {
-              return { title: latestThread.title, updated }
+            if (latestThread && !shouldAutoTitleThread(latestThread, userMsg)) {
+              return {
+                title: latestThread.title ?? userFallback,
+                updated: false,
+              }
             }
 
             if (latestThread?.title?.trim() === title) {
-              return { title, updated }
+              return { title, updated: false }
             }
 
             yield* threads.updateThread(threadId, {

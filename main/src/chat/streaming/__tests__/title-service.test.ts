@@ -127,4 +127,28 @@ describe('shouldAutoTitleThread', () => {
       )
     ).toBe(true)
   })
+
+  it('ignores legacy hollow assistants when checking the first exchange', () => {
+    expect(
+      shouldAutoTitleThread(
+        {
+          id: 't1',
+          title: undefined,
+          titleEditedByUser: false,
+          messages: [
+            userMsg,
+            msg({ id: 'hollow', role: 'assistant', parts: [] }),
+            msg({
+              id: 'a1',
+              role: 'assistant',
+              parts: [{ type: 'text', text: 'Use Docker' }],
+            }),
+          ],
+          lastEditTimestamp: 0,
+          createdAt: 0,
+        },
+        userMsg
+      )
+    ).toBe(true)
+  })
 })

@@ -262,6 +262,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
 
   // React to streaming completion: publish a signal and set an optimistic title
   const prevStatusRef = useRef(status)
+  const titledThreadsRef = useRef<Set<string>>(new Set())
 
   /** Emits the streamingComplete cache signal so subscribers refresh the thread */
   function signalStreamingComplete(threadId: string) {
@@ -283,6 +284,9 @@ export function useChatStreaming(externalThreadId?: string | null) {
 
     // Publish initial signal so message list / loading state updates
     signalStreamingComplete(currentThreadId)
+
+    if (titledThreadsRef.current.has(currentThreadId)) return
+    titledThreadsRef.current.add(currentThreadId)
 
     const threadIdAtCompletion = currentThreadId
 

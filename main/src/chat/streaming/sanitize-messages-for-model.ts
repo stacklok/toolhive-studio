@@ -45,29 +45,50 @@ export function isHollowAssistantMessage(message: ChatUIMessage): boolean {
 }
 
 /**
- * OpenRouter serializes assistant `content` as `text || null`. Tool- or
- * reasoning-only turns therefore arrive at providers as an empty assistant
- * message. A single space keeps the wire payload non-empty without changing
- * the visible reply.
+ * Reasoning-only turns serialize to empty assistant `content` on some
+ * providers. Tool-only turns must stay unpadded so adapters can emit
+ * null/omitted content alongside tool_calls (whitespace-only text is
+ * rejected by strict Kimi-compatible gateways).
  */
 function ensureAssistantWireText(message: ChatUIMessage): ChatUIMessage {
   if (message.role !== 'assistant') return message
   const { hasText, hasTool, hasReasoning } = getAssistantPartFlags(message)
-  if (hasText || (!hasTool && !hasReasoning)) return message
+  if (hasText || hasTool || !hasReasoning) return message
   return {
     ...message,
     parts: [...(message.parts ?? []), { type: 'text', text: ' ' }],
   }
 }
 
+/** Merge consecutive user turns after hollow removal heals role alternation. */
+function coalesceAdjacentUserMessages(
+  messages: ChatUIMessage[]
+): ChatUIMessage[] {
+  const result: ChatUIMessage[] = []
+  for (const message of messages) {
+    const previous = result.at(-1)
+    if (message.role === 'user' && previous?.role === 'user') {
+      result[result.length - 1] = {
+        ...previous,
+        parts: [...(previous.parts ?? []), ...(message.parts ?? [])],
+      }
+      continue
+    }
+    result.push(message)
+  }
+  return result
+}
+
 /**
- * Drop hollow assistants and ensure tool/reasoning-only turns have non-empty
- * text so providers like Moonshot accept the request.
+ * Drop hollow assistants, coalesce adjacent user turns for strict role
+ * alternation, and pad reasoning-only turns for wire compatibility.
  */
 export function sanitizeMessagesForModel(
   messages: ChatUIMessage[]
 ): ChatUIMessage[] {
-  return messages
-    .filter((message) => !isHollowAssistantMessage(message))
-    .map(ensureAssistantWireText)
+  return coalesceAdjacentUserMessages(
+    messages
+      .filter((message) => !isHollowAssistantMessage(message))
+      .map(ensureAssistantWireText)
+  )
 }

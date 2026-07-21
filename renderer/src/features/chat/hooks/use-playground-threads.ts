@@ -290,23 +290,23 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
   // Refresh when a background stream finishes, or when main writes a
   // title after stream end (title work runs after the `finished` broadcast).
   useEffect(() => {
+    const signalStreamingComplete = (threadId: string) => {
+      queryClient.setQueryData(['chat', 'streamingComplete'], {
+        threadId,
+        timestamp: Date.now(),
+      })
+    }
+
     const onStreamState = (...args: unknown[]) => {
       const event = args[0] as { chatId?: string; status?: string } | undefined
       if (!event?.chatId || event.status !== 'finished') return
-      // Signal only — the query-cache subscriber above does the refresh.
-      queryClient.setQueryData(['chat', 'streamingComplete'], {
-        threadId: event.chatId,
-        timestamp: Date.now(),
-      })
+      signalStreamingComplete(event.chatId)
     }
 
     const onThreadUpdated = (...args: unknown[]) => {
       const event = args[0] as { threadId?: string } | undefined
       if (!event?.threadId) return
-      queryClient.setQueryData(['chat', 'streamingComplete'], {
-        threadId: event.threadId,
-        timestamp: Date.now(),
-      })
+      signalStreamingComplete(event.threadId)
     }
 
     const offState = window.electronAPI.on?.('chat:stream:state', onStreamState)
@@ -315,19 +315,8 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
       onThreadUpdated
     )
     return () => {
-      if (typeof offState === 'function') {
-        offState()
-      } else {
-        window.electronAPI.removeListener?.('chat:stream:state', onStreamState)
-      }
-      if (typeof offUpdated === 'function') {
-        offUpdated()
-      } else {
-        window.electronAPI.removeListener?.(
-          'chat:thread:updated',
-          onThreadUpdated
-        )
-      }
+      offState?.()
+      offUpdated?.()
     }
   }, [queryClient])
 

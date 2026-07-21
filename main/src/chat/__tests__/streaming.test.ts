@@ -545,3 +545,46 @@ describe('handleChatStreamRealtime — auto-title on stream complete', () => {
     expect(mockBroadcastThreadUpdated).not.toHaveBeenCalled()
   })
 })
+
+describe('handleChatStreamRealtime — message sanitization', () => {
+  it('passes sanitized messages to convertToModelMessages', async () => {
+    mockResolveAgentForThread.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'DEFAULT INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(
+      makeRequest({
+        messages: [
+          {
+            id: 'u1',
+            role: 'user',
+            parts: [{ type: 'text', text: 'hi' }],
+          },
+          {
+            id: 'a-hollow',
+            role: 'assistant',
+            parts: [],
+          },
+          {
+            id: 'u2',
+            role: 'user',
+            parts: [{ type: 'text', text: 'again' }],
+          },
+        ],
+      }),
+      'stream-sanitize',
+      fakeSender
+    )
+
+    expect(mockConvertToModelMessages).toHaveBeenCalledWith([
+      expect.objectContaining({
+        id: 'u1',
+        role: 'user',
+        parts: [
+          { type: 'text', text: 'hi' },
+          { type: 'text', text: 'again' },
+        ],
+      }),
+    ])
+  })
+})

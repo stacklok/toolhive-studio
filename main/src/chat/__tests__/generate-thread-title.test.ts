@@ -428,20 +428,74 @@ describe('generateThreadTitle', () => {
       expect(result).toMatchObject({
         success: true,
         title: 'Manual Title',
+        updated: false,
       })
       expect(mockGenerateText).not.toHaveBeenCalled()
+      expect(mockWriteThread).not.toHaveBeenCalled()
     })
 
-    it('persists the user-message fallback before calling the LLM', async () => {
+    it('writes once with the LLM title', async () => {
+      mockGenerateText.mockResolvedValue({ text: 'Great Title' })
       await generateThreadTitle('thread-1')
 
+      expect(mockWriteThread).toHaveBeenCalledTimes(1)
       expect(mockWriteThread).toHaveBeenCalledWith(
         expect.objectContaining({
           id: 'thread-1',
+          title: 'Great Title',
+          titleEditedByUser: false,
+        })
+      )
+    })
+
+    it('does not write when the renderer already persisted the fallback title', async () => {
+      mockGetThread.mockReturnValue(
+        makeThread({
           title: 'Hello',
           titleEditedByUser: false,
         })
       )
+      mockGenerateText.mockResolvedValue({ text: 'Hello' })
+
+      const result = await generateThreadTitle('thread-1')
+
+      expect(result).toMatchObject({
+        success: true,
+        title: 'Hello',
+        updated: false,
+      })
+      expect(mockWriteThread).not.toHaveBeenCalled()
+    })
+
+    it('still auto-titles when a legacy hollow assistant is present', async () => {
+      mockGetThread.mockReturnValue(
+        makeThread({
+          title: undefined,
+          messages: [
+            {
+              id: 'm1',
+              role: 'user',
+              parts: [{ type: 'text', text: 'Hello' }],
+            },
+            { id: 'm-hollow', role: 'assistant', parts: [] },
+            {
+              id: 'm2',
+              role: 'assistant',
+              parts: [{ type: 'text', text: 'Hi there' }],
+            },
+          ],
+        })
+      )
+      mockGenerateText.mockResolvedValue({ text: 'Legacy Hollow Thread' })
+
+      const result = await generateThreadTitle('thread-1')
+
+      expect(result).toMatchObject({
+        success: true,
+        title: 'Legacy Hollow Thread',
+        updated: true,
+      })
+      expect(mockGenerateText).toHaveBeenCalled()
     })
   })
 
