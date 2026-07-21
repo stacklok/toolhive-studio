@@ -31,6 +31,13 @@
       "groupName": "streamdown",
       "groupSlug": "streamdown",
       "matchPackageNames": ["streamdown", "/^@streamdown\\//"]
+    },
+    {
+      "description": "TypeScript 7 side-by-side: group native compiler (@typescript/native alias) and TS6 API compat package",
+      "groupName": "typescript side-by-side",
+      "groupSlug": "typescript-side-by-side",
+      "matchPackageNames": ["@typescript/typescript6", "typescript"],
+      "matchManagers": ["npm"]
     }
   ],
   "customManagers": [

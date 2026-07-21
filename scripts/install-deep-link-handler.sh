@@ -24,7 +24,7 @@ SYSTEM_APPLICATIONS_DIR="/usr/share/applications"
 
 echo "==> Building .deb package..."
 cd "$PROJECT_ROOT"
-pnpm exec tsc -b --clean && pnpm exec tsc -b
+node scripts/tsc-native.mjs -b --clean && node scripts/tsc-native.mjs -b
 pnpm exec electron-forge make --targets deb
 
 DEB_FILE=$(find "$DEB_DIR" -name '*.deb' -print -quit)

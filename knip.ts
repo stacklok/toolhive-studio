@@ -28,6 +28,7 @@ export default {
     'main/src/system-tray.ts',
   ],
   ignoreDependencies: [
+    '@typescript/native', // TS7 compiler invoked via scripts/tsc-native.mjs, not imported
     '@electron-forge/maker-dmg', // Used indirectly in MakerDMGWithArch
     '@electron-forge/maker-squirrel', // Referenced by name in forge.config.ts
     'electron-winstaller', // Required by maker-squirrel; direct dep for pnpm hoisting
