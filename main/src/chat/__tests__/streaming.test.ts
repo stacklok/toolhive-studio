@@ -29,8 +29,12 @@ const mockCreateBuiltinAgentTools = vi.hoisted(() =>
 )
 const mockRunManagedStream = vi.hoisted(() =>
   vi.fn().mockImplementation(async (args: unknown) => {
-    const options = args as { onComplete?: () => void | Promise<void> }
-    await options.onComplete?.()
+    const options = args as {
+      onComplete?: (info: {
+        status: 'finished' | 'error'
+      }) => void | Promise<void>
+    }
+    await options.onComplete?.({ status: 'finished' })
   })
 )
 const mockGetAgent = vi.hoisted(() => vi.fn())
@@ -38,6 +42,7 @@ const mockResolveAgentForThread = vi.hoisted(() => vi.fn())
 const mockGenerateThreadTitle = vi.hoisted(() =>
   vi.fn().mockResolvedValue({ success: true, title: 'Generated Title' })
 )
+const mockBroadcastThreadUpdated = vi.hoisted(() => vi.fn())
 
 vi.mock('ai', () => ({
   ToolLoopAgent: class {
@@ -66,6 +71,13 @@ vi.mock('../agents/builtin-agent-tools', () => ({
 
 vi.mock('../generate-thread-title', () => ({
   generateThreadTitle: mockGenerateThreadTitle,
+}))
+
+vi.mock('../streaming/stream-registry-broadcast', () => ({
+  broadcastThreadUpdated: mockBroadcastThreadUpdated,
+  broadcastState: vi.fn(),
+  broadcast: vi.fn(),
+  safeSend: vi.fn(),
 }))
 
 import { handleChatStreamRealtime as handleChatStreamRealtimeImpl } from '../streaming/chat-stream-service-impl'
@@ -483,7 +495,7 @@ describe('handleChatStreamRealtime — AI SDK v7 UI stream wiring', () => {
 })
 
 describe('handleChatStreamRealtime — auto-title on stream complete', () => {
-  it('calls generateThreadTitle for the chat when the managed stream completes', async () => {
+  it('calls generateThreadTitle and broadcasts thread updated on success', async () => {
     mockResolveAgentForThread.mockReturnValue(
       fakeAgent('builtin.toolhive-assistant', 'DEFAULT INSTRUCTIONS')
     )
@@ -491,5 +503,25 @@ describe('handleChatStreamRealtime — auto-title on stream complete', () => {
     await handleChatStreamRealtime(makeRequest(), 'stream-title', fakeSender)
 
     expect(mockGenerateThreadTitle).toHaveBeenCalledWith('thread-1')
+    expect(mockBroadcastThreadUpdated).toHaveBeenCalledWith('thread-1')
+  })
+
+  it('skips title generation when the stream ends in error', async () => {
+    mockRunManagedStream.mockImplementationOnce(async (args: unknown) => {
+      const options = args as {
+        onComplete?: (info: {
+          status: 'finished' | 'error'
+        }) => void | Promise<void>
+      }
+      await options.onComplete?.({ status: 'error' })
+    })
+    mockResolveAgentForThread.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'DEFAULT INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(makeRequest(), 'stream-error', fakeSender)
+
+    expect(mockGenerateThreadTitle).not.toHaveBeenCalled()
+    expect(mockBroadcastThreadUpdated).not.toHaveBeenCalled()
   })
 })

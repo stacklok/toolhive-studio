@@ -148,12 +148,13 @@ function finalizeError(stream: ActiveStream, error: unknown): void {
 
 async function teardownStream(
   stream: ActiveStream,
-  onComplete: (() => void | Promise<void>) | undefined
+  onComplete: RunStreamOptions['onComplete']
 ): Promise<void> {
   getStreams().delete(stream.chatId)
   if (!onComplete) return
+  const status = stream.status === 'finished' ? 'finished' : 'error'
   try {
-    await onComplete()
+    await onComplete({ status })
   } catch (cleanupError) {
     log.error(
       `[ACTIVE_STREAMS] onComplete threw for ${stream.chatId}:`,

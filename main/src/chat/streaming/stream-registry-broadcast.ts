@@ -36,6 +36,20 @@ export function broadcastState(
   }
 }
 
+/** Notify every renderer that thread metadata (e.g. title) changed so
+ * sidebars can refresh after async work that finished after stream end. */
+export function broadcastThreadUpdated(threadId: string): void {
+  let allContents: WebContents[]
+  try {
+    allContents = webContentsApi.getAllWebContents()
+  } catch {
+    return
+  }
+  for (const wc of allContents) {
+    safeSend(wc, 'chat:thread:updated', { threadId })
+  }
+}
+
 export function broadcast(
   stream: ActiveStream,
   channel: string,

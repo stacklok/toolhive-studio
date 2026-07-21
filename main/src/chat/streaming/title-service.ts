@@ -1,5 +1,10 @@
 import { generateText, convertToModelMessages } from 'ai'
 import { Effect } from 'effect'
+import {
+  extractThreadTitleText,
+  fallbackTitleFromParts,
+} from '@common/chat/thread-title'
+import log from '../../logger'
 import { LOCAL_PROVIDER_IDS } from '../constants'
 import { CHAT_PROVIDERS } from '../providers/providers-catalog'
 import { createModelFromRequest } from '../utils'
@@ -13,9 +18,6 @@ import { sanitizeMessagesForModel } from './sanitize-messages-for-model'
 
 const TITLE_SYSTEM_PROMPT =
   'You are a concise assistant. Summarize the following conversation in 6 words or fewer using title case. Reply with only the title — no punctuation, no quotes, no explanation.'
-
-/** Max chars for the non-LLM fallback title (first user message). */
-const FALLBACK_TITLE_MAX_CHARS = 60
 
 /**
  * Reasoning models (e.g. Moonshot Kimi via OpenRouter) spend max_tokens on
@@ -36,14 +38,7 @@ function isLocalProvider(providerId: string): boolean {
 }
 
 function extractMessageText(message: ChatUIMessage): string {
-  return (message.parts ?? [])
-    .filter(
-      (part): part is { type: 'text'; text: string } =>
-        part.type === 'text' && 'text' in part
-    )
-    .map((part) => part.text)
-    .join(' ')
-    .trim()
+  return extractThreadTitleText(message.parts ?? [])
 }
 
 function normalizeTitle(text: string): string {
@@ -54,7 +49,7 @@ function normalizeTitle(text: string): string {
 }
 
 export function fallbackTitleFromUser(userMsg: ChatUIMessage): string {
-  return extractMessageText(userMsg).slice(0, FALLBACK_TITLE_MAX_CHARS)
+  return fallbackTitleFromParts(userMsg.parts ?? [])
 }
 
 /** Only auto-title the first assistant exchange in a thread. */
@@ -218,12 +213,24 @@ export class TitleService extends Effect.Service<TitleService>()(
                 })
                 return text
               },
-              catch: () =>
+              catch: (cause) =>
                 new ProviderError({
                   providerId: selected.provider,
+                  cause,
                   userMessage: 'Failed to generate thread title.',
                 }),
-            }).pipe(Effect.catchTag('ProviderError', () => Effect.succeed('')))
+            }).pipe(
+              Effect.tapError((error) =>
+                Effect.sync(() => {
+                  log.warn(
+                    `[TITLE] LLM title generation failed for ${threadId}:`,
+                    error.userMessage,
+                    error.cause ?? ''
+                  )
+                })
+              ),
+              Effect.catchTag('ProviderError', () => Effect.succeed(''))
+            )
 
             const title = normalizeTitle(llmText) || userFallback
             if (!title) {

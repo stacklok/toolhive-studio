@@ -43,7 +43,8 @@ export function isPersistenceBoundary(chunk: ChatUIMessageChunk): boolean {
   return PERSISTENCE_BOUNDARIES.has(chunk.type)
 }
 
-function buildSnapshot(stream: ActiveStream): ChatUIMessage[] {
+/** Exported for unit tests covering hollow-assistant persist rules. */
+export function buildSnapshot(stream: ActiveStream): ChatUIMessage[] {
   let messages: ChatUIMessage[]
   if (!stream.runningMessage) {
     messages = stream.originalMessages

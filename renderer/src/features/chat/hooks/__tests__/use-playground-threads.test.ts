@@ -592,5 +592,36 @@ describe('usePlaygroundThreads', () => {
         expect(mockChatAPI.getThread).toHaveBeenCalledWith('bg-thread')
       )
     })
+
+    it('calls refreshThread when chat:thread:updated is broadcast', async () => {
+      mockChatAPI.getAllThreads.mockResolvedValue([
+        makeDbThread({ id: 'titled-thread', title: 'Old title' }),
+      ])
+      mockChatAPI.getThread.mockResolvedValue(
+        makeDbThread({ id: 'titled-thread', title: 'LLM title' })
+      )
+
+      const { result } = renderHook(
+        () => usePlaygroundThreads('titled-thread'),
+        { wrapper: createWrapper() }
+      )
+      await waitFor(() => expect(result.current.isLoading).toBe(false))
+
+      const onCalls = vi.mocked(window.electronAPI.on).mock.calls
+      const threadUpdatedHandler = onCalls.find(
+        (call) => call[0] === 'chat:thread:updated'
+      )?.[1] as ((...args: unknown[]) => void) | undefined
+      expect(threadUpdatedHandler).toBeDefined()
+
+      await act(async () => {
+        threadUpdatedHandler?.({ threadId: 'titled-thread' })
+      })
+
+      await waitFor(() =>
+        expect(
+          result.current.threads.find((t) => t.id === 'titled-thread')?.title
+        ).toBe('LLM title')
+      )
+    })
   })
 })

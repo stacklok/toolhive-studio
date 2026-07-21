@@ -21,6 +21,7 @@ import { StreamRegistryService } from './stream-registry-service'
 import { createBuiltinAgentTools } from '../agents/builtin-agent-tools'
 import { sanitizeMessagesForModel } from './sanitize-messages-for-model'
 import { generateThreadTitle } from '../generate-thread-title'
+import { broadcastThreadUpdated } from './stream-registry-broadcast'
 
 /** Gemini's function-declaration validator rejects schema constructs other
  * providers accept. True for Google directly or a `google/*` OpenRouter model. */
@@ -287,7 +288,7 @@ export async function handleChatStreamRealtime(
               initialToolUiMetadata: Effect.runSync(
                 deps.mcp.getCachedUiMetadata()
               ),
-              onComplete: async () => {
+              onComplete: async ({ status }) => {
                 for (const client of mcpClients) {
                   try {
                     await client.close()
@@ -303,14 +304,27 @@ export async function handleChatStreamRealtime(
                     error
                   )
                 }
-                void generateThreadTitle(request.chatId).then((result) => {
+                // Only auto-title successful finishes — aborted/errored
+                // streams would waste tokens on a user-only transcript.
+                if (status !== 'finished') return
+                try {
+                  const result = await generateThreadTitle(request.chatId)
                   if (!result.success) {
                     log.warn(
                       `[CHAT] Auto-title failed for ${request.chatId}:`,
                       result.error
                     )
+                    return
                   }
-                })
+                  // Stream `finished` was broadcast before this async work;
+                  // notify renderers again so the sidebar picks up the title.
+                  broadcastThreadUpdated(request.chatId)
+                } catch (error) {
+                  log.warn(
+                    `[CHAT] Auto-title threw for ${request.chatId}:`,
+                    error
+                  )
+                }
               },
             })
           )
