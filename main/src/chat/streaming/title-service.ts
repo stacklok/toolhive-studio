@@ -15,7 +15,7 @@ const TITLE_SYSTEM_PROMPT =
   'You are a concise assistant. Summarize the following conversation in 6 words or fewer using title case. Reply with only the title — no punctuation, no quotes, no explanation.'
 
 /** Max chars for the non-LLM fallback title (first user message). */
-export const FALLBACK_TITLE_MAX_CHARS = 60
+const FALLBACK_TITLE_MAX_CHARS = 60
 
 /**
  * Reasoning models (e.g. Moonshot Kimi via OpenRouter) spend max_tokens on
@@ -35,7 +35,7 @@ function isLocalProvider(providerId: string): boolean {
   )
 }
 
-export function extractMessageText(message: ChatUIMessage): string {
+function extractMessageText(message: ChatUIMessage): string {
   return (message.parts ?? [])
     .filter(
       (part): part is { type: 'text'; text: string } =>
