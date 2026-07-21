@@ -315,8 +315,19 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
       onThreadUpdated
     )
     return () => {
-      offState?.()
-      offUpdated?.()
+      if (typeof offState === 'function') {
+        offState()
+      } else {
+        window.electronAPI.removeListener?.('chat:stream:state', onStreamState)
+      }
+      if (typeof offUpdated === 'function') {
+        offUpdated()
+      } else {
+        window.electronAPI.removeListener?.(
+          'chat:thread:updated',
+          onThreadUpdated
+        )
+      }
     }
   }, [queryClient])
 
