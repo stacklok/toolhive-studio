@@ -287,6 +287,30 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
     })
   }, [queryClient, refreshThread])
 
+  // Refresh thread metadata when a background stream finishes in main
+  // (e.g. user switched away before the LLM title was written).
+  useEffect(() => {
+    const listener = (...args: unknown[]) => {
+      const event = args[0] as { chatId?: string; status?: string } | undefined
+      if (!event?.chatId || event.status !== 'finished') return
+      refreshThread(event.chatId).catch((err) =>
+        log.error('[usePlaygroundThreads] refreshThread failed:', err)
+      )
+      queryClient.invalidateQueries({
+        queryKey: ['chat', 'thread', event.chatId],
+      })
+      queryClient.setQueryData(['chat', 'streamingComplete'], {
+        threadId: event.chatId,
+        timestamp: Date.now(),
+      })
+    }
+
+    const unsubscribe = window.electronAPI.on?.('chat:stream:state', listener)
+    return () => {
+      unsubscribe?.()
+    }
+  }, [queryClient, refreshThread])
+
   return {
     threads,
     isLoading,

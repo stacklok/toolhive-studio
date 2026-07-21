@@ -20,6 +20,7 @@ import { McpService } from '../mcp/mcp-service'
 import { StreamRegistryService } from './stream-registry-service'
 import { createBuiltinAgentTools } from '../agents/builtin-agent-tools'
 import { sanitizeMessagesForModel } from './sanitize-messages-for-model'
+import { generateThreadTitle } from '../generate-thread-title'
 
 /** Gemini's function-declaration validator rejects schema constructs other
  * providers accept. True for Google directly or a `google/*` OpenRouter model. */
@@ -302,6 +303,14 @@ export async function handleChatStreamRealtime(
                     error
                   )
                 }
+                void generateThreadTitle(request.chatId).then((result) => {
+                  if (!result.success) {
+                    log.warn(
+                      `[CHAT] Auto-title failed for ${request.chatId}:`,
+                      result.error
+                    )
+                  }
+                })
               },
             })
           )

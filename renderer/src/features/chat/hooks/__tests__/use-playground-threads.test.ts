@@ -21,6 +21,8 @@ const mockChatAPI = {
   updateThread: vi.fn(),
 }
 
+const mockUnsubscribeStreamState = vi.fn()
+
 function createWrapper() {
   const queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
@@ -44,6 +46,7 @@ beforeEach(() => {
   window.electronAPI = {
     ...window.electronAPI,
     chat: mockChatAPI as unknown as typeof window.electronAPI.chat,
+    on: vi.fn().mockReturnValue(mockUnsubscribeStreamState),
   }
   mockChatAPI.getAllThreads.mockResolvedValue([])
   mockChatAPI.setActiveThreadId.mockResolvedValue(undefined)
@@ -559,6 +562,34 @@ describe('usePlaygroundThreads', () => {
         expect(
           result.current.threads.find((t) => t.id === 'streaming-thread')?.title
         ).toBe('Auto title')
+      )
+    })
+
+    it('calls refreshThread when chat:stream:state reports finished', async () => {
+      mockChatAPI.getAllThreads.mockResolvedValue([
+        makeDbThread({ id: 'bg-thread', title: 'Old title' }),
+      ])
+      mockChatAPI.getThread.mockResolvedValue(
+        makeDbThread({ id: 'bg-thread', title: 'LLM title' })
+      )
+
+      renderHook(() => usePlaygroundThreads('bg-thread'), {
+        wrapper: createWrapper(),
+      })
+      await waitFor(() => expect(mockChatAPI.getAllThreads).toHaveBeenCalled())
+
+      const onCalls = vi.mocked(window.electronAPI.on).mock.calls
+      const streamStateHandler = onCalls.find(
+        (call) => call[0] === 'chat:stream:state'
+      )?.[1] as ((...args: unknown[]) => void) | undefined
+      expect(streamStateHandler).toBeDefined()
+
+      await act(async () => {
+        streamStateHandler?.({ chatId: 'bg-thread', status: 'finished' })
+      })
+
+      await waitFor(() =>
+        expect(mockChatAPI.getThread).toHaveBeenCalledWith('bg-thread')
       )
     })
   })

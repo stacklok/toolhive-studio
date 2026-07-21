@@ -3,18 +3,77 @@ import { Effect } from 'effect'
 import { LOCAL_PROVIDER_IDS } from '../constants'
 import { CHAT_PROVIDERS } from '../providers/providers-catalog'
 import { createModelFromRequest } from '../utils'
-import type { ChatRequest } from '../types'
+import type { ChatRequest, ChatUIMessage } from '../types'
+import type { ChatSettingsThread } from '../threads/types'
 import { ProviderError, ThreadNotFoundError } from '../runtime/errors'
 import { ThreadsService } from '../threads/threads-service'
 import { SettingsRepository } from '../settings/settings-service'
+import { ThreadSettingsService } from '../settings/thread-settings-service'
+import { sanitizeMessagesForModel } from './sanitize-messages-for-model'
 
 const TITLE_SYSTEM_PROMPT =
   'You are a concise assistant. Summarize the following conversation in 6 words or fewer using title case. Reply with only the title — no punctuation, no quotes, no explanation.'
+
+/** Max chars for the non-LLM fallback title (first user message). */
+export const FALLBACK_TITLE_MAX_CHARS = 60
+
+/**
+ * Reasoning models (e.g. Moonshot Kimi via OpenRouter) spend max_tokens on
+ * hidden thinking. Title calls are tiny — disable reasoning so the budget
+ * goes to visible text. `effort: 'none'` satisfies the OpenRouter schema
+ * which requires either `max_tokens` or `effort` alongside `enabled`.
+ */
+const OPENROUTER_TITLE_PROVIDER_OPTIONS = {
+  openrouter: {
+    reasoning: { enabled: false, effort: 'none' as const },
+  },
+}
 
 function isLocalProvider(providerId: string): boolean {
   return LOCAL_PROVIDER_IDS.includes(
     providerId as (typeof LOCAL_PROVIDER_IDS)[number]
   )
+}
+
+export function extractMessageText(message: ChatUIMessage): string {
+  return (message.parts ?? [])
+    .filter(
+      (part): part is { type: 'text'; text: string } =>
+        part.type === 'text' && 'text' in part
+    )
+    .map((part) => part.text)
+    .join(' ')
+    .trim()
+}
+
+function normalizeTitle(text: string): string {
+  return text
+    .trim()
+    .replace(/[.!?]+$/, '')
+    .trim()
+}
+
+export function fallbackTitleFromUser(userMsg: ChatUIMessage): string {
+  return extractMessageText(userMsg).slice(0, FALLBACK_TITLE_MAX_CHARS)
+}
+
+/** Only auto-title the first assistant exchange in a thread. */
+export function shouldAutoTitleThread(
+  thread: ChatSettingsThread,
+  userMsg: ChatUIMessage
+): boolean {
+  if (thread.titleEditedByUser) return false
+
+  const assistantCount = thread.messages.filter(
+    (m) => m.role === 'assistant'
+  ).length
+  if (assistantCount > 1) return false
+
+  const userFallback = fallbackTitleFromUser(userMsg)
+  const existingTitle = thread.title?.trim()
+  if (existingTitle && existingTitle !== userFallback) return false
+
+  return true
 }
 
 export class TitleService extends Effect.Service<TitleService>()(
@@ -24,6 +83,7 @@ export class TitleService extends Effect.Service<TitleService>()(
     effect: Effect.gen(function* () {
       const threads = yield* ThreadsService
       const settingsRepo = yield* SettingsRepository
+      const threadSettings = yield* ThreadSettingsService
 
       return {
         generateThreadTitle: (threadId: string) =>
@@ -50,12 +110,35 @@ export class TitleService extends Effect.Service<TitleService>()(
                 })
               )
             }
-            const contextMessages = [
-              userMsg,
-              ...(assistantMsg ? [assistantMsg] : []),
-            ]
 
-            const selected = yield* settingsRepo.readSelectedModel()
+            const userFallback = fallbackTitleFromUser(userMsg)
+
+            if (thread.titleEditedByUser) {
+              return { title: thread.title }
+            }
+
+            if (!shouldAutoTitleThread(thread, userMsg)) {
+              return { title: thread.title ?? userFallback }
+            }
+
+            // Skip empty/hollow assistants — some providers reject them, and
+            // they add no signal for a short title summary.
+            const assistantText = assistantMsg
+              ? extractMessageText(assistantMsg)
+              : ''
+            const contextMessages = sanitizeMessagesForModel([
+              userMsg,
+              ...(assistantMsg && assistantText ? [assistantMsg] : []),
+            ])
+
+            const threadModel =
+              yield* threadSettings.getThreadSelectedModel(threadId)
+            const globalModel = yield* settingsRepo.readSelectedModel()
+            const selected =
+              threadModel?.provider && threadModel?.model
+                ? threadModel
+                : globalModel
+
             if (!selected.provider || !selected.model) {
               return yield* Effect.fail(
                 new ProviderError({
@@ -91,6 +174,13 @@ export class TitleService extends Effect.Service<TitleService>()(
               )
             }
 
+            if (!thread.title?.trim() && userFallback) {
+              yield* threads.updateThread(threadId, {
+                title: userFallback,
+                titleEditedByUser: false,
+              })
+            }
+
             const request = (
               isLocalProvider(selected.provider)
                 ? {
@@ -111,26 +201,31 @@ export class TitleService extends Effect.Service<TitleService>()(
 
             const model = createModelFromRequest(provider, request)
 
-            const { text } = yield* Effect.tryPromise({
-              try: async () =>
-                generateText({
+            // Soft-fail the LLM call: reasoning models / flaky providers often
+            // return empty text. We always prefer a user-message fallback over
+            // leaving the UI stuck on "New chat".
+            const llmText = yield* Effect.tryPromise({
+              try: async () => {
+                const { text } = await generateText({
                   model,
                   instructions: TITLE_SYSTEM_PROMPT,
                   messages: await convertToModelMessages(contextMessages),
-                  maxOutputTokens: 20,
-                }),
-              catch: (cause) =>
+                  // Small but enough for a 6-word title once reasoning is off.
+                  maxOutputTokens: 64,
+                  ...(selected.provider === 'openrouter'
+                    ? { providerOptions: OPENROUTER_TITLE_PROVIDER_OPTIONS }
+                    : {}),
+                })
+                return text
+              },
+              catch: () =>
                 new ProviderError({
                   providerId: selected.provider,
-                  cause,
                   userMessage: 'Failed to generate thread title.',
                 }),
-            })
+            }).pipe(Effect.catchTag('ProviderError', () => Effect.succeed('')))
 
-            const title = text
-              .trim()
-              .replace(/[.!?]+$/, '')
-              .trim()
+            const title = normalizeTitle(llmText) || userFallback
             if (!title) {
               return yield* Effect.fail(
                 new ProviderError({
@@ -145,6 +240,10 @@ export class TitleService extends Effect.Service<TitleService>()(
               return { title: latestThread.title }
             }
 
+            if (latestThread?.title?.trim() === title) {
+              return { title }
+            }
+
             yield* threads.updateThread(threadId, {
               title,
               titleEditedByUser: false,
@@ -153,6 +252,10 @@ export class TitleService extends Effect.Service<TitleService>()(
           }),
       }
     }),
-    dependencies: [ThreadsService.Default, SettingsRepository.Default],
+    dependencies: [
+      ThreadsService.Default,
+      SettingsRepository.Default,
+      ThreadSettingsService.Default,
+    ],
   }
 ) {}
