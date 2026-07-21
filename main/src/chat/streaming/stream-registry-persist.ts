@@ -16,6 +16,7 @@ import type {
   ChatUIMessageChunk,
   PersistMessagesSync,
 } from './stream-registry-types'
+import { isHollowAssistantMessage } from './sanitize-messages-for-model'
 
 /**
  * Throttled DB persistence cadence (ms).
@@ -43,12 +44,26 @@ export function isPersistenceBoundary(chunk: ChatUIMessageChunk): boolean {
 }
 
 function buildSnapshot(stream: ActiveStream): ChatUIMessage[] {
-  if (!stream.runningMessage) return stream.originalMessages
-  const tail = stream.originalMessages[stream.originalMessages.length - 1]
-  if (tail && tail.id === stream.runningMessage.id) {
-    return [...stream.originalMessages.slice(0, -1), stream.runningMessage]
+  let messages: ChatUIMessage[]
+  if (!stream.runningMessage) {
+    messages = stream.originalMessages
+  } else if (isHollowAssistantMessage(stream.runningMessage)) {
+    // Never persist a hollow assistant placeholder (stream start / abort
+    // before any text, tools, or reasoning).
+    messages = stream.originalMessages
+  } else {
+    const tail = stream.originalMessages[stream.originalMessages.length - 1]
+    if (tail && tail.id === stream.runningMessage.id) {
+      messages = [
+        ...stream.originalMessages.slice(0, -1),
+        stream.runningMessage,
+      ]
+    } else {
+      messages = [...stream.originalMessages, stream.runningMessage]
+    }
   }
-  return [...stream.originalMessages, stream.runningMessage]
+  // Heal threads that already stored hollow assistants from earlier aborts.
+  return messages.filter((message) => !isHollowAssistantMessage(message))
 }
 
 function reportPersistFailure(stream: ActiveStream, error: string): void {

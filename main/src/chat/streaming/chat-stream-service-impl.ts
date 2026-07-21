@@ -19,6 +19,7 @@ import { AgentsService } from '../agents/agents-service'
 import { McpService } from '../mcp/mcp-service'
 import { StreamRegistryService } from './stream-registry-service'
 import { createBuiltinAgentTools } from '../agents/builtin-agent-tools'
+import { sanitizeMessagesForModel } from './sanitize-messages-for-model'
 
 /** Gemini's function-declaration validator rejects schema constructs other
  * providers accept. True for Google directly or a `google/*` OpenRouter model. */
@@ -126,7 +127,9 @@ export async function handleChatStreamRealtime(
           })
 
           const result = await agent.stream({
-            messages: await convertToModelMessages(request.messages),
+            messages: await convertToModelMessages(
+              sanitizeMessagesForModel(request.messages)
+            ),
             abortSignal: abortController.signal,
           })
 
