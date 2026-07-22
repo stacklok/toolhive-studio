@@ -34,7 +34,7 @@ auditConfig:
 overrides:
   '@electron/rebuild': ^4.2.0
   fast-xml-builder: '>=1.2.1'
-  fast-xml-parser: '>=5.10.1'
+  '@aws-sdk/xml-builder>fast-xml-parser': 5.10.1
   js-yaml: '>=4.3.0'
   '@opentelemetry/core': '>=2.9.0'
   tmp: '>=0.2.7'
@@ -44,11 +44,11 @@ overrides:
   brace-expansion@>=4.0.0 <5.0.7: 5.0.7
   brace-expansion@>=2.0.0 <2.1.2: 2.1.2
   brace-expansion@<1.1.16: 1.1.16
-  fast-uri: '>=3.1.4'
-  hono: '>=4.12.27'
-  '@hono/node-server': '>=2.0.5'
-  dompurify: '>=3.4.12'
-  sharp: '>=0.35.0'
+  'ajv>fast-uri': 3.1.4
+  '@modelcontextprotocol/sdk>hono': 4.12.31
+  '@modelcontextprotocol/sdk>@hono/node-server': 2.0.11
+  'mermaid>dompurify': 3.4.12
+  'icon-gen>sharp': 0.35.3
 
 patchedDependencies:
   electron-installer-redhat@3.4.0: patches/electron-installer-redhat@3.4.0.patch

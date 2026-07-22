@@ -7,7 +7,7 @@ settings:
 overrides:
   '@electron/rebuild': ^4.2.0
   fast-xml-builder: '>=1.2.1'
-  fast-xml-parser: '>=5.10.1'
+  '@aws-sdk/xml-builder>fast-xml-parser': 5.10.1
   js-yaml: '>=4.3.0'
   '@opentelemetry/core': '>=2.9.0'
   tmp: '>=0.2.7'
@@ -17,11 +17,11 @@ overrides:
   brace-expansion@>=4.0.0 <5.0.7: 5.0.7
   brace-expansion@>=2.0.0 <2.1.2: 2.1.2
   brace-expansion@<1.1.16: 1.1.16
-  fast-uri: '>=3.1.4'
-  hono: '>=4.12.27'
-  '@hono/node-server': '>=2.0.5'
-  dompurify: '>=3.4.12'
-  sharp: '>=0.35.0'
+  ajv>fast-uri: 3.1.4
+  '@modelcontextprotocol/sdk>hono': 4.12.31
+  '@modelcontextprotocol/sdk>@hono/node-server': 2.0.11
+  mermaid>dompurify: 3.4.12
+  icon-gen>sharp: 0.35.3
 
 patchedDependencies:
   electron-installer-redhat@3.4.0: 8fe238a56db4de235c10dd7f02c6a523c6ac3010edcc1d547dbc5c6416b89a37
@@ -1226,7 +1226,7 @@ packages:
     resolution: {integrity: sha512-bjD221KPLoJTWUwso1J6fGKiTXEUFedG/s0visavY4zakFPkeGURMRNly+FhBHs7T8Dz4qHaZIMX9ZoJHSJtKA==}
     engines: {node: '>=20'}
     peerDependencies:
-      hono: '>=4.12.27'
+      hono: ^4
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -4851,8 +4851,8 @@ packages:
   fast-string-width@3.0.2:
     resolution: {integrity: sha512-gX8LrtNEI5hq8DVUfRQMbr5lpaS4nMIWV+7XEbXk2b8kiQIizgnlr12B4dA3ZEx3308ze0O4Q1R+cHts8kyUJg==}
 
-  fast-uri@4.1.1:
-    resolution: {integrity: sha512-YPOs1zD5TG2+EZt+r88LwF6mclA7TPkpwMP7ZN3TO2HiHS8TXvq7QA/17iJsV9dubcLo/f8eEYqMBruyQV21hQ==}
+  fast-uri@3.1.4:
+    resolution: {integrity: sha512-8JnbkQ4juDyvYs4mgFGQqg4yCYtFDtUtmp2QIQq11ZZe5CFQ5wcqm1rqDgAh/QdMySuBnPzMUiJUNZG5N/AiQw==}
 
   fast-wrap-ansi@0.2.0:
     resolution: {integrity: sha512-rLV8JHxTyhVmFYhBJuMujcrHqOT2cnO5Zxj37qROj23CP39GXubJRBUFF0z8KFK77Uc0SukZUf7JZhsVEQ6n8w==}
@@ -11886,7 +11886,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 4.1.1
+      fast-uri: 3.1.4
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -13150,7 +13150,7 @@ snapshots:
     dependencies:
       fast-string-truncated-width: 3.0.3
 
-  fast-uri@4.1.1: {}
+  fast-uri@3.1.4: {}
 
   fast-wrap-ansi@0.2.0:
     dependencies:
