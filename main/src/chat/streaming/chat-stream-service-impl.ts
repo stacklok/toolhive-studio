@@ -19,6 +19,9 @@ import { AgentsService } from '../agents/agents-service'
 import { McpService } from '../mcp/mcp-service'
 import { StreamRegistryService } from './stream-registry-service'
 import { createBuiltinAgentTools } from '../agents/builtin-agent-tools'
+import { sanitizeMessagesForModel } from './sanitize-messages-for-model'
+import { generateThreadTitle } from '../generate-thread-title'
+import { broadcastThreadUpdated } from './stream-registry-broadcast'
 
 /** Gemini's function-declaration validator rejects schema constructs other
  * providers accept. True for Google directly or a `google/*` OpenRouter model. */
@@ -126,7 +129,9 @@ export async function handleChatStreamRealtime(
           })
 
           const result = await agent.stream({
-            messages: await convertToModelMessages(request.messages),
+            messages: await convertToModelMessages(
+              sanitizeMessagesForModel(request.messages)
+            ),
             abortSignal: abortController.signal,
           })
 
@@ -283,7 +288,7 @@ export async function handleChatStreamRealtime(
               initialToolUiMetadata: Effect.runSync(
                 deps.mcp.getCachedUiMetadata()
               ),
-              onComplete: async () => {
+              onComplete: async ({ status }) => {
                 for (const client of mcpClients) {
                   try {
                     await client.close()
@@ -296,6 +301,29 @@ export async function handleChatStreamRealtime(
                 } catch (error) {
                   log.error(
                     '[CHAT] Error cleaning up builtin agent tools:',
+                    error
+                  )
+                }
+                // Only auto-title successful finishes — aborted/errored
+                // streams would waste tokens on a user-only transcript.
+                if (status !== 'finished') return
+                try {
+                  const result = await generateThreadTitle(request.chatId)
+                  if (!result.success) {
+                    log.warn(
+                      `[CHAT] Auto-title failed for ${request.chatId}:`,
+                      result.error
+                    )
+                    return
+                  }
+                  // Only refresh when SQLite actually changed — skip no-ops
+                  // (manual title, unchanged title, second-turn skip).
+                  if (result.updated) {
+                    broadcastThreadUpdated(request.chatId)
+                  }
+                } catch (error) {
+                  log.warn(
+                    `[CHAT] Auto-title threw for ${request.chatId}:`,
                     error
                   )
                 }

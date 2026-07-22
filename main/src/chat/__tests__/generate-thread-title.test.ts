@@ -11,6 +11,9 @@ const mockGetThread = vi.hoisted(() => vi.fn())
 const mockWriteThread = vi.hoisted(() => vi.fn())
 const mockReadSelectedModel = vi.hoisted(() => vi.fn())
 const mockReadChatProvider = vi.hoisted(() => vi.fn())
+const mockReadThreadSelectedModel = vi.hoisted(() =>
+  vi.fn<() => { provider: string; model: string } | null>(() => null)
+)
 const mockCreateModelFromRequest = vi.hoisted(() => vi.fn())
 
 // ---------------------------------------------------------------------------
@@ -27,7 +30,7 @@ vi.mock('../../db/readers/threads-reader', () => ({
   readAllThreads: vi.fn(() => []),
   readActiveThreadId: vi.fn(),
   readThreadCount: vi.fn(() => 0),
-  readThreadSelectedModel: vi.fn(() => null),
+  readThreadSelectedModel: mockReadThreadSelectedModel,
   readThreadEnabledMcpTools: vi.fn(() => ({})),
   readThreadEnabledSkills: vi.fn(() => []),
 }))
@@ -80,7 +83,7 @@ const fakeConvertedMessages = [{ role: 'user', content: 'hello' }]
 function makeThread(overrides: Record<string, unknown> = {}) {
   return {
     id: 'thread-1',
-    title: 'Old title',
+    title: undefined,
     titleEditedByUser: false,
     messages: [
       { id: 'm1', role: 'user', parts: [{ type: 'text', text: 'Hello' }] },
@@ -102,6 +105,7 @@ describe('generateThreadTitle', () => {
   beforeEach(() => {
     vi.clearAllMocks()
     mockGetThread.mockReturnValue(makeThread())
+    mockReadThreadSelectedModel.mockReturnValue(null)
     mockReadSelectedModel.mockReturnValue({
       provider: 'openai',
       model: 'gpt-4o',
@@ -160,32 +164,55 @@ describe('generateThreadTitle', () => {
       })
     })
 
-    it('returns failure when LLM returns only whitespace', async () => {
+    it('falls back to the first user message when LLM returns only whitespace', async () => {
       mockGenerateText.mockResolvedValue({ text: '   ' })
+      const result = await generateThreadTitle('thread-1')
+      expect(result).toMatchObject({
+        success: true,
+        title: 'Hello',
+      })
+      expect(mockWriteThread).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'thread-1',
+          title: 'Hello',
+          titleEditedByUser: false,
+        })
+      )
+    })
+
+    it('falls back to the first user message when generateText throws', async () => {
+      mockGenerateText.mockRejectedValue(new Error('API timeout'))
+      const result = await generateThreadTitle('thread-1')
+      expect(result).toMatchObject({
+        success: true,
+        title: 'Hello',
+      })
+    })
+
+    it('falls back when generateText throws a non-Error value', async () => {
+      mockGenerateText.mockRejectedValue('some string error')
+      const result = await generateThreadTitle('thread-1')
+      expect(result).toMatchObject({
+        success: true,
+        title: 'Hello',
+      })
+    })
+
+    it('returns failure when LLM and user-message fallback are both empty', async () => {
+      mockGetThread.mockReturnValue(
+        makeThread({
+          messages: [
+            { id: 'm1', role: 'user', parts: [{ type: 'text', text: '   ' }] },
+          ],
+        })
+      )
+      mockGenerateText.mockResolvedValue({ text: '' })
       const result = await generateThreadTitle('thread-1')
       expect(result).toMatchObject({
         success: false,
         error: 'Empty title generated',
       })
       expect(mockWriteThread).not.toHaveBeenCalled()
-    })
-
-    it('returns failure with error message when generateText throws', async () => {
-      mockGenerateText.mockRejectedValue(new Error('API timeout'))
-      const result = await generateThreadTitle('thread-1')
-      expect(result).toMatchObject({
-        success: false,
-        error: 'Failed to generate thread title.',
-      })
-    })
-
-    it('returns failure with "Unknown error" for non-Error throws', async () => {
-      mockGenerateText.mockRejectedValue('some string error')
-      const result = await generateThreadTitle('thread-1')
-      expect(result).toMatchObject({
-        success: false,
-        error: 'Failed to generate thread title.',
-      })
     })
   })
 
@@ -198,6 +225,7 @@ describe('generateThreadTitle', () => {
       expect(result).toMatchObject({
         success: true,
         title: 'Patching Security Vulnerabilities',
+        updated: true,
       })
     })
 
@@ -238,10 +266,58 @@ describe('generateThreadTitle', () => {
         expect.objectContaining({
           model: fakeModel,
           messages: fakeConvertedMessages,
-          maxOutputTokens: 20,
+          maxOutputTokens: 64,
           instructions: expect.stringContaining('6 words or fewer'),
         })
       )
+    })
+
+    it('disables OpenRouter reasoning for title generation', async () => {
+      mockReadSelectedModel.mockReturnValue({
+        provider: 'openrouter',
+        model: 'moonshotai/kimi-k3',
+      })
+      mockReadChatProvider.mockReturnValue({
+        apiKey: 'sk-or-v1-test-key',
+      })
+
+      await generateThreadTitle('thread-1')
+
+      expect(mockGenerateText).toHaveBeenCalledWith(
+        expect.objectContaining({
+          providerOptions: {
+            openrouter: {
+              reasoning: { enabled: false, effort: 'none' },
+            },
+          },
+        })
+      )
+    })
+
+    it('does not pass OpenRouter reasoning options for other providers', async () => {
+      await generateThreadTitle('thread-1')
+      const call = mockGenerateText.mock.calls[0]?.[0] as
+        { providerOptions?: unknown } | undefined
+      expect(call?.providerOptions).toBeUndefined()
+    })
+
+    it('omits hollow assistant messages from the title context', async () => {
+      mockGetThread.mockReturnValue(
+        makeThread({
+          messages: [
+            {
+              id: 'm1',
+              role: 'user',
+              parts: [{ type: 'text', text: 'Hello' }],
+            },
+            { id: 'm2', role: 'assistant', parts: [] },
+          ],
+        })
+      )
+      await generateThreadTitle('thread-1')
+      expect(mockConvertToModelMessages).toHaveBeenCalledWith([
+        expect.objectContaining({ id: 'm1', role: 'user' }),
+      ])
     })
 
     it('works when thread has only a user message (no assistant reply yet)', async () => {
@@ -262,6 +338,164 @@ describe('generateThreadTitle', () => {
         success: true,
         title: 'Solo User Message',
       })
+    })
+
+    it('prefers the thread selected model over the global default', async () => {
+      mockReadThreadSelectedModel.mockReturnValue({
+        provider: 'openrouter',
+        model: 'moonshotai/kimi-k3',
+      })
+      mockReadSelectedModel.mockReturnValue({
+        provider: 'openai',
+        model: 'gpt-4o',
+      })
+      mockReadChatProvider.mockReturnValue({
+        apiKey: 'sk-or-v1-test-key',
+      })
+
+      await generateThreadTitle('thread-1')
+
+      expect(mockCreateModelFromRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'openrouter' }),
+        expect.objectContaining({
+          provider: 'openrouter',
+          model: 'moonshotai/kimi-k3',
+        })
+      )
+    })
+
+    it('skips LLM when the thread already has a non-fallback title', async () => {
+      mockGetThread.mockReturnValue(
+        makeThread({ title: 'Existing Custom Title' })
+      )
+
+      const result = await generateThreadTitle('thread-1')
+
+      expect(result).toMatchObject({
+        success: true,
+        title: 'Existing Custom Title',
+        updated: false,
+      })
+      expect(mockGenerateText).not.toHaveBeenCalled()
+      expect(mockWriteThread).not.toHaveBeenCalled()
+    })
+
+    it('skips LLM after the first assistant exchange', async () => {
+      mockGetThread.mockReturnValue(
+        makeThread({
+          title: undefined,
+          messages: [
+            {
+              id: 'm1',
+              role: 'user',
+              parts: [{ type: 'text', text: 'Hello' }],
+            },
+            {
+              id: 'm2',
+              role: 'assistant',
+              parts: [{ type: 'text', text: 'Hi' }],
+            },
+            {
+              id: 'm3',
+              role: 'user',
+              parts: [{ type: 'text', text: 'Follow up' }],
+            },
+            {
+              id: 'm4',
+              role: 'assistant',
+              parts: [{ type: 'text', text: 'Sure' }],
+            },
+          ],
+        })
+      )
+
+      const result = await generateThreadTitle('thread-1')
+
+      expect(result).toMatchObject({ success: true, title: 'Hello' })
+      expect(mockGenerateText).not.toHaveBeenCalled()
+    })
+
+    it('returns the existing title when titleEditedByUser is true', async () => {
+      mockGetThread.mockReturnValue(
+        makeThread({
+          title: 'Manual Title',
+          titleEditedByUser: true,
+        })
+      )
+
+      const result = await generateThreadTitle('thread-1')
+
+      expect(result).toMatchObject({
+        success: true,
+        title: 'Manual Title',
+        updated: false,
+      })
+      expect(mockGenerateText).not.toHaveBeenCalled()
+      expect(mockWriteThread).not.toHaveBeenCalled()
+    })
+
+    it('writes once with the LLM title', async () => {
+      mockGenerateText.mockResolvedValue({ text: 'Great Title' })
+      await generateThreadTitle('thread-1')
+
+      expect(mockWriteThread).toHaveBeenCalledTimes(1)
+      expect(mockWriteThread).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: 'thread-1',
+          title: 'Great Title',
+          titleEditedByUser: false,
+        })
+      )
+    })
+
+    it('does not write when the renderer already persisted the fallback title', async () => {
+      mockGetThread.mockReturnValue(
+        makeThread({
+          title: 'Hello',
+          titleEditedByUser: false,
+        })
+      )
+      mockGenerateText.mockResolvedValue({ text: 'Hello' })
+
+      const result = await generateThreadTitle('thread-1')
+
+      expect(result).toMatchObject({
+        success: true,
+        title: 'Hello',
+        updated: false,
+      })
+      expect(mockWriteThread).not.toHaveBeenCalled()
+    })
+
+    it('still auto-titles when a legacy hollow assistant is present', async () => {
+      mockGetThread.mockReturnValue(
+        makeThread({
+          title: undefined,
+          messages: [
+            {
+              id: 'm1',
+              role: 'user',
+              parts: [{ type: 'text', text: 'Hello' }],
+            },
+            { id: 'm-hollow', role: 'assistant', parts: [] },
+            {
+              id: 'm2',
+              role: 'assistant',
+              parts: [{ type: 'text', text: 'Hi there' }],
+            },
+          ],
+        })
+      )
+      mockGenerateText.mockResolvedValue({ text: 'Legacy Hollow Thread' })
+
+      const result = await generateThreadTitle('thread-1')
+
+      expect(result).toMatchObject({
+        success: true,
+        title: 'Legacy Hollow Thread',
+        updated: true,
+      })
+      expect(mockGenerateText).toHaveBeenCalled()
     })
   })
 

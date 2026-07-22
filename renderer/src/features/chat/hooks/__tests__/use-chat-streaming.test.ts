@@ -69,6 +69,7 @@ const mockChatAPI = {
   ensureThreadExists: vi.fn(),
   getThread: vi.fn(),
   getThreadMessagesForTransport: vi.fn(),
+  updateThread: vi.fn(),
   updateThreadMessages: vi.fn(),
   getActiveStreamId: vi.fn(),
   unsubscribeStream: vi.fn(),
@@ -141,6 +142,7 @@ describe('useChatStreaming', () => {
     })
     mockChatAPI.getThread.mockResolvedValue(null)
     mockChatAPI.getThreadMessagesForTransport.mockResolvedValue([])
+    mockChatAPI.updateThread.mockResolvedValue({ success: true })
     mockChatAPI.updateThreadMessages.mockResolvedValue({ success: true })
     mockChatAPI.getActiveStreamId.mockResolvedValue(null)
     mockChatAPI.unsubscribeStream.mockResolvedValue(undefined)
@@ -1330,6 +1332,92 @@ describe('useChatStreaming', () => {
         mockChatAPI.getActiveStreamId.mock.calls.length
       ).toBeGreaterThanOrEqual(2)
       expect(mockUseChat.resumeStream).toHaveBeenCalled()
+    })
+  })
+
+  describe('optimistic title on stream completion', () => {
+    it('writes the user-message fallback once when the thread has no title', async () => {
+      mockUseChat.messages = [
+        {
+          id: 'm1',
+          role: 'user',
+          parts: [{ type: 'text', text: 'How do I deploy this app?' }],
+        },
+      ]
+      mockUseChat.status = 'streaming'
+      mockChatAPI.getThread.mockResolvedValue({
+        id: 'toolhive-chat',
+        title: undefined,
+        titleEditedByUser: false,
+        messages: mockUseChat.messages,
+        lastEditTimestamp: 0,
+        createdAt: 0,
+      })
+
+      const { Wrapper } = createTestUtils()
+      const { rerender } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      mockUseChat.status = 'ready'
+      await act(async () => {
+        rerender()
+      })
+
+      await waitFor(() => {
+        expect(mockChatAPI.updateThread).toHaveBeenCalledWith('toolhive-chat', {
+          title: 'How do I deploy this app?',
+          titleEditedByUser: false,
+        })
+      })
+      expect(mockChatAPI.updateThread).toHaveBeenCalledTimes(1)
+    })
+
+    it('does not write the optimistic title twice for the same thread', async () => {
+      mockUseChat.messages = [
+        {
+          id: 'm1',
+          role: 'user',
+          parts: [{ type: 'text', text: 'Hello' }],
+        },
+      ]
+      mockUseChat.status = 'streaming'
+      mockChatAPI.getThread.mockResolvedValue({
+        id: 'toolhive-chat',
+        title: undefined,
+        titleEditedByUser: false,
+        messages: mockUseChat.messages,
+        lastEditTimestamp: 0,
+        createdAt: 0,
+      })
+
+      const { Wrapper } = createTestUtils()
+      const { rerender } = renderHook(() => useChatStreaming(), {
+        wrapper: Wrapper,
+      })
+
+      mockUseChat.status = 'ready'
+      await act(async () => {
+        rerender()
+      })
+
+      await waitFor(() => {
+        expect(mockChatAPI.updateThread).toHaveBeenCalledTimes(1)
+      })
+
+      mockUseChat.status = 'streaming'
+      await act(async () => {
+        rerender()
+      })
+
+      mockUseChat.status = 'ready'
+      await act(async () => {
+        rerender()
+      })
+
+      await waitFor(() => {
+        expect(mockChatAPI.updateThread).toHaveBeenCalledTimes(1)
+      })
     })
   })
 })

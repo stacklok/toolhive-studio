@@ -136,8 +136,6 @@ export const chatApi = {
       ipcRenderer.invoke('chat:get-thread-info', threadId),
     ensureThreadExists: (threadId?: string, title?: string) =>
       ipcRenderer.invoke('chat:ensure-thread-exists', threadId, title),
-    generateThreadTitle: (threadId: string) =>
-      ipcRenderer.invoke('chat:generate-thread-title', threadId),
 
     agents: {
       list: (): Promise<AgentConfig[]> =>
@@ -459,11 +457,6 @@ export interface ChatAPI {
       threadId?: string
       error?: string
       isNew?: boolean
-    }>
-    generateThreadTitle: (threadId: string) => Promise<{
-      success: boolean
-      title?: string
-      error?: string
     }>
 
     agents: {

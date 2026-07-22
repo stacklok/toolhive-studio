@@ -28,10 +28,25 @@ const mockCreateBuiltinAgentTools = vi.hoisted(() =>
   >(() => ({ tools: {}, cleanup: vi.fn() }))
 )
 const mockRunManagedStream = vi.hoisted(() =>
-  vi.fn().mockResolvedValue(undefined)
+  vi.fn().mockImplementation(async (args: unknown) => {
+    const options = args as {
+      onComplete?: (info: {
+        status: 'finished' | 'error'
+      }) => void | Promise<void>
+    }
+    await options.onComplete?.({ status: 'finished' })
+  })
 )
 const mockGetAgent = vi.hoisted(() => vi.fn())
 const mockResolveAgentForThread = vi.hoisted(() => vi.fn())
+const mockGenerateThreadTitle = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({
+    success: true,
+    title: 'Generated Title',
+    updated: true,
+  })
+)
+const mockBroadcastThreadUpdated = vi.hoisted(() => vi.fn())
 
 vi.mock('ai', () => ({
   ToolLoopAgent: class {
@@ -56,6 +71,17 @@ vi.mock('../utils', () => ({
 
 vi.mock('../agents/builtin-agent-tools', () => ({
   createBuiltinAgentTools: mockCreateBuiltinAgentTools,
+}))
+
+vi.mock('../generate-thread-title', () => ({
+  generateThreadTitle: mockGenerateThreadTitle,
+}))
+
+vi.mock('../streaming/stream-registry-broadcast', () => ({
+  broadcastThreadUpdated: mockBroadcastThreadUpdated,
+  broadcastState: vi.fn(),
+  broadcast: vi.fn(),
+  safeSend: vi.fn(),
 }))
 
 import { handleChatStreamRealtime as handleChatStreamRealtimeImpl } from '../streaming/chat-stream-service-impl'
@@ -469,5 +495,96 @@ describe('handleChatStreamRealtime — AI SDK v7 UI stream wiring', () => {
     expect(mockCreateMcpTools).toHaveBeenCalledWith('thread-1', {
       sanitizeSchemas: true,
     })
+  })
+})
+
+describe('handleChatStreamRealtime — auto-title on stream complete', () => {
+  it('calls generateThreadTitle and broadcasts thread updated on success', async () => {
+    mockResolveAgentForThread.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'DEFAULT INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(makeRequest(), 'stream-title', fakeSender)
+
+    expect(mockGenerateThreadTitle).toHaveBeenCalledWith('thread-1')
+    expect(mockBroadcastThreadUpdated).toHaveBeenCalledWith('thread-1')
+  })
+
+  it('skips thread-updated broadcast when title generation is a no-op', async () => {
+    mockGenerateThreadTitle.mockResolvedValueOnce({
+      success: true,
+      title: 'Existing Title',
+      updated: false,
+    })
+    mockResolveAgentForThread.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'DEFAULT INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(makeRequest(), 'stream-noop', fakeSender)
+
+    expect(mockGenerateThreadTitle).toHaveBeenCalledWith('thread-1')
+    expect(mockBroadcastThreadUpdated).not.toHaveBeenCalled()
+  })
+
+  it('skips title generation when the stream ends in error', async () => {
+    mockRunManagedStream.mockImplementationOnce(async (args: unknown) => {
+      const options = args as {
+        onComplete?: (info: {
+          status: 'finished' | 'error'
+        }) => void | Promise<void>
+      }
+      await options.onComplete?.({ status: 'error' })
+    })
+    mockResolveAgentForThread.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'DEFAULT INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(makeRequest(), 'stream-error', fakeSender)
+
+    expect(mockGenerateThreadTitle).not.toHaveBeenCalled()
+    expect(mockBroadcastThreadUpdated).not.toHaveBeenCalled()
+  })
+})
+
+describe('handleChatStreamRealtime — message sanitization', () => {
+  it('passes sanitized messages to convertToModelMessages', async () => {
+    mockResolveAgentForThread.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'DEFAULT INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(
+      makeRequest({
+        messages: [
+          {
+            id: 'u1',
+            role: 'user',
+            parts: [{ type: 'text', text: 'hi' }],
+          },
+          {
+            id: 'a-hollow',
+            role: 'assistant',
+            parts: [],
+          },
+          {
+            id: 'u2',
+            role: 'user',
+            parts: [{ type: 'text', text: 'again' }],
+          },
+        ],
+      }),
+      'stream-sanitize',
+      fakeSender
+    )
+
+    expect(mockConvertToModelMessages).toHaveBeenCalledWith([
+      expect.objectContaining({
+        id: 'u1',
+        role: 'user',
+        parts: [
+          { type: 'text', text: 'hi' },
+          { type: 'text', text: 'again' },
+        ],
+      }),
+    ])
   })
 })

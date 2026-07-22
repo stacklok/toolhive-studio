@@ -16,6 +16,7 @@ import { useChatSettings } from './use-chat-settings'
 import { useThreadManagement } from './use-thread-management'
 import type { FileUIPart } from 'ai'
 import { trackEvent } from '@/common/lib/analytics'
+import { fallbackTitleFromParts } from '@common/chat/thread-title'
 import { hasValidCredentials } from '../lib/utils'
 import { chatThreadQueryOptions } from '../lib/thread-query'
 
@@ -259,18 +260,9 @@ export function useChatStreaming(externalThreadId?: string | null) {
     }
   }, [status, currentThreadId, queryClient])
 
-  // React to streaming completion: publish a signal and auto-title the thread via LLM
+  // React to streaming completion: publish a signal and set an optimistic title
   const prevStatusRef = useRef(status)
   const titledThreadsRef = useRef<Set<string>>(new Set())
-
-  /** Extracts plain text from a ChatUIMessage's parts */
-  function extractUserText(msg: ChatUIMessage): string {
-    return msg.parts
-      .filter((p): p is { type: 'text'; text: string } => p.type === 'text')
-      .map((p) => p.text)
-      .join(' ')
-      .trim()
-  }
 
   /** Emits the streamingComplete cache signal so subscribers refresh the thread */
   function signalStreamingComplete(threadId: string) {
@@ -293,22 +285,25 @@ export function useChatStreaming(externalThreadId?: string | null) {
     // Publish initial signal so message list / loading state updates
     signalStreamingComplete(currentThreadId)
 
-    // Auto-title: run once per thread per session (guard against concurrent calls)
     if (titledThreadsRef.current.has(currentThreadId)) return
     titledThreadsRef.current.add(currentThreadId)
 
     const threadIdAtCompletion = currentThreadId
 
-    window.electronAPI.chat
+    void window.electronAPI.chat
       .getThread(threadIdAtCompletion)
       .then(async (thread) => {
-        // Respect manually-edited titles
         if (thread?.titleEditedByUser) return
 
-        // Optimistic placeholder: first user-message text, visible immediately
+        // Optimistic placeholder: first user-message text, visible immediately.
+        // Main process owns the LLM title upgrade on stream complete.
+        // Must match `fallbackTitleFromParts` so shouldAutoTitleThread
+        // still upgrades this placeholder after the LLM returns.
         const firstUserMsg = messages.find((m) => m.role === 'user')
-        if (firstUserMsg) {
-          const optimisticTitle = extractUserText(firstUserMsg).slice(0, 60)
+        if (firstUserMsg && !thread?.title?.trim()) {
+          const optimisticTitle = fallbackTitleFromParts(
+            firstUserMsg.parts ?? []
+          )
           if (optimisticTitle) {
             await window.electronAPI.chat.updateThread(threadIdAtCompletion, {
               title: optimisticTitle,
@@ -317,21 +312,9 @@ export function useChatStreaming(externalThreadId?: string | null) {
             signalStreamingComplete(threadIdAtCompletion)
           }
         }
-
-        return window.electronAPI.chat.generateThreadTitle(threadIdAtCompletion)
-      })
-      .then((result) => {
-        if (result && !result.success) {
-          log.warn('[useChatStreaming] Title generation failed:', result.error)
-          return
-        }
-        // Re-publish after LLM title is written to DB
-        if (result?.success) {
-          signalStreamingComplete(threadIdAtCompletion)
-        }
       })
       .catch((err) =>
-        log.error('[useChatStreaming] Failed to auto-title thread:', err)
+        log.error('[useChatStreaming] Failed to set optimistic title:', err)
       )
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, currentThreadId, queryClient])

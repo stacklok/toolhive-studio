@@ -287,6 +287,39 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
     })
   }, [queryClient, refreshThread])
 
+  // Refresh when a background stream finishes, or when main writes a
+  // title after stream end (title work runs after the `finished` broadcast).
+  useEffect(() => {
+    const signalStreamingComplete = (threadId: string) => {
+      queryClient.setQueryData(['chat', 'streamingComplete'], {
+        threadId,
+        timestamp: Date.now(),
+      })
+    }
+
+    const onStreamState = (...args: unknown[]) => {
+      const event = args[0] as { chatId?: string; status?: string } | undefined
+      if (!event?.chatId || event.status !== 'finished') return
+      signalStreamingComplete(event.chatId)
+    }
+
+    const onThreadUpdated = (...args: unknown[]) => {
+      const event = args[0] as { threadId?: string } | undefined
+      if (!event?.threadId) return
+      signalStreamingComplete(event.threadId)
+    }
+
+    const offState = window.electronAPI.on?.('chat:stream:state', onStreamState)
+    const offUpdated = window.electronAPI.on?.(
+      'chat:thread:updated',
+      onThreadUpdated
+    )
+    return () => {
+      offState?.()
+      offUpdated?.()
+    }
+  }, [queryClient])
+
   return {
     threads,
     isLoading,

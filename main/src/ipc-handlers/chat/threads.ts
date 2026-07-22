@@ -21,7 +21,6 @@ import {
   getThreadInfo,
   ensureThreadExists,
 } from '../../chat/thread-integration'
-import { generateThreadTitle } from '../../chat/generate-thread-title'
 
 export function register() {
   ipcMain.handle(
@@ -104,9 +103,5 @@ export function register() {
     'chat:ensure-thread-exists',
     (_, threadId?: string, title?: string) =>
       ensureThreadExists(threadId, title)
-  )
-
-  ipcMain.handle('chat:generate-thread-title', (_, threadId: string) =>
-    generateThreadTitle(threadId)
   )
 }

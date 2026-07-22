@@ -106,5 +106,5 @@ export interface RunStreamOptions {
   /** Tool UI metadata broadcast on first chunk so late-attaching
    * subscribers can identify MCP App tools. */
   initialToolUiMetadata?: Record<string, unknown>
-  onComplete?: () => void | Promise<void>
+  onComplete?: (info: { status: 'finished' | 'error' }) => void | Promise<void>
 }

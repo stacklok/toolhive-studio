@@ -18,13 +18,7 @@ export function safeSend(
   }
 }
 
-/** Broadcast a stream-state change to every renderer window so UI
- * surfaces (e.g. the sidebar) can reflect activity for threads they
- * aren't currently subscribed to. */
-export function broadcastState(
-  chatId: string,
-  status: 'streaming' | 'finished' | 'error'
-): void {
+function broadcastToAllRenderers(channel: string, payload: unknown): void {
   let allContents: WebContents[]
   try {
     allContents = webContentsApi.getAllWebContents()
@@ -32,8 +26,24 @@ export function broadcastState(
     return
   }
   for (const wc of allContents) {
-    safeSend(wc, 'chat:stream:state', { chatId, status })
+    safeSend(wc, channel, payload)
   }
+}
+
+/** Broadcast a stream-state change to every renderer window so UI
+ * surfaces (e.g. the sidebar) can reflect activity for threads they
+ * aren't currently subscribed to. */
+export function broadcastState(
+  chatId: string,
+  status: 'streaming' | 'finished' | 'error'
+): void {
+  broadcastToAllRenderers('chat:stream:state', { chatId, status })
+}
+
+/** Notify every renderer that thread metadata (e.g. title) changed so
+ * sidebars can refresh after async work that finished after stream end. */
+export function broadcastThreadUpdated(threadId: string): void {
+  broadcastToAllRenderers('chat:thread:updated', { threadId })
 }
 
 export function broadcast(
