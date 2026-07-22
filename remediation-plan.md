@@ -31,8 +31,13 @@ Seven production vulnerabilities reported by `pnpm audit --prod --audit-level=mo
 | hono | Override | `hono: '>=4.12.27'` | 4.12.31 |
 | @hono/node-server | Override (major) | `@hono/node-server: '>=2.0.5'` | 2.0.11 |
 | dompurify | Override | `dompurify: '>=3.4.12'` | 3.4.12 |
+| fast-xml-parser | Override (bump) | `fast-xml-parser: '>=5.10.1'` | 5.10.1 |
+| sharp | Override | `sharp: '>=0.35.0'` | 0.35.3 |
 
 ### Notes
+
+- `fast-xml-parser` override bumped from pinned `5.9.3` to `>=5.10.1` for GHSA-8r6m-32jq-jx6q (Grype CI).
+- `sharp` override added for GHSA-f88m-g3jw-g9cj (dev dep via `icon-gen`, used by `generate-icons` script).
 
 - `fast-uri` resolved to 4.1.1 (latest patched) rather than 3.1.4 because the `>=3.1.4` override allows newer majors. Audit clean; tests pass.
 - `@hono/node-server` v2 override crosses MCP SDK's `^1.19.9` range. v2 breaking changes (Node 18 removal, Vercel adapter removal) do not affect this project (Node >=24, no Hono/Vercel imports). All 2557 tests pass.
