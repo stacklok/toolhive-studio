@@ -38,33 +38,33 @@ function TestWrapper({
 }
 
 describe('NetworkAccessTabTriggerLabel', () => {
-  it('shows "Not isolated" text when no isolation is selected', async () => {
+  it('shows "Unrestricted" text when no isolation is selected', async () => {
     const router = createTestRouter(() => <TestWrapper networkAccess="none" />)
     renderRoute(router)
 
     await waitFor(() => {
-      expect(screen.getByText('Not isolated')).toBeInTheDocument()
+      expect(screen.getByText('Unrestricted')).toBeInTheDocument()
     })
-    expect(screen.queryByText('Isolated')).not.toBeInTheDocument()
+    expect(screen.queryByText('Restricted')).not.toBeInTheDocument()
   })
 
-  it('shows "Not isolated" text when host networking is selected', async () => {
+  it('shows "Unrestricted" text when host networking is selected', async () => {
     const router = createTestRouter(() => <TestWrapper networkAccess="host" />)
     renderRoute(router)
 
     await waitFor(() => {
-      expect(screen.getByText('Not isolated')).toBeInTheDocument()
+      expect(screen.getByText('Unrestricted')).toBeInTheDocument()
     })
   })
 
-  it('shows "Isolated" text when proxy mode is selected', async () => {
+  it('shows "Restricted" text when proxy mode is selected', async () => {
     const router = createTestRouter(() => <TestWrapper networkAccess="proxy" />)
     renderRoute(router)
 
     await waitFor(() => {
-      expect(screen.getByText('Isolated')).toBeInTheDocument()
+      expect(screen.getByText('Restricted')).toBeInTheDocument()
     })
-    expect(screen.queryByText('Not isolated')).not.toBeInTheDocument()
+    expect(screen.queryByText('Unrestricted')).not.toBeInTheDocument()
   })
 
   it('always renders the "Network access" label alongside the status', async () => {

@@ -16,21 +16,21 @@ export function NetworkAccessTabTriggerLabel<
   const networkAccess = form.watch(
     'networkAccess' as Path<TFieldValues>
   ) as NetworkAccessMode
-  const isIsolated = networkAccess === NETWORK_ACCESS_MODES.Proxy
+  const isRestricted = networkAccess === NETWORK_ACCESS_MODES.Proxy
 
   return (
     <>
       Network access
       <Badge
-        variant={isIsolated ? 'success' : 'outline'}
+        variant={isRestricted ? 'success' : 'outline'}
         className="pointer-events-none font-normal"
       >
-        {isIsolated ? (
+        {isRestricted ? (
           <ShieldCheck className="size-3" />
         ) : (
           <ShieldOff className="size-3" />
         )}
-        {isIsolated ? 'Isolated' : 'Not isolated'}
+        {isRestricted ? 'Restricted' : 'Unrestricted'}
       </Badge>
     </>
   )
