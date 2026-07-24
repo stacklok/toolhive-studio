@@ -10,6 +10,7 @@ import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/re
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
 import { LoadingStateAlert } from '../../../../common/components/secrets/loading-state-alert'
 import { NetworkAccessTabContent } from '@/features/network-isolation/components/network-access-tab-content'
+import { NetworkAccessTabTriggerLabel } from '@/features/network-isolation/components/network-access-tab-trigger-label'
 import { ConfigurationTabContent } from './configuration-tab-content'
 import { Tabs, TabsList, TabsTrigger } from '@/common/components/ui/tabs'
 import {
@@ -261,7 +262,7 @@ export function FormRunFromRegistry({
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="configuration">Configuration</TabsTrigger>
               <TabsTrigger value="network-isolation">
-                Network access
+                <NetworkAccessTabTriggerLabel form={form} />
               </TabsTrigger>
             </TabsList>
           </Tabs>

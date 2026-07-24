@@ -22,6 +22,7 @@ import {
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
 import { NetworkAccessTabContent } from '@/features/network-isolation/components/network-access-tab-content'
+import { NetworkAccessTabTriggerLabel } from '@/features/network-isolation/components/network-access-tab-trigger-label'
 import { FormFieldsArrayVolumes } from '../form-fields-array-custom-volumes'
 import { FormFieldsBase } from './form-fields-base'
 import {
@@ -324,7 +325,7 @@ export function DialogFormLocalMcp({
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="configuration">Configuration</TabsTrigger>
                 <TabsTrigger value="network-isolation">
-                  Network access
+                  <NetworkAccessTabTriggerLabel form={form} />
                 </TabsTrigger>
               </TabsList>
             </Tabs>
