@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import log from 'electron-log/renderer'
 import type { RegistryImageMetadata } from '@common/api/registry-types'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { cn } from '@/common/lib/utils'
 import { groupEnvVars } from '../../lib/group-env-vars'
 import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
 import { useRunFromRegistry } from '../../hooks/use-run-from-registry'
@@ -17,6 +16,7 @@ import {
   useFormTabState,
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
+import { useStableTabPanelMinHeight } from '@/common/hooks/use-stable-tab-panel-height'
 import {
   getFormSchemaRegistryMcp,
   type FormSchemaRegistryMcp,
@@ -108,6 +108,7 @@ export function FormRunFromRegistry({
       fieldTabMap: FIELD_TAB_MAP,
       defaultTab: 'configuration',
     })
+  const { measureRef, minHeight } = useStableTabPanelMinHeight()
 
   const { data } = useQuery({
     ...getApiV1BetaWorkloadsOptions({ query: { all: true } }),
@@ -266,14 +267,11 @@ export function FormRunFromRegistry({
               </TabsTrigger>
             </TabsList>
           </Tabs>
-          <div className="grid flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto">
             <div
-              className={cn(
-                'col-start-1 row-start-1',
-                activeTab === 'configuration'
-                  ? 'visible'
-                  : 'pointer-events-none invisible'
-              )}
+              ref={activeTab === 'configuration' ? measureRef : undefined}
+              style={{ minHeight }}
+              hidden={activeTab !== 'configuration'}
               inert={activeTab !== 'configuration'}
             >
               <ConfigurationTabContent
@@ -282,12 +280,9 @@ export function FormRunFromRegistry({
               />
             </div>
             <div
-              className={cn(
-                'col-start-1 row-start-1',
-                activeTab === 'network-isolation'
-                  ? 'visible'
-                  : 'pointer-events-none invisible'
-              )}
+              ref={activeTab === 'network-isolation' ? measureRef : undefined}
+              style={{ minHeight }}
+              hidden={activeTab !== 'network-isolation'}
               inert={activeTab !== 'network-isolation'}
             >
               <NetworkAccessTabContent form={form} />

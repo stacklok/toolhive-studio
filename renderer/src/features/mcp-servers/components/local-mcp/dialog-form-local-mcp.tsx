@@ -10,7 +10,6 @@ import {
 import { convertCreateRequestToFormData } from '../../lib/orchestrate-run-local-server'
 import { useUpdateServer } from '../../hooks/use-update-server'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
-import { cn } from '@/common/lib/utils'
 import { FormFieldsArrayCustomEnvVars } from '../form-fields-array-custom-env-vars'
 import { FormFieldsArrayCustomSecrets } from '../form-fields-array-custom-secrets'
 import { useRunCustomServer } from '../../hooks/use-run-custom-server'
@@ -21,6 +20,7 @@ import {
   useFormTabState,
   type FieldTabMapping,
 } from '@/common/hooks/use-form-tab-state'
+import { useStableTabPanelMinHeight } from '@/common/hooks/use-stable-tab-panel-height'
 import { NetworkAccessTabContent } from '@/features/network-isolation/components/network-access-tab-content'
 import { NetworkAccessTabTriggerLabel } from '@/features/network-isolation/components/network-access-tab-trigger-label'
 import { FormFieldsArrayVolumes } from '../form-fields-array-custom-volumes'
@@ -119,6 +119,7 @@ export function DialogFormLocalMcp({
       fieldTabMap: FIELD_TAB_MAP,
       defaultTab: 'configuration',
     })
+  const { measureRef, minHeight } = useStableTabPanelMinHeight()
   const { checkServerStatus } = useCheckServerStatus()
 
   const handleSecrets = (completedCount: number, secretsCount: number) => {
@@ -329,14 +330,12 @@ export function DialogFormLocalMcp({
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <div className="grid flex-1 overflow-y-auto">
+            <div className="flex-1 overflow-y-auto">
               <div
-                className={cn(
-                  'col-start-1 row-start-1 space-y-4 px-6',
-                  activeTab === 'configuration'
-                    ? 'visible'
-                    : 'pointer-events-none invisible'
-                )}
+                ref={activeTab === 'configuration' ? measureRef : undefined}
+                className="space-y-4 px-6"
+                style={{ minHeight }}
+                hidden={activeTab !== 'configuration'}
                 inert={activeTab !== 'configuration'}
               >
                 <FormFieldsBase
@@ -349,12 +348,9 @@ export function DialogFormLocalMcp({
                 <FormFieldsArrayVolumes<FormSchemaLocalMcp> form={form} />
               </div>
               <div
-                className={cn(
-                  'col-start-1 row-start-1',
-                  activeTab === 'network-isolation'
-                    ? 'visible'
-                    : 'pointer-events-none invisible'
-                )}
+                ref={activeTab === 'network-isolation' ? measureRef : undefined}
+                style={{ minHeight }}
+                hidden={activeTab !== 'network-isolation'}
                 inert={activeTab !== 'network-isolation'}
               >
                 <NetworkAccessTabContent form={form} />
@@ -377,6 +373,8 @@ export function DialogFormLocalMcp({
     setError,
     activeTab,
     setActiveTab,
+    measureRef,
+    minHeight,
     form,
     groups,
     serverToEdit,
