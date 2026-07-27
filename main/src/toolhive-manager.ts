@@ -100,6 +100,10 @@ function cleanupSocketFile(socketPath: string): void {
   }
 }
 
+function formatUnknownError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
 function isTelemetryEnabled(): boolean {
   try {
     return readSetting('isTelemetryEnabled') !== 'false'
@@ -203,7 +207,7 @@ export async function startToolhive(): Promise<void> {
         // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
         log.error('Failed to start ToolHive: ', error)
         Sentry.captureMessage(
-          `Failed to start ${THV_DISPLAY_NAME}: ${JSON.stringify(error)}`,
+          `Failed to start ${THV_DISPLAY_NAME}: ${formatUnknownError(error)}`,
           'fatal'
         )
         updateTrayStatus(false)
@@ -239,7 +243,7 @@ export async function startToolhive(): Promise<void> {
     // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.error('Failed to start ToolHive:', error)
     Sentry.captureMessage(
-      `Failed to start ${THV_DISPLAY_NAME}: ${JSON.stringify(error)}`,
+      `Failed to start ${THV_DISPLAY_NAME}: ${formatUnknownError(error)}`,
       'fatal'
     )
     updateTrayStatus(false)

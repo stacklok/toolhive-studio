@@ -231,7 +231,7 @@ describe('toolhive-manager', () => {
         testError
       )
       expect(mockCaptureMessage).toHaveBeenCalledWith(
-        `Failed to start ToolHive: ${JSON.stringify(testError)}`,
+        'Failed to start ToolHive: Test spawn error',
         'fatal'
       )
       expect(mockUpdateTrayStatus).toHaveBeenCalledWith(false)
