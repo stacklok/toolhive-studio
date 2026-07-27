@@ -1,3 +1,4 @@
+import path from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 
 const { cpSyncMock } = vi.hoisted(() => ({
@@ -70,8 +71,8 @@ describe('forge.config — packageAfterCopy native modules', () => {
 
     expect(cpSyncMock).toHaveBeenCalledTimes(1)
     expect(cpSyncMock).toHaveBeenCalledWith(
-      expect.stringMatching(/node_modules\/better-sqlite3$/),
-      '/build/path/node_modules/better-sqlite3',
+      path.join(process.cwd(), 'node_modules', 'better-sqlite3'),
+      path.join('/build/path', 'node_modules', 'better-sqlite3'),
       { recursive: true }
     )
   })
