@@ -8,6 +8,7 @@ import { THV_DISPLAY_NAME } from '@common/app-info'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
 import { readSetting } from './db/readers/settings-reader'
+import { telemetryStore } from './telemetry-store'
 import { createEnhancedPath } from './utils/enhanced-path'
 import {
   ALREADY_RUNNING,
@@ -109,7 +110,8 @@ function isTelemetryEnabled(): boolean {
     return readSetting('isTelemetryEnabled') !== 'false'
   } catch (err) {
     log.error('[DB] SQLite read failed:', err)
-    return true
+    // electron-store is the authoritative opt-out source (written before SQLite).
+    return telemetryStore.get('isTelemetryEnabled', true)
   }
 }
 
@@ -242,12 +244,12 @@ export async function startToolhive(): Promise<void> {
   } catch (error) {
     // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.error('Failed to start ToolHive:', error)
-    Sentry.captureMessage(
-      `Failed to start ${THV_DISPLAY_NAME}: ${formatUnknownError(error)}`,
-      'fatal'
-    )
-    updateTrayStatus(false)
     if (!isToolhiveRunning()) {
+      Sentry.captureMessage(
+        `Failed to start ${THV_DISPLAY_NAME}: ${formatUnknownError(error)}`,
+        'fatal'
+      )
+      updateTrayStatus(false)
       toolhiveSocketPath = undefined
     }
   }
@@ -279,7 +281,7 @@ export async function restartToolhive(): Promise<void> {
     // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.error('Failed to restart ToolHive: ', error)
     Sentry.captureMessage(
-      `Failed to restart ${THV_DISPLAY_NAME}: ${JSON.stringify(error)}`,
+      `Failed to restart ${THV_DISPLAY_NAME}: ${formatUnknownError(error)}`,
       'fatal'
     )
   } finally {

@@ -18,6 +18,7 @@ import log from '../logger'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from '../app-state'
 import { readSetting } from '../db/readers/settings-reader'
+import { telemetryStore } from '../telemetry-store'
 
 vi.mock('node:child_process', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:child_process')>()
@@ -92,6 +93,8 @@ const mockUpdateTrayStatus = vi.mocked(updateTrayStatus)
 const mockLog = vi.mocked(log)
 const mockCaptureMessage = vi.mocked(Sentry.captureMessage)
 const mockGetQuittingState = vi.mocked(getQuittingState)
+const mockReadSetting = vi.mocked(readSetting)
+const mockTelemetryStoreGet = vi.mocked(telemetryStore.get)
 
 // Mock process for testing
 class MockProcess extends EventEmitter {
@@ -493,9 +496,10 @@ describe('toolhive-manager', () => {
 
     it('still spawns thv when readSetting throws (e.g. SQLite unavailable)', async () => {
       vi.stubEnv('VITE_SENTRY_THV_DSN', 'https://test@sentry.io/123')
-      vi.mocked(readSetting).mockImplementation(() => {
+      mockReadSetting.mockImplementation(() => {
         throw new Error('GLIBC_2.38 not found')
       })
+      mockTelemetryStoreGet.mockReturnValue(true)
 
       const startPromise = startToolhive()
       await vi.advanceTimersByTimeAsync(50)
@@ -505,6 +509,10 @@ describe('toolhive-manager', () => {
       expect(mockLog.error).toHaveBeenCalledWith(
         '[DB] SQLite read failed:',
         expect.any(Error)
+      )
+      expect(mockTelemetryStoreGet).toHaveBeenCalledWith(
+        'isTelemetryEnabled',
+        true
       )
       expect(isToolhiveRunning()).toBe(true)
 
@@ -516,6 +524,22 @@ describe('toolhive-manager', () => {
           '--sentry-traces-sample-rate=1.0',
         ])
       )
+    })
+
+    it('omits sentry flags when SQLite is down but user opted out in telemetryStore', async () => {
+      vi.stubEnv('VITE_SENTRY_THV_DSN', 'https://test@sentry.io/123')
+      mockReadSetting.mockImplementation(() => {
+        throw new Error('GLIBC_2.38 not found')
+      })
+      mockTelemetryStoreGet.mockReturnValue(false)
+
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      expect(mockSpawn).toHaveBeenCalled()
+      const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
+      expect(spawnArgs.some((a) => a.startsWith('--sentry-'))).toBe(false)
     })
 
     it('clears socket path and updates tray when startup throws before spawn', async () => {
