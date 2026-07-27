@@ -26,6 +26,7 @@ import MakerDMGWithArch from './utils/forge-makers/MakerDMGWithArch'
 import { isPrerelease } from './utils/pre-release'
 import { stripBomFromReleasesFiles } from './utils/forge-makers/strip-bom-from-releases'
 import { getAzureTrustedSigningConfig } from './utils/windows-sign-azure'
+import { pruneBetterSqlite3Prebuilds } from './utils/prune-better-sqlite3-prebuilds'
 import packageJson from './package.json'
 
 function isValidPlatform(platform: string): platform is NodeJS.Platform {
@@ -256,7 +257,13 @@ const config: ForgeConfig = {
       return makeResults
     },
     // Copy better-sqlite3 with bundled N-API prebuilds into the app package
-    packageAfterCopy: async (_config, buildPath) => {
+    packageAfterCopy: async (
+      _config,
+      buildPath,
+      _electronVersion,
+      platform,
+      arch
+    ) => {
       const fs = await import('node:fs')
       const nodePath = await import('node:path')
       const modules = ['better-sqlite3']
@@ -264,6 +271,14 @@ const config: ForgeConfig = {
         const src = nodePath.join(process.cwd(), 'node_modules', mod)
         const dest = nodePath.join(buildPath, 'node_modules', mod)
         fs.cpSync(src, dest, { recursive: true })
+
+        if (isValidPlatform(platform) && isValidArchitecture(arch)) {
+          pruneBetterSqlite3Prebuilds(
+            nodePath.join(dest, 'prebuilds'),
+            platform,
+            arch
+          )
+        }
       }
     },
     // this would take care of downloading thv binary

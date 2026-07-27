@@ -1,8 +1,9 @@
 import path from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 
-const { cpSyncMock } = vi.hoisted(() => ({
+const { cpSyncMock, prunePrebuildsMock } = vi.hoisted(() => ({
   cpSyncMock: vi.fn(),
+  prunePrebuildsMock: vi.fn(),
 }))
 
 vi.mock('node:fs', async (importOriginal) => {
@@ -12,6 +13,10 @@ vi.mock('node:fs', async (importOriginal) => {
     cpSync: cpSyncMock,
   }
 })
+
+vi.mock('../utils/prune-better-sqlite3-prebuilds', () => ({
+  pruneBetterSqlite3Prebuilds: prunePrebuildsMock,
+}))
 
 import config from '../forge.config'
 
@@ -61,19 +66,25 @@ describe('forge.config — RPM maker dependency', () => {
 })
 
 describe('forge.config — packageAfterCopy native modules', () => {
-  it('copies only better-sqlite3 (v13 ships bundled N-API prebuilds, no bindings deps)', async () => {
+  it('copies better-sqlite3 and prunes prebuilds to the build target', async () => {
     cpSyncMock.mockClear()
+    prunePrebuildsMock.mockClear()
 
     const hook = config.hooks?.packageAfterCopy
     expect(hook).toBeTypeOf('function')
 
-    await hook!({} as never, '/build/path')
+    await hook!({} as never, '/build/path', '34.0.0', 'linux', 'arm64')
 
     expect(cpSyncMock).toHaveBeenCalledTimes(1)
     expect(cpSyncMock).toHaveBeenCalledWith(
       path.join(process.cwd(), 'node_modules', 'better-sqlite3'),
       path.join('/build/path', 'node_modules', 'better-sqlite3'),
       { recursive: true }
+    )
+    expect(prunePrebuildsMock).toHaveBeenCalledWith(
+      path.join('/build/path', 'node_modules', 'better-sqlite3', 'prebuilds'),
+      'linux',
+      'arm64'
     )
   })
 })
