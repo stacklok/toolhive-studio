@@ -270,7 +270,7 @@ const config: ForgeConfig = {
       for (const mod of modules) {
         const src = nodePath.join(process.cwd(), 'node_modules', mod)
         const dest = nodePath.join(buildPath, 'node_modules', mod)
-        fs.cpSync(src, dest, { recursive: true })
+        fs.cpSync(src, dest, { recursive: true, dereference: true })
 
         if (isValidPlatform(platform) && isValidArchitecture(arch)) {
           pruneBetterSqlite3Prebuilds(

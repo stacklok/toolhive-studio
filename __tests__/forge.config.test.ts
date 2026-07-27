@@ -79,7 +79,7 @@ describe('forge.config — packageAfterCopy native modules', () => {
     expect(cpSyncMock).toHaveBeenCalledWith(
       path.join(process.cwd(), 'node_modules', 'better-sqlite3'),
       path.join('/build/path', 'node_modules', 'better-sqlite3'),
-      { recursive: true }
+      expect.objectContaining({ recursive: true, dereference: true })
     )
     expect(prunePrebuildsMock).toHaveBeenCalledWith(
       path.join('/build/path', 'node_modules', 'better-sqlite3', 'prebuilds'),
