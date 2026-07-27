@@ -255,11 +255,11 @@ const config: ForgeConfig = {
       await stripBomFromReleasesFiles(makeResults)
       return makeResults
     },
-    // copy sqlite deps that already compiled
+    // Copy better-sqlite3 with bundled N-API prebuilds into the app package
     packageAfterCopy: async (_config, buildPath) => {
       const fs = await import('node:fs')
       const nodePath = await import('node:path')
-      const modules = ['better-sqlite3', 'bindings', 'file-uri-to-path']
+      const modules = ['better-sqlite3']
       for (const mod of modules) {
         const src = nodePath.join(process.cwd(), 'node_modules', mod)
         const dest = nodePath.join(buildPath, 'node_modules', mod)

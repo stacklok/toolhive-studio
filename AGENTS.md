@@ -24,8 +24,7 @@ Husky/lint-staged automatically run lint + format on staged files. Run `pnpm run
 ## Common Gotchas
 
 - Docker daemon must be running before `pnpm run start`
-- Node.js version must be >=24 <25 — native modules break otherwise
-- After Node version change, run `pnpm run rebuild` for native modules
+- Node.js version must be >=24 <25 — some native modules break on wrong Node version
 - If API type errors appear, run `pnpm run generate-client` to refresh
 - Tests run through Electron (`pnpm run vitest:electron`), not plain Node
 - Always run commands from the **repository root**, not from subdirectories

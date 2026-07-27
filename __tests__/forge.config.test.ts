@@ -1,4 +1,17 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+
+const { cpSyncMock } = vi.hoisted(() => ({
+  cpSyncMock: vi.fn(),
+}))
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>()
+  return {
+    ...actual,
+    cpSync: cpSyncMock,
+  }
+})
+
 import config from '../forge.config'
 
 /**
@@ -43,5 +56,23 @@ describe('forge.config — RPM maker dependency', () => {
       hardDockerRequire,
       `RPM "Requires: ${hardDockerRequire}" forces moby-engine on Fedora and conflicts with podman-docker. Use a boolean dependency or remove the requirement so Podman setups can install the RPM.`
     ).toBeUndefined()
+  })
+})
+
+describe('forge.config — packageAfterCopy native modules', () => {
+  it('copies only better-sqlite3 (v13 ships bundled N-API prebuilds, no bindings deps)', async () => {
+    cpSyncMock.mockClear()
+
+    const hook = config.hooks?.packageAfterCopy
+    expect(hook).toBeTypeOf('function')
+
+    await hook!({} as never, '/build/path')
+
+    expect(cpSyncMock).toHaveBeenCalledTimes(1)
+    expect(cpSyncMock).toHaveBeenCalledWith(
+      expect.stringMatching(/node_modules\/better-sqlite3$/),
+      '/build/path/node_modules/better-sqlite3',
+      { recursive: true }
+    )
   })
 })
