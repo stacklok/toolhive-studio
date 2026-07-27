@@ -8,6 +8,7 @@ import { THV_DISPLAY_NAME } from '@common/app-info'
 import * as Sentry from '@sentry/electron/main'
 import { getQuittingState } from './app-state'
 import { readSetting } from './db/readers/settings-reader'
+import { telemetryStore } from './telemetry-store'
 import { createEnhancedPath } from './utils/enhanced-path'
 import {
   ALREADY_RUNNING,
@@ -100,131 +101,158 @@ function cleanupSocketFile(socketPath: string): void {
   }
 }
 
+function formatUnknownError(error: unknown): string {
+  return error instanceof Error ? error.message : String(error)
+}
+
+function isTelemetryEnabled(): boolean {
+  try {
+    return readSetting('isTelemetryEnabled') !== 'false'
+  } catch (err) {
+    log.error('[DB] SQLite read failed:', err)
+    // electron-store is the authoritative opt-out source (written before SQLite).
+    return telemetryStore.get('isTelemetryEnabled', true)
+  }
+}
+
 export async function startToolhive(): Promise<void> {
-  Sentry.withScope<Promise<void>>(async (scope) => {
-    if (isUsingCustomSocket()) {
-      toolhiveSocketPath = process.env.THV_SOCKET!
-      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
-      log.info(`Using external ToolHive on socket ${toolhiveSocketPath}`)
-      return
-    }
-
-    if (!existsSync(binPath)) {
-      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
-      log.error(`ToolHive binary not found at: ${binPath}`)
-      return
-    }
-
-    processError = undefined
-    toolhiveSocketPath = generateSocketPath()
-    cleanupSocketFile(toolhiveSocketPath)
-
-    log.info(
-      `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}`
-    )
-
-    const serveArgs = ['serve', '--openapi', `--socket=${toolhiveSocketPath}`]
-
-    const isE2E = process.env.TOOLHIVE_E2E === 'true'
-    const sentryDsn = isE2E ? undefined : import.meta.env.VITE_SENTRY_THV_DSN
-    if (sentryDsn && readSetting('isTelemetryEnabled') !== 'false') {
-      const sentryEnvironment = app.isPackaged ? 'production' : 'development'
-      serveArgs.push(
-        `--sentry-dsn=${sentryDsn}`,
-        `--sentry-environment=${sentryEnvironment}`,
-        `--sentry-traces-sample-rate=1.0`
-      )
-    }
-
-    const child = spawn(binPath, serveArgs, {
-      stdio: ['ignore', 'ignore', 'pipe'],
-      detached: false,
-      // Ensure child process is killed when parent exits
-      // On Windows, this creates a job object to enforce cleanup
-      windowsHide: true,
-      env: {
-        ...process.env,
-        PATH: createEnhancedPath(),
-        TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
-      },
-    })
-    toolhiveProcess = child
-    isStopping = false
-
-    log.info(`[startToolhive] Process spawned with PID: ${child.pid}`)
-
-    scope.addBreadcrumb({
-      category: 'debug',
-      message: `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}, PID: ${child.pid}`,
-    })
-
-    updateTrayStatus(!!child)
-
-    // Capture and log stderr
-    if (child.stderr) {
-      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
-      log.info(`[ToolHive] Capturing stderr enabled`)
-      child.stderr.on('data', (data) => {
-        const output = data.toString().trim()
-        if (!output) return
-        // eslint-disable-next-line no-restricted-syntax -- matches thv stderr output — must stay literal
-        if (output.includes('A new version of ToolHive is available')) {
-          return
-        }
-        if (output.includes('registry authentication required')) {
-          processError = REGISTRY_AUTH_REQUIRED
-        }
-        // eslint-disable-next-line no-restricted-syntax -- matches thv stderr output — must stay literal
-        if (output.includes('another ToolHive server is already running')) {
-          processError = ALREADY_RUNNING
-        }
+  try {
+    await Sentry.withScope(async (scope) => {
+      if (isUsingCustomSocket()) {
+        toolhiveSocketPath = process.env.THV_SOCKET!
         // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
-        log.info(`[ToolHive stderr] ${output}`)
-        scope.addBreadcrumb({
-          category: 'debug',
-          // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
-          message: `[ToolHive stderr] ${output}`,
-          level: 'log',
-        })
-      })
-    }
+        log.info(`Using external ToolHive on socket ${toolhiveSocketPath}`)
+        return
+      }
 
-    child.on('error', (error) => {
-      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
-      log.error('Failed to start ToolHive: ', error)
+      if (!existsSync(binPath)) {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
+        log.error(`ToolHive binary not found at: ${binPath}`)
+        return
+      }
+
+      processError = undefined
+      toolhiveSocketPath = generateSocketPath()
+      cleanupSocketFile(toolhiveSocketPath)
+
+      log.info(
+        `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}`
+      )
+
+      const serveArgs = ['serve', '--openapi', `--socket=${toolhiveSocketPath}`]
+
+      const isE2E = process.env.TOOLHIVE_E2E === 'true'
+      const sentryDsn = isE2E ? undefined : import.meta.env.VITE_SENTRY_THV_DSN
+      if (sentryDsn && isTelemetryEnabled()) {
+        const sentryEnvironment = app.isPackaged ? 'production' : 'development'
+        serveArgs.push(
+          `--sentry-dsn=${sentryDsn}`,
+          `--sentry-environment=${sentryEnvironment}`,
+          `--sentry-traces-sample-rate=1.0`
+        )
+      }
+
+      const child = spawn(binPath, serveArgs, {
+        stdio: ['ignore', 'ignore', 'pipe'],
+        detached: false,
+        // Ensure child process is killed when parent exits
+        // On Windows, this creates a job object to enforce cleanup
+        windowsHide: true,
+        env: {
+          ...process.env,
+          PATH: createEnhancedPath(),
+          TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
+        },
+      })
+      toolhiveProcess = child
+      isStopping = false
+
+      log.info(`[startToolhive] Process spawned with PID: ${child.pid}`)
+
+      scope.addBreadcrumb({
+        category: 'debug',
+        message: `Starting ${THV_DISPLAY_NAME} from: ${binPath} on socket ${toolhiveSocketPath}, PID: ${child.pid}`,
+      })
+
+      updateTrayStatus(!!child)
+
+      // Capture and log stderr
+      if (child.stderr) {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
+        log.info(`[ToolHive] Capturing stderr enabled`)
+        child.stderr.on('data', (data) => {
+          const output = data.toString().trim()
+          if (!output) return
+          // eslint-disable-next-line no-restricted-syntax -- matches thv stderr output — must stay literal
+          if (output.includes('A new version of ToolHive is available')) {
+            return
+          }
+          if (output.includes('registry authentication required')) {
+            processError = REGISTRY_AUTH_REQUIRED
+          }
+          // eslint-disable-next-line no-restricted-syntax -- matches thv stderr output — must stay literal
+          if (output.includes('another ToolHive server is already running')) {
+            processError = ALREADY_RUNNING
+          }
+          // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
+          log.info(`[ToolHive stderr] ${output}`)
+          scope.addBreadcrumb({
+            category: 'debug',
+            // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
+            message: `[ToolHive stderr] ${output}`,
+            level: 'log',
+          })
+        })
+      }
+
+      child.on('error', (error) => {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
+        log.error('Failed to start ToolHive: ', error)
+        Sentry.captureMessage(
+          `Failed to start ${THV_DISPLAY_NAME}: ${formatUnknownError(error)}`,
+          'fatal'
+        )
+        updateTrayStatus(false)
+      })
+
+      child.on('exit', (code) => {
+        // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
+        log.warn(`ToolHive process exited with code: ${code}`)
+        // Only clear globals if this exit is for the currently tracked child.
+        // Otherwise a prior child's exit can run after restart has spawned a
+        // replacement and would wipe the new socket path / process reference.
+        if (toolhiveProcess === child) {
+          toolhiveProcess = undefined
+          toolhiveSocketPath = undefined
+          isStopping = false
+          // Drop the pending SIGKILL timer - the child is already gone and a
+          // live setTimeout would keep the event loop alive during shutdown.
+          if (killTimer) {
+            clearTimeout(killTimer)
+            killTimer = undefined
+          }
+        }
+        if (!isRestarting && !getQuittingState()) {
+          updateTrayStatus(false)
+          Sentry.captureMessage(
+            `${THV_DISPLAY_NAME} process exited with code: ${code}`,
+            'fatal'
+          )
+        }
+      })
+    })
+  } catch (error) {
+    // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
+    log.error('Failed to start ToolHive:', error)
+    if (!isToolhiveRunning()) {
       Sentry.captureMessage(
-        `Failed to start ${THV_DISPLAY_NAME}: ${JSON.stringify(error)}`,
+        `Failed to start ${THV_DISPLAY_NAME}: ${formatUnknownError(error)}`,
         'fatal'
       )
       updateTrayStatus(false)
-    })
-
-    child.on('exit', (code) => {
-      // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
-      log.warn(`ToolHive process exited with code: ${code}`)
-      // Only clear globals if this exit is for the currently tracked child.
-      // Otherwise a prior child's exit can run after restart has spawned a
-      // replacement and would wipe the new socket path / process reference.
-      if (toolhiveProcess === child) {
-        toolhiveProcess = undefined
-        toolhiveSocketPath = undefined
-        isStopping = false
-        // Drop the pending SIGKILL timer - the child is already gone and a
-        // live setTimeout would keep the event loop alive during shutdown.
-        if (killTimer) {
-          clearTimeout(killTimer)
-          killTimer = undefined
-        }
-      }
-      if (!isRestarting && !getQuittingState()) {
-        updateTrayStatus(false)
-        Sentry.captureMessage(
-          `${THV_DISPLAY_NAME} process exited with code: ${code}`,
-          'fatal'
-        )
-      }
-    })
-  })
+      toolhiveSocketPath = undefined
+    }
+  }
 }
 
 export async function restartToolhive(): Promise<void> {
@@ -253,7 +281,7 @@ export async function restartToolhive(): Promise<void> {
     // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
     log.error('Failed to restart ToolHive: ', error)
     Sentry.captureMessage(
-      `Failed to restart ${THV_DISPLAY_NAME}: ${JSON.stringify(error)}`,
+      `Failed to restart ${THV_DISPLAY_NAME}: ${formatUnknownError(error)}`,
       'fatal'
     )
   } finally {
