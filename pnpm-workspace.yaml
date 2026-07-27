@@ -46,7 +46,7 @@ overrides:
   brace-expansion@>=2.0.0 <2.1.2: 2.1.2
   brace-expansion@<1.1.16: 1.1.16
   'ajv>fast-uri': 3.1.4
-  '@modelcontextprotocol/sdk>hono': 4.12.31
+  '@modelcontextprotocol/sdk>hono': 4.12.32
   '@modelcontextprotocol/sdk>@hono/node-server': 2.0.11
   'mermaid>dompurify': 3.4.12
   'icon-gen>sharp': 0.35.3
