@@ -11,6 +11,30 @@
 # Only report vulnerabilities that have a fix available — unfixed ones are noise with no actionable remedy.
 only-fixed: true
 
+ignore:
+  - vulnerability: GHSA-mh99-v99m-4gvg
+    package:
+      name: brace-expansion
+      version: 1.1.16
+      type: npm
+    reason: >-
+      brace-expansion 1.1.16 is a build-only dependency of Electron Forge,
+      @electron/asar, and ESLint through minimatch 3.x. The only patched release
+      is 5.0.8, whose changed export shape breaks these consumers. The vulnerable
+      expansion input is limited to developer-controlled build and lint globs and
+      is not reachable in the packaged application.
+  - vulnerability: GHSA-mh99-v99m-4gvg
+    package:
+      name: brace-expansion
+      version: 2.1.2
+      type: npm
+    reason: >-
+      brace-expansion 2.1.2 is a build-only dependency of @electron/universal
+      through minimatch 9.x. The only patched release is 5.0.8, whose changed
+      export shape is incompatible with this consumer. The vulnerable expansion
+      input is limited to developer-controlled packaging globs and is not
+      reachable in the packaged application.
+
 exclude:
   - '**/node_modules/**'
   - '**/dist/**'
