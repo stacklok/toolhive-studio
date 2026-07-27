@@ -22,6 +22,10 @@ describe('getBetterSqlite3PrebuildNames', () => {
       new Set(['win32-arm64.node'])
     )
   })
+
+  it('returns an empty set for unsupported platforms', () => {
+    expect(getBetterSqlite3PrebuildNames('aix', 'x64')).toEqual(new Set())
+  })
 })
 
 describe('pruneBetterSqlite3Prebuilds', () => {
@@ -54,6 +58,24 @@ describe('pruneBetterSqlite3Prebuilds', () => {
     expect(fs.readdirSync(prebuildsDir).sort()).toEqual([
       'linux-arm64.node',
       'linuxmusl-arm64.node',
+    ])
+  })
+
+  it('does not delete prebuilds for an unsupported platform', () => {
+    const prebuildsDir = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'better-sqlite3-prebuilds-')
+    )
+    tempDirs.push(prebuildsDir)
+
+    for (const name of ['linux-arm64.node', 'darwin-x64.node']) {
+      fs.writeFileSync(path.join(prebuildsDir, name), name)
+    }
+
+    pruneBetterSqlite3Prebuilds(prebuildsDir, 'aix', 'x64')
+
+    expect(fs.readdirSync(prebuildsDir).sort()).toEqual([
+      'darwin-x64.node',
+      'linux-arm64.node',
     ])
   })
 })

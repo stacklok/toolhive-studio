@@ -33,6 +33,9 @@ export function pruneBetterSqlite3Prebuilds(
   arch: NodeJS.Architecture
 ): void {
   const keep = getBetterSqlite3PrebuildNames(platform, arch)
+  if (keep.size === 0) {
+    return
+  }
 
   for (const entry of fs.readdirSync(prebuildsDir)) {
     if (entry.endsWith('.node') && !keep.has(entry)) {
