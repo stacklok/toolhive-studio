@@ -67,7 +67,7 @@ vi.mock('@sentry/electron/main', () => ({
     const mockScope = {
       addBreadcrumb: vi.fn(),
     }
-    callback(mockScope)
+    return callback(mockScope)
   }),
 }))
 
@@ -489,6 +489,53 @@ describe('toolhive-manager', () => {
 
       const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
       expect(spawnArgs.some((a) => a.startsWith('--sentry-'))).toBe(false)
+    })
+
+    it('still spawns thv when readSetting throws (e.g. SQLite unavailable)', async () => {
+      vi.stubEnv('VITE_SENTRY_THV_DSN', 'https://test@sentry.io/123')
+      vi.mocked(readSetting).mockImplementation(() => {
+        throw new Error('GLIBC_2.38 not found')
+      })
+
+      const startPromise = startToolhive()
+      await vi.advanceTimersByTimeAsync(50)
+      await startPromise
+
+      expect(mockSpawn).toHaveBeenCalled()
+      expect(mockLog.error).toHaveBeenCalledWith(
+        '[DB] SQLite read failed:',
+        expect.any(Error)
+      )
+      expect(isToolhiveRunning()).toBe(true)
+
+      const spawnArgs = mockSpawn.mock.calls[0]![1] as string[]
+      expect(spawnArgs).toEqual(
+        expect.arrayContaining([
+          '--sentry-dsn=https://test@sentry.io/123',
+          '--sentry-environment=development',
+          '--sentry-traces-sample-rate=1.0',
+        ])
+      )
+    })
+
+    it('clears socket path and updates tray when startup throws before spawn', async () => {
+      mockSpawn.mockImplementation(() => {
+        throw new Error('spawn failed')
+      })
+
+      await startToolhive()
+
+      expect(mockLog.error).toHaveBeenCalledWith(
+        'Failed to start ToolHive:',
+        expect.any(Error)
+      )
+      expect(mockCaptureMessage).toHaveBeenCalledWith(
+        expect.stringContaining('Failed to start ToolHive:'),
+        'fatal'
+      )
+      expect(mockUpdateTrayStatus).toHaveBeenCalledWith(false)
+      expect(getToolhiveSocketPath()).toBeUndefined()
+      expect(isToolhiveRunning()).toBe(false)
     })
 
     it('sets processError to ALREADY_RUNNING when stderr reports another server running', async () => {
