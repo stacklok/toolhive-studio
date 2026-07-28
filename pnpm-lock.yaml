@@ -32,10 +32,10 @@ importers:
   .:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: ^4.0.19
+        specifier: ^4.0.20
         version: 4.0.21(zod@4.4.3)
       '@ai-sdk/google':
-        specifier: ^4.0.23
+        specifier: ^4.0.24
         version: 4.0.24(zod@4.4.3)
       '@ai-sdk/mcp':
         specifier: ^2.0.16
