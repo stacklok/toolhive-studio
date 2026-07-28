@@ -1,4 +1,4 @@
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import type { RegistryEnvVar } from '@common/api/registry-types'
 import {
   Table,

@@ -1,6 +1,6 @@
 import {
-  type GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
-  type GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter,
+  type CoreWorkload,
+  type SecretsSecretParameter,
   type PkgApiV1ListSecretsResponse as V1ListSecretsResponse,
 } from '@common/api/generated/types.gen'
 import type {

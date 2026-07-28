@@ -1,6 +1,6 @@
 import { Effect } from 'effect'
 import { getApiV1BetaWorkloads } from '@common/api/generated/sdk.gen'
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { getTearingDownState } from '../../app-state'
 import { createMainProcessApiClient } from '../../unix-socket-fetch'
 import { isToolhiveRunning } from '../../toolhive-manager'

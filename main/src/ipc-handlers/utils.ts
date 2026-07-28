@@ -1,5 +1,5 @@
 import { ipcMain } from 'electron'
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { getHeaders } from '../headers'
 import { getInstanceId, isOfficialReleaseBuild } from '../util'
 import { getWorkloadAvailableTools } from '../utils/mcp-tools'

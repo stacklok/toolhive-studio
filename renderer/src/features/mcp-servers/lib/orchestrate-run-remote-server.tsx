@@ -1,5 +1,5 @@
 import {
-  type GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter,
+  type SecretsSecretParameter,
   type PkgApiV1CreateRequest as V1CreateRequest,
   type PkgApiV1HeaderForwardConfig as V1HeaderForwardConfig,
   type PkgApiV1ListSecretsResponse as V1ListSecretsResponse,

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createTransport } from '../mcp-tools'
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
 
 vi.mock('../../logger', () => ({

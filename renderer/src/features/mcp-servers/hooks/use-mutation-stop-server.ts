@@ -1,5 +1,5 @@
 import type {
-  GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
+  CoreWorkload,
   PkgApiV1WorkloadListResponse as V1WorkloadListResponse,
 } from '@common/api/generated/types.gen'
 import {
