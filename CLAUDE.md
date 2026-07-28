@@ -7,7 +7,7 @@ ToolHive Studio is an Electron desktop application for managing MCP (Model Conte
 ## Build and Development Commands
 
 ```bash
-pnpm install              # Install dependencies (runs rebuild for native modules)
+pnpm install              # Install dependencies
 pnpm run start            # Start dev server with hot reload
 pnpm run lint             # Run ESLint
 pnpm run type-check       # TypeScript checking (both app and node configs)
@@ -31,9 +31,8 @@ Husky/lint-staged automatically run lint + format on staged `.ts`/`.tsx` files. 
 ## Common Gotchas
 
 - **Docker must be running** before `pnpm run start` — ToolHive manages containers, so the daemon is required even in dev
-- **Node version mismatch**: native modules (`better-sqlite3`) break on wrong Node version. Always `nvm use` first
+- **Node version mismatch**: wrong Node version can break other native modules. Always `nvm use` first
 - **Stale generated types**: if type errors reference API types, run `pnpm run generate-client` to refresh
-- **Native module rebuild**: after Node version change or fresh install issues, run `pnpm run rebuild`
 - **Electron test runner**: unit tests run through Electron (`vitest:electron`), not plain Node — required for native module compatibility
 - **All commands from root**: always run `pnpm` commands from the repository root, not from subdirectories
 

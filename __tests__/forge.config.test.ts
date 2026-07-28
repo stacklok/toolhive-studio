@@ -1,4 +1,23 @@
-import { describe, expect, it } from 'vitest'
+import path from 'node:path'
+import { describe, expect, it, vi } from 'vitest'
+
+const { cpSyncMock, prunePrebuildsMock } = vi.hoisted(() => ({
+  cpSyncMock: vi.fn(),
+  prunePrebuildsMock: vi.fn(),
+}))
+
+vi.mock('node:fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs')>()
+  return {
+    ...actual,
+    cpSync: cpSyncMock,
+  }
+})
+
+vi.mock('../utils/prune-better-sqlite3-prebuilds', () => ({
+  pruneBetterSqlite3Prebuilds: prunePrebuildsMock,
+}))
+
 import config from '../forge.config'
 
 /**
@@ -43,5 +62,29 @@ describe('forge.config — RPM maker dependency', () => {
       hardDockerRequire,
       `RPM "Requires: ${hardDockerRequire}" forces moby-engine on Fedora and conflicts with podman-docker. Use a boolean dependency or remove the requirement so Podman setups can install the RPM.`
     ).toBeUndefined()
+  })
+})
+
+describe('forge.config — packageAfterCopy native modules', () => {
+  it('copies better-sqlite3 and prunes prebuilds to the build target', async () => {
+    cpSyncMock.mockClear()
+    prunePrebuildsMock.mockClear()
+
+    const hook = config.hooks?.packageAfterCopy
+    expect(hook).toBeTypeOf('function')
+
+    await hook!({} as never, '/build/path', '34.0.0', 'linux', 'arm64')
+
+    expect(cpSyncMock).toHaveBeenCalledTimes(1)
+    expect(cpSyncMock).toHaveBeenCalledWith(
+      path.join(process.cwd(), 'node_modules', 'better-sqlite3'),
+      path.join('/build/path', 'node_modules', 'better-sqlite3'),
+      expect.objectContaining({ recursive: true, dereference: true })
+    )
+    expect(prunePrebuildsMock).toHaveBeenCalledWith(
+      path.join('/build/path', 'node_modules', 'better-sqlite3', 'prebuilds'),
+      'linux',
+      'arm64'
+    )
   })
 })
