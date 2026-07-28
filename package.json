@@ -57,7 +57,7 @@
     "@electron/rebuild": "^4.2.0",
     "@eslint/js": "^9.39.5",
     "@hey-api/openapi-ts": "0.99.0",
-    "@playwright/test": "^1.61.1",
+    "@playwright/test": "^1.62.0",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/router-plugin": "^1.168.23",
     "@testing-library/jest-dom": "^6.9.1",
