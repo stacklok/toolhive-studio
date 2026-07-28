@@ -1,9 +1,17 @@
 import z from 'zod/v4'
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type {
+  GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
+  PkgApiV1ListSecretsResponse as V1ListSecretsResponse,
+} from '@common/api/generated/types.gen'
 import {
   createRemoteMcpBaseSchema,
   REMOTE_MCP_AUTH_TYPES,
 } from '@/common/lib/form-schema-mcp'
+
+type SecretFormValue = {
+  name: string
+  value: { secret: string; isFromStore: boolean }
+}
 
 const OAUTH_VALIDATION_RULES = {
   oauth2: [
@@ -47,20 +55,27 @@ const OAUTH_VALIDATION_RULES = {
 const validateOAuthField = (value: string | undefined): boolean =>
   Boolean(value && value.trim() !== '')
 
-const validateSecretField = (
-  value:
-    | { name: string; value: { secret: string; isFromStore: boolean } }
-    | undefined
-): boolean =>
+const validateSecretField = (value: SecretFormValue | undefined): boolean =>
   Boolean(value && value.value.secret && value.value.secret.trim() !== '')
+
+const getAvailableSecretKeys = (availableSecrets?: V1ListSecretsResponse) => {
+  if (!availableSecrets) return undefined
+  return new Set(
+    availableSecrets.keys
+      ?.map((secret) => secret.key)
+      .filter((key): key is string => Boolean(key)) ?? []
+  )
+}
 
 export const getFormSchemaRemoteMcp = (
   workloads: CoreWorkload[],
-  editingServerName?: string
+  editingServerName?: string,
+  availableSecrets?: V1ListSecretsResponse
 ) => {
   const filteredWorkloads = editingServerName
     ? workloads.filter((w) => w.name !== editingServerName)
     : workloads
+  const availableSecretKeys = getAvailableSecretKeys(availableSecrets)
 
   return createRemoteMcpBaseSchema(filteredWorkloads).superRefine(
     (data, ctx) => {
@@ -109,6 +124,50 @@ export const getFormSchemaRemoteMcp = (
             path,
           })
         }
+      })
+
+      const validateStoreReference = (
+        value: SecretFormValue | undefined,
+        path: (string | number)[]
+      ) => {
+        if (
+          !availableSecretKeys ||
+          !value?.value.isFromStore ||
+          !value.value.secret.trim()
+        ) {
+          return
+        }
+
+        const secretName = value.value.secret
+        if (!availableSecretKeys.has(secretName)) {
+          ctx.addIssue({
+            code: 'custom',
+            message: `Secret "${secretName}" was not found in the secrets store`,
+            path,
+          })
+        }
+      }
+
+      validateStoreReference(oauth_config.client_secret, [
+        'oauth_config',
+        'client_secret',
+      ])
+      validateStoreReference(oauth_config.bearer_token, [
+        'oauth_config',
+        'bearer_token',
+      ])
+
+      data.secrets.forEach((secret, index) => {
+        validateStoreReference(secret, ['secrets', index, 'value'])
+      })
+
+      data.header_forward?.add_headers_from_secret?.forEach((header, index) => {
+        validateStoreReference(header.secret, [
+          'header_forward',
+          'add_headers_from_secret',
+          index,
+          'secret',
+        ])
       })
     }
   )

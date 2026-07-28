@@ -156,6 +156,56 @@ describe('getFormSchemaRemoteMcp', () => {
       expect(errors).toContain('Token URL is required for OAuth2')
       expect(errors).toContain('Client ID is required for OAuth 2.0')
     })
+
+    it('passes when client_secret references an existing secret-store key', () => {
+      const input = {
+        ...oauth2Input,
+        oauth_config: {
+          ...oauth2Input.oauth_config,
+          client_secret: {
+            name: 'CLIENT_SECRET',
+            value: {
+              secret: 'CLIENT_SECRET',
+              isFromStore: true,
+            },
+          },
+        },
+      }
+
+      const result = getFormSchemaRemoteMcp([], undefined, {
+        keys: [{ key: 'CLIENT_SECRET' }],
+      }).safeParse(input)
+
+      expect(result.success, `${result.error}`).toBe(true)
+    })
+
+    it('fails when client_secret references a missing secret-store key', () => {
+      const input = {
+        ...oauth2Input,
+        oauth_config: {
+          ...oauth2Input.oauth_config,
+          client_secret: {
+            name: 'CLIENT_SECRET',
+            value: {
+              secret: 'CLIENT_SECRET',
+              isFromStore: true,
+            },
+          },
+        },
+      }
+
+      const result = getFormSchemaRemoteMcp([], undefined, {
+        keys: [{ key: 'OTHER_SECRET' }],
+      }).safeParse(input)
+
+      expect(result.success).toBe(false)
+      expect(result.error?.issues).toContainEqual(
+        expect.objectContaining({
+          message: 'Secret "CLIENT_SECRET" was not found in the secrets store',
+          path: ['oauth_config', 'client_secret'],
+        })
+      )
+    })
   })
 
   describe('auth_type: "oidc"', () => {

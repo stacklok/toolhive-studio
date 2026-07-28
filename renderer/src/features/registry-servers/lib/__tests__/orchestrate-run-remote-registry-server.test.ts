@@ -24,4 +24,28 @@ describe('convertCreateRequestToFormData', () => {
     })
     expect(result.name).toBe('my-server')
   })
+
+  it('preserves registry OAuth client_secret as a store reference', () => {
+    const result = convertCreateRequestToFormData({
+      ...baseRequest,
+      oauth_config: {
+        authorize_url: 'https://auth.example.com/authorize',
+        token_url: 'https://auth.example.com/token',
+        client_id: 'client-id',
+        client_secret: {
+          name: 'CLIENT_SECRET',
+          target: 'CLIENT_SECRET',
+        },
+      },
+    })
+
+    expect(result.auth_type).toBe('oauth2')
+    expect(result.oauth_config.client_secret).toEqual({
+      name: 'CLIENT_SECRET',
+      value: {
+        secret: 'CLIENT_SECRET',
+        isFromStore: true,
+      },
+    })
+  })
 })
