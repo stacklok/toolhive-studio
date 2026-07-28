@@ -61,6 +61,8 @@ import {
   postApiV1BetaSkills,
   postApiV1BetaSkillsBuild,
   postApiV1BetaSkillsPush,
+  postApiV1BetaSkillsSync,
+  postApiV1BetaSkillsUpgrade,
   postApiV1BetaSkillsValidate,
   postApiV1BetaWorkloads,
   postApiV1BetaWorkloadsByNameEdit,
@@ -217,6 +219,12 @@ import type {
   PostApiV1BetaSkillsPushError,
   PostApiV1BetaSkillsPushResponse,
   PostApiV1BetaSkillsResponse,
+  PostApiV1BetaSkillsSyncData,
+  PostApiV1BetaSkillsSyncError,
+  PostApiV1BetaSkillsSyncResponse,
+  PostApiV1BetaSkillsUpgradeData,
+  PostApiV1BetaSkillsUpgradeError,
+  PostApiV1BetaSkillsUpgradeResponse,
   PostApiV1BetaSkillsValidateData,
   PostApiV1BetaSkillsValidateError,
   PostApiV1BetaSkillsValidateResponse,
@@ -1313,6 +1321,64 @@ export const postApiV1BetaSkillsPushMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaSkillsPush({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Sync project skills from the lock file
+ *
+ * Restore a project's installed skills to match toolhive.lock.yaml
+ */
+export const postApiV1BetaSkillsSyncMutation = (
+  options?: Partial<Options<PostApiV1BetaSkillsSyncData>>
+): UseMutationOptions<
+  PostApiV1BetaSkillsSyncResponse,
+  PostApiV1BetaSkillsSyncError,
+  Options<PostApiV1BetaSkillsSyncData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSkillsSyncResponse,
+    PostApiV1BetaSkillsSyncError,
+    Options<PostApiV1BetaSkillsSyncData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaSkillsSync({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Upgrade project skills
+ *
+ * Re-resolve a project's lock entries and install newer content where available
+ */
+export const postApiV1BetaSkillsUpgradeMutation = (
+  options?: Partial<Options<PostApiV1BetaSkillsUpgradeData>>
+): UseMutationOptions<
+  PostApiV1BetaSkillsUpgradeResponse,
+  PostApiV1BetaSkillsUpgradeError,
+  Options<PostApiV1BetaSkillsUpgradeData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaSkillsUpgradeResponse,
+    PostApiV1BetaSkillsUpgradeError,
+    Options<PostApiV1BetaSkillsUpgradeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaSkillsUpgrade({
         ...options,
         ...fnOptions,
         throwOnError: true,
