@@ -10,7 +10,7 @@ import {
 } from '@/common/hooks/use-auto-update'
 import { Button } from '../../ui/button'
 import { Alert, AlertDescription } from '../../ui/alert'
-import { AlertCircleIcon, Download } from 'lucide-react'
+import { AlertCircleIcon, Download, ExternalLink } from 'lucide-react'
 import { trackEvent } from '@/common/lib/analytics'
 import { Separator } from '../../ui/separator'
 import { SettingsSectionTitle } from './components/settings-section-title'
@@ -18,7 +18,7 @@ import { SettingsRow } from './components/settings-row'
 import { WrapperField } from './components/wrapper-field'
 import { usePermissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
-import { APP_DISPLAY_NAME, GITHUB_RELEASES_URL } from '@common/app-info'
+import { APP_DISPLAY_NAME, getGitHubReleaseUrl } from '@common/app-info'
 
 interface VersionTabProps {
   appInfo: AppVersionInfo | undefined
@@ -58,6 +58,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   const canShowAutoUpdate = canShow(PERMISSION_KEYS.AUTO_UPDATE)
   const canShowUpdateAlert =
     canShowAutoUpdate && appInfo?.isNewVersionAvailable && isProduction
+  const releaseNotesUrl = getGitHubReleaseUrl(appInfo?.latestVersion)
 
   if (isLoading) {
     return (
@@ -84,7 +85,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   const handleManualUpdate = () => {
     const isLinux = window.electronAPI?.isLinux
     if (isLinux) {
-      window.open(GITHUB_RELEASES_URL)
+      window.open(releaseNotesUrl)
 
       trackEvent('redirect to github releases', {
         pageName: '/settings/version',
@@ -173,19 +174,29 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
         <Alert className="flex h-full items-center">
           <AlertDescription className="flex w-full items-center gap-2">
             <AlertCircleIcon className="flex size-4 items-center" />
-            <div className="flex w-full items-center justify-between">
+            <div
+              className="flex w-full flex-wrap items-center justify-between
+                gap-3"
+            >
               <div className="font-medium">
                 A new version {appInfo.latestVersion} is available
               </div>
-              <Button
-                variant="outline"
-                disabled={isCheckingOrDownloading}
-                onClick={() => {
-                  handleManualUpdate()
-                }}
-              >
-                <Download className="size-4" /> {getButtonText()}
-              </Button>
+              <div className="flex flex-wrap items-center justify-end gap-3">
+                <Button asChild variant="link">
+                  <a href={releaseNotesUrl} target="_blank" rel="noreferrer">
+                    View release notes <ExternalLink className="size-4" />
+                  </a>
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={isCheckingOrDownloading}
+                  onClick={() => {
+                    handleManualUpdate()
+                  }}
+                >
+                  <Download className="size-4" /> {getButtonText()}
+                </Button>
+              </div>
             </div>
           </AlertDescription>
         </Alert>
