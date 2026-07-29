@@ -82,11 +82,7 @@ export async function handleChatStreamRealtime(
               deps.agents.resolveAgentForThread(request.chatId)
             )
 
-        const {
-          tools: mcpTools,
-          clients: mcpClients,
-          enabledTools,
-        } = await Effect.runPromise(
+        const mcpSession = await Effect.runPromise(
           deps.mcp.createMcpTools(request.chatId, {
             sanitizeSchemas: requiresGeminiSchemaCompat(
               request.provider,
@@ -95,29 +91,35 @@ export async function handleChatStreamRealtime(
           })
         )
 
-        // Agent-specific built-in tools (e.g. Skills Builder, Skill Tester).
-        // Pass the threadId so per-thread skill enablement is honoured.
-        const builtinToolsHandle = await createBuiltinAgentTools(
-          agentConfig.builtinToolsKey ?? null,
-          { threadId: request.chatId }
-        )
-        const builtinTools = builtinToolsHandle.tools
-
-        const combinedTools = {
-          ...mcpTools,
-          ...builtinTools,
-        }
-        const hasTools = Object.keys(combinedTools).length > 0
-
-        // Some bundles (e.g. the skills bundle) augment the agent's
-        // instructions with runtime data such as the list of installed skills,
-        // following the Vercel "Add Skills to Your Agent" progressive-
-        // disclosure pattern.
-        const instructions = builtinToolsHandle.instructionsSuffix
-          ? `${agentConfig.instructions}\n\n${builtinToolsHandle.instructionsSuffix}`
-          : agentConfig.instructions
+        let builtinToolsHandle: Awaited<
+          ReturnType<typeof createBuiltinAgentTools>
+        > | null = null
 
         try {
+          const { tools: mcpTools, enabledTools } = mcpSession
+
+          // Agent-specific built-in tools (e.g. Skills Builder, Skill Tester).
+          // Pass the threadId so per-thread skill enablement is honoured.
+          builtinToolsHandle = await createBuiltinAgentTools(
+            agentConfig.builtinToolsKey ?? null,
+            { threadId: request.chatId }
+          )
+          const builtinTools = builtinToolsHandle.tools
+
+          const combinedTools = {
+            ...mcpTools,
+            ...builtinTools,
+          }
+          const hasTools = Object.keys(combinedTools).length > 0
+
+          // Some bundles (e.g. the skills bundle) augment the agent's
+          // instructions with runtime data such as the list of installed skills,
+          // following the Vercel "Add Skills to Your Agent" progressive-
+          // disclosure pattern.
+          const instructions = builtinToolsHandle.instructionsSuffix
+            ? `${agentConfig.instructions}\n\n${builtinToolsHandle.instructionsSuffix}`
+            : agentConfig.instructions
+
           const agent = new ToolLoopAgent({
             model,
             instructions,
@@ -289,21 +291,6 @@ export async function handleChatStreamRealtime(
                 deps.mcp.getCachedUiMetadata()
               ),
               onComplete: async ({ status }) => {
-                for (const client of mcpClients) {
-                  try {
-                    await client.close()
-                  } catch (error) {
-                    log.error('[CHAT] Error closing MCP client:', error)
-                  }
-                }
-                try {
-                  await builtinToolsHandle.cleanup()
-                } catch (error) {
-                  log.error(
-                    '[CHAT] Error cleaning up builtin agent tools:',
-                    error
-                  )
-                }
                 // Only auto-title successful finishes — aborted/errored
                 // streams would waste tokens on a user-only transcript.
                 if (status !== 'finished') return
@@ -332,28 +319,23 @@ export async function handleChatStreamRealtime(
           )
           finish()
         } catch (error) {
-          // Clean up MCP clients on error as well
-
-          for (const client of mcpClients) {
+          throw new Error(toUserFacingProviderMessage(error), { cause: error })
+        } finally {
+          try {
+            await mcpSession.close()
+          } catch (cleanupError) {
+            log.error('[CHAT] Error closing MCP session:', cleanupError)
+          }
+          if (builtinToolsHandle) {
             try {
-              await client.close()
+              await builtinToolsHandle.cleanup()
             } catch (cleanupError) {
               log.error(
-                '[CHAT] Error closing MCP client during error cleanup:',
+                '[CHAT] Error cleaning up builtin agent tools during cleanup:',
                 cleanupError
               )
             }
           }
-          try {
-            await builtinToolsHandle.cleanup()
-          } catch (cleanupError) {
-            log.error(
-              '[CHAT] Error cleaning up builtin agent tools during error cleanup:',
-              cleanupError
-            )
-          }
-
-          throw new Error(toUserFacingProviderMessage(error), { cause: error })
         }
       } catch (error) {
         log.error('[CHAT] Chat stream error:', error)

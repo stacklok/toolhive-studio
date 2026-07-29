@@ -1,6 +1,11 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
+import {
+  createMcpHandler,
+  McpServer as ModernMcpServer,
+} from '@modelcontextprotocol/server'
 import express from 'express'
+import { z } from 'zod'
 import type { Server } from 'http'
 
 // Simple word+number format (e.g. "apple42") - hard to guess randomly but simple enough
@@ -28,6 +33,114 @@ export interface TestMcpServer {
   bearerToken: string
   url: string
   stop: () => Promise<void>
+}
+
+async function readRequestBody(
+  req: express.Request
+): Promise<Uint8Array | undefined> {
+  if (req.method === 'GET' || req.method === 'HEAD') return undefined
+  if (req.body && Buffer.isBuffer(req.body)) return req.body
+  if (req.body && typeof req.body === 'object') {
+    return Buffer.from(JSON.stringify(req.body))
+  }
+  return undefined
+}
+
+function createModernMcpHandler(secretCode: string) {
+  return createMcpHandler(
+    () => {
+      const server = new ModernMcpServer({
+        name: 'e2e-modern-test-server',
+        version: '1.0.0',
+      })
+
+      server.registerTool(
+        'get_secret_code',
+        {
+          description: 'Returns a secret code for testing',
+          inputSchema: z.object({}),
+        },
+        async () => ({
+          content: [{ type: 'text', text: secretCode }],
+        })
+      )
+
+      return server
+    },
+    { legacy: 'reject' }
+  )
+}
+
+export async function startModernTestMcpServer(): Promise<TestMcpServer> {
+  const secretCode = generateSimpleCode()
+  const bearerToken = `token-${generateSimpleCode()}`
+  const handler = createModernMcpHandler(secretCode)
+
+  const app = express()
+  app.use(express.raw({ type: '*/*' }))
+
+  app.get('/.well-known/oauth-protected-resource', (_req, res) => {
+    res.status(404).send('Not found')
+  })
+  app.get('/.well-known/oauth-protected-resource/mcp', (_req, res) => {
+    res.status(404).send('Not found')
+  })
+
+  app.get('/', (_req, res) => {
+    res.json({ status: 'ok', protocol: 'modern' })
+  })
+
+  app.all('/mcp', async (req, res) => {
+    if (req.method !== 'OPTIONS') {
+      const authHeader = req.headers.authorization
+      if (authHeader !== `Bearer ${bearerToken}`) {
+        res.status(401).send('Unauthorized')
+        return
+      }
+    }
+
+    try {
+      const host = req.headers.host ?? '127.0.0.1'
+      const url = new URL(req.url ?? '/mcp', `http://${host}`)
+      const body = await readRequestBody(req)
+      const response = await handler.fetch(
+        new Request(url, {
+          method: req.method,
+          headers: req.headers as HeadersInit,
+          body: body ? Buffer.from(body) : undefined,
+        })
+      )
+
+      res.statusCode = response.status
+      response.headers.forEach((value, key) => {
+        res.setHeader(key, value)
+      })
+      const responseBody = Buffer.from(await response.arrayBuffer())
+      res.end(responseBody)
+    } catch (error) {
+      res.statusCode = 500
+      res.end(String(error))
+    }
+  })
+
+  return new Promise((resolve) => {
+    const httpServer: Server = app.listen(0, () => {
+      const address = httpServer.address()
+      const port = typeof address === 'object' && address ? address.port : 0
+
+      resolve({
+        port,
+        secretCode,
+        bearerToken,
+        url: `http://127.0.0.1:${port}/mcp`,
+        stop: async () => {
+          await new Promise<void>((res) => {
+            httpServer.close(() => res())
+          })
+        },
+      })
+    })
+  })
 }
 
 export async function startTestMcpServer(): Promise<TestMcpServer> {

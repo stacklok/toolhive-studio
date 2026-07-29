@@ -15,7 +15,11 @@ const mockCreateModelFromRequest = vi.hoisted(() =>
   vi.fn(() => ({ id: 'model' }))
 )
 const mockCreateMcpTools = vi.hoisted(() =>
-  vi.fn().mockResolvedValue({ tools: {}, clients: [], enabledTools: {} })
+  vi.fn().mockResolvedValue({
+    tools: {},
+    enabledTools: {},
+    close: vi.fn().mockResolvedValue(undefined),
+  })
 )
 const mockGetCachedUiMetadata = vi.hoisted(() => vi.fn(() => ({})))
 const mockCreateBuiltinAgentTools = vi.hoisted(() =>
@@ -165,8 +169,8 @@ beforeEach(() => {
   })
   mockCreateMcpTools.mockResolvedValue({
     tools: {},
-    clients: [],
     enabledTools: {},
+    close: vi.fn().mockResolvedValue(undefined),
   })
   mockCreateBuiltinAgentTools.mockReturnValue({
     tools: {},
@@ -458,6 +462,51 @@ describe('handleChatStreamRealtime — AI SDK v7 UI stream wiring', () => {
         allowSystemInMessages: true,
       })
     )
+  })
+
+  it('closes the MCP session after a successful stream', async () => {
+    const close = vi.fn().mockResolvedValue(undefined)
+    mockCreateMcpTools.mockResolvedValueOnce({
+      tools: {},
+      enabledTools: {},
+      close,
+    })
+    mockResolveAgentForThread.mockReturnValue(
+      fakeAgent('builtin.toolhive-assistant', 'DEFAULT INSTRUCTIONS')
+    )
+
+    await handleChatStreamRealtime(
+      makeRequest(),
+      'stream-close-success',
+      fakeSender
+    )
+
+    expect(close).toHaveBeenCalledTimes(1)
+  })
+
+  it('closes the MCP session when builtin tool setup fails', async () => {
+    const close = vi.fn().mockResolvedValue(undefined)
+    mockCreateMcpTools.mockResolvedValueOnce({
+      tools: {},
+      enabledTools: {},
+      close,
+    })
+    mockResolveAgentForThread.mockReturnValue(
+      fakeAgent('builtin.skills', 'SKILLS INSTRUCTIONS', 'skills')
+    )
+    mockCreateBuiltinAgentTools.mockRejectedValueOnce(
+      new Error('builtin tools failed')
+    )
+
+    await expect(
+      handleChatStreamRealtime(
+        makeRequest(),
+        'stream-close-failure',
+        fakeSender
+      )
+    ).rejects.toThrow('builtin tools failed')
+
+    expect(close).toHaveBeenCalledTimes(1)
   })
 
   it('passes sanitizeSchemas to createMcpTools only for Gemini-compatible providers', async () => {

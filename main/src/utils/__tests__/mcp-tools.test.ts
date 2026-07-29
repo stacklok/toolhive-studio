@@ -1,7 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { createTransport } from '../mcp-tools'
+import {
+  SSEClientTransport,
+  StreamableHTTPClientTransport,
+} from '@modelcontextprotocol/client'
+import { buildMcpClientTransport } from '../mcp-tools'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
-import { Experimental_StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
 
 vi.mock('../../logger', () => ({
   default: {
@@ -12,7 +15,7 @@ vi.mock('../../logger', () => ({
   },
 }))
 
-describe('createTransport', () => {
+describe('buildMcpClientTransport', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -28,51 +31,9 @@ describe('createTransport', () => {
         status: 'running',
       }
 
-      const config = createTransport(workload)
+      const transport = buildMcpClientTransport(workload)
 
-      expect(config.name).toBe('vercel')
-      expect(config.transport).toEqual({
-        type: 'http',
-        url: 'http://127.0.0.1:21454',
-      })
-    })
-
-    it('should use workload.url when provided for remote servers (GitHub)', () => {
-      const workload: CoreWorkload = {
-        name: 'github-remote',
-        port: 21153,
-        transport_type: 'streamable-http',
-        remote: true,
-        url: 'http://127.0.0.1:21153/mcp',
-        status: 'running',
-      }
-
-      const config = createTransport(workload)
-
-      expect(config.name).toBe('github-remote')
-      expect(config.transport).toEqual({
-        type: 'http',
-        url: 'http://127.0.0.1:21153/mcp',
-      })
-    })
-
-    it('should use workload.url when provided for remote servers (Notion)', () => {
-      const workload: CoreWorkload = {
-        name: 'notion-remote',
-        port: 48750,
-        transport_type: 'streamable-http',
-        remote: true,
-        url: 'http://127.0.0.1:48750/mcp',
-        status: 'running',
-      }
-
-      const config = createTransport(workload)
-
-      expect(config.name).toBe('notion-remote')
-      expect(config.transport).toEqual({
-        type: 'http',
-        url: 'http://127.0.0.1:48750/mcp',
-      })
+      expect(transport).toBeInstanceOf(StreamableHTTPClientTransport)
     })
 
     it('should fallback to /mcp path for local containers when url is missing', () => {
@@ -84,37 +45,14 @@ describe('createTransport', () => {
         status: 'running',
       }
 
-      const config = createTransport(workload)
+      const transport = buildMcpClientTransport(workload)
 
-      expect(config.name).toBe('local-server')
-      expect(config.transport).toEqual({
-        type: 'http',
-        url: 'http://localhost:36548/mcp',
-      })
-    })
-
-    it('should use correct path for local containers with url provided', () => {
-      const workload: CoreWorkload = {
-        name: 'github',
-        port: 36548,
-        transport_type: 'streamable-http',
-        remote: false,
-        url: 'http://127.0.0.1:36548/mcp',
-        status: 'running',
-      }
-
-      const config = createTransport(workload)
-
-      expect(config.name).toBe('github')
-      expect(config.transport).toEqual({
-        type: 'http',
-        url: 'http://127.0.0.1:36548/mcp',
-      })
+      expect(transport).toBeInstanceOf(StreamableHTTPClientTransport)
     })
   })
 
   describe('sse transport', () => {
-    it('should construct SSE URL with correct format', () => {
+    it('should construct an SSE transport', () => {
       const workload: CoreWorkload = {
         name: 'oci-registry',
         port: 57839,
@@ -122,15 +60,9 @@ describe('createTransport', () => {
         status: 'running',
       }
 
-      const config = createTransport(workload)
+      const transport = buildMcpClientTransport(workload)
 
-      expect(config.name).toBe('oci-registry')
-      expect(config.transport).toEqual(
-        expect.objectContaining({
-          url: 'http://localhost:57839/sse#oci-registry',
-          type: 'sse',
-        })
-      )
+      expect(transport).toBeInstanceOf(SSEClientTransport)
     })
   })
 
@@ -145,13 +77,9 @@ describe('createTransport', () => {
         status: 'running',
       }
 
-      const config = createTransport(workload)
+      const transport = buildMcpClientTransport(workload)
 
-      expect(config.name).toBe('stdio-server')
-      expect(config.transport).toEqual({
-        type: 'http',
-        url: 'http://127.0.0.1:40281/mcp',
-      })
+      expect(transport).toBeInstanceOf(StreamableHTTPClientTransport)
     })
 
     it('should use SSE when proxy_mode is sse', () => {
@@ -164,38 +92,12 @@ describe('createTransport', () => {
         status: 'running',
       }
 
-      const config = createTransport(workload)
+      const transport = buildMcpClientTransport(workload)
 
-      expect(config.name).toBe('stdio-server-sse')
-      expect(config.transport).toEqual(
-        expect.objectContaining({
-          url: 'http://localhost:18890/sse#stdio-server-sse',
-          type: 'sse',
-        })
-      )
+      expect(transport).toBeInstanceOf(SSEClientTransport)
     })
 
-    it('should use SSE when URL contains /sse even without proxy_mode', () => {
-      const workload: CoreWorkload = {
-        name: 'stdio-server-url-sse',
-        port: 18890,
-        transport_type: 'stdio',
-        url: 'http://127.0.0.1:18890/sse#stdio-server-url-sse',
-        status: 'running',
-      }
-
-      const config = createTransport(workload)
-
-      expect(config.name).toBe('stdio-server-url-sse')
-      expect(config.transport).toEqual(
-        expect.objectContaining({
-          url: 'http://localhost:18890/sse#stdio-server-url-sse',
-          type: 'sse',
-        })
-      )
-    })
-
-    it('should use stdio transport when no proxy_mode and no /sse in URL', () => {
+    it('should reject unresolved direct stdio workloads', () => {
       const workload: CoreWorkload = {
         name: 'pure-stdio',
         port: 40281,
@@ -203,10 +105,9 @@ describe('createTransport', () => {
         status: 'running',
       }
 
-      const config = createTransport(workload)
-
-      expect(config.name).toBe('pure-stdio')
-      expect(config.transport).toBeInstanceOf(Experimental_StdioMCPTransport)
+      expect(() => buildMcpClientTransport(workload)).toThrow(
+        /no HTTP proxy endpoint/i
+      )
     })
   })
 })

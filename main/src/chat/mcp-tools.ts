@@ -34,7 +34,7 @@ export async function createMcpTools(
 ) {
   return runChatPromiseOr(McpService.createMcpTools(threadId, options), {
     tools: {},
-    clients: [],
     enabledTools: {},
+    close: async () => undefined,
   })
 }
