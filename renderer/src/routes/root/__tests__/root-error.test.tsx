@@ -25,9 +25,7 @@ function renderWithProviders(ui: React.ReactElement) {
 function createHealthCheckError(
   healthCheck: HealthCheckError['healthCheck']
 ): HealthCheckError {
-  const error = new Error('Health check failed') as HealthCheckError
-  error.healthCheck = healthCheck
-  return error
+  return Object.assign(new Error('Health check failed'), { healthCheck })
 }
 
 describe('RootErrorComponent', () => {

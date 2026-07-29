@@ -4,7 +4,7 @@ import type {
   ToolhiveStatus,
 } from '@common/types/toolhive-status'
 
-export interface HealthCheckErrorCause {
+interface HealthCheckErrorCause {
   isToolhiveRunning: boolean
   containerEngineAvailable: boolean
   processError?: ToolhiveProcessError
@@ -12,6 +12,15 @@ export interface HealthCheckErrorCause {
 
 export interface HealthCheckError extends Error {
   healthCheck: HealthCheckErrorCause
+}
+
+function createHealthCheckError(
+  cause: unknown,
+  healthCheck: HealthCheckErrorCause
+): HealthCheckError {
+  return Object.assign(new Error('Health check failed', { cause }), {
+    healthCheck,
+  })
 }
 import { getHealth } from '@common/api/generated/sdk.gen'
 import { client } from '@common/api/generated/client.gen'
@@ -67,11 +76,7 @@ export async function checkHealth(queryClient: QueryClient): Promise<void> {
       processError: freshStatus.processError,
     }
 
-    const healthError = new Error('Health check failed', {
-      cause: error,
-    }) as HealthCheckError
-    healthError.healthCheck = healthCheck
-    throw healthError
+    throw createHealthCheckError(error, healthCheck)
   }
 }
 
