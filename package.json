@@ -101,7 +101,7 @@
     "vitest-fail-on-console": "^0.10.1"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.20",
+    "@ai-sdk/anthropic": "^4.0.21",
     "@ai-sdk/google": "^4.0.24",
     "@ai-sdk/mcp": "^2.0.16",
     "@ai-sdk/openai": "^4.0.20",
@@ -142,7 +142,7 @@
     "@tanstack/react-router-devtools": "^1.167.0",
     "@tanstack/react-virtual": "^3.14.8",
     "ai": "^7.0.37",
-    "ai-sdk-ollama": "^4.0.0",
+    "ai-sdk-ollama": "^4.1.0",
     "better-sqlite3": "^13.0.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

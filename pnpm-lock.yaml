@@ -32,7 +32,7 @@ importers:
   .:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: ^4.0.20
+        specifier: ^4.0.21
         version: 4.0.21(zod@4.4.3)
       '@ai-sdk/google':
         specifier: ^4.0.24
@@ -155,8 +155,8 @@ importers:
         specifier: ^7.0.37
         version: 7.0.37(zod@4.4.3)
       ai-sdk-ollama:
-        specifier: ^4.0.0
-        version: 4.0.0(ai@7.0.37(zod@4.4.3))(zod@4.4.3)
+        specifier: ^4.1.0
+        version: 4.1.0(ai@7.0.37(zod@4.4.3))(zod@4.4.3)
       better-sqlite3:
         specifier: ^13.0.1
         version: 13.0.1
@@ -452,21 +452,11 @@ packages:
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
 
-  '@ai-sdk/provider-utils@5.0.1':
-    resolution: {integrity: sha512-p9Ra+dN4jjHrssXvklNf4nFvWbj1KePMfUOs7nue0NuoIMbYFBULhX4Vu0+6DWLnw3+UsLL9+RCKLtzzU43Qpg==}
-    engines: {node: '>=22'}
-    peerDependencies:
-      zod: ^3.25.76 || ^4.1.8
-
   '@ai-sdk/provider-utils@5.0.12':
     resolution: {integrity: sha512-bbhlOgHeYwrIGheLkM6fhS8hVger8uFPmcOLg+kxc9EFh7y30XYorWhthlYAgpadO3SJhFZrIcEknN7qEqEVvA==}
     engines: {node: '>=22'}
     peerDependencies:
       zod: ^3.25.76 || ^4.1.8
-
-  '@ai-sdk/provider@4.0.0':
-    resolution: {integrity: sha512-fr9Gs89prDWiuox/T+kCA+i2cJkHpxU5S+tr4megjTzRC27ZsvFhwjU/+XrqqMbvBUlfmXxTOYWy8ng45dsjIg==}
-    engines: {node: '>=22'}
 
   '@ai-sdk/provider@4.0.3':
     resolution: {integrity: sha512-e0CpNWJUY7OxAFAnCZkw+ri9QOHWwTs1tXP42782KFGCU07qt8NiXCrCVowyCB5dP2r5/Uls+g2oPd8kOJn9dw==}
@@ -3854,11 +3844,11 @@ packages:
     resolution: {integrity: sha512-RZNwNclF7+MS/8bDg70amg32dyeZGZxiDuQmZxKLAlQjr3jGyLx+4Kkk58UO7D2QdgFIQCovuSuZESne6RG6XQ==}
     engines: {node: '>= 6.0.0'}
 
-  ai-sdk-ollama@4.0.0:
-    resolution: {integrity: sha512-WeEWshmrc2Qj3MdZzZGOCocH6F/p71b/hN0C9/I963a1jH6bzvUn1+ymxJYWBF2bebvQDNeT2mMZbZDn2geD8w==}
+  ai-sdk-ollama@4.1.0:
+    resolution: {integrity: sha512-WBucDWhYVpahhoY5wAsPy4vbEYc34D7xRJOtfpE5VWkD/cRKG4eY1y3pkyP3pCK/Zmp3cHBuiHWu1vHZ81ljEA==}
     engines: {node: '>=22'}
     peerDependencies:
-      ai: ^7.0.0
+      ai: ^7.0.31
 
   ai@7.0.37:
     resolution: {integrity: sha512-stF+SEQJgKY3Qfe3FwNzqUrehHviOp2l7LemoI8YMOa0Zk5PxKsRNgUk3cHXz0RAue9RRyCAis2fz6LSCP6EKw==}
@@ -5713,8 +5703,8 @@ packages:
     resolution: {integrity: sha512-p/nXbhSEcu3pZRdkW1OfJhpsVtW1gd4Wa1fnQc9YLiTfAjn0312eMKimbdIQzuZl9aa9xUGaRlP9T/CJE/ditQ==}
     engines: {node: '>=0.10.0'}
 
-  jsonrepair@3.14.0:
-    resolution: {integrity: sha512-tWPGKMZf/8UPim+fcW2EfcQ/d/7aKUrP6IECz9G3Tu6Q5dX0orSleqJ9z6sSw7qrQkjF8/Edo4DvsWBZ8H+HNg==}
+  jsonrepair@3.15.0:
+    resolution: {integrity: sha512-wy8OTjwsJwQRnQJkKnMJJ9vcytRdBPAgIF/Hy6+s1dAj42BHMKiyL8JzEieIl3JY7idt8eyHwBWTO8mh/+mtwA==}
     hasBin: true
 
   junk@3.1.0:
@@ -7985,14 +7975,6 @@ snapshots:
       '@ai-sdk/provider-utils': 5.0.12(zod@4.4.3)
       zod: 4.4.3
 
-  '@ai-sdk/provider-utils@5.0.1(zod@4.4.3)':
-    dependencies:
-      '@ai-sdk/provider': 4.0.0
-      '@standard-schema/spec': 1.1.0
-      '@workflow/serde': 4.1.0
-      eventsource-parser: 3.0.8
-      zod: 4.4.3
-
   '@ai-sdk/provider-utils@5.0.12(zod@4.4.3)':
     dependencies:
       '@ai-sdk/provider': 4.0.3
@@ -8000,10 +7982,6 @@ snapshots:
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.0.8
       zod: 4.4.3
-
-  '@ai-sdk/provider@4.0.0':
-    dependencies:
-      json-schema: 0.4.0
 
   '@ai-sdk/provider@4.0.3':
     dependencies:
@@ -11925,12 +11903,12 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ai-sdk-ollama@4.0.0(ai@7.0.37(zod@4.4.3))(zod@4.4.3):
+  ai-sdk-ollama@4.1.0(ai@7.0.37(zod@4.4.3))(zod@4.4.3):
     dependencies:
-      '@ai-sdk/provider': 4.0.0
-      '@ai-sdk/provider-utils': 5.0.1(zod@4.4.3)
+      '@ai-sdk/provider': 4.0.3
+      '@ai-sdk/provider-utils': 5.0.12(zod@4.4.3)
       ai: 7.0.37(zod@4.4.3)
-      jsonrepair: 3.14.0
+      jsonrepair: 3.15.0
       ollama: 0.6.3
     transitivePeerDependencies:
       - zod
@@ -14045,7 +14023,7 @@ snapshots:
   jsonpointer@5.0.1:
     optional: true
 
-  jsonrepair@3.14.0: {}
+  jsonrepair@3.15.0: {}
 
   junk@3.1.0: {}
 
