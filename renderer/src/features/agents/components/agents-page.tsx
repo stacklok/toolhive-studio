@@ -29,8 +29,28 @@ import type { AgentConfig } from '@common/types/agents'
 
 type AgentsTab = 'all' | 'builtin' | 'custom'
 
-function activateOnKey(e: KeyboardEvent, onActivate: () => void) {
-  if (e.key === 'Enter' || e.key === ' ') {
+function isSpaceKey(e: KeyboardEvent) {
+  return e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar'
+}
+
+function handleCardKeyDown(e: KeyboardEvent, onActivate: () => void) {
+  if (e.repeat) return
+
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    onActivate()
+    return
+  }
+
+  if (isSpaceKey(e)) {
+    e.preventDefault()
+  }
+}
+
+function handleCardKeyUp(e: KeyboardEvent, onActivate: () => void) {
+  if (e.repeat) return
+
+  if (isSpaceKey(e)) {
     e.preventDefault()
     onActivate()
   }
@@ -71,7 +91,8 @@ function AgentCard({
           flex-col rounded-t-md outline-none focus-visible:ring-2
           focus-visible:ring-offset-2"
         onClick={() => onOpen(agent)}
-        onKeyDown={(e) => activateOnKey(e, () => onOpen(agent))}
+        onKeyDown={(e) => handleCardKeyDown(e, () => onOpen(agent))}
+        onKeyUp={(e) => handleCardKeyUp(e, () => onOpen(agent))}
         data-testid={`open-agent-${agent.id}`}
       >
         <CardHeader className="pb-0">

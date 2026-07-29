@@ -193,6 +193,19 @@ describe('AgentsPage', () => {
     })
   })
 
+  it('navigates to the agent detail page when Space is released on the card', async () => {
+    renderPage()
+
+    const openTarget = await screen.findByTestId('open-agent-custom.my-agent')
+    openTarget.focus()
+    await userEvent.keyboard(' ')
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/playground/agents/$agentId',
+      params: { agentId: 'custom.my-agent' },
+    })
+  })
+
   it('navigates to /playground/agents/new when "New agent" is clicked', async () => {
     renderPage()
 
