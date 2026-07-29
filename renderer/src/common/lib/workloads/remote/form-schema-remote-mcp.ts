@@ -85,7 +85,7 @@ export const getFormSchemaRemoteMcp = (
       validationRules?.forEach(({ field, message, path }) => {
         const fieldValue = (oauth_config as Record<string, unknown>)[field]
 
-        let isValid = false
+        let isValid: boolean
         if (
           field === 'client_secret' ||
           auth_type === REMOTE_MCP_AUTH_TYPES.BearerToken

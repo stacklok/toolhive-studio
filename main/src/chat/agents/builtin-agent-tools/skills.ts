@@ -290,7 +290,8 @@ async function readSkillMd(rootDir: string): Promise<string> {
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
       throw new Error(
-        `No ${SKILL_MD_FILENAME} found in ${rootDir} (install dir does not exist)`
+        `No ${SKILL_MD_FILENAME} found in ${rootDir} (install dir does not exist)`,
+        { cause: err }
       )
     }
     throw err

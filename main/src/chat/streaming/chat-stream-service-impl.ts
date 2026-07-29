@@ -353,14 +353,14 @@ export async function handleChatStreamRealtime(
             )
           }
 
-          throw new Error(toUserFacingProviderMessage(error))
+          throw new Error(toUserFacingProviderMessage(error), { cause: error })
         }
       } catch (error) {
         log.error('[CHAT] Chat stream error:', error)
         // Outer catch covers setup failures (agent/MCP/builtin tools) that
         // never enter the inner try. Domain TaggedErrors often have empty
         // `.message`, so map through userMessage the same as the inner path.
-        throw new Error(toUserFacingProviderMessage(error))
+        throw new Error(toUserFacingProviderMessage(error), { cause: error })
       }
     }
   )

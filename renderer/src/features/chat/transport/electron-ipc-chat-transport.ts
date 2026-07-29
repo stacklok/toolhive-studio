@@ -329,7 +329,8 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       })
     } catch (error) {
       throw new Error(
-        `IPC communication failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+        `IPC communication failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        { cause: error }
       )
     }
   }
@@ -342,7 +343,7 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
       streamId: string
       replayChunks: unknown[]
       toolUiMetadata: Record<string, unknown> | null
-    } | null = null
+    } | null
     try {
       resumed = await window.electronAPI.chat.resumeStream(options.chatId)
     } catch {

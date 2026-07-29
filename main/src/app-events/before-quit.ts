@@ -19,7 +19,7 @@ export function register() {
 
     // Show the native confirmation dialog (async to support the
     // "Don't ask me again" checkbox, which only the async variant offers).
-    let confirmed = false
+    let confirmed: boolean
     try {
       confirmed = await showNativeQuitConfirmation()
     } catch (error) {
