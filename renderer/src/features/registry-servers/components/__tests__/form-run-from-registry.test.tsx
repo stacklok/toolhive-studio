@@ -296,7 +296,6 @@ describe('FormRunFromRegistry', () => {
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
-    let server = { ...REGISTRY_SERVER }
 
     // --- Scenario 2: Secret from store ---
     vi.clearAllMocks()
@@ -309,7 +308,7 @@ describe('FormRunFromRegistry', () => {
       isErrorSecrets: false,
       isPendingSecrets: false,
     })
-    server = { ...REGISTRY_SERVER }
+    let server = { ...REGISTRY_SERVER }
     server.env_vars = ENV_VARS_OPTIONAL
     renderWithProviders(
       <FormRunFromRegistry

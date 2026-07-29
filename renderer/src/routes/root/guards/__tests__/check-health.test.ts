@@ -49,8 +49,9 @@ describe('checkHealth', () => {
     await expect(checkHealth(queryClient)).resolves.toBeUndefined()
   })
 
-  it('throws with structured cause when health check fails', async () => {
-    vi.mocked(getHealth).mockRejectedValue(new Error('fetch failed'))
+  it('throws with structured health metadata when health check fails', async () => {
+    const fetchError = new Error('fetch failed')
+    vi.mocked(getHealth).mockRejectedValue(fetchError)
 
     try {
       await checkHealth(queryClient)
@@ -58,7 +59,8 @@ describe('checkHealth', () => {
     } catch (error) {
       expect(error).toBeInstanceOf(Error)
       expect((error as Error).message).toBe('Health check failed')
-      expect((error as Error).cause).toEqual({
+      expect((error as Error).cause).toBe(fetchError)
+      expect((error as { healthCheck?: unknown }).healthCheck).toEqual({
         isToolhiveRunning: true,
         containerEngineAvailable: true,
         processError: undefined,

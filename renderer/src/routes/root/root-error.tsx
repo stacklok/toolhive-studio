@@ -2,7 +2,7 @@ import { AlreadyRunningError } from '@/common/components/error/already-running-e
 import { Error as ErrorComponent } from '@/common/components/error'
 import { StartingToolHive } from '@/common/components/starting-toolhive'
 import { ALREADY_RUNNING } from '@common/types/toolhive-status'
-import type { HealthCheckErrorCause } from './guards/check-health'
+import type { HealthCheckError } from './guards/check-health'
 import log from 'electron-log/renderer'
 
 /**
@@ -12,8 +12,8 @@ import log from 'electron-log/renderer'
  * Falls back to the generic error page for all other errors.
  */
 export function RootErrorComponent({ error }: { error: unknown }) {
-  const errorData = error as Error & { cause?: HealthCheckErrorCause }
-  const cause = errorData instanceof Error ? errorData.cause : undefined
+  const errorData = error as HealthCheckError
+  const cause = errorData instanceof Error ? errorData.healthCheck : undefined
 
   if (cause?.processError === ALREADY_RUNNING) {
     // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs

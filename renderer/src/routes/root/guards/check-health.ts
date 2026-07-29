@@ -9,6 +9,10 @@ export interface HealthCheckErrorCause {
   containerEngineAvailable: boolean
   processError?: ToolhiveProcessError
 }
+
+export interface HealthCheckError extends Error {
+  healthCheck: HealthCheckErrorCause
+}
 import { getHealth } from '@common/api/generated/sdk.gen'
 import { client } from '@common/api/generated/client.gen'
 import * as Sentry from '@sentry/electron/renderer'
@@ -57,13 +61,17 @@ export async function checkHealth(queryClient: QueryClient): Promise<void> {
       clientConfig
     )
 
-    const cause: HealthCheckErrorCause = {
+    const healthCheck: HealthCheckErrorCause = {
       isToolhiveRunning: freshStatus.isRunning,
       containerEngineAvailable: containerEngineStatus.available,
       processError: freshStatus.processError,
     }
 
-    throw new Error('Health check failed', { cause })
+    const healthError = new Error('Health check failed', {
+      cause: error,
+    }) as HealthCheckError
+    healthError.healthCheck = healthCheck
+    throw healthError
   }
 }
 

@@ -114,7 +114,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
       // `processUIMessageStream` pile a second copy of every part on
       // top of it. Drop it; the replay's `start { messageId }` creates
       // a fresh assistant that the live tail extends.
-      let activeStreamId: string | null = null
+      let activeStreamId: string | null
       try {
         activeStreamId =
           await window.electronAPI.chat.getActiveStreamId(threadIdAtResume)
@@ -142,7 +142,7 @@ export function useChatStreaming(externalThreadId?: string | null) {
       // the registry and refetch the now-finalized snapshot if the
       // stream is gone — `setMessages` will replay over the trimmed list.
       if (activeStreamId) {
-        let stillActive: string | null = activeStreamId
+        let stillActive: string | null
         try {
           stillActive =
             await window.electronAPI.chat.getActiveStreamId(threadIdAtResume)

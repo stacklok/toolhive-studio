@@ -2,6 +2,7 @@ import { render, screen } from '@testing-library/react'
 import { describe, it, expect, vi } from 'vitest'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { ALREADY_RUNNING } from '@common/types/toolhive-status'
+import type { HealthCheckError } from '../guards/check-health'
 import { RootErrorComponent } from '../root-error'
 
 vi.mock('@tanstack/react-router', () => ({
@@ -21,13 +22,19 @@ function renderWithProviders(ui: React.ReactElement) {
   )
 }
 
+function createHealthCheckError(
+  healthCheck: HealthCheckError['healthCheck']
+): HealthCheckError {
+  const error = new Error('Health check failed') as HealthCheckError
+  error.healthCheck = healthCheck
+  return error
+}
+
 describe('RootErrorComponent', () => {
   it('renders StartingToolHive when toolhive is running and container engine available', () => {
-    const error = new Error('Health check failed', {
-      cause: {
-        isToolhiveRunning: true,
-        containerEngineAvailable: true,
-      },
+    const error = createHealthCheckError({
+      isToolhiveRunning: true,
+      containerEngineAvailable: true,
     })
 
     renderWithProviders(<RootErrorComponent error={error} />)
@@ -38,11 +45,9 @@ describe('RootErrorComponent', () => {
   })
 
   it('renders generic error when toolhive is not running', () => {
-    const error = new Error('Health check failed', {
-      cause: {
-        isToolhiveRunning: false,
-        containerEngineAvailable: true,
-      },
+    const error = createHealthCheckError({
+      isToolhiveRunning: false,
+      containerEngineAvailable: true,
     })
 
     renderWithProviders(<RootErrorComponent error={error} />)
@@ -54,11 +59,9 @@ describe('RootErrorComponent', () => {
   })
 
   it('renders connection refused error when container engine is not available', () => {
-    const error = new Error('Health check failed', {
-      cause: {
-        isToolhiveRunning: true,
-        containerEngineAvailable: false,
-      },
+    const error = createHealthCheckError({
+      isToolhiveRunning: true,
+      containerEngineAvailable: false,
     })
 
     renderWithProviders(<RootErrorComponent error={error} />)
@@ -75,7 +78,7 @@ describe('RootErrorComponent', () => {
     expect(screen.getByText('Oops, something went wrong')).toBeInTheDocument()
   })
 
-  it('renders generic error when cause is missing', () => {
+  it('renders generic error when healthCheck metadata is missing', () => {
     const error = new Error('Something broke')
 
     renderWithProviders(<RootErrorComponent error={error} />)
@@ -84,12 +87,10 @@ describe('RootErrorComponent', () => {
   })
 
   it('renders AlreadyRunningError when processError is ALREADY_RUNNING', () => {
-    const error = new Error('Health check failed', {
-      cause: {
-        isToolhiveRunning: false,
-        containerEngineAvailable: true,
-        processError: ALREADY_RUNNING,
-      },
+    const error = createHealthCheckError({
+      isToolhiveRunning: false,
+      containerEngineAvailable: true,
+      processError: ALREADY_RUNNING,
     })
 
     renderWithProviders(<RootErrorComponent error={error} />)

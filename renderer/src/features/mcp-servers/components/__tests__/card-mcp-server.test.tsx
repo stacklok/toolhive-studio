@@ -211,8 +211,6 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
     expect(nameInput).toHaveValue('postgres-db-my-group')
   })
 
-  let nameInput = screen.getByLabelText('Name')
-
   let confirmButton = screen.getByRole('button', { name: /ok|confirm/i })
   await user.click(confirmButton)
 
@@ -220,7 +218,7 @@ it('shows validation error and re-prompts when API returns 409 conflict', async 
     expect(screen.getByText(/This name is already taken/i)).toBeVisible()
   })
 
-  nameInput = screen.getByDisplayValue('postgres-db-my-group')
+  let nameInput = screen.getByDisplayValue('postgres-db-my-group')
   expect(nameInput).toBeVisible()
   expect(nameInput).toHaveValue('postgres-db-my-group')
 

@@ -6,11 +6,14 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
+const tsconfigRootDir = import.meta.dirname
+
 export default defineConfig([
   eslint.configs.recommended,
   tseslint.configs.recommended,
   {
     ignores: [
+      '.claude/**',
       'dist',
       'coverage',
       '.vite',
@@ -27,6 +30,9 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,
+      parserOptions: {
+        tsconfigRootDir,
+      },
     },
     plugins: {
       ...reactHooks.configs.flat.recommended.plugins,
@@ -55,6 +61,9 @@ export default defineConfig([
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.node,
+      parserOptions: {
+        tsconfigRootDir,
+      },
     },
   },
   {
