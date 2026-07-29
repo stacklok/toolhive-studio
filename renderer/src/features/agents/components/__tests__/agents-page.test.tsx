@@ -43,6 +43,21 @@ const customAgent: AgentConfig = {
   updatedAt: 0,
 }
 
+const longNameAgent: AgentConfig = {
+  id: 'custom.long-name-agent',
+  kind: 'custom',
+  name: 'PR Review Instructions (TypeScript + Next.js App Router + OpenAPI)',
+  description: 'Reviews pull requests with a very long checklist of rules.',
+  instructions: 'Review PRs.',
+  builtinToolsKey: null,
+  defaultModel: {
+    provider: 'openrouter',
+    model: 'moonshotai/kimi-k2.7-code-with-an-extremely-long-model-name',
+  },
+  createdAt: 0,
+  updatedAt: 0,
+}
+
 function renderPage() {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -66,7 +81,21 @@ describe('AgentsPage', () => {
       },
     } as unknown as typeof window.electronAPI
 
-    mockAgentsApi.list.mockResolvedValue([builtinAgent, customAgent])
+    mockAgentsApi.list.mockResolvedValue([
+      builtinAgent,
+      customAgent,
+      longNameAgent,
+    ])
+  })
+
+  it('renders the refreshed page subtitle', async () => {
+    renderPage()
+
+    expect(
+      await screen.findByText(
+        'Create and manage the agents available in Playground.'
+      )
+    ).toBeInTheDocument()
   })
 
   it('renders both built-in and custom agents in the All tab', async () => {
@@ -78,18 +107,85 @@ describe('AgentsPage', () => {
     expect(screen.getByText('Does cool things')).toBeInTheDocument()
   })
 
-  it('shows the default model for agents that have one', async () => {
+  it('shows built-in and custom badges with consistent labels', async () => {
+    renderPage()
+
+    await screen.findByText('ToolHive Assistant')
+    expect(
+      screen.getByTestId('agent-metadata-builtin.toolhive-assistant')
+    ).toHaveTextContent('Built-in')
+    expect(
+      screen.getByTestId('agent-metadata-custom.my-agent')
+    ).toHaveTextContent('Custom')
+  })
+
+  it('shows model metadata with a Model label for agents that have one', async () => {
     renderPage()
 
     await screen.findByText('My custom agent')
-    expect(screen.getByText(/openai · gpt-4o/i)).toBeInTheDocument()
+    const metadata = screen.getByTestId('agent-metadata-custom.my-agent')
+    expect(metadata).toHaveTextContent('Model')
+    expect(metadata).toHaveTextContent(/openai · gpt-4o/i)
+  })
+
+  it('renders long agent names and model values without a View details button', async () => {
+    renderPage()
+
+    const openTarget = await screen.findByTestId(
+      'open-agent-custom.long-name-agent'
+    )
+    expect(openTarget).toHaveAttribute(
+      'aria-label',
+      'Open PR Review Instructions (TypeScript + Next.js App Router + OpenAPI)'
+    )
+    expect(
+      screen.getByText(
+        'PR Review Instructions (TypeScript + Next.js App Router + OpenAPI)'
+      )
+    ).toHaveClass('line-clamp-2')
+    expect(
+      screen.getByText(
+        /moonshotai\/kimi-k2\.7-code-with-an-extremely-long-model-name/i
+      )
+    ).toHaveClass('truncate')
+    expect(
+      screen.queryByRole('button', { name: /view details/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('leaves the description area blank when an agent has no description', async () => {
+    const agentWithoutDescription: AgentConfig = {
+      ...customAgent,
+      id: 'custom.no-description',
+      name: 'No description agent',
+      description: '',
+    }
+    mockAgentsApi.list.mockResolvedValue([agentWithoutDescription])
+
+    renderPage()
+
+    await screen.findByText('No description agent')
+    expect(screen.queryByText('No description')).not.toBeInTheDocument()
   })
 
   it('navigates to the agent detail page when a card is clicked', async () => {
     renderPage()
 
     await screen.findByText('ToolHive Assistant')
-    await userEvent.click(screen.getByTestId('agent-card-custom.my-agent'))
+    await userEvent.click(screen.getByTestId('open-agent-custom.my-agent'))
+
+    expect(mockNavigate).toHaveBeenCalledWith({
+      to: '/playground/agents/$agentId',
+      params: { agentId: 'custom.my-agent' },
+    })
+  })
+
+  it('navigates to the agent detail page when Enter is pressed on the card', async () => {
+    renderPage()
+
+    const openTarget = await screen.findByTestId('open-agent-custom.my-agent')
+    openTarget.focus()
+    await userEvent.keyboard('{Enter}')
 
     expect(mockNavigate).toHaveBeenCalledWith({
       to: '/playground/agents/$agentId',
