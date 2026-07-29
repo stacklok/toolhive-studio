@@ -1,6 +1,6 @@
 import type {
   PkgApiV1WorkloadListResponse as V1WorkloadListResponse,
-  GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
+  CoreWorkload,
 } from '@common/api/generated/types.gen'
 import {
   postApiV1BetaWorkloadsByNameRestartMutation,

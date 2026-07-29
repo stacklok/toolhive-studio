@@ -1,5 +1,5 @@
 import { ipcRenderer } from 'electron'
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 
 export const utilsApi = {
   isOfficialReleaseBuild: () => ipcRenderer.invoke('is-official-release-build'),

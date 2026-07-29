@@ -5,7 +5,7 @@ import * as headers from '../headers'
 import * as logger from '../logger'
 import * as delay from '../../../utils/delay'
 import type {
-  GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload,
+  CoreWorkload,
   PkgApiV1WorkloadListResponse as V1WorkloadListResponse,
 } from '@common/api/generated/types.gen'
 

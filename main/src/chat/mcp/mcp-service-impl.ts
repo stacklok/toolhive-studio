@@ -22,7 +22,7 @@ import {
   isMcpToolDefinition,
 } from '../../utils/mcp-tools'
 import { sanitizeJsonSchema } from '../../utils/sanitize-json-schema'
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { Effect } from 'effect'
 import { readAllMcpAppUiMetadata } from '../../db/readers/mcp-app-ui-metadata-reader'
 import { replaceAllMcpAppUiMetadata } from '../../db/writers/mcp-app-ui-metadata-writer'

@@ -12,7 +12,7 @@ import { renderRoute } from '@/common/test/render-route'
 import type { createTestRouter } from '@/common/test/create-test-router'
 import { mockedGetApiV1BetaWorkloadsByName } from '@mocks/fixtures/workloads_name/get'
 import { mockedGetApiV1BetaRegistryByNameServers } from '@mocks/fixtures/registry_name_servers/get'
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { TableMcpServers } from '../table-mcp-servers'
 import { EditServerDialogProvider } from '../../contexts/edit-server-dialog-provider'
 

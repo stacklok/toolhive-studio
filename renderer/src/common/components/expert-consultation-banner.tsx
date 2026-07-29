@@ -6,7 +6,7 @@ import { z } from 'zod/v4'
 import * as Sentry from '@sentry/electron/renderer'
 import log from 'electron-log/renderer'
 import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
-import type { GithubComStacklokToolhivePkgCoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { trackEvent } from '../lib/analytics'
 import {
   shouldShowAfterDismissal,
@@ -35,9 +35,7 @@ import {
 } from '@common/app-info'
 const MIN_SERVERS_IN_GROUP = 3
 
-function hasGroupWithEnoughServers(
-  workloads: GithubComStacklokToolhivePkgCoreWorkload[]
-): boolean {
+function hasGroupWithEnoughServers(workloads: CoreWorkload[]): boolean {
   const groupCounts = new Map<string, number>()
   for (const w of workloads) {
     const group = w.group ?? 'default'

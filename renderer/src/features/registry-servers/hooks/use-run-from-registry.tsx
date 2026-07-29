@@ -1,6 +1,6 @@
 import {
   type PostApiV1BetaSecretsDefaultKeysData,
-  type GithubComStacklokToolhivePkgSecretsSecretParameter as SecretsSecretParameter,
+  type SecretsSecretParameter,
 } from '@common/api/generated/types.gen'
 import type {
   RegistryImageMetadata,

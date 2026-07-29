@@ -11,7 +11,7 @@ import {
 import { renderRoute } from '@/common/test/render-route'
 import type { createTestRouter } from '@/common/test/create-test-router'
 import { mockedGetApiV1BetaRegistryByNameServers } from '@mocks/fixtures/registry_name_servers/get'
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { GridCardsMcpServers } from '../grid-cards-mcp-server'
 
 const baseServer: CoreWorkload = {

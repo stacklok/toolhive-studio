@@ -1,5 +1,5 @@
 import { getApiV1BetaWorkloadsOptions } from '@common/api/generated/@tanstack/react-query.gen'
-import type { GithubComStacklokToolhivePkgCoreWorkload as CoreWorkload } from '@common/api/generated/types.gen'
+import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { ChatMcpServer } from '../types'

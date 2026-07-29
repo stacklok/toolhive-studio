@@ -152,6 +152,12 @@ import type {
   PostApiV1BetaSkillsPushErrors,
   PostApiV1BetaSkillsPushResponses,
   PostApiV1BetaSkillsResponses,
+  PostApiV1BetaSkillsSyncData,
+  PostApiV1BetaSkillsSyncErrors,
+  PostApiV1BetaSkillsSyncResponses,
+  PostApiV1BetaSkillsUpgradeData,
+  PostApiV1BetaSkillsUpgradeErrors,
+  PostApiV1BetaSkillsUpgradeResponses,
   PostApiV1BetaSkillsValidateData,
   PostApiV1BetaSkillsValidateErrors,
   PostApiV1BetaSkillsValidateResponses,
@@ -941,6 +947,58 @@ export const postApiV1BetaSkillsPush = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     url: '/api/v1beta/skills/push',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Sync project skills from the lock file
+ *
+ * Restore a project's installed skills to match toolhive.lock.yaml
+ */
+export const postApiV1BetaSkillsSync = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaSkillsSyncData, ThrowOnError>
+): RequestResult<
+  PostApiV1BetaSkillsSyncResponses,
+  PostApiV1BetaSkillsSyncErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1BetaSkillsSyncResponses,
+    PostApiV1BetaSkillsSyncErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/skills/sync',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Upgrade project skills
+ *
+ * Re-resolve a project's lock entries and install newer content where available
+ */
+export const postApiV1BetaSkillsUpgrade = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaSkillsUpgradeData, ThrowOnError>
+): RequestResult<
+  PostApiV1BetaSkillsUpgradeResponses,
+  PostApiV1BetaSkillsUpgradeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1BetaSkillsUpgradeResponses,
+    PostApiV1BetaSkillsUpgradeErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/skills/upgrade',
     ...options,
     headers: {
       'Content-Type': 'application/json',
