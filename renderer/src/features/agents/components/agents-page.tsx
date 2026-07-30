@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type KeyboardEvent } from 'react'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
-import { Bot, Copy, Plus, Sparkles } from 'lucide-react'
+import { Bot, Copy, Plus } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { Badge } from '@/common/components/ui/badge'
 import {
@@ -18,11 +18,51 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/common/components/ui/tabs'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/common/components/ui/tooltip'
 import { trackEvent } from '@/common/lib/analytics'
 import { useAgents, useDuplicateAgent } from '../hooks/use-agents'
 import type { AgentConfig } from '@common/types/agents'
 
 type AgentsTab = 'all' | 'builtin' | 'custom'
+
+function isSpaceKey(e: KeyboardEvent) {
+  return e.code === 'Space' || e.key === ' ' || e.key === 'Spacebar'
+}
+
+function handleCardKeyDown(e: KeyboardEvent, onActivate: () => void) {
+  if (e.repeat) return
+
+  if (e.key === 'Enter') {
+    e.preventDefault()
+    onActivate()
+    return
+  }
+
+  if (isSpaceKey(e)) {
+    e.preventDefault()
+  }
+}
+
+function handleCardKeyUp(e: KeyboardEvent, onActivate: () => void) {
+  if (e.repeat) return
+
+  if (isSpaceKey(e)) {
+    e.preventDefault()
+    onActivate()
+  }
+}
+
+function getKindLabel(kind: AgentConfig['kind']) {
+  return kind === 'builtin' ? 'Built-in' : 'Custom'
+}
+
+function formatModelLabel(model: NonNullable<AgentConfig['defaultModel']>) {
+  return `${model.provider} · ${model.model}`
+}
 
 function AgentCard({
   agent,
@@ -33,58 +73,93 @@ function AgentCard({
   onOpen: (agent: AgentConfig) => void
   onDuplicate: (agent: AgentConfig) => void
 }) {
-  const Icon = agent.kind === 'custom' ? Sparkles : Bot
+  const modelLabel = agent.defaultModel
+    ? formatModelLabel(agent.defaultModel)
+    : null
 
   return (
     <Card
-      className="hover:border-accent-foreground/40 flex cursor-pointer flex-col
+      className="hover:border-accent-foreground/40 flex flex-col
         transition-colors"
-      onClick={() => onOpen(agent)}
       data-testid={`agent-card-${agent.id}`}
     >
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
+      <div
+        role="button"
+        tabIndex={0}
+        aria-label={`Open ${agent.name}`}
+        className="focus-visible:ring-ring flex min-w-0 flex-1 cursor-pointer
+          flex-col rounded-t-md outline-none focus-visible:ring-2
+          focus-visible:ring-offset-2"
+        onClick={() => onOpen(agent)}
+        onKeyDown={(e) => handleCardKeyDown(e, () => onOpen(agent))}
+        onKeyUp={(e) => handleCardKeyUp(e, () => onOpen(agent))}
+        data-testid={`open-agent-${agent.id}`}
+      >
+        <CardHeader className="pb-0">
           <div className="flex min-w-0 items-start gap-2">
-            <Icon className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0" />
-            <div className="min-w-0">
-              <CardTitle className="truncate" title={agent.name}>
-                {agent.name}
+            <Bot
+              className="text-muted-foreground mt-0.5 h-5 w-5 shrink-0"
+              aria-hidden
+            />
+            <div className="min-w-0 flex-1">
+              <CardTitle className="min-h-10 text-base leading-snug">
+                <Tooltip onlyWhenTruncated>
+                  <TooltipTrigger asChild>
+                    <span className="line-clamp-2 block text-left">
+                      {agent.name}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    {agent.name}
+                  </TooltipContent>
+                </Tooltip>
               </CardTitle>
-              <CardDescription className="mt-1 line-clamp-2">
-                {agent.description || 'No description'}
-              </CardDescription>
             </div>
           </div>
-          <Badge
-            variant={agent.kind === 'builtin' ? 'secondary' : 'outline'}
-            className="shrink-0 capitalize"
+        </CardHeader>
+
+        <CardContent className="flex flex-1 flex-col gap-3 pt-3">
+          <div className="min-h-10">
+            {agent.description ? (
+              <CardDescription className="line-clamp-2">
+                {agent.description}
+              </CardDescription>
+            ) : null}
+          </div>
+
+          <div
+            className="flex min-h-5 min-w-0 items-center justify-between gap-2"
+            data-testid={`agent-metadata-${agent.id}`}
           >
-            {agent.kind}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="flex-1">
-        {agent.defaultModel && (
-          <p className="text-muted-foreground text-xs">
-            Default model:{' '}
-            <span className="font-mono">
-              {agent.defaultModel.provider} · {agent.defaultModel.model}
-            </span>
-          </p>
-        )}
-      </CardContent>
-      <CardFooter className="gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation()
-            onOpen(agent)
-          }}
-          data-testid={`open-agent-${agent.id}`}
-        >
-          View details
-        </Button>
+            <Badge
+              variant={agent.kind === 'builtin' ? 'secondary' : 'outline'}
+              className="shrink-0"
+            >
+              {getKindLabel(agent.kind)}
+            </Badge>
+            <div className="min-w-0 flex-1 text-right">
+              {modelLabel ? (
+                <p
+                  className="text-muted-foreground flex min-w-0 items-center
+                    justify-end gap-1.5 text-xs"
+                >
+                  <span className="shrink-0">Model</span>
+                  <Tooltip onlyWhenTruncated>
+                    <TooltipTrigger asChild>
+                      <span className="truncate font-mono">{modelLabel}</span>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      {modelLabel}
+                    </TooltipContent>
+                  </Tooltip>
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </CardContent>
+      </div>
+
+      <CardFooter className="justify-end pt-0">
         <Button
           variant="ghost"
           size="sm"
@@ -152,8 +227,7 @@ export function AgentsPage() {
         <div>
           <h1 className="text-2xl font-semibold">Agents</h1>
           <p className="text-muted-foreground mt-1 text-sm">
-            Configure the personalities and instructions used by the Playground.
-            Built-in agents can be duplicated and customised.
+            Create and manage the agents available in Playground.
           </p>
         </div>
         <Button onClick={openCreate} data-testid="create-agent">
