@@ -47,28 +47,28 @@ async function readRequestBody(
 }
 
 function createModernMcpHandler(secretCode: string) {
-  return createMcpHandler(
-    () => {
-      const server = new ModernMcpServer({
-        name: 'e2e-modern-test-server',
-        version: '1.0.0',
+  // ToolHive still probes remote streamable-HTTP endpoints with a Legacy
+  // client during workload startup. Rejecting Legacy here prevents the
+  // server card from reaching Running even though Studio negotiates Modern.
+  return createMcpHandler(() => {
+    const server = new ModernMcpServer({
+      name: 'e2e-modern-test-server',
+      version: '1.0.0',
+    })
+
+    server.registerTool(
+      'get_secret_code',
+      {
+        description: 'Returns a secret code for testing',
+        inputSchema: z.object({}),
+      },
+      async () => ({
+        content: [{ type: 'text', text: secretCode }],
       })
+    )
 
-      server.registerTool(
-        'get_secret_code',
-        {
-          description: 'Returns a secret code for testing',
-          inputSchema: z.object({}),
-        },
-        async () => ({
-          content: [{ type: 'text', text: secretCode }],
-        })
-      )
-
-      return server
-    },
-    { legacy: 'reject' }
-  )
+    return server
+  })
 }
 
 export async function startModernTestMcpServer(): Promise<TestMcpServer> {
