@@ -22,12 +22,19 @@ import type { CoreWorkload } from '@common/api/generated/types.gen'
 async function readRequestBody(
   req: import('node:http').IncomingMessage
 ): Promise<Uint8Array | undefined> {
-  if (req.method === 'GET' || req.method === 'HEAD') return undefined
+  if (
+    req.method === 'GET' ||
+    req.method === 'HEAD' ||
+    req.method === 'DELETE'
+  ) {
+    return undefined
+  }
   const chunks: Buffer[] = []
   for await (const chunk of req) {
     chunks.push(Buffer.from(chunk))
   }
-  return Buffer.concat(chunks)
+  const body = Buffer.concat(chunks)
+  return body.length > 0 ? body : undefined
 }
 
 async function startModernMcpHttpServer(): Promise<{
@@ -90,7 +97,7 @@ async function startModernMcpHttpServer(): Promise<{
           new Request(url, {
             method: req.method,
             headers: req.headers as HeadersInit,
-            body: body ? Buffer.from(body) : undefined,
+            body: body && body.length > 0 ? Buffer.from(body) : undefined,
           })
         )
 

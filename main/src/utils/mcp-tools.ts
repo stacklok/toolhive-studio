@@ -8,6 +8,7 @@ import {
 import { jsonSchema, type Tool } from 'ai'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
 import log from '../logger'
+import { normalizeMcpInputSchema } from './normalize-mcp-input-schema'
 
 export interface McpToolDefinition {
   description?: string
@@ -54,6 +55,9 @@ function resolveTransportType(workload: CoreWorkload): ResolvedTransportType {
 export function buildMcpClientTransport(workload: CoreWorkload): Transport {
   const transportType = resolveTransportType(workload)
 
+  // Intentional: Studio only talks to ToolHive's HTTP/SSE proxy. Direct stdio
+  // without a resolved proxy_mode is a configuration race/error, not a silent
+  // fallback case — fail loudly so discovery surfaces the real problem.
   if (transportType === 'unsupported') {
     throw new Error(
       `Workload ${workload.name ?? 'unknown'} has no HTTP proxy endpoint; use streamable-http or sse proxy_mode`
@@ -115,22 +119,10 @@ export async function getWorkloadAvailableTools(
     const serverMcpTools: Record<string, McpToolDefinition> = {}
     for (const tool of tools) {
       if (!tool.name) continue
-      const schema =
-        tool.inputSchema && typeof tool.inputSchema === 'object'
-          ? tool.inputSchema
-          : { type: 'object', properties: {} }
 
       serverMcpTools[tool.name] = {
         description: tool.description,
-        inputSchema: jsonSchema({
-          ...(schema as Record<string, unknown>),
-          type: 'object',
-          properties:
-            'properties' in schema && schema.properties
-              ? schema.properties
-              : {},
-          additionalProperties: false,
-        }),
+        inputSchema: jsonSchema(normalizeMcpInputSchema(tool.inputSchema)),
         _meta: tool._meta,
       }
     }

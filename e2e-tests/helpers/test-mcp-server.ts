@@ -33,11 +33,24 @@ export interface TestMcpServer {
 async function readRequestBody(
   req: express.Request
 ): Promise<Uint8Array | undefined> {
-  if (req.method === 'GET' || req.method === 'HEAD') return undefined
-  if (req.body && Buffer.isBuffer(req.body)) return req.body
+  if (
+    req.method === 'GET' ||
+    req.method === 'HEAD' ||
+    req.method === 'DELETE'
+  ) {
+    return undefined
+  }
+
+  if (Buffer.isBuffer(req.body)) {
+    return req.body.length > 0 ? req.body : undefined
+  }
+
+  // express.raw() leaves `{}` for empty bodies — do not forward that as "{}".
   if (req.body && typeof req.body === 'object') {
+    if (Object.keys(req.body).length === 0) return undefined
     return Buffer.from(JSON.stringify(req.body))
   }
+
   return undefined
 }
 
@@ -45,6 +58,10 @@ function createTestMcpHandler(secretCode: string, serverName: string) {
   // ToolHive still probes remote streamable-HTTP endpoints with a Legacy
   // client during workload startup. SDK v2 handlers must accept Legacy there
   // while Studio negotiates Modern through the proxy.
+  //
+  // createMcpHandler invokes this factory once per HTTP request, so concurrent
+  // clients each get an isolated McpServer instance (same isolation intent as
+  // the old per-request McpServer + transport pattern / GHSA-345p-7cg4-v4c7).
   return createMcpHandler(() => {
     const server = new McpServer({
       name: serverName,
@@ -105,7 +122,7 @@ async function startStreamableHttpMcpServer(options: {
         new Request(url, {
           method: req.method,
           headers: req.headers as HeadersInit,
-          body: body ? Buffer.from(body) : undefined,
+          body: body && body.length > 0 ? Buffer.from(body) : undefined,
         })
       )
 

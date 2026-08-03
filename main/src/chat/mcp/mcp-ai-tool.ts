@@ -1,4 +1,4 @@
-import { dynamicTool, jsonSchema, type JSONSchema7, type JSONValue } from 'ai'
+import { dynamicTool, jsonSchema, type JSONValue } from 'ai'
 import {
   isInputRequiredResult,
   type CallToolResult,
@@ -6,25 +6,24 @@ import {
   type Tool as NativeMcpTool,
 } from '@modelcontextprotocol/client'
 import { sanitizeJsonSchema } from '../../utils/sanitize-json-schema'
+import { normalizeMcpInputSchema } from '../../utils/normalize-mcp-input-schema'
 
 const INPUT_REQUIRED_UNSUPPORTED_MESSAGE =
   'This MCP server requested interactive input during tool execution, which the Playground does not support yet.'
 
-function normalizeInputSchema(schema: unknown, sanitize: boolean): JSONSchema7 {
-  const raw = (
-    schema && typeof schema === 'object'
-      ? schema
-      : { type: 'object', properties: {} }
-  ) as JSONSchema7
+function textFromCallToolContent(result: CallToolResult): string | undefined {
+  if (!('content' in result) || !Array.isArray(result.content)) return undefined
 
-  const normalized: JSONSchema7 = {
-    ...raw,
-    type: raw.type ?? 'object',
-    properties: raw.properties ?? {},
-    additionalProperties: raw.additionalProperties ?? false,
-  }
+  const text = result.content
+    .filter(
+      (part): part is { type: 'text'; text: string } =>
+        part.type === 'text' && 'text' in part && typeof part.text === 'string'
+    )
+    .map((part) => part.text)
+    .join('\n')
+    .trim()
 
-  return sanitize ? (sanitizeJsonSchema(normalized) as JSONSchema7) : normalized
+  return text.length > 0 ? text : undefined
 }
 
 function mcpCallToolResultToModelOutput({
@@ -35,6 +34,14 @@ function mcpCallToolResultToModelOutput({
   output: unknown
 }) {
   const result = output as CallToolResult
+
+  if (result && typeof result === 'object' && result.isError) {
+    const errorText = textFromCallToolContent(result)
+    if (errorText) {
+      return { type: 'error-text' as const, value: errorText }
+    }
+    return { type: 'error-json' as const, value: result as JSONValue }
+  }
 
   if (!('content' in result) || !Array.isArray(result.content)) {
     return { type: 'json' as const, value: result as JSONValue }
@@ -65,10 +72,10 @@ export function createAiMcpTool(params: {
   definition: NativeMcpTool
   sanitizeSchema?: boolean
 }) {
-  const inputSchema = normalizeInputSchema(
-    params.definition.inputSchema,
-    params.sanitizeSchema ?? false
-  )
+  const normalized = normalizeMcpInputSchema(params.definition.inputSchema)
+  const inputSchema = params.sanitizeSchema
+    ? (sanitizeJsonSchema(normalized) as typeof normalized)
+    : normalized
 
   return dynamicTool({
     description: params.definition.description ?? params.toolName,
