@@ -1,9 +1,4 @@
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js'
-import {
-  createMcpHandler,
-  McpServer as ModernMcpServer,
-} from '@modelcontextprotocol/server'
+import { createMcpHandler, McpServer } from '@modelcontextprotocol/server'
 import express from 'express'
 import { z } from 'zod'
 import type { Server } from 'http'
@@ -46,13 +41,13 @@ async function readRequestBody(
   return undefined
 }
 
-function createModernMcpHandler(secretCode: string) {
+function createTestMcpHandler(secretCode: string, serverName: string) {
   // ToolHive still probes remote streamable-HTTP endpoints with a Legacy
-  // client during workload startup. Rejecting Legacy here prevents the
-  // server card from reaching Running even though Studio negotiates Modern.
+  // client during workload startup. SDK v2 handlers must accept Legacy there
+  // while Studio negotiates Modern through the proxy.
   return createMcpHandler(() => {
-    const server = new ModernMcpServer({
-      name: 'e2e-modern-test-server',
+    const server = new McpServer({
+      name: serverName,
       version: '1.0.0',
     })
 
@@ -71,10 +66,13 @@ function createModernMcpHandler(secretCode: string) {
   })
 }
 
-export async function startModernTestMcpServer(): Promise<TestMcpServer> {
+async function startStreamableHttpMcpServer(options: {
+  serverName: string
+  healthPayload: Record<string, unknown>
+}): Promise<TestMcpServer> {
   const secretCode = generateSimpleCode()
   const bearerToken = `token-${generateSimpleCode()}`
-  const handler = createModernMcpHandler(secretCode)
+  const handler = createTestMcpHandler(secretCode, options.serverName)
 
   const app = express()
   app.use(express.raw({ type: '*/*' }))
@@ -87,7 +85,7 @@ export async function startModernTestMcpServer(): Promise<TestMcpServer> {
   })
 
   app.get('/', (_req, res) => {
-    res.json({ status: 'ok', protocol: 'modern' })
+    res.json(options.healthPayload)
   })
 
   app.all('/mcp', async (req, res) => {
@@ -143,74 +141,18 @@ export async function startModernTestMcpServer(): Promise<TestMcpServer> {
   })
 }
 
+/** Legacy-protocol E2E coverage via SDK v2 server (accepts Legacy probes + Modern negotiation). */
 export async function startTestMcpServer(): Promise<TestMcpServer> {
-  const secretCode = generateSimpleCode()
-  const bearerToken = `token-${generateSimpleCode()}`
-
-  const app = express()
-  app.use(express.json())
-
-  // Handle OAuth discovery - return 404 to indicate no auth required
-  app.get('/.well-known/oauth-protected-resource', (_req, res) => {
-    res.status(404).send('Not found')
+  return startStreamableHttpMcpServer({
+    serverName: 'e2e-test-server',
+    healthPayload: { status: 'ok' },
   })
-  app.get('/.well-known/oauth-protected-resource/mcp', (_req, res) => {
-    res.status(404).send('Not found')
-  })
+}
 
-  // Health check endpoint (app polls this)
-  app.get('/', (_req, res) => {
-    res.json({ status: 'ok' })
-  })
-
-  app.all('/mcp', async (req, res) => {
-    if (req.method !== 'OPTIONS') {
-      const authHeader = req.headers.authorization
-      if (authHeader !== `Bearer ${bearerToken}`) {
-        res.status(401).send('Unauthorized')
-        return
-      }
-    }
-
-    // Create fresh server + transport per request to avoid cross-client data leaks
-    // See: GHSA-345p-7cg4-v4c7
-    const mcpServer = new McpServer({
-      name: 'e2e-test-server',
-      version: '1.0.0',
-    })
-
-    mcpServer.tool(
-      'get_secret_code',
-      'Returns a secret code for testing',
-      {},
-      async () => ({
-        content: [{ type: 'text', text: secretCode }],
-      })
-    )
-
-    const transport = new StreamableHTTPServerTransport({
-      sessionIdGenerator: undefined,
-    })
-    await mcpServer.connect(transport)
-    await transport.handleRequest(req, res, req.body)
-  })
-
-  return new Promise((resolve) => {
-    const httpServer: Server = app.listen(0, () => {
-      const address = httpServer.address()
-      const port = typeof address === 'object' && address ? address.port : 0
-
-      resolve({
-        port,
-        secretCode,
-        bearerToken,
-        url: `http://127.0.0.1:${port}/mcp`,
-        stop: async () => {
-          await new Promise<void>((res) => {
-            httpServer.close(() => res())
-          })
-        },
-      })
-    })
+/** Modern-protocol Playground path via SDK v2 server through ToolHive proxy. */
+export async function startModernTestMcpServer(): Promise<TestMcpServer> {
+  return startStreamableHttpMcpServer({
+    serverName: 'e2e-modern-test-server',
+    healthPayload: { status: 'ok', protocol: 'modern' },
   })
 }
