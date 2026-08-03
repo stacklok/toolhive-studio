@@ -11,6 +11,7 @@ import {
 } from './renderer/src/common/mocks/matchMedia'
 import { resetElectronAPI } from './renderer/src/common/mocks/electronAPI'
 import { server } from './renderer/src/common/mocks/node'
+import { http, passthrough } from 'msw'
 import type { ElectronAPI } from './preload/src/preload'
 
 expect.extend(testingLibraryMatchers)
@@ -47,6 +48,15 @@ beforeEach(() => {
   resetAllAutoAPIMocks()
   resetMatchMediaState()
   resetElectronAPI()
+  server.use(
+    http.all(
+      ({ request }) => {
+        const { hostname } = new URL(request.url)
+        return hostname === '127.0.0.1' || hostname === 'localhost'
+      },
+      () => passthrough()
+    )
+  )
 })
 
 afterEach(() => {

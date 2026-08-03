@@ -1,11 +1,6 @@
 import * as Sentry from '@sentry/electron/main'
-import { createMCPClient } from '@ai-sdk/mcp'
-import { asSchema, jsonSchema, type JSONSchema7, type ToolSet } from 'ai'
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import {
-  ReadResourceResultSchema,
-  CallToolResultSchema,
-} from '@modelcontextprotocol/sdk/types.js'
+import { createAiMcpTool } from './mcp-ai-tool'
+import type { ToolSet } from 'ai'
 import type {
   McpUiResourceCsp,
   McpUiResourcePermissions,
@@ -16,12 +11,11 @@ import log from '../../logger'
 import type { AvailableServer } from '../types'
 import {
   type McpToolDefinition,
-  buildRawTransport,
-  createTransport,
+  connectWorkloadMcpClient,
   getWorkloadAvailableTools,
-  isMcpToolDefinition,
+  MCP_UI_EXTENSION_CAPABILITY,
 } from '../../utils/mcp-tools'
-import { sanitizeJsonSchema } from '../../utils/sanitize-json-schema'
+import { isUsableMcpTool } from '../../utils/normalize-mcp-input-schema'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { Effect } from 'effect'
 import { readAllMcpAppUiMetadata } from '../../db/readers/mcp-app-ui-metadata-reader'
@@ -31,16 +25,17 @@ import type {
   ToolUiMetadataEntry,
 } from './mcp-ui-metadata-cache'
 
-// Advertised to MCP servers during initialize so they expose UI-enabled tools
-const MCP_UI_EXTENSION_CAPABILITY = {
-  'io.modelcontextprotocol/ui': { mimeTypes: ['text/html;profile=mcp-app'] },
-} as const
-
 interface UiResourceMetadata {
   html: string
   csp?: McpUiResourceCsp
   permissions?: McpUiResourcePermissions
   prefersBorder?: boolean
+}
+
+export interface McpToolSession {
+  tools: ToolSet
+  enabledTools: Record<string, string[]>
+  close: () => Promise<void>
 }
 
 // Module-level fallback cache for direct impl imports in unit tests.
@@ -80,15 +75,27 @@ function commitUiMetadata(next: Record<string, ToolUiMetadataEntry>): void {
   uiMetadataLoaded = true
 }
 
-// ---------------------------------------------------------------------------
-// Private helpers
-// ---------------------------------------------------------------------------
+let inFlightWorkloads: Promise<CoreWorkload[]> | null = null
 
-/** Fetches all workloads from the ToolHive API. */
+/**
+ * Fetches all workloads from the ToolHive API.
+ * Concurrent callers (e.g. tool discovery + MCP Apps in the same turn) share
+ * one in-flight request; sequential calls always refetch.
+ */
 async function fetchWorkloads(): Promise<CoreWorkload[]> {
-  const client = createMainProcessApiClient()
-  const { data } = await getApiV1BetaWorkloads({ client })
-  return data?.workloads ?? []
+  if (inFlightWorkloads) return inFlightWorkloads
+
+  inFlightWorkloads = (async () => {
+    try {
+      const client = createMainProcessApiClient()
+      const { data } = await getApiV1BetaWorkloads({ client })
+      return data?.workloads ?? []
+    } finally {
+      inFlightWorkloads = null
+    }
+  })()
+
+  return inFlightWorkloads
 }
 
 /** Extracts the `_meta.ui` block from a raw tool definition. */
@@ -106,20 +113,19 @@ function shouldSkipAppOnlyTool(
   return !!ui?.visibility && !ui.visibility.includes('model')
 }
 
-async function createRawMcpClientForServer(
-  serverName: string
-): Promise<{ client: Client; close: () => Promise<void> }> {
-  const clientInfo = { name: 'toolhive-studio-mcp-apps', version: '1.0.0' }
-  const clientOptions = {
-    capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
-  }
-
+async function createRawMcpClientForServer(serverName: string): Promise<{
+  client: Awaited<ReturnType<typeof connectWorkloadMcpClient>>['client']
+  close: () => Promise<void>
+}> {
   const workload = (await fetchWorkloads()).find((w) => w.name === serverName)
   if (!workload) throw new Error(`Workload not found: ${serverName}`)
 
-  const client = new Client(clientInfo, clientOptions)
-  await client.connect(buildRawTransport(workload))
-  return { client, close: () => client.close() }
+  const connection = await connectWorkloadMcpClient(workload, {
+    clientName: 'toolhive-studio-mcp-apps',
+    capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
+  })
+
+  return { client: connection.client, close: connection.close }
 }
 
 export async function fetchUiResource(
@@ -128,10 +134,7 @@ export async function fetchUiResource(
 ): Promise<UiResourceMetadata> {
   const { client, close } = await createRawMcpClientForServer(serverName)
   try {
-    const result = await client.request(
-      { method: 'resources/read', params: { uri: resourceUri } },
-      ReadResourceResultSchema
-    )
+    const result = await client.readResource({ uri: resourceUri })
     const content = result.contents[0]
     if (!content) throw new Error('Empty resource response')
 
@@ -144,7 +147,6 @@ export async function fetchUiResource(
       throw new Error('Resource content has no text or blob')
     }
 
-    // Extract per-resource CSP and permission metadata from the response
     const uiMeta = (content as { _meta?: { ui?: Record<string, unknown> } })
       ._meta?.ui
 
@@ -166,17 +168,12 @@ export async function proxyMcpToolCall(
 ): Promise<unknown> {
   const { client, close } = await createRawMcpClientForServer(serverName)
   try {
-    const result = await client.request(
-      { method: 'tools/call', params: { name: toolName, arguments: args } },
-      CallToolResultSchema
-    )
-    return result
+    return await client.callTool({ name: toolName, arguments: args })
   } finally {
     await close()
   }
 }
 
-// Helper to safely extract properties
 function getToolParameters(inputSchema: unknown): Record<string, unknown> {
   if (
     inputSchema &&
@@ -188,87 +185,28 @@ function getToolParameters(inputSchema: unknown): Record<string, unknown> {
   ) {
     return inputSchema['properties'] as Record<string, unknown>
   }
+
+  if (
+    inputSchema &&
+    typeof inputSchema === 'object' &&
+    'jsonSchema' in inputSchema
+  ) {
+    const wrapped = (inputSchema as { jsonSchema?: unknown }).jsonSchema
+    if (
+      wrapped &&
+      typeof wrapped === 'object' &&
+      'properties' in wrapped &&
+      wrapped.properties &&
+      typeof wrapped.properties === 'object' &&
+      !Array.isArray(wrapped.properties)
+    ) {
+      return wrapped.properties as Record<string, unknown>
+    }
+  }
+
   return {}
 }
 
-/**
- * Returns a copy of an MCP tool whose `inputSchema` has been sanitized so
- * strict function-calling validators (Google Gemini) accept it. MCP tools
- * wrap their JSON Schema in a `Schema` object (from `jsonSchema()`); we read
- * the raw schema (prune dangling `required`, drop non-string `enum`s, collapse
- * union `type` arrays), and re-wrap. Tools whose schema can't be resolved
- * synchronously are returned unchanged.
- */
-function isThenable(value: unknown): value is PromiseLike<unknown> {
-  return (
-    value != null &&
-    (typeof value === 'object' || typeof value === 'function') &&
-    typeof (value as { then?: unknown }).then === 'function'
-  )
-}
-
-function resolveRawJsonSchema(inputSchema: unknown): unknown | null {
-  if (
-    !inputSchema ||
-    typeof inputSchema !== 'object' ||
-    Array.isArray(inputSchema) ||
-    isThenable(inputSchema)
-  ) {
-    return null
-  }
-
-  const candidate = inputSchema as Record<string, unknown>
-  const wrapped = candidate.jsonSchema
-  if (
-    wrapped &&
-    typeof wrapped === 'object' &&
-    !Array.isArray(wrapped) &&
-    !isThenable(wrapped)
-  ) {
-    return wrapped
-  }
-
-  try {
-    const schema = asSchema(inputSchema as Parameters<typeof asSchema>[0])
-    const raw = schema.jsonSchema
-    if (
-      raw &&
-      typeof raw === 'object' &&
-      !Array.isArray(raw) &&
-      !isThenable(raw)
-    ) {
-      return raw
-    }
-  } catch {
-    // MCP fixtures and some clients expose bare JSON Schema objects.
-    return candidate
-  }
-
-  return null
-}
-
-function withSanitizedInputSchema(tool: McpToolDefinition): McpToolDefinition {
-  const { inputSchema } = tool
-  if (!inputSchema || typeof inputSchema !== 'object') return tool
-  try {
-    const raw = resolveRawJsonSchema(inputSchema)
-    if (raw) {
-      const sanitized = sanitizeJsonSchema(raw) as JSONSchema7
-      return {
-        ...tool,
-        inputSchema: jsonSchema(sanitized),
-      }
-    }
-    log.warn(
-      `[MCP SANITIZE] unresolved schema shape for tool: ${JSON.stringify(inputSchema).slice(0, 200)}`
-    )
-  } catch (error) {
-    log.warn('[MCP SANITIZE] error reading schema:', error)
-  }
-  return tool
-}
-
-// Get MCP server tools information
 export async function getMcpServerTools(
   serverName: string,
   _threadId?: string,
@@ -288,7 +226,6 @@ export async function getMcpServerTools(
     throw new Error('Server not in the workload list')
   }
 
-  // If workload.tools is empty, try to discover tools by connecting to the server
   let discoveredTools: string[] = workload.tools || []
   let serverMcpTools: Record<string, McpToolDefinition> = {}
 
@@ -324,7 +261,107 @@ export async function getMcpServerTools(
   return result
 }
 
-// Create MCP tools for AI SDK
+type ServerDiscoveryResult = {
+  serverName: string
+  tools: ToolSet
+  metadata: Record<string, ToolUiMetadataEntry>
+  close: () => Promise<void>
+  keepOpen: boolean
+}
+
+async function discoverToolsForServer(params: {
+  serverName: string
+  toolNames: string[]
+  workload: CoreWorkload
+  sanitizeSchemas?: boolean
+}): Promise<ServerDiscoveryResult | null> {
+  const { serverName, toolNames, workload } = params
+  log.debug(`Found MCP workload for ${serverName}:`, workload.package)
+
+  let connection: Awaited<ReturnType<typeof connectWorkloadMcpClient>> | null =
+    null
+
+  try {
+    connection = await connectWorkloadMcpClient(workload, {
+      clientName: 'toolhive-studio-playground',
+      capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
+    })
+
+    const { tools: listedTools } = await connection.client.listTools()
+    const toolsByName = new Map(listedTools.map((tool) => [tool.name, tool]))
+
+    const tools: ToolSet = {}
+    const metadata: Record<string, ToolUiMetadataEntry> = {}
+    let addedToolsCount = 0
+
+    for (const toolName of toolNames) {
+      const nativeTool = toolsByName.get(toolName)
+      if (nativeTool === undefined) {
+        log.warn(`Tool ${toolName} not found in server ${serverName}`)
+        continue
+      }
+
+      if (!isUsableMcpTool(nativeTool)) {
+        log.warn(
+          `Skipping malformed tool ${toolName} from server ${serverName}`
+        )
+        continue
+      }
+
+      const ui = extractToolUiMeta(nativeTool)
+      if (shouldSkipAppOnlyTool(ui)) {
+        log.debug(`Skipping app-only tool ${toolName} from ${serverName}`)
+        continue
+      }
+
+      tools[toolName] = createAiMcpTool({
+        client: connection.client,
+        toolName,
+        definition: nativeTool,
+        sanitizeSchema: params.sanitizeSchemas,
+      })
+
+      if (ui?.resourceUri) {
+        metadata[toolName] = {
+          resourceUri: ui.resourceUri,
+          serverName,
+        }
+      }
+      addedToolsCount++
+    }
+
+    log.debug(
+      `Added ${addedToolsCount}/${toolNames.length} tools from ${serverName}`
+    )
+
+    if (addedToolsCount === 0) {
+      await connection.close()
+      return null
+    }
+
+    return {
+      serverName,
+      tools,
+      metadata,
+      close: connection.close,
+      keepOpen: true,
+    }
+  } catch (error) {
+    if (connection) {
+      try {
+        await connection.close()
+      } catch (closeError) {
+        log.error(
+          `Failed to close MCP client for ${serverName} after error:`,
+          closeError
+        )
+      }
+    }
+    log.error(`Failed to create MCP client for ${serverName}:`, error)
+    return null
+  }
+}
+
 export async function createMcpTools(
   threadId?: string,
   options?: { sanitizeSchemas?: boolean },
@@ -334,41 +371,20 @@ export async function createMcpTools(
       threadId: string
     ) => Promise<Record<string, string[]>>
   }
-): Promise<{
-  tools: ToolSet
-  clients: Awaited<ReturnType<typeof createMCPClient>>[]
-  enabledTools: Record<string, string[]>
-}> {
+): Promise<McpToolSession> {
   const mcpTools: ToolSet = {}
-  const mcpClients: Awaited<ReturnType<typeof createMCPClient>>[] = []
+  const closeByServer = new Map<string, () => Promise<void>>()
   let enabledTools: Record<string, string[]> = {}
-  // Build the UI metadata map for this stream session into a local object
-  // and only swap it into the module-level cache (and persist it to SQLite)
-  // once discovery has completed successfully. A transient fetchWorkloads()
-  // or getEnabledMcpTools() failure must not wipe the previously persisted
-  // snapshot — historical MCP App iframes rely on it.
   const nextCachedUiMetadata: Record<string, ToolUiMetadataEntry> = {}
   let discoverySucceeded = false
 
-  /** Registers a validated tool and caches its UI metadata if present. */
-  const registerTool = (
-    toolName: string,
-    toolDef: unknown,
-    serverName: string
-  ): boolean => {
-    if (!isMcpToolDefinition(toolDef)) return false
-    const ui = extractToolUiMeta(toolDef)
-    if (shouldSkipAppOnlyTool(ui)) return false
-    mcpTools[toolName] = options?.sanitizeSchemas
-      ? withSanitizedInputSchema(toolDef)
-      : toolDef
-    if (ui?.resourceUri) {
-      nextCachedUiMetadata[toolName] = {
-        resourceUri: ui.resourceUri,
-        serverName,
-      }
-    }
-    return true
+  let closePromise: Promise<void> | null = null
+  const close = async () => {
+    if (closePromise) return closePromise
+    closePromise = Promise.allSettled(
+      [...closeByServer.values()].map((fn) => fn())
+    ).then(() => undefined)
+    return closePromise
   }
 
   try {
@@ -383,48 +399,38 @@ export async function createMcpTools(
       resolveEnabled(),
     ])
     enabledTools = resolvedEnabledTools
-    // Flag is set here, AFTER the two required calls resolved, so any
-    // rejection above propagates into the catch below without flipping it.
     discoverySucceeded = true
 
-    for (const [serverName, toolNames] of Object.entries(enabledTools)) {
-      if (toolNames.length === 0) continue
+    const serverJobs = Object.entries(enabledTools)
+      .filter(([, toolNames]) => toolNames.length > 0)
+      .map(([serverName, toolNames]) => {
+        const workload = workloads.find((w) => w.name === serverName)
+        if (!workload) {
+          log.debug(`Skipping ${serverName}: workload not found`)
+          return Promise.resolve(null)
+        }
+        return discoverToolsForServer({
+          serverName,
+          toolNames,
+          workload,
+          sanitizeSchemas: options?.sanitizeSchemas,
+        })
+      })
 
-      const workload = workloads.find((w) => w.name === serverName)
-
-      if (!workload) {
-        log.debug(`Skipping ${serverName}: workload not found`)
+    const settled = await Promise.allSettled(serverJobs)
+    for (const outcome of settled) {
+      if (outcome.status === 'rejected') {
+        log.error('Failed to discover MCP tools for a server:', outcome.reason)
         continue
       }
 
-      log.debug(`Found MCP workload for ${serverName}:`, workload.package)
+      const result = outcome.value
+      if (!result) continue
 
-      try {
-        const mcpClient = await createMCPClient({
-          ...createTransport(workload),
-          capabilities: { extensions: MCP_UI_EXTENSION_CAPABILITY },
-        })
-        mcpClients.push(mcpClient)
-
-        const serverMcpTools = await mcpClient.tools()
-        let addedToolsCount = 0
-        for (const toolName of toolNames) {
-          const tool = serverMcpTools[toolName]
-          if (tool === undefined) {
-            log.warn(`Tool ${toolName} not found in server ${serverName}`)
-          } else if (registerTool(toolName, tool, serverName)) {
-            addedToolsCount++
-          } else if (shouldSkipAppOnlyTool(extractToolUiMeta(tool))) {
-            log.debug(`Skipping app-only tool ${toolName} from ${serverName}`)
-          } else {
-            log.warn(`Tool ${toolName} from ${serverName} failed validation`)
-          }
-        }
-        log.debug(
-          `Added ${addedToolsCount}/${toolNames.length} tools from ${serverName}`
-        )
-      } catch (error) {
-        log.error(`Failed to create MCP client for ${serverName}:`, error)
+      Object.assign(mcpTools, result.tools)
+      Object.assign(nextCachedUiMetadata, result.metadata)
+      if (result.keepOpen) {
+        closeByServer.set(result.serverName, result.close)
       }
     }
   } catch (error) {
@@ -432,10 +438,6 @@ export async function createMcpTools(
   }
 
   if (discoverySucceeded) {
-    // Swap the module-level cache in and persist it. Empty maps are
-    // persisted too — a server that lost all UI tools should have its
-    // stale entries removed. When discovery failed we skip both, keeping
-    // the previously hydrated cache and DB rows intact.
     commitUiMetadata(nextCachedUiMetadata)
 
     const uiToolCount = Object.keys(nextCachedUiMetadata).length
@@ -455,5 +457,5 @@ export async function createMcpTools(
     }
   }
 
-  return { tools: mcpTools, clients: mcpClients, enabledTools }
+  return { tools: mcpTools, enabledTools, close }
 }

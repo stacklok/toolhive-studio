@@ -7,6 +7,7 @@ import {
 import type { Page } from '@playwright/test'
 import {
   startTestMcpServer,
+  startModernTestMcpServer,
   type TestMcpServer,
 } from './helpers/test-mcp-server'
 
@@ -113,6 +114,95 @@ async function clearPlaygroundState(window: Page): Promise<void> {
   await removeOllamaProvider(window)
 }
 
+async function installRemoteMcpServer(
+  window: Page,
+  serverName: string,
+  testServer: TestMcpServer
+): Promise<void> {
+  await window.getByRole('link', { name: 'MCP Servers' }).click()
+  await expect(window.getByRole('heading', { level: 1 })).toBeVisible()
+
+  await window.getByRole('button', { name: /add an mcp server/i }).click()
+  await window.getByRole('menuitem', { name: /remote mcp server/i }).click()
+  await window.getByRole('dialog').waitFor()
+
+  await window.getByPlaceholder('e.g. my-awesome-server').fill(serverName)
+
+  await window.getByRole('combobox', { name: /group/i }).click()
+  await window.getByRole('option', { name: TEST_GROUP_NAME }).click()
+
+  await window
+    .getByPlaceholder('e.g. https://example.com/mcp')
+    .fill(testServer.url)
+
+  await window.getByRole('combobox', { name: /transport/i }).click()
+  await window.getByRole('option', { name: /streamable http/i }).click()
+
+  await window.getByRole('combobox', { name: /authorization/i }).click()
+  await window.getByRole('option', { name: /bearer token/i }).click()
+  await window
+    .getByPlaceholder('e.g. token_123_ABC_789_XYZ')
+    .fill(testServer.bearerToken)
+
+  await window.getByRole('button', { name: /install server/i }).click()
+  await window.getByRole('dialog').waitFor({ state: 'hidden' })
+
+  await window.getByRole('link', { name: TEST_GROUP_NAME }).click()
+  await expect(window.getByText(new RegExp(serverName))).toBeVisible({
+    timeout: 30_000,
+  })
+  await expect(
+    window
+      .locator('[data-slot="card"]')
+      .filter({ hasText: serverName })
+      .getByText('Running')
+  ).toBeVisible({ timeout: 30_000 })
+}
+
+async function configureOllamaAndChat(
+  window: Page,
+  serverName: string,
+  testServer: TestMcpServer
+): Promise<void> {
+  await window.getByRole('link', { name: 'Playground' }).click()
+  await waitForPlaygroundReady(window)
+
+  await openProviderSettingsDialog(window)
+
+  await window.getByRole('button', { name: /ollama/i }).click()
+  await window.getByPlaceholder('http://localhost:11434').fill(OLLAMA_URL)
+
+  await window.getByTestId('refresh-models-button').click()
+
+  await expect(window.getByText(/connection successful/i)).toBeVisible({
+    timeout: 30_000,
+  })
+
+  await window.getByRole('button', { name: 'Save' }).click()
+  await window.getByRole('dialog').waitFor({ state: 'hidden' })
+
+  await selectOllamaModel(window)
+
+  await expect(window.getByPlaceholder(/type your message/i)).toBeVisible({
+    timeout: 10_000,
+  })
+
+  await enableMcpServer(window, serverName)
+
+  await window
+    .getByPlaceholder(/type your message/i)
+    .fill(
+      'Use the get_secret_code tool, then reply with ONLY the exact code the tool returned. No quotes, no extra words, no punctuation.'
+    )
+  await window.keyboard.press('Enter')
+
+  await expect(
+    window.getByText(new RegExp(testServer.secretCode, 'i'))
+  ).toBeVisible({
+    timeout: LONG_TIMEOUT,
+  })
+}
+
 test.describe('Playground chat with Ollama', () => {
   test.slow()
 
@@ -142,81 +232,41 @@ test.describe('Playground chat with Ollama', () => {
 
     const serverName = generateRandomServerName()
 
-    await window.getByRole('link', { name: 'MCP Servers' }).click()
-    await expect(window.getByRole('heading', { level: 1 })).toBeVisible()
+    await installRemoteMcpServer(window, serverName, testServer)
+    await configureOllamaAndChat(window, serverName, testServer)
+  })
+})
 
-    await window.getByRole('button', { name: /add an mcp server/i }).click()
-    await window.getByRole('menuitem', { name: /remote mcp server/i }).click()
-    await window.getByRole('dialog').waitFor()
+test.describe('Playground chat with Modern MCP server', () => {
+  test.slow()
 
-    await window.getByPlaceholder('e.g. my-awesome-server').fill(serverName)
+  let modernTestServer: TestMcpServer
 
-    await window.getByRole('combobox', { name: /group/i }).click()
-    await window.getByRole('option', { name: TEST_GROUP_NAME }).click()
+  test.beforeAll(async () => {
+    console.log('Warming up Ollama model for Modern MCP test...')
+    try {
+      await warmupOllamaModel()
+      console.log('Ollama warmup complete')
+    } catch (error) {
+      console.error('Ollama warmup failed:', error)
+      throw error
+    }
 
-    await window
-      .getByPlaceholder('e.g. https://example.com/mcp')
-      .fill(testServer.url)
+    modernTestServer = await startModernTestMcpServer()
+  })
 
-    await window.getByRole('combobox', { name: /transport/i }).click()
-    await window.getByRole('option', { name: /streamable http/i }).click()
+  test.afterAll(async () => {
+    await modernTestServer?.stop()
+  })
 
-    await window.getByRole('combobox', { name: /authorization/i }).click()
-    await window.getByRole('option', { name: /bearer token/i }).click()
-    await window
-      .getByPlaceholder('e.g. token_123_ABC_789_XYZ')
-      .fill(testServer.bearerToken)
+  test('calls tools through ToolHive proxy against a Modern MCP backend', async ({
+    window,
+  }) => {
+    await clearPlaygroundState(window)
 
-    await window.getByRole('button', { name: /install server/i }).click()
-    await window.getByRole('dialog').waitFor({ state: 'hidden' })
+    const serverName = generateRandomServerName()
 
-    await window.getByRole('link', { name: TEST_GROUP_NAME }).click()
-    await expect(window.getByText(new RegExp(serverName))).toBeVisible({
-      timeout: 30_000,
-    })
-    await expect(
-      window
-        .locator('[data-slot="card"]')
-        .filter({ hasText: serverName })
-        .getByText('Running')
-    ).toBeVisible({ timeout: 30_000 })
-
-    await window.getByRole('link', { name: 'Playground' }).click()
-    await waitForPlaygroundReady(window)
-
-    await openProviderSettingsDialog(window)
-
-    await window.getByRole('button', { name: /ollama/i }).click()
-    await window.getByPlaceholder('http://localhost:11434').fill(OLLAMA_URL)
-
-    await window.getByTestId('refresh-models-button').click()
-
-    await expect(window.getByText(/connection successful/i)).toBeVisible({
-      timeout: 30_000,
-    })
-
-    await window.getByRole('button', { name: 'Save' }).click()
-    await window.getByRole('dialog').waitFor({ state: 'hidden' })
-
-    await selectOllamaModel(window)
-
-    await expect(window.getByPlaceholder(/type your message/i)).toBeVisible({
-      timeout: 10_000,
-    })
-
-    await enableMcpServer(window, serverName)
-
-    await window
-      .getByPlaceholder(/type your message/i)
-      .fill(
-        'Use the get_secret_code tool, then reply with ONLY the exact code the tool returned. No quotes, no extra words, no punctuation.'
-      )
-    await window.keyboard.press('Enter')
-
-    await expect(
-      window.getByText(new RegExp(testServer.secretCode, 'i'))
-    ).toBeVisible({
-      timeout: LONG_TIMEOUT,
-    })
+    await installRemoteMcpServer(window, serverName, modernTestServer)
+    await configureOllamaAndChat(window, serverName, modernTestServer)
   })
 })

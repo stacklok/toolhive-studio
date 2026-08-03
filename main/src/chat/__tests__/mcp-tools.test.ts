@@ -17,30 +17,23 @@ const mockReadEnabledMcpTools = vi.hoisted(() => vi.fn().mockReturnValue({}))
 const mockReadThreadEnabledMcpTools = vi.hoisted(() =>
   vi.fn().mockReturnValue({})
 )
-const mockBuildRawTransport = vi.hoisted(() =>
-  vi.fn().mockReturnValue({ type: 'raw-mock-transport' })
+const mockConnectionClose = vi.hoisted(() =>
+  vi.fn().mockResolvedValue(undefined)
 )
-const mockCreateTransport = vi.hoisted(() =>
-  vi.fn().mockReturnValue({ name: 'test-server', transport: {} })
+const mockNativeClient = vi.hoisted(() => ({
+  listTools: vi.fn().mockResolvedValue({ tools: [] }),
+  readResource: vi.fn().mockResolvedValue({ contents: [] }),
+  callTool: vi.fn().mockResolvedValue({ content: [] }),
+  close: vi.fn().mockResolvedValue(undefined),
+}))
+const mockConnectWorkloadMcpClient = vi.hoisted(() =>
+  vi.fn().mockResolvedValue({
+    client: mockNativeClient,
+    close: mockConnectionClose,
+  })
 )
 const mockGetWorkloadAvailableTools = vi.hoisted(() =>
   vi.fn().mockResolvedValue(null)
-)
-
-// Raw SDK Client mock (used by fetchUiResource / proxyMcpToolCall)
-const mockSdkClient = vi.hoisted(() => ({
-  connect: vi.fn().mockResolvedValue(undefined),
-  request: vi.fn().mockResolvedValue({ contents: [] }),
-  close: vi.fn().mockResolvedValue(undefined),
-}))
-
-// AI SDK MCP client mock (used by createMcpTools)
-const mockAiMcpClient = vi.hoisted(() => ({
-  tools: vi.fn().mockResolvedValue({}),
-  close: vi.fn().mockResolvedValue(undefined),
-}))
-const mockCreateMCPClient = vi.hoisted(() =>
-  vi.fn().mockResolvedValue(mockAiMcpClient)
 )
 
 // MCP App UI metadata DB reader/writer mocks
@@ -82,31 +75,11 @@ vi.mock('../../utils/mcp-tools', async (importOriginal) => {
   const original =
     await importOriginal<typeof import('../../utils/mcp-tools')>()
   return {
-    // Keep the real validator so fixtures need to be shaped correctly
-    isMcpToolDefinition: original.isMcpToolDefinition,
-    buildRawTransport: mockBuildRawTransport,
-    createTransport: mockCreateTransport,
+    ...original,
+    connectWorkloadMcpClient: mockConnectWorkloadMcpClient,
     getWorkloadAvailableTools: mockGetWorkloadAvailableTools,
   }
 })
-
-vi.mock('@ai-sdk/mcp', () => ({
-  createMCPClient: mockCreateMCPClient,
-}))
-
-vi.mock('@modelcontextprotocol/sdk/client/index.js', () => ({
-  // Named function constructor so `new Client(...)` works
-  Client: function ClientMock() {
-    return mockSdkClient
-  },
-}))
-
-// The schemas are passed through to the mocked client.request(), so they
-// just need to be non-undefined objects.
-vi.mock('@modelcontextprotocol/sdk/types.js', () => ({
-  ReadResourceResultSchema: {},
-  CallToolResultSchema: {},
-}))
 
 vi.mock('../../logger', () => ({
   default: { error: vi.fn(), warn: vi.fn(), info: vi.fn(), debug: vi.fn() },
@@ -150,12 +123,30 @@ const makeWorkload = (overrides: Record<string, unknown> = {}) => ({
   ...overrides,
 })
 
-/** Minimal object that passes isMcpToolDefinition validation. */
+/** Minimal native MCP tool returned by listTools(). */
+const makeNativeTool = (
+  name: string,
+  overrides: Record<string, unknown> = {}
+) => ({
+  name,
+  description: 'A test tool',
+  inputSchema: { type: 'object', properties: { foo: { type: 'string' } } },
+  ...overrides,
+})
+
 const makeToolDef = (overrides: Record<string, unknown> = {}) => ({
   description: 'A test tool',
   inputSchema: { type: 'object', properties: { foo: { type: 'string' } } },
   ...overrides,
 })
+
+function mockListedTools(toolsByName: Record<string, Record<string, unknown>>) {
+  mockNativeClient.listTools.mockResolvedValue({
+    tools: Object.entries(toolsByName).map(([name, def]) =>
+      makeNativeTool(name, def)
+    ),
+  })
+}
 
 // ---------------------------------------------------------------------------
 // Global per-test reset
@@ -173,19 +164,16 @@ beforeEach(() => {
   mockReadThreadEnabledMcpTools.mockReturnValue({})
 
   // Utils mocks
-  mockBuildRawTransport.mockReturnValue({ type: 'raw-mock-transport' })
-  mockCreateTransport.mockReturnValue({ name: 'test-server', transport: {} })
+  mockConnectWorkloadMcpClient.mockResolvedValue({
+    client: mockNativeClient,
+    close: mockConnectionClose,
+  })
   mockGetWorkloadAvailableTools.mockResolvedValue(null)
 
-  // Raw SDK client
-  mockSdkClient.connect.mockResolvedValue(undefined)
-  mockSdkClient.request.mockResolvedValue({ contents: [] })
-  mockSdkClient.close.mockResolvedValue(undefined)
-
-  // AI SDK client
-  mockAiMcpClient.tools.mockResolvedValue({})
-  mockAiMcpClient.close.mockResolvedValue(undefined)
-  mockCreateMCPClient.mockResolvedValue(mockAiMcpClient)
+  mockNativeClient.listTools.mockResolvedValue({ tools: [] })
+  mockNativeClient.readResource.mockResolvedValue({ contents: [] })
+  mockNativeClient.callTool.mockResolvedValue({ content: [] })
+  mockNativeClient.close.mockResolvedValue(undefined)
 
   // MCP App UI metadata DB reader/writer
   mockReadAllMcpAppUiMetadata.mockReturnValue({})
@@ -247,7 +235,7 @@ describe('getCachedUiMetadata', () => {
     mockReadEnabledMcpTools.mockReturnValue({
       'test-server': ['cached-tool'],
     })
-    mockAiMcpClient.tools.mockResolvedValue({ 'cached-tool': toolWithUi })
+    mockListedTools({ 'cached-tool': toolWithUi })
 
     await createMcpTools()
 
@@ -270,7 +258,7 @@ describe('fetchUiResource', () => {
     mockGetApiV1BetaWorkloads.mockResolvedValue({
       data: { workloads: [makeWorkload()] },
     })
-    mockSdkClient.request.mockResolvedValue({
+    mockNativeClient.readResource.mockResolvedValue({
       contents: [
         {
           text: '<html>hello</html>',
@@ -298,7 +286,7 @@ describe('fetchUiResource', () => {
       data: { workloads: [makeWorkload()] },
     })
     const html = '<html>blob</html>'
-    mockSdkClient.request.mockResolvedValue({
+    mockNativeClient.readResource.mockResolvedValue({
       contents: [{ blob: Buffer.from(html).toString('base64') }],
     })
 
@@ -311,7 +299,7 @@ describe('fetchUiResource', () => {
     mockGetApiV1BetaWorkloads.mockResolvedValue({
       data: { workloads: [makeWorkload()] },
     })
-    mockSdkClient.request.mockResolvedValue({ contents: [] })
+    mockNativeClient.readResource.mockResolvedValue({ contents: [] })
 
     await expect(fetchUiResource('test-server', 'res://empty')).rejects.toThrow(
       'Empty resource response'
@@ -322,7 +310,7 @@ describe('fetchUiResource', () => {
     mockGetApiV1BetaWorkloads.mockResolvedValue({
       data: { workloads: [makeWorkload()] },
     })
-    mockSdkClient.request.mockResolvedValue({ contents: [{}] })
+    mockNativeClient.readResource.mockResolvedValue({ contents: [{}] })
 
     await expect(fetchUiResource('test-server', 'res://bad')).rejects.toThrow(
       'Resource content has no text or blob'
@@ -333,23 +321,23 @@ describe('fetchUiResource', () => {
     mockGetApiV1BetaWorkloads.mockResolvedValue({
       data: { workloads: [makeWorkload()] },
     })
-    mockSdkClient.request.mockRejectedValue(new Error('network error'))
+    mockNativeClient.readResource.mockRejectedValue(new Error('network error'))
 
     await expect(fetchUiResource('test-server', 'res://fail')).rejects.toThrow()
-    expect(mockSdkClient.close).toHaveBeenCalledOnce()
+    expect(mockConnectionClose).toHaveBeenCalledOnce()
   })
 
   it('uses buildRawTransport for external servers', async () => {
     mockGetApiV1BetaWorkloads.mockResolvedValue({
       data: { workloads: [makeWorkload()] },
     })
-    mockSdkClient.request.mockResolvedValue({
+    mockNativeClient.readResource.mockResolvedValue({
       contents: [{ text: '<html>ext</html>' }],
     })
 
     await fetchUiResource('test-server', 'res://ext')
 
-    expect(mockBuildRawTransport).toHaveBeenCalledOnce()
+    expect(mockConnectWorkloadMcpClient).toHaveBeenCalledOnce()
   })
 
   it('throws when external server workload is not found', async () => {
@@ -374,32 +362,29 @@ describe('proxyMcpToolCall', () => {
       content: [{ type: 'text', text: 'done' }],
       isError: false,
     }
-    mockSdkClient.request.mockResolvedValue(toolResult)
+    mockNativeClient.callTool.mockResolvedValue(toolResult)
 
     const result = await proxyMcpToolCall('test-server', 'my-tool', {
       arg: 1,
     })
 
     expect(result).toEqual(toolResult)
-    expect(mockSdkClient.request).toHaveBeenCalledWith(
-      {
-        method: 'tools/call',
-        params: { name: 'my-tool', arguments: { arg: 1 } },
-      },
-      expect.anything()
-    )
+    expect(mockNativeClient.callTool).toHaveBeenCalledWith({
+      name: 'my-tool',
+      arguments: { arg: 1 },
+    })
   })
 
   it('always closes the client even when the request throws', async () => {
     mockGetApiV1BetaWorkloads.mockResolvedValue({
       data: { workloads: [makeWorkload()] },
     })
-    mockSdkClient.request.mockRejectedValue(new Error('call failed'))
+    mockNativeClient.callTool.mockRejectedValue(new Error('call failed'))
 
     await expect(
       proxyMcpToolCall('test-server', 'bad-tool', {})
     ).rejects.toThrow('call failed')
-    expect(mockSdkClient.close).toHaveBeenCalledOnce()
+    expect(mockConnectionClose).toHaveBeenCalledOnce()
   })
 })
 
@@ -480,13 +465,13 @@ describe('getMcpServerTools', () => {
 // ---------------------------------------------------------------------------
 
 describe('createMcpTools', () => {
-  it('returns empty tools and clients when no servers are enabled', async () => {
+  it('returns empty tools and close noop when no servers are enabled', async () => {
     mockReadEnabledMcpTools.mockReturnValue({})
 
-    const { tools, clients, enabledTools } = await createMcpTools()
+    const { tools, close, enabledTools } = await createMcpTools()
 
     expect(tools).toEqual({})
-    expect(clients).toHaveLength(0)
+    expect(typeof close).toBe('function')
     expect(enabledTools).toEqual({})
     expect(Sentry.addBreadcrumb).not.toHaveBeenCalled()
   })
@@ -507,7 +492,7 @@ describe('createMcpTools', () => {
     mockReadEnabledMcpTools.mockReturnValue({
       'test-server': ['schema-tool'],
     })
-    mockAiMcpClient.tools.mockResolvedValue({
+    mockListedTools({
       'schema-tool': toolWithDanglingRequired,
     })
 
@@ -540,7 +525,7 @@ describe('createMcpTools', () => {
     mockReadEnabledMcpTools.mockReturnValue({
       'test-server': ['enum-tool'],
     })
-    mockAiMcpClient.tools.mockResolvedValue({
+    mockListedTools({
       'enum-tool': toolWithBooleanEnum,
     })
 
@@ -550,7 +535,12 @@ describe('createMcpTools', () => {
     const registered = tools['enum-tool']
     expect(registered).toBeDefined()
 
-    expect(registered!.inputSchema).toEqual(toolWithBooleanEnum.inputSchema)
+    const schema = asSchema(registered!.inputSchema).jsonSchema as {
+      properties: {
+        delete: Record<string, unknown>
+      }
+    }
+    expect(schema.properties.delete).toEqual({ type: 'boolean', enum: [true] })
   })
 
   it('sanitizes schemas with JSON Schema if/then keywords when sanitizeSchemas is enabled', async () => {
@@ -572,7 +562,7 @@ describe('createMcpTools', () => {
     mockReadEnabledMcpTools.mockReturnValue({
       'test-server': ['conditional-tool'],
     })
-    mockAiMcpClient.tools.mockResolvedValue({
+    mockListedTools({
       'conditional-tool': toolWithConditionalSchema,
     })
 
@@ -618,7 +608,7 @@ describe('createMcpTools', () => {
     mockReadEnabledMcpTools.mockReturnValue({
       'test-server': ['enum-tool'],
     })
-    mockAiMcpClient.tools.mockResolvedValue({
+    mockListedTools({
       'enum-tool': toolWithBooleanEnum,
     })
 
@@ -657,7 +647,7 @@ describe('createMcpTools', () => {
       data: { workloads: [makeWorkload()] },
     })
     mockReadEnabledMcpTools.mockReturnValue({ 'test-server': ['cached'] })
-    mockAiMcpClient.tools.mockResolvedValue({ cached: toolWithUi })
+    mockListedTools({ cached: toolWithUi })
     await createMcpTools()
     expect(getCachedUiMetadata()).toHaveProperty('cached')
 
@@ -681,7 +671,7 @@ describe('createMcpTools', () => {
     mockReadEnabledMcpTools.mockReturnValue({
       'test-server': ['persist-tool'],
     })
-    mockAiMcpClient.tools.mockResolvedValue({ 'persist-tool': uiTool })
+    mockListedTools({ 'persist-tool': uiTool })
 
     await createMcpTools()
 
@@ -720,7 +710,7 @@ describe('createMcpTools', () => {
     mockReadEnabledMcpTools.mockReturnValueOnce({
       'test-server': ['survivor-tool'],
     })
-    mockAiMcpClient.tools.mockResolvedValueOnce({ 'survivor-tool': uiTool })
+    mockListedTools({ 'survivor-tool': uiTool })
 
     await createMcpTools()
     expect(getCachedUiMetadata()).toHaveProperty('survivor-tool')
@@ -761,23 +751,24 @@ describe('createMcpTools', () => {
 
     await createMcpTools()
 
-    expect(mockCreateMCPClient).not.toHaveBeenCalled()
+    expect(mockConnectWorkloadMcpClient).not.toHaveBeenCalled()
   })
 
-  it('registers per-server tools using createTransport', async () => {
+  it('registers per-server tools using connectWorkloadMcpClient', async () => {
     const workload = makeWorkload()
     mockGetApiV1BetaWorkloads.mockResolvedValue({
       data: { workloads: [workload] },
     })
     mockReadEnabledMcpTools.mockReturnValue({ 'test-server': ['tool-a'] })
-    mockAiMcpClient.tools.mockResolvedValue({ 'tool-a': makeToolDef() })
+    mockListedTools({ 'tool-a': makeToolDef() })
 
-    const { tools, clients } = await createMcpTools()
+    const { tools } = await createMcpTools()
 
     expect(tools).toHaveProperty('tool-a')
-    expect(clients).toHaveLength(1)
-    expect(mockCreateTransport).toHaveBeenCalledWith(workload)
-    expect(mockCreateMCPClient).toHaveBeenCalledWith(
+    expect(mockConnectWorkloadMcpClient).toHaveBeenCalled()
+
+    expect(mockConnectWorkloadMcpClient).toHaveBeenCalledWith(
+      workload,
       expect.objectContaining({
         capabilities: expect.objectContaining({
           extensions: expect.objectContaining({
@@ -800,7 +791,7 @@ describe('createMcpTools', () => {
     mockReadEnabledMcpTools.mockReturnValue({
       'test-server': ['app-only-tool'],
     })
-    mockAiMcpClient.tools.mockResolvedValue({ 'app-only-tool': appOnlyTool })
+    mockListedTools({ 'app-only-tool': appOnlyTool })
 
     await expect(createMcpTools()).rejects.toThrow(
       'No MCP tools are available from the enabled servers.'
@@ -819,7 +810,7 @@ describe('createMcpTools', () => {
       data: { workloads: [workload] },
     })
     mockReadEnabledMcpTools.mockReturnValue({ 'test-server': ['hybrid-tool'] })
-    mockAiMcpClient.tools.mockResolvedValue({ 'hybrid-tool': hybridTool })
+    mockListedTools({ 'hybrid-tool': hybridTool })
 
     const { tools } = await createMcpTools()
 
@@ -836,7 +827,7 @@ describe('createMcpTools', () => {
       data: { workloads: [workload] },
     })
     mockReadEnabledMcpTools.mockReturnValue({ 'test-server': ['ui-tool'] })
-    mockAiMcpClient.tools.mockResolvedValue({ 'ui-tool': uiTool })
+    mockListedTools({ 'ui-tool': uiTool })
 
     await createMcpTools()
 
@@ -863,7 +854,7 @@ describe('createMcpTools', () => {
       data: { workloads: [workload] },
     })
     mockReadEnabledMcpTools.mockReturnValue({ 'test-server': ['no-uri-tool'] })
-    mockAiMcpClient.tools.mockResolvedValue({ 'no-uri-tool': noUriTool })
+    mockListedTools({ 'no-uri-tool': noUriTool })
 
     await createMcpTools()
 
@@ -883,13 +874,13 @@ describe('createMcpTools', () => {
     )
   })
 
-  it('logs and continues when createMCPClient throws for a server', async () => {
+  it('logs and continues when connectWorkloadMcpClient throws for a server', async () => {
     const workload = makeWorkload()
     mockGetApiV1BetaWorkloads.mockResolvedValue({
       data: { workloads: [workload] },
     })
     mockReadEnabledMcpTools.mockReturnValue({ 'test-server': ['tool-a'] })
-    mockCreateMCPClient.mockRejectedValue(new Error('conn refused'))
+    mockConnectWorkloadMcpClient.mockRejectedValue(new Error('conn refused'))
 
     await expect(createMcpTools()).rejects.toThrow(
       'No MCP tools are available from the enabled servers.'
@@ -910,16 +901,17 @@ describe('createMcpTools', () => {
       'server-a': ['tool-a'],
       'server-b': ['tool-b'],
     })
-    mockCreateMCPClient
-      .mockRejectedValueOnce(new Error('conn refused'))
-      .mockResolvedValueOnce(mockAiMcpClient)
-    mockAiMcpClient.tools.mockResolvedValue({ 'tool-b': makeToolDef() })
+    mockConnectWorkloadMcpClient.mockRejectedValueOnce(
+      new Error('conn refused')
+    )
 
-    const { tools, clients } = await createMcpTools()
+    mockListedTools({ 'tool-b': makeToolDef() })
+
+    const { tools } = await createMcpTools()
 
     expect(tools).toHaveProperty('tool-b')
     expect(tools).not.toHaveProperty('tool-a')
-    expect(clients).toHaveLength(1)
+    expect(mockConnectWorkloadMcpClient).toHaveBeenCalled()
     expect(log.error).toHaveBeenCalledWith(
       'Failed to create MCP client for server-a:',
       expect.any(Error)
@@ -935,7 +927,7 @@ describe('createMcpTools', () => {
       'test-server': ['missing-tool'],
     })
     // Server returns no tools
-    mockAiMcpClient.tools.mockResolvedValue({})
+    mockListedTools({})
 
     await expect(createMcpTools()).rejects.toThrow(
       'No MCP tools are available from the enabled servers.'

@@ -1,178 +1,139 @@
-import { createMCPClient, type MCPClientConfig } from '@ai-sdk/mcp'
-import { type Tool } from 'ai'
-import { Experimental_StdioMCPTransport as StdioMCPTransport } from '@ai-sdk/mcp/mcp-stdio'
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
-import { SSEClientTransport } from '@modelcontextprotocol/sdk/client/sse.js'
-import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js'
+import {
+  Client,
+  SSEClientTransport,
+  StreamableHTTPClientTransport,
+  type ClientOptions,
+  type Transport,
+} from '@modelcontextprotocol/client'
+import { jsonSchema, type Tool } from 'ai'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
 import log from '../logger'
+import { normalizeMcpInputSchema } from './normalize-mcp-input-schema'
 
 export interface McpToolDefinition {
   description?: string
   inputSchema: Tool['inputSchema']
+  _meta?: Record<string, unknown>
 }
 
-export function isMcpToolDefinition(obj: unknown): obj is McpToolDefinition {
-  if (!obj || typeof obj !== 'object' || obj === null) return false
-
-  const tool = obj
-
-  // Description should be string if present
-  if (
-    'description' in tool &&
-    tool.description !== undefined &&
-    typeof tool.description !== 'string'
-  )
-    return false
-
-  // InputSchema should be object if present
-  if ('inputSchema' in tool && tool.inputSchema !== undefined) {
-    if (typeof tool.inputSchema !== 'object' || tool.inputSchema === null)
-      return false
-
-    const inputSchema = tool.inputSchema as Record<string, unknown>
-    if ('properties' in inputSchema && inputSchema.properties !== undefined) {
-      if (
-        typeof inputSchema.properties !== 'object' ||
-        inputSchema.properties === null ||
-        Array.isArray(inputSchema.properties)
-      ) {
-        return false
-      }
-    }
-  }
-
-  return true
+export const MCP_UI_EXTENSION_CAPABILITY = {
+  'io.modelcontextprotocol/ui': {
+    mimeTypes: ['text/html;profile=mcp-app'],
+  },
 }
 
-export function createTransport(workload: CoreWorkload): MCPClientConfig {
-  const transportConfigs = {
-    stdio: () => ({
-      name: workload.name,
-      transport: new StdioMCPTransport({
-        command: 'node',
-        args: [],
-      }),
-    }),
-    'streamable-http': () => {
-      // ToolHive provides the correct URL with path in workload.url
-      // Fallback to /mcp for local containers if url is missing
-      const urlString = workload.url || `http://localhost:${workload.port}/mcp`
-      // Use the AI SDK's transport config form (not a transport instance).
-      // `@ai-sdk/mcp` >=1.0.42 assigns to `transport.protocolVersion` after
-      // `initialize`, but `StreamableHTTPClientTransport` from
-      // `@modelcontextprotocol/sdk` exposes `protocolVersion` as a
-      // getter-only property and throws TypeError on assignment in strict
-      // mode, breaking tool discovery for every streamable-http server.
-      return {
-        name: workload.name,
-        transport: {
-          type: 'http' as const,
-          url: urlString,
-          // AI SDK v7 defaults redirect to 'error' (SSRF protection). ToolHive
-          // proxies are localhost and do not redirect; keep the secure default.
-        },
-      }
-    },
-    sse: () => ({
-      name: workload.name,
-      transport: {
-        type: 'sse' as const,
-        url: `http://localhost:${workload.port}/sse#${workload.name}`,
-      },
-    }),
-    default: () => ({
-      name: workload.name,
-      transport: {
-        type: 'sse' as const,
-        url: `http://localhost:${workload.port}/sse#${workload.name}`,
-      },
-    }),
-  }
+export interface ConnectWorkloadMcpClientOptions {
+  clientName?: string
+  capabilities?: ClientOptions['capabilities']
+}
 
-  // For stdio transport, ToolHive exposes the server via a proxy (SSE or streamable-http)
-  // Check proxy_mode or URL pattern to determine the actual transport to use
-  let transportType = workload.transport_type as keyof typeof transportConfigs
+export interface ConnectedMcpClient {
+  client: Client
+  close: () => Promise<void>
+}
+
+type ResolvedTransportType = 'streamable-http' | 'sse' | 'unsupported'
+
+function resolveTransportType(workload: CoreWorkload): ResolvedTransportType {
+  const transportType = workload.transport_type
 
   if (transportType === 'stdio') {
-    // Use proxy_mode if available, otherwise check URL pattern
     if (workload.proxy_mode === 'streamable-http') {
-      transportType = 'streamable-http'
-    } else if (
-      workload.proxy_mode === 'sse' ||
-      workload.url?.includes('/sse')
-    ) {
-      transportType = 'sse'
+      return 'streamable-http'
     }
+    if (workload.proxy_mode === 'sse' || workload.url?.includes('/sse')) {
+      return 'sse'
+    }
+    return 'unsupported'
   }
 
-  const configBuilder =
-    transportConfigs[transportType] || transportConfigs.default
-  return configBuilder()
+  if (transportType === 'streamable-http') return 'streamable-http'
+  if (transportType === 'sse') return 'sse'
+  return 'sse'
 }
 
-/**
- * Builds a raw SDK `Transport` for a workload. Unlike `createTransport`, this
- * returns a concrete transport instance suitable for `Client.connect()` from
- * `@modelcontextprotocol/sdk` rather than the AI SDK client config shape.
- */
-export function buildRawTransport(workload: CoreWorkload): Transport {
-  const config = createTransport(workload)
-  const { transport } = config
-  // `createTransport` returns AI SDK config shapes (`{ type: 'http' | 'sse',
-  // url }`) for HTTP-based transports. Materialize them into the raw SDK
-  // transport instances expected by `Client.connect()`.
-  const cfgTransport = transport as {
-    type?: string
-    url?: string | URL
+export function buildMcpClientTransport(workload: CoreWorkload): Transport {
+  const transportType = resolveTransportType(workload)
+
+  // Intentional: Studio only talks to ToolHive's HTTP/SSE proxy. Direct stdio
+  // without a resolved proxy_mode is a configuration race/error, not a silent
+  // fallback case — fail loudly so discovery surfaces the real problem.
+  if (transportType === 'unsupported') {
+    throw new Error(
+      `Workload ${workload.name ?? 'unknown'} has no HTTP proxy endpoint; use streamable-http or sse proxy_mode`
+    )
   }
-  if (cfgTransport.type === 'http' && cfgTransport.url) {
-    const url =
-      cfgTransport.url instanceof URL
-        ? cfgTransport.url
-        : new URL(cfgTransport.url)
-    return new StreamableHTTPClientTransport(url)
+
+  if (transportType === 'streamable-http') {
+    const urlString = workload.url || `http://localhost:${workload.port}/mcp`
+    return new StreamableHTTPClientTransport(new URL(urlString))
   }
-  if (cfgTransport.type === 'sse' && cfgTransport.url) {
-    const url =
-      cfgTransport.url instanceof URL
-        ? cfgTransport.url
-        : new URL(cfgTransport.url)
-    return new SSEClientTransport(url)
-  }
-  throw new Error(
-    `Unsupported raw transport for workload ${workload.name ?? 'unknown'}`
+
+  const sseUrl = workload.url?.includes('/sse')
+    ? workload.url
+    : `http://localhost:${workload.port}/sse#${workload.name}`
+  return new SSEClientTransport(new URL(sseUrl))
+}
+
+export async function connectWorkloadMcpClient(
+  workload: CoreWorkload,
+  options: ConnectWorkloadMcpClientOptions = {}
+): Promise<ConnectedMcpClient> {
+  const client = new Client(
+    {
+      name: options.clientName ?? 'toolhive-studio',
+      version: '1.0.0',
+    },
+    {
+      capabilities: options.capabilities,
+      versionNegotiation: { mode: 'auto' },
+      inputRequired: { autoFulfill: false },
+    }
   )
+
+  await client.connect(buildMcpClientTransport(workload))
+
+  let closed = false
+  const close = async () => {
+    if (closed) return
+    closed = true
+    await client.close()
+  }
+
+  return { client, close }
 }
 
-// Get available tools from a workload
 export async function getWorkloadAvailableTools(
   workload: CoreWorkload
 ): Promise<Record<string, McpToolDefinition> | null> {
   if (!workload.name) return null
 
-  try {
-    // Try to create an MCP client and discover tools
-    const config = createTransport(workload)
-    if (config) {
-      const mcpClient = await createMCPClient(config)
-      const rawTools = await mcpClient.tools<'automatic'>()
+  let connection: ConnectedMcpClient | null = null
 
-      // Filter and validate tools using type guard
-      const serverMcpTools: Record<string, McpToolDefinition> = {}
-      for (const [name, defTool] of Object.entries(rawTools)) {
-        if (!name || !isMcpToolDefinition(defTool)) continue
-        serverMcpTools[name] = {
-          description: defTool.description,
-          inputSchema: defTool.inputSchema as Tool['inputSchema'],
-        }
+  try {
+    connection = await connectWorkloadMcpClient(workload, {
+      clientName: 'toolhive-studio-discovery',
+    })
+    const { tools } = await connection.client.listTools()
+
+    const serverMcpTools: Record<string, McpToolDefinition> = {}
+    for (const tool of tools) {
+      if (!tool.name) continue
+
+      serverMcpTools[tool.name] = {
+        description: tool.description,
+        inputSchema: jsonSchema(normalizeMcpInputSchema(tool.inputSchema)),
+        _meta: tool._meta,
       }
-      await mcpClient.close()
-      return serverMcpTools
     }
-    return null
+
+    return serverMcpTools
   } catch (error) {
     log.error(`Failed to discover tools for ${workload.name}:`, error)
     throw error
+  } finally {
+    if (connection) {
+      await connection.close()
+    }
   }
 }
