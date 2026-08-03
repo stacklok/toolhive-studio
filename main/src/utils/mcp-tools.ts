@@ -31,44 +31,6 @@ export interface ConnectedMcpClient {
   close: () => Promise<void>
 }
 
-export function isMcpToolDefinition(obj: unknown): obj is McpToolDefinition {
-  if (!obj || typeof obj !== 'object' || obj === null) return false
-
-  const tool = obj as Record<string, unknown>
-
-  if (
-    'description' in tool &&
-    tool.description !== undefined &&
-    typeof tool.description !== 'string'
-  ) {
-    return false
-  }
-
-  if ('inputSchema' in tool && tool.inputSchema !== undefined) {
-    if (typeof tool.inputSchema !== 'object' || tool.inputSchema === null) {
-      return false
-    }
-
-    const inputSchema = tool.inputSchema as Record<string, unknown>
-    const schemaBody =
-      'jsonSchema' in inputSchema && inputSchema.jsonSchema
-        ? (inputSchema.jsonSchema as Record<string, unknown>)
-        : inputSchema
-
-    if (
-      'properties' in schemaBody &&
-      schemaBody.properties !== undefined &&
-      (typeof schemaBody.properties !== 'object' ||
-        schemaBody.properties === null ||
-        Array.isArray(schemaBody.properties))
-    ) {
-      return false
-    }
-  }
-
-  return true
-}
-
 type ResolvedTransportType = 'streamable-http' | 'sse' | 'unsupported'
 
 function resolveTransportType(workload: CoreWorkload): ResolvedTransportType {

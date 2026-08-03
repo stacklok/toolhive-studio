@@ -1,5 +1,4 @@
 import { dynamicTool, jsonSchema, type JSONSchema7, type JSONValue } from 'ai'
-import type { ToolResultOutput } from '@ai-sdk/provider-utils'
 import {
   isInputRequiredResult,
   type CallToolResult,
@@ -8,7 +7,7 @@ import {
 } from '@modelcontextprotocol/client'
 import { sanitizeJsonSchema } from '../../utils/sanitize-json-schema'
 
-export const INPUT_REQUIRED_UNSUPPORTED_MESSAGE =
+const INPUT_REQUIRED_UNSUPPORTED_MESSAGE =
   'This MCP server requested interactive input during tool execution, which the Playground does not support yet.'
 
 function normalizeInputSchema(schema: unknown, sanitize: boolean): JSONSchema7 {
@@ -28,17 +27,17 @@ function normalizeInputSchema(schema: unknown, sanitize: boolean): JSONSchema7 {
   return sanitize ? (sanitizeJsonSchema(normalized) as JSONSchema7) : normalized
 }
 
-export function mcpCallToolResultToModelOutput({
+function mcpCallToolResultToModelOutput({
   output,
 }: {
   toolCallId: string
   input: unknown
   output: unknown
-}): ToolResultOutput {
+}) {
   const result = output as CallToolResult
 
   if (!('content' in result) || !Array.isArray(result.content)) {
-    return { type: 'json', value: result as JSONValue }
+    return { type: 'json' as const, value: result as JSONValue }
   }
 
   const convertedContent = result.content.map(
@@ -57,7 +56,7 @@ export function mcpCallToolResultToModelOutput({
     }
   )
 
-  return { type: 'content', value: convertedContent }
+  return { type: 'content' as const, value: convertedContent }
 }
 
 export function createAiMcpTool(params: {
