@@ -40,6 +40,12 @@ overrides:
   js-yaml: '>=5.2.2'
   tmp: '>=0.2.7'
   'icon-gen>sharp': 0.35.3
+  # Security patches for transitive deps (GHSA-7p8r-x3mc-p8w7,
+  # GHSA-mwp4-54f8-5fhr / GHSA-4xrf-jv44-h6hh / GHSA-22jq-vg5j-6vgg,
+  # GHSA-8j4g-w8fx-2239). Cap fast-uri below v4 — ajv expects the v3 API.
+  fast-uri: '>=3.1.5 <4'
+  ip-address: '>=10.3.1'
+  hono: '>=4.12.34'
 
 patchedDependencies:
   electron-installer-redhat@3.4.0: patches/electron-installer-redhat@3.4.0.patch
@@ -47,3 +53,5 @@ patchedDependencies:
 minimumReleaseAgeExclude:
   # Temporary until @openrouter/ai-sdk-provider@3.0.0 clears release-age threshold
   - '@openrouter/ai-sdk-provider@3.0.0'
+  # Security patch younger than default minimumReleaseAge (1440m)
+  - hono@4.12.34
