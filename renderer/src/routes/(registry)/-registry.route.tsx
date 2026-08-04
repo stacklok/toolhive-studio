@@ -72,9 +72,8 @@ export default function RegistryRouteComponent() {
       // namespace prefix. Search the short name (segment after the last `/`) instead,
       // plus title/description/tags — the fields users actually see and think in.
       const name = item.name || ''
-      const shortName = name.includes('/')
-        ? (name.split('/').pop() ?? name)
-        : name
+      const slash = name.lastIndexOf('/')
+      const shortName = slash >= 0 ? name.slice(slash + 1) || name : name
       const title = ('title' in item && item.title) || ''
       const description = item.description || ''
       const tags =

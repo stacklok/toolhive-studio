@@ -301,6 +301,8 @@ describe('Bug: search for "github" should match GitHub MCP servers', () => {
   })
 
   it('still matches the short name after the namespace prefix', async () => {
+    // Title/description deliberately omit the search term so a match can only
+    // come from the short name extracted after the namespace prefix.
     mockedGetApiV1BetaRegistryByName.override(
       (data) =>
         ({
@@ -315,15 +317,15 @@ describe('Bug: search for "github" should match GitHub MCP servers', () => {
       servers: [
         {
           name: 'io.github.stacklok/fetch',
-          title: 'Fetch',
+          title: 'Web Content Retriever',
           image: 'mcp/fetch:latest',
-          description: 'Fetch content from the web.',
+          description: 'Pulls pages over HTTP.',
         },
         {
           name: 'io.github.stacklok/time',
-          title: 'Time',
+          title: 'Clock',
           image: 'mcp/time:latest',
-          description: 'Time server.',
+          description: 'Reports the current time.',
         },
       ],
       remote_servers: [],
@@ -332,16 +334,16 @@ describe('Bug: search for "github" should match GitHub MCP servers', () => {
     renderRoute(router)
 
     await waitFor(() => {
-      expect(screen.queryByText('Fetch')).toBeVisible()
+      expect(screen.queryByText('Web Content Retriever')).toBeVisible()
     })
 
     const searchInput = screen.getByPlaceholderText('Search...')
     await userEvent.type(searchInput, 'fetch')
 
     await waitFor(() => {
-      expect(screen.queryByText('Fetch')).toBeVisible()
+      expect(screen.queryByText('Web Content Retriever')).toBeVisible()
     })
-    expect(screen.queryByText('Time')).not.toBeInTheDocument()
+    expect(screen.queryByText('Clock')).not.toBeInTheDocument()
   })
 
   it('matches servers by tag', async () => {
