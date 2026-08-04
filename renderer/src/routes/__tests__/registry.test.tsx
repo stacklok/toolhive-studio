@@ -233,4 +233,160 @@ describe('Bug: search for "github" should match GitHub MCP servers', () => {
     // The unrelated MCP should be filtered out.
     expect(screen.queryByText('time')).not.toBeInTheDocument()
   })
+
+  it('does not match every server just because the namespace contains "github"', async () => {
+    // Production registry names are reverse-DNS namespaced, e.g.
+    // `io.github.stacklok/fetch`. Matching the full name makes searching
+    // "github" return (almost) the entire catalog — search appears broken.
+    mockedGetApiV1BetaRegistryByName.override(
+      (data) =>
+        ({
+          ...data,
+          registry: {
+            ...(data as V1GetRegistryResponse).registry,
+            groups: [],
+          },
+        }) as unknown as V1GetRegistryResponse
+    )
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          name: 'io.github.stacklok/gh-mcp-server',
+          title: 'GitHub',
+          image: 'mcp/gh-server:latest',
+          description: 'Official MCP server for accessing repos and PRs.',
+        },
+        {
+          name: 'io.github.stacklok/time',
+          title: 'Time',
+          image: 'mcp/time:latest',
+          description: 'Time server.',
+        },
+        {
+          name: 'io.github.stacklok/fetch',
+          title: 'Fetch',
+          image: 'mcp/fetch:latest',
+          description: 'Fetch content from the web.',
+        },
+      ],
+      remote_servers: [],
+    }))
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.queryByText('GitHub')).toBeVisible()
+      expect(screen.queryByText('Time')).toBeVisible()
+      expect(screen.queryByText('Fetch')).toBeVisible()
+    })
+
+    const searchInput = screen.getByPlaceholderText('Search...')
+    await userEvent.type(searchInput, 'github')
+
+    await waitFor(() => {
+      expect(
+        screen.queryByText('GitHub'),
+        'GitHub MCP should remain visible when searching "github"'
+      ).toBeVisible()
+    })
+
+    expect(
+      screen.queryByText('Time'),
+      'Unrelated namespaced server must not match via io.github.* prefix'
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByText('Fetch'),
+      'Unrelated namespaced server must not match via io.github.* prefix'
+    ).not.toBeInTheDocument()
+  })
+
+  it('still matches the short name after the namespace prefix', async () => {
+    mockedGetApiV1BetaRegistryByName.override(
+      (data) =>
+        ({
+          ...data,
+          registry: {
+            ...(data as V1GetRegistryResponse).registry,
+            groups: [],
+          },
+        }) as unknown as V1GetRegistryResponse
+    )
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          name: 'io.github.stacklok/fetch',
+          title: 'Fetch',
+          image: 'mcp/fetch:latest',
+          description: 'Fetch content from the web.',
+        },
+        {
+          name: 'io.github.stacklok/time',
+          title: 'Time',
+          image: 'mcp/time:latest',
+          description: 'Time server.',
+        },
+      ],
+      remote_servers: [],
+    }))
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.queryByText('Fetch')).toBeVisible()
+    })
+
+    const searchInput = screen.getByPlaceholderText('Search...')
+    await userEvent.type(searchInput, 'fetch')
+
+    await waitFor(() => {
+      expect(screen.queryByText('Fetch')).toBeVisible()
+    })
+    expect(screen.queryByText('Time')).not.toBeInTheDocument()
+  })
+
+  it('matches servers by tag', async () => {
+    mockedGetApiV1BetaRegistryByName.override(
+      (data) =>
+        ({
+          ...data,
+          registry: {
+            ...(data as V1GetRegistryResponse).registry,
+            groups: [],
+          },
+        }) as unknown as V1GetRegistryResponse
+    )
+    mockedGetApiV1BetaRegistryByNameServers.override(() => ({
+      servers: [
+        {
+          name: 'io.github.stacklok/content-fetcher',
+          title: 'Content Fetcher',
+          image: 'mcp/content-fetcher:latest',
+          description: 'Retrieves web pages.',
+          tags: ['html', 'markdown', 'scrape'],
+        },
+        {
+          name: 'io.github.stacklok/time',
+          title: 'Time',
+          image: 'mcp/time:latest',
+          description: 'Time server.',
+          tags: ['clock'],
+        },
+      ],
+      remote_servers: [],
+    }))
+
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(screen.queryByText('Content Fetcher')).toBeVisible()
+    })
+
+    const searchInput = screen.getByPlaceholderText('Search...')
+    await userEvent.type(searchInput, 'scrape')
+
+    await waitFor(() => {
+      expect(screen.queryByText('Content Fetcher')).toBeVisible()
+    })
+    expect(screen.queryByText('Time')).not.toBeInTheDocument()
+  })
 })

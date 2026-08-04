@@ -66,11 +66,22 @@ export default function RegistryRouteComponent() {
 
   const { filter, setFilter, filteredData } = useFilterSort({
     data: items,
-    filterFields: (item) => [
-      item.name || '',
-      ('title' in item && item.title) || '',
-      item.description || '',
-    ],
+    filterFields: (item) => {
+      // Registry names are reverse-DNS namespaced (e.g. `io.github.stacklok/fetch`).
+      // Matching the full name makes common terms like "github" hit every entry's
+      // namespace prefix. Search the short name (segment after the last `/`) instead,
+      // plus title/description/tags — the fields users actually see and think in.
+      const name = item.name || ''
+      const shortName = name.includes('/')
+        ? (name.split('/').pop() ?? name)
+        : name
+      const title = ('title' in item && item.title) || ''
+      const description = item.description || ''
+      const tags =
+        'tags' in item && Array.isArray(item.tags) ? item.tags.join(' ') : ''
+
+      return [shortName, title, description, tags]
+    },
     sortBy: (item) => item.name || '',
   })
 
