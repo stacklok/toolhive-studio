@@ -66,20 +66,27 @@ export default function RegistryRouteComponent() {
 
   const { filter, setFilter, filteredData } = useFilterSort({
     data: items,
-    filterFields: (item) => {
+    filterFields: (item, searchTerm) => {
       // Registry names are reverse-DNS namespaced (e.g. `io.github.stacklok/fetch`).
-      // Matching the full name makes common terms like "github" hit every entry's
-      // namespace prefix. Search the short name (segment after the last `/`) instead,
-      // plus title/description/tags — the fields users actually see and think in.
+      // Matching the full name for every query makes terms like "github" hit the
+      // namespace prefix on almost every entry. Prefer the short name (after the
+      // last `/`), plus title/description (what users see) and tags (common
+      // search terms). When the query itself contains `/`, also match the full
+      // name so pasting a CLI/docs reference still works.
       const name = item.name || ''
       const slash = name.lastIndexOf('/')
       const shortName = slash >= 0 ? name.slice(slash + 1) || name : name
       const title = ('title' in item && item.title) || ''
       const description = item.description || ''
-      const tags =
-        'tags' in item && Array.isArray(item.tags) ? item.tags.join(' ') : ''
+      const tags = 'tags' in item && Array.isArray(item.tags) ? item.tags : []
 
-      return [shortName, title, description, tags]
+      return [
+        shortName,
+        title,
+        description,
+        ...tags,
+        ...(searchTerm.includes('/') ? [name] : []),
+      ]
     },
     sortBy: (item) => item.name || '',
   })

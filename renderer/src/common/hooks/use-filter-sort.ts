@@ -2,7 +2,8 @@ import { useState, useMemo } from 'react'
 
 interface UseFilterSortOptions<T> {
   data: T[]
-  filterFields: (item: T) => string[]
+  /** Fields to match against. Receives the lowercased search term for query-aware matching. */
+  filterFields: (item: T, searchTerm: string) => string[]
   sortBy?: (item: T) => string
   sortOrder?: 'asc' | 'desc'
 }
@@ -26,7 +27,7 @@ export function useFilterSort<T>({
     return data
       .filter((item) => {
         if (!searchTerm) return true
-        const fields = filterFields(item)
+        const fields = filterFields(item, searchTerm)
         return fields.some((field) => field.toLowerCase().includes(searchTerm))
       })
       .sort((a, b) => {
