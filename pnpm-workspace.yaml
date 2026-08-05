@@ -37,7 +37,7 @@ overrides:
   # Only overrides where parent ranges cannot reach a patched version.
   '@electron/rebuild': ^4.2.0
   '@aws-sdk/xml-builder>fast-xml-parser': 5.10.1
-  js-yaml: '>=5.2.2'
+  js-yaml: '>=5.2.3'
   tmp: '>=0.2.7'
   'icon-gen>sharp': 0.35.3
   # Security patches for transitive deps (GHSA-7p8r-x3mc-p8w7,
