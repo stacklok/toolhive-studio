@@ -13,6 +13,8 @@ import {
   deleteApiV1BetaClientsByName,
   deleteApiV1BetaClientsByNameGroupsByGroup,
   deleteApiV1BetaGroupsByName,
+  deleteApiV1BetaPluginsBuildsByTag,
+  deleteApiV1BetaPluginsByName,
   deleteApiV1BetaRegistryByName,
   deleteApiV1BetaSecretsDefaultKeysByKey,
   deleteApiV1BetaSkillsBuildsByTag,
@@ -23,6 +25,10 @@ import {
   getApiV1BetaDiscoveryClients,
   getApiV1BetaGroups,
   getApiV1BetaGroupsByName,
+  getApiV1BetaPlugins,
+  getApiV1BetaPluginsBuilds,
+  getApiV1BetaPluginsByName,
+  getApiV1BetaPluginsContent,
   getApiV1BetaRegistry,
   getApiV1BetaRegistryByName,
   getApiV1BetaRegistryByNameServers,
@@ -45,6 +51,8 @@ import {
   getHealth,
   getRegistryByRegistryNameV01Servers,
   getRegistryByRegistryNameV01ServersByServerNameVersionsLatest,
+  getRegistryByRegistryNameV01xDevToolhivePlugins,
+  getRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginName,
   getRegistryByRegistryNameV01xDevToolhiveSkills,
   getRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillName,
   type Options,
@@ -52,6 +60,10 @@ import {
   postApiV1BetaClientsRegister,
   postApiV1BetaClientsUnregister,
   postApiV1BetaGroups,
+  postApiV1BetaPlugins,
+  postApiV1BetaPluginsBuild,
+  postApiV1BetaPluginsPush,
+  postApiV1BetaPluginsValidate,
   postApiV1BetaRegistry,
   postApiV1BetaRegistryAuthLogin,
   postApiV1BetaRegistryAuthLogout,
@@ -85,6 +97,12 @@ import type {
   DeleteApiV1BetaGroupsByNameData,
   DeleteApiV1BetaGroupsByNameError,
   DeleteApiV1BetaGroupsByNameResponse,
+  DeleteApiV1BetaPluginsBuildsByTagData,
+  DeleteApiV1BetaPluginsBuildsByTagError,
+  DeleteApiV1BetaPluginsBuildsByTagResponse,
+  DeleteApiV1BetaPluginsByNameData,
+  DeleteApiV1BetaPluginsByNameError,
+  DeleteApiV1BetaPluginsByNameResponse,
   DeleteApiV1BetaRegistryByNameData,
   DeleteApiV1BetaRegistryByNameError,
   DeleteApiV1BetaRegistryByNameResponse,
@@ -112,6 +130,18 @@ import type {
   GetApiV1BetaGroupsData,
   GetApiV1BetaGroupsError,
   GetApiV1BetaGroupsResponse,
+  GetApiV1BetaPluginsBuildsData,
+  GetApiV1BetaPluginsBuildsError,
+  GetApiV1BetaPluginsBuildsResponse,
+  GetApiV1BetaPluginsByNameData,
+  GetApiV1BetaPluginsByNameError,
+  GetApiV1BetaPluginsByNameResponse,
+  GetApiV1BetaPluginsContentData,
+  GetApiV1BetaPluginsContentError,
+  GetApiV1BetaPluginsContentResponse,
+  GetApiV1BetaPluginsData,
+  GetApiV1BetaPluginsError,
+  GetApiV1BetaPluginsResponse,
   GetApiV1BetaRegistryByNameData,
   GetApiV1BetaRegistryByNameError,
   GetApiV1BetaRegistryByNameResponse,
@@ -175,6 +205,12 @@ import type {
   GetRegistryByRegistryNameV01ServersData,
   GetRegistryByRegistryNameV01ServersError,
   GetRegistryByRegistryNameV01ServersResponse,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameData,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameError,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponse,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsData,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsError,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsResponse,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameError,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponse,
@@ -193,6 +229,18 @@ import type {
   PostApiV1BetaGroupsData,
   PostApiV1BetaGroupsError,
   PostApiV1BetaGroupsResponse,
+  PostApiV1BetaPluginsBuildData,
+  PostApiV1BetaPluginsBuildError,
+  PostApiV1BetaPluginsBuildResponse,
+  PostApiV1BetaPluginsData,
+  PostApiV1BetaPluginsError,
+  PostApiV1BetaPluginsPushData,
+  PostApiV1BetaPluginsPushError,
+  PostApiV1BetaPluginsPushResponse,
+  PostApiV1BetaPluginsResponse,
+  PostApiV1BetaPluginsValidateData,
+  PostApiV1BetaPluginsValidateError,
+  PostApiV1BetaPluginsValidateResponse,
   PostApiV1BetaRegistryAuthLoginData,
   PostApiV1BetaRegistryAuthLoginError,
   PostApiV1BetaRegistryAuthLoginResponse,
@@ -652,6 +700,301 @@ export const getApiV1BetaGroupsByNameOptions = (
       return data
     },
     queryKey: getApiV1BetaGroupsByNameQueryKey(options),
+  })
+
+export const getApiV1BetaPluginsQueryKey = (
+  options?: Options<GetApiV1BetaPluginsData>
+) => createQueryKey('getApiV1BetaPlugins', options)
+
+/**
+ * List all installed plugins
+ *
+ * Get a list of all installed plugins
+ */
+export const getApiV1BetaPluginsOptions = (
+  options?: Options<GetApiV1BetaPluginsData>
+) =>
+  queryOptions<
+    GetApiV1BetaPluginsResponse,
+    GetApiV1BetaPluginsError,
+    GetApiV1BetaPluginsResponse,
+    ReturnType<typeof getApiV1BetaPluginsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaPlugins({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaPluginsQueryKey(options),
+  })
+
+/**
+ * Install a plugin
+ *
+ * Install a plugin from a remote source
+ */
+export const postApiV1BetaPluginsMutation = (
+  options?: Partial<Options<PostApiV1BetaPluginsData>>
+): UseMutationOptions<
+  PostApiV1BetaPluginsResponse,
+  PostApiV1BetaPluginsError,
+  Options<PostApiV1BetaPluginsData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaPluginsResponse,
+    PostApiV1BetaPluginsError,
+    Options<PostApiV1BetaPluginsData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaPlugins({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Build a plugin
+ *
+ * Build a plugin from a local directory
+ */
+export const postApiV1BetaPluginsBuildMutation = (
+  options?: Partial<Options<PostApiV1BetaPluginsBuildData>>
+): UseMutationOptions<
+  PostApiV1BetaPluginsBuildResponse,
+  PostApiV1BetaPluginsBuildError,
+  Options<PostApiV1BetaPluginsBuildData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaPluginsBuildResponse,
+    PostApiV1BetaPluginsBuildError,
+    Options<PostApiV1BetaPluginsBuildData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaPluginsBuild({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const getApiV1BetaPluginsBuildsQueryKey = (
+  options?: Options<GetApiV1BetaPluginsBuildsData>
+) => createQueryKey('getApiV1BetaPluginsBuilds', options)
+
+/**
+ * List locally-built plugin artifacts
+ *
+ * Get a list of all locally-built OCI plugin artifacts in the local store
+ */
+export const getApiV1BetaPluginsBuildsOptions = (
+  options?: Options<GetApiV1BetaPluginsBuildsData>
+) =>
+  queryOptions<
+    GetApiV1BetaPluginsBuildsResponse,
+    GetApiV1BetaPluginsBuildsError,
+    GetApiV1BetaPluginsBuildsResponse,
+    ReturnType<typeof getApiV1BetaPluginsBuildsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaPluginsBuilds({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaPluginsBuildsQueryKey(options),
+  })
+
+/**
+ * Delete a locally-built plugin artifact
+ *
+ * Remove a locally-built OCI plugin artifact and its blobs from the local store
+ */
+export const deleteApiV1BetaPluginsBuildsByTagMutation = (
+  options?: Partial<Options<DeleteApiV1BetaPluginsBuildsByTagData>>
+): UseMutationOptions<
+  DeleteApiV1BetaPluginsBuildsByTagResponse,
+  DeleteApiV1BetaPluginsBuildsByTagError,
+  Options<DeleteApiV1BetaPluginsBuildsByTagData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1BetaPluginsBuildsByTagResponse,
+    DeleteApiV1BetaPluginsBuildsByTagError,
+    Options<DeleteApiV1BetaPluginsBuildsByTagData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await deleteApiV1BetaPluginsBuildsByTag({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const getApiV1BetaPluginsContentQueryKey = (
+  options: Options<GetApiV1BetaPluginsContentData>
+) => createQueryKey('getApiV1BetaPluginsContent', options)
+
+/**
+ * Get plugin content
+ *
+ * Retrieve the plugin.json body and file listing from an artifact
+ * without installing it. Accepts OCI refs, git refs, or local tags.
+ */
+export const getApiV1BetaPluginsContentOptions = (
+  options: Options<GetApiV1BetaPluginsContentData>
+) =>
+  queryOptions<
+    GetApiV1BetaPluginsContentResponse,
+    GetApiV1BetaPluginsContentError,
+    GetApiV1BetaPluginsContentResponse,
+    ReturnType<typeof getApiV1BetaPluginsContentQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaPluginsContent({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaPluginsContentQueryKey(options),
+  })
+
+/**
+ * Push a plugin
+ *
+ * Push a built plugin artifact to a remote registry
+ */
+export const postApiV1BetaPluginsPushMutation = (
+  options?: Partial<Options<PostApiV1BetaPluginsPushData>>
+): UseMutationOptions<
+  PostApiV1BetaPluginsPushResponse,
+  PostApiV1BetaPluginsPushError,
+  Options<PostApiV1BetaPluginsPushData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaPluginsPushResponse,
+    PostApiV1BetaPluginsPushError,
+    Options<PostApiV1BetaPluginsPushData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaPluginsPush({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Validate a plugin
+ *
+ * Validate a plugin definition
+ */
+export const postApiV1BetaPluginsValidateMutation = (
+  options?: Partial<Options<PostApiV1BetaPluginsValidateData>>
+): UseMutationOptions<
+  PostApiV1BetaPluginsValidateResponse,
+  PostApiV1BetaPluginsValidateError,
+  Options<PostApiV1BetaPluginsValidateData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaPluginsValidateResponse,
+    PostApiV1BetaPluginsValidateError,
+    Options<PostApiV1BetaPluginsValidateData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaPluginsValidate({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Uninstall a plugin
+ *
+ * Remove an installed plugin
+ */
+export const deleteApiV1BetaPluginsByNameMutation = (
+  options?: Partial<Options<DeleteApiV1BetaPluginsByNameData>>
+): UseMutationOptions<
+  DeleteApiV1BetaPluginsByNameResponse,
+  DeleteApiV1BetaPluginsByNameError,
+  Options<DeleteApiV1BetaPluginsByNameData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    DeleteApiV1BetaPluginsByNameResponse,
+    DeleteApiV1BetaPluginsByNameError,
+    Options<DeleteApiV1BetaPluginsByNameData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await deleteApiV1BetaPluginsByName({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+export const getApiV1BetaPluginsByNameQueryKey = (
+  options: Options<GetApiV1BetaPluginsByNameData>
+) => createQueryKey('getApiV1BetaPluginsByName', options)
+
+/**
+ * Get plugin details
+ *
+ * Get detailed information about a specific plugin
+ */
+export const getApiV1BetaPluginsByNameOptions = (
+  options: Options<GetApiV1BetaPluginsByNameData>
+) =>
+  queryOptions<
+    GetApiV1BetaPluginsByNameResponse,
+    GetApiV1BetaPluginsByNameError,
+    GetApiV1BetaPluginsByNameResponse,
+    ReturnType<typeof getApiV1BetaPluginsByNameQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getApiV1BetaPluginsByName({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getApiV1BetaPluginsByNameQueryKey(options),
   })
 
 export const getApiV1BetaRegistryQueryKey = (
@@ -2203,6 +2546,145 @@ export const getRegistryByRegistryNameV01ServersByServerNameVersionsLatestOption
       },
       queryKey:
         getRegistryByRegistryNameV01ServersByServerNameVersionsLatestQueryKey(
+          options
+        ),
+    })
+
+export const getRegistryByRegistryNameV01xDevToolhivePluginsQueryKey = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhivePluginsData>
+) => createQueryKey('getRegistryByRegistryNameV01XDevToolhivePlugins', options)
+
+/**
+ * List available registry plugins
+ *
+ * Get a paginated list of plugins from the registry. Supports optional full-text search and pagination.
+ */
+export const getRegistryByRegistryNameV01xDevToolhivePluginsOptions = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhivePluginsData>
+) =>
+  queryOptions<
+    GetRegistryByRegistryNameV01xDevToolhivePluginsResponse,
+    GetRegistryByRegistryNameV01xDevToolhivePluginsError,
+    GetRegistryByRegistryNameV01xDevToolhivePluginsResponse,
+    ReturnType<typeof getRegistryByRegistryNameV01xDevToolhivePluginsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await getRegistryByRegistryNameV01xDevToolhivePlugins({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      })
+      return data
+    },
+    queryKey: getRegistryByRegistryNameV01xDevToolhivePluginsQueryKey(options),
+  })
+
+export const getRegistryByRegistryNameV01xDevToolhivePluginsInfiniteQueryKey = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhivePluginsData>
+): QueryKey<Options<GetRegistryByRegistryNameV01xDevToolhivePluginsData>> =>
+  createQueryKey(
+    'getRegistryByRegistryNameV01XDevToolhivePlugins',
+    options,
+    true
+  )
+
+/**
+ * List available registry plugins
+ *
+ * Get a paginated list of plugins from the registry. Supports optional full-text search and pagination.
+ */
+export const getRegistryByRegistryNameV01xDevToolhivePluginsInfiniteOptions = (
+  options: Options<GetRegistryByRegistryNameV01xDevToolhivePluginsData>
+) => {
+  const opts = infiniteQueryOptions<
+    GetRegistryByRegistryNameV01xDevToolhivePluginsResponse,
+    GetRegistryByRegistryNameV01xDevToolhivePluginsError,
+    InfiniteData<GetRegistryByRegistryNameV01xDevToolhivePluginsResponse>,
+    QueryKey<Options<GetRegistryByRegistryNameV01xDevToolhivePluginsData>>,
+    | number
+    | Pick<
+        QueryKey<
+          Options<GetRegistryByRegistryNameV01xDevToolhivePluginsData>
+        >[0],
+        'body' | 'headers' | 'path' | 'query'
+      >
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<
+          QueryKey<
+            Options<GetRegistryByRegistryNameV01xDevToolhivePluginsData>
+          >[0],
+          'body' | 'headers' | 'path' | 'query'
+        > =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  page: pageParam,
+                },
+              }
+        const params = createInfiniteParams(queryKey, page)
+        const { data } = await getRegistryByRegistryNameV01xDevToolhivePlugins({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        })
+        return data
+      },
+      queryKey:
+        getRegistryByRegistryNameV01xDevToolhivePluginsInfiniteQueryKey(
+          options
+        ),
+    }
+  )
+  return opts as Omit<typeof opts, 'initialData'>
+}
+
+export const getRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameQueryKey =
+  (
+    options: Options<GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameData>
+  ) =>
+    createQueryKey(
+      'getRegistryByRegistryNameV01XDevToolhivePluginsByNamespaceByPluginName',
+      options
+    )
+
+/**
+ * Get a registry plugin
+ *
+ * Retrieve a single plugin by its namespace and name from the registry.
+ */
+export const getRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameOptions =
+  (
+    options: Options<GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameData>
+  ) =>
+    queryOptions<
+      GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponse,
+      GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameError,
+      GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponse,
+      ReturnType<
+        typeof getRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameQueryKey
+      >
+    >({
+      queryFn: async ({ queryKey, signal }) => {
+        const { data } =
+          await getRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginName(
+            {
+              ...options,
+              ...queryKey[0],
+              signal,
+              throwOnError: true,
+            }
+          )
+        return data
+      },
+      queryKey:
+        getRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameQueryKey(
           options
         ),
     })

@@ -18,6 +18,12 @@ import type {
   DeleteApiV1BetaGroupsByNameData,
   DeleteApiV1BetaGroupsByNameErrors,
   DeleteApiV1BetaGroupsByNameResponses,
+  DeleteApiV1BetaPluginsBuildsByTagData,
+  DeleteApiV1BetaPluginsBuildsByTagErrors,
+  DeleteApiV1BetaPluginsBuildsByTagResponses,
+  DeleteApiV1BetaPluginsByNameData,
+  DeleteApiV1BetaPluginsByNameErrors,
+  DeleteApiV1BetaPluginsByNameResponses,
   DeleteApiV1BetaRegistryByNameData,
   DeleteApiV1BetaRegistryByNameErrors,
   DeleteApiV1BetaRegistryByNameResponses,
@@ -45,6 +51,18 @@ import type {
   GetApiV1BetaGroupsData,
   GetApiV1BetaGroupsErrors,
   GetApiV1BetaGroupsResponses,
+  GetApiV1BetaPluginsBuildsData,
+  GetApiV1BetaPluginsBuildsErrors,
+  GetApiV1BetaPluginsBuildsResponses,
+  GetApiV1BetaPluginsByNameData,
+  GetApiV1BetaPluginsByNameErrors,
+  GetApiV1BetaPluginsByNameResponses,
+  GetApiV1BetaPluginsContentData,
+  GetApiV1BetaPluginsContentErrors,
+  GetApiV1BetaPluginsContentResponses,
+  GetApiV1BetaPluginsData,
+  GetApiV1BetaPluginsErrors,
+  GetApiV1BetaPluginsResponses,
   GetApiV1BetaRegistryByNameData,
   GetApiV1BetaRegistryByNameErrors,
   GetApiV1BetaRegistryByNameResponses,
@@ -108,6 +126,12 @@ import type {
   GetRegistryByRegistryNameV01ServersData,
   GetRegistryByRegistryNameV01ServersErrors,
   GetRegistryByRegistryNameV01ServersResponses,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameData,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameErrors,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponses,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsData,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsErrors,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsResponses,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameData,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameErrors,
   GetRegistryByRegistryNameV01xDevToolhiveSkillsByNamespaceBySkillNameResponses,
@@ -126,6 +150,18 @@ import type {
   PostApiV1BetaGroupsData,
   PostApiV1BetaGroupsErrors,
   PostApiV1BetaGroupsResponses,
+  PostApiV1BetaPluginsBuildData,
+  PostApiV1BetaPluginsBuildErrors,
+  PostApiV1BetaPluginsBuildResponses,
+  PostApiV1BetaPluginsData,
+  PostApiV1BetaPluginsErrors,
+  PostApiV1BetaPluginsPushData,
+  PostApiV1BetaPluginsPushErrors,
+  PostApiV1BetaPluginsPushResponses,
+  PostApiV1BetaPluginsResponses,
+  PostApiV1BetaPluginsValidateData,
+  PostApiV1BetaPluginsValidateErrors,
+  PostApiV1BetaPluginsValidateResponses,
   PostApiV1BetaRegistryAuthLoginData,
   PostApiV1BetaRegistryAuthLoginErrors,
   PostApiV1BetaRegistryAuthLoginResponses,
@@ -459,6 +495,223 @@ export const getApiV1BetaGroupsByName = <ThrowOnError extends boolean = false>(
     GetApiV1BetaGroupsByNameErrors,
     ThrowOnError
   >({ url: '/api/v1beta/groups/{name}', ...options })
+
+/**
+ * List all installed plugins
+ *
+ * Get a list of all installed plugins
+ */
+export const getApiV1BetaPlugins = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1BetaPluginsData, ThrowOnError>
+): RequestResult<
+  GetApiV1BetaPluginsResponses,
+  GetApiV1BetaPluginsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    GetApiV1BetaPluginsResponses,
+    GetApiV1BetaPluginsErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/plugins', ...options })
+
+/**
+ * Install a plugin
+ *
+ * Install a plugin from a remote source
+ */
+export const postApiV1BetaPlugins = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaPluginsData, ThrowOnError>
+): RequestResult<
+  PostApiV1BetaPluginsResponses,
+  PostApiV1BetaPluginsErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1BetaPluginsResponses,
+    PostApiV1BetaPluginsErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/plugins',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Build a plugin
+ *
+ * Build a plugin from a local directory
+ */
+export const postApiV1BetaPluginsBuild = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaPluginsBuildData, ThrowOnError>
+): RequestResult<
+  PostApiV1BetaPluginsBuildResponses,
+  PostApiV1BetaPluginsBuildErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1BetaPluginsBuildResponses,
+    PostApiV1BetaPluginsBuildErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/plugins/build',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * List locally-built plugin artifacts
+ *
+ * Get a list of all locally-built OCI plugin artifacts in the local store
+ */
+export const getApiV1BetaPluginsBuilds = <ThrowOnError extends boolean = false>(
+  options?: Options<GetApiV1BetaPluginsBuildsData, ThrowOnError>
+): RequestResult<
+  GetApiV1BetaPluginsBuildsResponses,
+  GetApiV1BetaPluginsBuildsErrors,
+  ThrowOnError
+> =>
+  (options?.client ?? client).get<
+    GetApiV1BetaPluginsBuildsResponses,
+    GetApiV1BetaPluginsBuildsErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/plugins/builds', ...options })
+
+/**
+ * Delete a locally-built plugin artifact
+ *
+ * Remove a locally-built OCI plugin artifact and its blobs from the local store
+ */
+export const deleteApiV1BetaPluginsBuildsByTag = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1BetaPluginsBuildsByTagData, ThrowOnError>
+): RequestResult<
+  DeleteApiV1BetaPluginsBuildsByTagResponses,
+  DeleteApiV1BetaPluginsBuildsByTagErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteApiV1BetaPluginsBuildsByTagResponses,
+    DeleteApiV1BetaPluginsBuildsByTagErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/plugins/builds/{tag}', ...options })
+
+/**
+ * Get plugin content
+ *
+ * Retrieve the plugin.json body and file listing from an artifact
+ * without installing it. Accepts OCI refs, git refs, or local tags.
+ */
+export const getApiV1BetaPluginsContent = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<GetApiV1BetaPluginsContentData, ThrowOnError>
+): RequestResult<
+  GetApiV1BetaPluginsContentResponses,
+  GetApiV1BetaPluginsContentErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetApiV1BetaPluginsContentResponses,
+    GetApiV1BetaPluginsContentErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/plugins/content', ...options })
+
+/**
+ * Push a plugin
+ *
+ * Push a built plugin artifact to a remote registry
+ */
+export const postApiV1BetaPluginsPush = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaPluginsPushData, ThrowOnError>
+): RequestResult<
+  PostApiV1BetaPluginsPushResponses,
+  PostApiV1BetaPluginsPushErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1BetaPluginsPushResponses,
+    PostApiV1BetaPluginsPushErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/plugins/push',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Validate a plugin
+ *
+ * Validate a plugin definition
+ */
+export const postApiV1BetaPluginsValidate = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaPluginsValidateData, ThrowOnError>
+): RequestResult<
+  PostApiV1BetaPluginsValidateResponses,
+  PostApiV1BetaPluginsValidateErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1BetaPluginsValidateResponses,
+    PostApiV1BetaPluginsValidateErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/plugins/validate',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Uninstall a plugin
+ *
+ * Remove an installed plugin
+ */
+export const deleteApiV1BetaPluginsByName = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<DeleteApiV1BetaPluginsByNameData, ThrowOnError>
+): RequestResult<
+  DeleteApiV1BetaPluginsByNameResponses,
+  DeleteApiV1BetaPluginsByNameErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).delete<
+    DeleteApiV1BetaPluginsByNameResponses,
+    DeleteApiV1BetaPluginsByNameErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/plugins/{name}', ...options })
+
+/**
+ * Get plugin details
+ *
+ * Get detailed information about a specific plugin
+ */
+export const getApiV1BetaPluginsByName = <ThrowOnError extends boolean = false>(
+  options: Options<GetApiV1BetaPluginsByNameData, ThrowOnError>
+): RequestResult<
+  GetApiV1BetaPluginsByNameResponses,
+  GetApiV1BetaPluginsByNameErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetApiV1BetaPluginsByNameResponses,
+    GetApiV1BetaPluginsByNameErrors,
+    ThrowOnError
+  >({ url: '/api/v1beta/plugins/{name}', ...options })
 
 /**
  * List registries
@@ -1533,6 +1786,54 @@ export const getRegistryByRegistryNameV01ServersByServerNameVersionsLatest = <
     url: '/registry/{registryName}/v0.1/servers/{serverName}/versions/latest',
     ...options,
   })
+
+/**
+ * List available registry plugins
+ *
+ * Get a paginated list of plugins from the registry. Supports optional full-text search and pagination.
+ */
+export const getRegistryByRegistryNameV01xDevToolhivePlugins = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<
+    GetRegistryByRegistryNameV01xDevToolhivePluginsData,
+    ThrowOnError
+  >
+): RequestResult<
+  GetRegistryByRegistryNameV01xDevToolhivePluginsResponses,
+  GetRegistryByRegistryNameV01xDevToolhivePluginsErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).get<
+    GetRegistryByRegistryNameV01xDevToolhivePluginsResponses,
+    GetRegistryByRegistryNameV01xDevToolhivePluginsErrors,
+    ThrowOnError
+  >({ url: '/registry/{registryName}/v0.1/x/dev.toolhive/plugins', ...options })
+
+/**
+ * Get a registry plugin
+ *
+ * Retrieve a single plugin by its namespace and name from the registry.
+ */
+export const getRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginName =
+  <ThrowOnError extends boolean = false>(
+    options: Options<
+      GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameData,
+      ThrowOnError
+    >
+  ): RequestResult<
+    GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponses,
+    GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameErrors,
+    ThrowOnError
+  > =>
+    (options.client ?? client).get<
+      GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponses,
+      GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameErrors,
+      ThrowOnError
+    >({
+      url: '/registry/{registryName}/v0.1/x/dev.toolhive/plugins/{namespace}/{pluginName}',
+      ...options,
+    })
 
 /**
  * List available registry skills
