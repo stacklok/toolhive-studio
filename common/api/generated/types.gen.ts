@@ -874,6 +874,222 @@ export type GithubComStacklokToolhivePkgGroupsGroup = {
   skills?: Array<string>
 }
 
+export type GithubComStacklokToolhivePkgPluginsBuildResult = {
+  /**
+   * Reference is the OCI reference of the built skill artifact.
+   */
+  reference?: string
+}
+
+/**
+ * Components is the inventory of component types declared by the plugin
+ * (e.g. {"commands": 3, "skills": 2}). Extracted from the OCI artifact.
+ */
+export type GithubComStacklokToolhivePkgPluginsComponentInventory = {
+  [key: string]: number
+}
+
+export type GithubComStacklokToolhivePkgPluginsComponentType =
+  'commands' | 'agents' | 'skills' | 'hooks' | 'mcpServers' | 'lspServers'
+
+export type GithubComStacklokToolhivePkgPluginsDependency = {
+  /**
+   * Digest is the OCI digest for upgrade detection.
+   */
+  digest?: string
+  /**
+   * Name is the dependency name.
+   */
+  name?: string
+  /**
+   * Reference is the OCI reference for the dependency.
+   */
+  reference?: string
+}
+
+/**
+ * Status is the current installation status.
+ */
+export type GithubComStacklokToolhivePkgPluginsInstallStatus =
+  'installed' | 'pending' | 'failed'
+
+/**
+ * InstalledPlugin contains the full installation record.
+ */
+export type GithubComStacklokToolhivePkgPluginsInstalledPlugin = {
+  /**
+   * Clients is the list of client identifiers the plugin is installed for.
+   */
+  clients?: Array<string>
+  components?: GithubComStacklokToolhivePkgPluginsComponentInventory
+  /**
+   * Dependencies is the list of external plugin dependencies.
+   */
+  dependencies?: Array<GithubComStacklokToolhivePkgPluginsDependency>
+  /**
+   * Digest is the OCI digest (sha256:...) for upgrade detection.
+   */
+  digest?: string
+  /**
+   * InstalledAt is the timestamp when the plugin was installed.
+   */
+  installed_at?: string
+  metadata?: GithubComStacklokToolhivePkgPluginsPluginMetadata
+  /**
+   * ProjectRoot is the project root path for project-scoped plugins. Empty for user-scoped.
+   */
+  project_root?: string
+  /**
+   * Reference is the full OCI reference (e.g. ghcr.io/org/plugin:v1).
+   */
+  reference?: string
+  scope?: GithubComStacklokToolhivePkgPluginsScope
+  /**
+   * Signature is the optional signing signature for the plugin artifact.
+   */
+  signature?: string
+  status?: GithubComStacklokToolhivePkgPluginsInstallStatus
+  /**
+   * Tag is the OCI tag (e.g. v1.0.0).
+   */
+  tag?: string
+}
+
+export type GithubComStacklokToolhivePkgPluginsLocalBuild = {
+  /**
+   * Description is the skill description extracted from the artifact metadata, if available.
+   */
+  description?: string
+  /**
+   * Digest is the OCI digest of the artifact (sha256:...).
+   */
+  digest?: string
+  /**
+   * Name is the skill name extracted from the artifact metadata, if available.
+   */
+  name?: string
+  /**
+   * Tag is the OCI tag or name used to reference the artifact.
+   */
+  tag?: string
+  /**
+   * Version is the skill version extracted from the artifact metadata, if available.
+   */
+  version?: string
+}
+
+export type GithubComStacklokToolhivePkgPluginsPluginContent = {
+  /**
+   * Description is the plugin description from the OCI config labels.
+   */
+  description?: string
+  /**
+   * Files is the list of all files in the artifact with their sizes.
+   */
+  files?: Array<GithubComStacklokToolhivePkgPluginsPluginFileEntry>
+  /**
+   * License is the SPDX license identifier from the OCI config labels.
+   */
+  license?: string
+  /**
+   * Manifest is the raw .claude-plugin/plugin.json body.
+   */
+  manifest?: string
+  /**
+   * Name is the plugin name from the OCI config labels.
+   */
+  name?: string
+  /**
+   * Version is the plugin version from the OCI config labels.
+   */
+  version?: string
+}
+
+export type GithubComStacklokToolhivePkgPluginsPluginFileEntry = {
+  /**
+   * Path is the file path within the artifact.
+   */
+  path?: string
+  /**
+   * Size is the uncompressed file size in bytes.
+   */
+  size?: number
+}
+
+export type GithubComStacklokToolhivePkgPluginsPluginInfo = {
+  installed_plugin?: GithubComStacklokToolhivePkgPluginsInstalledPlugin
+  metadata?: GithubComStacklokToolhivePkgPluginsPluginMetadata
+  /**
+   * ProjectScopeDegradedClients lists the client types for which a
+   * project-scoped install degraded (the adapter could only materialize at
+   * user scope — e.g. Codex always writes to the user-scoped config.toml).
+   * Populated by Info; empty for user-scoped installs. Recomputed at read
+   * time from the stored scope + each adapter's capability, mirroring the
+   * UnmaterializedComponents pattern (no persistence needed — the degradation
+   * is deterministic from scope + client type).
+   */
+  project_scope_degraded_clients?: Array<string>
+  /**
+   * UnmaterializedComponents lists, per client type, the component types the
+   * plugin declares that the installed client adapter does NOT load. Populated
+   * by Info by diffing InstalledPlugin.Components against each installed
+   * client adapter's SupportedComponents.
+   */
+  unmaterialized_components?: {
+    [key: string]: Array<GithubComStacklokToolhivePkgPluginsComponentType>
+  }
+}
+
+/**
+ * Metadata contains the plugin's metadata.
+ */
+export type GithubComStacklokToolhivePkgPluginsPluginMetadata = {
+  /**
+   * Author is the plugin author or maintainer.
+   */
+  author?: string
+  /**
+   * Description is a human-readable description of the plugin.
+   */
+  description?: string
+  /**
+   * Keywords is a list of keywords for categorization/search.
+   */
+  keywords?: Array<string>
+  /**
+   * License is the SPDX license identifier for the plugin.
+   */
+  license?: string
+  /**
+   * Name is the unique name of the plugin (kebab-case).
+   */
+  name?: string
+  /**
+   * Version is the semantic version of the plugin.
+   */
+  version?: string
+}
+
+/**
+ * Scope for the installation
+ */
+export type GithubComStacklokToolhivePkgPluginsScope = 'user' | 'project'
+
+export type GithubComStacklokToolhivePkgPluginsValidationResult = {
+  /**
+   * Errors is a list of validation errors, if any.
+   */
+  errors?: Array<string>
+  /**
+   * Valid indicates whether the skill definition is valid.
+   */
+  valid?: boolean
+  /**
+   * Warnings is a list of non-blocking validation warnings, if any.
+   */
+  warnings?: Array<string>
+}
+
 /**
  * PerUser token bucket configuration for this tool.
  * +optional
@@ -1275,6 +1491,9 @@ export type GithubComStacklokToolhivePkgSkillsFailureReason =
   | 'digest-missing'
   | 'validation-rejected'
   | 'lock-write-failed'
+  | 'signature-invalid'
+  | 'signer-mismatch'
+  | 'unsigned-rejected'
   | 'unknown'
 
 /**
@@ -1496,6 +1715,11 @@ export type GithubComStacklokToolhivePkgSkillsUpgradeOutcome = {
    */
   new_resolved_reference?: string
   /**
+   * NewSignerIdentity is the candidate's signer identity when it differs
+   * from the recorded one (empty when the candidate is unsigned).
+   */
+  new_signer_identity?: string
+  /**
    * OldDigest is the digest pinned in the lock file before this operation.
    */
   old_digest?: string
@@ -1514,7 +1738,12 @@ export type GithubComStacklokToolhivePkgSkillsUpgradeResult = {
  * Status is the outcome of the upgrade attempt.
  */
 export type GithubComStacklokToolhivePkgSkillsUpgradeStatus =
-  'upgraded' | 'up-to-date' | 'not-upgradable' | 'ref-change-blocked' | 'failed'
+  | 'upgraded'
+  | 'up-to-date'
+  | 'not-upgradable'
+  | 'ref-change-blocked'
+  | 'signer-change-blocked'
+  | 'failed'
 
 export type GithubComStacklokToolhivePkgSkillsValidationResult = {
   /**
@@ -1956,6 +2185,20 @@ export type PkgApiV1BuildListResponse = {
 }
 
 /**
+ * Request to build a plugin from a local directory
+ */
+export type PkgApiV1BuildPluginRequest = {
+  /**
+   * Path to the plugin definition directory
+   */
+  path?: string
+  /**
+   * OCI tag for the built artifact
+   */
+  tag?: string
+}
+
+/**
  * Request to build a skill from a local directory
  */
 export type PkgApiV1BuildSkillRequest = {
@@ -2274,9 +2517,55 @@ export type PkgApiV1HeaderForwardConfig = {
 }
 
 /**
+ * Request to install a plugin
+ */
+export type PkgApiV1InstallPluginRequest = {
+  /**
+   * Clients lists target client identifiers (e.g., "claude-code"),
+   * or ["all"] to target every plugin-supporting client.
+   * Omitting this field installs to all available clients.
+   */
+  clients?: Array<string>
+  /**
+   * Force allows overwriting unmanaged plugin directories
+   */
+  force?: boolean
+  /**
+   * Group is the group name to add the plugin to after installation
+   */
+  group?: string
+  /**
+   * Name or OCI reference of the plugin to install
+   */
+  name?: string
+  /**
+   * ProjectRoot is the project root path for project-scoped installs
+   */
+  project_root?: string
+  scope?: GithubComStacklokToolhivePkgPluginsScope
+  /**
+   * Version to install (empty means latest)
+   */
+  version?: string
+}
+
+/**
+ * Response after successfully installing a plugin
+ */
+export type PkgApiV1InstallPluginResponse = {
+  plugin?: GithubComStacklokToolhivePkgPluginsInstalledPlugin
+}
+
+/**
  * Request to install a skill
  */
 export type PkgApiV1InstallSkillRequest = {
+  /**
+   * AllowUnsigned permits installing a project-scoped skill without a
+   * verified signature; the exception is recorded in the project's lock
+   * file.
+   */
+  allow_unsigned?: boolean
   /**
    * Clients lists target client identifiers (e.g., "claude-code"),
    * or ["all"] to target every skill-supporting client.
@@ -2390,6 +2679,37 @@ export type PkgApiV1PaginationV01Metadata = {
 }
 
 /**
+ * Response containing a list of locally-built OCI plugin artifacts
+ */
+export type PkgApiV1PluginBuildListResponse = {
+  /**
+   * List of locally-built OCI plugin artifacts
+   */
+  builds?: Array<GithubComStacklokToolhivePkgPluginsLocalBuild>
+}
+
+/**
+ * Response containing a list of installed plugins
+ */
+export type PkgApiV1PluginListResponse = {
+  /**
+   * List of installed plugins
+   */
+  plugins?: Array<GithubComStacklokToolhivePkgPluginsInstalledPlugin>
+}
+
+/**
+ * Paginated list of plugins from the registry
+ */
+export type PkgApiV1PluginsV01Response = {
+  metadata?: PkgApiV1PaginationV01Metadata
+  /**
+   * Plugins is the list of plugins on the current page
+   */
+  plugins?: Array<RegistryPlugin>
+}
+
+/**
  * Capabilities of the secrets provider
  */
 export type PkgApiV1ProviderCapabilitiesResponse = {
@@ -2413,6 +2733,16 @@ export type PkgApiV1ProviderCapabilitiesResponse = {
    * Whether the provider can write secrets
    */
   can_write?: boolean
+}
+
+/**
+ * Request to push a built plugin artifact
+ */
+export type PkgApiV1PushPluginRequest = {
+  /**
+   * OCI reference to push
+   */
+  reference?: string
 }
 
 /**
@@ -2623,6 +2953,11 @@ export type PkgApiV1SyncSkillsRequest = {
    */
   adopt?: boolean
   /**
+   * AllowUnsigned permits adopting skills whose signature state cannot be
+   * established, recording them as unsigned
+   */
+  allow_unsigned?: boolean
+  /**
    * Check verifies on-disk content against the lock file without installing or writing anything
    */
   check?: boolean
@@ -2822,6 +3157,11 @@ export type PkgApiV1UpgradeSkillsRequest = {
    */
   allow_ref_change?: boolean
   /**
+   * AllowSignerChange permits upgrading to an artifact signed by a
+   * different identity than the recorded one
+   */
+  allow_signer_change?: boolean
+  /**
    * Clients lists target client identifiers. Empty means every
    * skill-supporting client detected on this host.
    */
@@ -2842,6 +3182,16 @@ export type PkgApiV1UpgradeSkillsRequest = {
    * ProjectRoot is the project root path whose lock file should be upgraded
    */
   project_root?: string
+}
+
+/**
+ * Request to validate a plugin definition
+ */
+export type PkgApiV1ValidatePluginRequest = {
+  /**
+   * Path to the plugin definition directory
+   */
+  path?: string
 }
 
 /**
@@ -3159,6 +3509,65 @@ export type RegistryOAuthConfig = {
    * Defaults to true for enhanced security
    */
   use_pkce?: boolean
+}
+
+export type RegistryPlugin = {
+  /**
+   * Meta is an opaque payload with extended meta data details of the plugin.
+   */
+  _meta?: {
+    [key: string]: unknown
+  }
+  /**
+   * Description is the description of the plugin.
+   */
+  description?: string
+  /**
+   * Icons is the list of icons for the plugin.
+   */
+  icons?: Array<RegistrySkillIcon>
+  /**
+   * License is the SPDX license identifier of the plugin.
+   */
+  license?: string
+  /**
+   * Metadata is the official metadata of the plugin as reported in the
+   * plugin manifest file.
+   */
+  metadata?: {
+    [key: string]: unknown
+  }
+  /**
+   * Name is the name of the plugin.
+   * The format is that of identifiers, e.g. "my-plugin".
+   */
+  name?: string
+  /**
+   * Namespace is the namespace of the plugin.
+   * The format is reverse-DNS, e.g. "io.github.user".
+   */
+  namespace?: string
+  /**
+   * Packages is the list of packages for the plugin.
+   */
+  packages?: Array<RegistrySkillPackage>
+  repository?: RegistrySkillRepository
+  /**
+   * Status is the status of the plugin.
+   * Can be one of "active", "deprecated", or "archived".
+   */
+  status?: string
+  /**
+   * Title is the title of the plugin.
+   * This is for human consumption, not an identifier.
+   */
+  title?: string
+  /**
+   * Version is the version of the plugin.
+   * Any non-empty string is valid, but ideally it should be either a
+   * semantic version or a commit hash.
+   */
+  version?: string
 }
 
 /**
@@ -4228,6 +4637,447 @@ export type GetApiV1BetaGroupsByNameResponses = {
 
 export type GetApiV1BetaGroupsByNameResponse =
   GetApiV1BetaGroupsByNameResponses[keyof GetApiV1BetaGroupsByNameResponses]
+
+export type GetApiV1BetaPluginsData = {
+  body?: never
+  path?: never
+  query?: {
+    /**
+     * Filter by scope (user or project)
+     */
+    scope?: 'user' | 'project'
+    /**
+     * Filter by client app
+     */
+    client?: string
+    /**
+     * Filter by project root path
+     */
+    project_root?: string
+    /**
+     * Filter by group name
+     */
+    group?: string
+  }
+  url: '/api/v1beta/plugins'
+}
+
+export type GetApiV1BetaPluginsErrors = {
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type GetApiV1BetaPluginsError =
+  GetApiV1BetaPluginsErrors[keyof GetApiV1BetaPluginsErrors]
+
+export type GetApiV1BetaPluginsResponses = {
+  /**
+   * OK
+   */
+  200: PkgApiV1PluginListResponse
+}
+
+export type GetApiV1BetaPluginsResponse =
+  GetApiV1BetaPluginsResponses[keyof GetApiV1BetaPluginsResponses]
+
+export type PostApiV1BetaPluginsData = {
+  /**
+   * Install request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | PkgApiV1InstallPluginRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/plugins'
+}
+
+export type PostApiV1BetaPluginsErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Unauthorized (registry refused credentials)
+   */
+  401: string
+  /**
+   * Not Found (artifact not present in registry)
+   */
+  404: string
+  /**
+   * Conflict
+   */
+  409: string
+  /**
+   * Too Many Requests (registry rate limit)
+   */
+  429: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+  /**
+   * Bad Gateway (upstream registry failure)
+   */
+  502: string
+  /**
+   * Gateway Timeout (upstream pull timed out)
+   */
+  504: string
+}
+
+export type PostApiV1BetaPluginsError =
+  PostApiV1BetaPluginsErrors[keyof PostApiV1BetaPluginsErrors]
+
+export type PostApiV1BetaPluginsResponses = {
+  /**
+   * Created
+   */
+  201: PkgApiV1InstallPluginResponse
+}
+
+export type PostApiV1BetaPluginsResponse =
+  PostApiV1BetaPluginsResponses[keyof PostApiV1BetaPluginsResponses]
+
+export type PostApiV1BetaPluginsBuildData = {
+  /**
+   * Build request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | PkgApiV1BuildPluginRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/plugins/build'
+}
+
+export type PostApiV1BetaPluginsBuildErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaPluginsBuildError =
+  PostApiV1BetaPluginsBuildErrors[keyof PostApiV1BetaPluginsBuildErrors]
+
+export type PostApiV1BetaPluginsBuildResponses = {
+  /**
+   * OK
+   */
+  200: GithubComStacklokToolhivePkgPluginsBuildResult
+}
+
+export type PostApiV1BetaPluginsBuildResponse =
+  PostApiV1BetaPluginsBuildResponses[keyof PostApiV1BetaPluginsBuildResponses]
+
+export type GetApiV1BetaPluginsBuildsData = {
+  body?: never
+  path?: never
+  query?: never
+  url: '/api/v1beta/plugins/builds'
+}
+
+export type GetApiV1BetaPluginsBuildsErrors = {
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type GetApiV1BetaPluginsBuildsError =
+  GetApiV1BetaPluginsBuildsErrors[keyof GetApiV1BetaPluginsBuildsErrors]
+
+export type GetApiV1BetaPluginsBuildsResponses = {
+  /**
+   * OK
+   */
+  200: PkgApiV1PluginBuildListResponse
+}
+
+export type GetApiV1BetaPluginsBuildsResponse =
+  GetApiV1BetaPluginsBuildsResponses[keyof GetApiV1BetaPluginsBuildsResponses]
+
+export type DeleteApiV1BetaPluginsBuildsByTagData = {
+  body?: never
+  path: {
+    /**
+     * Artifact tag
+     */
+    tag: string
+  }
+  query?: never
+  url: '/api/v1beta/plugins/builds/{tag}'
+}
+
+export type DeleteApiV1BetaPluginsBuildsByTagErrors = {
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type DeleteApiV1BetaPluginsBuildsByTagError =
+  DeleteApiV1BetaPluginsBuildsByTagErrors[keyof DeleteApiV1BetaPluginsBuildsByTagErrors]
+
+export type DeleteApiV1BetaPluginsBuildsByTagResponses = {
+  /**
+   * No Content
+   */
+  204: string
+}
+
+export type DeleteApiV1BetaPluginsBuildsByTagResponse =
+  DeleteApiV1BetaPluginsBuildsByTagResponses[keyof DeleteApiV1BetaPluginsBuildsByTagResponses]
+
+export type GetApiV1BetaPluginsContentData = {
+  body?: never
+  path?: never
+  query: {
+    /**
+     * OCI reference or local build tag
+     */
+    ref: string
+  }
+  url: '/api/v1beta/plugins/content'
+}
+
+export type GetApiV1BetaPluginsContentErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Unauthorized (registry refused credentials)
+   */
+  401: string
+  /**
+   * Not Found (artifact not present in registry)
+   */
+  404: string
+  /**
+   * Too Many Requests (registry rate limit)
+   */
+  429: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+  /**
+   * Bad Gateway (upstream registry or git resolver failure)
+   */
+  502: string
+  /**
+   * Gateway Timeout (upstream pull timed out)
+   */
+  504: string
+}
+
+export type GetApiV1BetaPluginsContentError =
+  GetApiV1BetaPluginsContentErrors[keyof GetApiV1BetaPluginsContentErrors]
+
+export type GetApiV1BetaPluginsContentResponses = {
+  /**
+   * OK
+   */
+  200: GithubComStacklokToolhivePkgPluginsPluginContent
+}
+
+export type GetApiV1BetaPluginsContentResponse =
+  GetApiV1BetaPluginsContentResponses[keyof GetApiV1BetaPluginsContentResponses]
+
+export type PostApiV1BetaPluginsPushData = {
+  /**
+   * Push request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | PkgApiV1PushPluginRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/plugins/push'
+}
+
+export type PostApiV1BetaPluginsPushErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaPluginsPushError =
+  PostApiV1BetaPluginsPushErrors[keyof PostApiV1BetaPluginsPushErrors]
+
+export type PostApiV1BetaPluginsPushResponses = {
+  /**
+   * No Content
+   */
+  204: string
+}
+
+export type PostApiV1BetaPluginsPushResponse =
+  PostApiV1BetaPluginsPushResponses[keyof PostApiV1BetaPluginsPushResponses]
+
+export type PostApiV1BetaPluginsValidateData = {
+  /**
+   * Validate request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | PkgApiV1ValidatePluginRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/plugins/validate'
+}
+
+export type PostApiV1BetaPluginsValidateErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type PostApiV1BetaPluginsValidateError =
+  PostApiV1BetaPluginsValidateErrors[keyof PostApiV1BetaPluginsValidateErrors]
+
+export type PostApiV1BetaPluginsValidateResponses = {
+  /**
+   * OK
+   */
+  200: GithubComStacklokToolhivePkgPluginsValidationResult
+}
+
+export type PostApiV1BetaPluginsValidateResponse =
+  PostApiV1BetaPluginsValidateResponses[keyof PostApiV1BetaPluginsValidateResponses]
+
+export type DeleteApiV1BetaPluginsByNameData = {
+  body?: never
+  path: {
+    /**
+     * Plugin name
+     */
+    name: string
+  }
+  query?: {
+    /**
+     * Scope to uninstall from (user or project)
+     */
+    scope?: 'user' | 'project'
+    /**
+     * Project root path for project-scoped plugins
+     */
+    project_root?: string
+  }
+  url: '/api/v1beta/plugins/{name}'
+}
+
+export type DeleteApiV1BetaPluginsByNameErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type DeleteApiV1BetaPluginsByNameError =
+  DeleteApiV1BetaPluginsByNameErrors[keyof DeleteApiV1BetaPluginsByNameErrors]
+
+export type DeleteApiV1BetaPluginsByNameResponses = {
+  /**
+   * No Content
+   */
+  204: string
+}
+
+export type DeleteApiV1BetaPluginsByNameResponse =
+  DeleteApiV1BetaPluginsByNameResponses[keyof DeleteApiV1BetaPluginsByNameResponses]
+
+export type GetApiV1BetaPluginsByNameData = {
+  body?: never
+  path: {
+    /**
+     * Plugin name
+     */
+    name: string
+  }
+  query?: {
+    /**
+     * Filter by scope (user or project)
+     */
+    scope?: 'user' | 'project'
+    /**
+     * Project root path for project-scoped plugins
+     */
+    project_root?: string
+  }
+  url: '/api/v1beta/plugins/{name}'
+}
+
+export type GetApiV1BetaPluginsByNameErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Not Found
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+}
+
+export type GetApiV1BetaPluginsByNameError =
+  GetApiV1BetaPluginsByNameErrors[keyof GetApiV1BetaPluginsByNameErrors]
+
+export type GetApiV1BetaPluginsByNameResponses = {
+  /**
+   * OK
+   */
+  200: GithubComStacklokToolhivePkgPluginsPluginInfo
+}
+
+export type GetApiV1BetaPluginsByNameResponse =
+  GetApiV1BetaPluginsByNameResponses[keyof GetApiV1BetaPluginsByNameResponses]
 
 export type GetApiV1BetaRegistryData = {
   body?: never
@@ -6100,6 +6950,106 @@ export type GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestRespons
 
 export type GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponse =
   GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponses[keyof GetRegistryByRegistryNameV01ServersByServerNameVersionsLatestResponses]
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsData = {
+  body?: never
+  path: {
+    /**
+     * Registry name (currently ignored, uses the default provider)
+     */
+    registryName: string
+  }
+  query?: {
+    /**
+     * Search filter — matches against plugin name, namespace, and description
+     */
+    q?: string
+    /**
+     * Page number, 1-based (default: 1)
+     */
+    page?: number
+    /**
+     * Items per page, max 200 (default: 50)
+     */
+    limit?: number
+  }
+  url: '/registry/{registryName}/v0.1/x/dev.toolhive/plugins'
+}
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsErrors = {
+  /**
+   * Internal server error
+   */
+  500: PkgApiV1RegistryErrorResponse
+  /**
+   * Registry authentication required or upstream registry unavailable
+   */
+  503: PkgApiV1RegistryErrorResponse
+}
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsError =
+  GetRegistryByRegistryNameV01xDevToolhivePluginsErrors[keyof GetRegistryByRegistryNameV01xDevToolhivePluginsErrors]
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsResponses = {
+  /**
+   * OK
+   */
+  200: PkgApiV1PluginsV01Response
+}
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsResponse =
+  GetRegistryByRegistryNameV01xDevToolhivePluginsResponses[keyof GetRegistryByRegistryNameV01xDevToolhivePluginsResponses]
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameData =
+  {
+    body?: never
+    path: {
+      /**
+       * Registry name (currently ignored, uses the default provider)
+       */
+      registryName: string
+      /**
+       * Plugin namespace in reverse-DNS format (e.g. io.github.stacklok)
+       */
+      namespace: string
+      /**
+       * Plugin name
+       */
+      pluginName: string
+    }
+    query?: never
+    url: '/registry/{registryName}/v0.1/x/dev.toolhive/plugins/{namespace}/{pluginName}'
+  }
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameErrors =
+  {
+    /**
+     * Plugin not found
+     */
+    404: PkgApiV1RegistryErrorResponse
+    /**
+     * Internal server error
+     */
+    500: PkgApiV1RegistryErrorResponse
+    /**
+     * Registry authentication required or upstream registry unavailable
+     */
+    503: PkgApiV1RegistryErrorResponse
+  }
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameError =
+  GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameErrors[keyof GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameErrors]
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponses =
+  {
+    /**
+     * OK
+     */
+    200: RegistryPlugin
+  }
+
+export type GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponse =
+  GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponses[keyof GetRegistryByRegistryNameV01xDevToolhivePluginsByNamespaceByPluginNameResponses]
 
 export type GetRegistryByRegistryNameV01xDevToolhiveSkillsData = {
   body?: never
