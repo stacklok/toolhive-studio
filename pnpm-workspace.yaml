@@ -44,7 +44,7 @@ overrides:
   # GHSA-mwp4-54f8-5fhr / GHSA-4xrf-jv44-h6hh / GHSA-22jq-vg5j-6vgg,
   # GHSA-8j4g-w8fx-2239). Cap fast-uri below v4 — ajv expects the v3 API.
   fast-uri: '>=3.1.5 <4'
-  ip-address: '>=10.3.1'
+  ip-address: '>=10.4.0'
   hono: '>=4.12.34'
 
 patchedDependencies:
