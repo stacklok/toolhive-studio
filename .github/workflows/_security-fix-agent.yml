@@ -79,7 +79,7 @@ jobs:
             Do NOT modify any project files — only create remediation-plan.md.
           claude_args: >-
             --model claude-opus-5
-            --max-turns 30
+            --max-turns 50
             --allowedTools "Read,Write,Bash(grype *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *)"
 
       - name: 'Phase 2: Implement Fixes (Sonnet 5)'
@@ -103,7 +103,7 @@ jobs:
             Do NOT run git, gh, or modify .env files.
           claude_args: >-
             --model claude-sonnet-5
-            --max-turns 40
+            --max-turns 80
             --allowedTools "Read,Write,Edit,Bash(grype *),Bash(pnpm install *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *),Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check)"
 
       - name: Check for changes
