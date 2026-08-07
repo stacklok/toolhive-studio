@@ -63,7 +63,7 @@ jobs:
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh -s -- -b /usr/local/bin
           grype version
 
-      - name: 'Phase 1: Analyze and Plan (Opus)'
+      - name: 'Phase 1: Analyze and Plan (Opus 5)'
         id: phase1
         if: steps.existing.outputs.skip != 'true'
         continue-on-error: true
@@ -78,11 +78,11 @@ jobs:
             Write a detailed remediation-plan.md with your full analysis and proposed fixes.
             Do NOT modify any project files — only create remediation-plan.md.
           claude_args: >-
-            --model opus
-            --max-turns 30
+            --model claude-opus-5
+            --max-turns 50
             --allowedTools "Read,Write,Bash(grype *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *)"
 
-      - name: 'Phase 2: Implement Fixes (Sonnet)'
+      - name: 'Phase 2: Implement Fixes (Sonnet 5)'
         id: phase2
         if: steps.existing.outputs.skip != 'true' && steps.phase1.outcome == 'success'
         continue-on-error: true
@@ -102,8 +102,8 @@ jobs:
             Write a conventional-commit-style PR title to remediation-title.txt (see skill for format).
             Do NOT run git, gh, or modify .env files.
           claude_args: >-
-            --model sonnet
-            --max-turns 40
+            --model claude-sonnet-5
+            --max-turns 80
             --allowedTools "Read,Write,Edit,Bash(grype *),Bash(pnpm install *),Bash(pnpm audit *),Bash(pnpm why *),Bash(pnpm view *),Bash(cat *),Bash(ls *),Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check)"
 
       - name: Check for changes
