@@ -47,11 +47,14 @@ function createCardTestRouter(build: LocalBuild = baseBuild) {
   })
 }
 
-const router = createCardTestRouter() as unknown as ReturnType<
-  typeof createTestRouter
->
+// Fresh router per test: after RouterProvider unmounts, await router.navigate()
+// can hang on TanStack Router >=1.170.19 (transition never settles).
+let router: ReturnType<typeof createTestRouter>
 
 beforeEach(async () => {
+  router = createCardTestRouter() as unknown as ReturnType<
+    typeof createTestRouter
+  >
   await router.navigate({ to: '/skills' })
 })
 

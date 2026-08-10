@@ -45,12 +45,15 @@ function createCardTestRouter(skill: RegistrySkill = baseSkill) {
   })
 }
 
-const router = createCardTestRouter() as unknown as ReturnType<
-  typeof createTestRouter
->
+// Fresh router per test: after RouterProvider unmounts, await router.navigate()
+// can hang on TanStack Router >=1.170.19 (transition never settles).
+let router: ReturnType<typeof createTestRouter>
 
 beforeEach(async () => {
   mockedGetApiV1BetaDiscoveryClients.activateScenario('empty')
+  router = createCardTestRouter() as unknown as ReturnType<
+    typeof createTestRouter
+  >
   await router.navigate({ to: '/skills' })
 })
 
