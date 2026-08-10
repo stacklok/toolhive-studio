@@ -46,6 +46,10 @@ overrides:
   fast-uri: '>=3.1.5 <4'
   ip-address: '>=10.4.0'
   hono: '>=4.12.34'
+  # GHSA-55q2-fjhq-7xh7 — mermaid pins dompurify ^3.3.3; cap below v4.
+  dompurify: '>=3.4.13 <4'
+  # GHSA-2v37-7h3g-55p8 — postcss pulls nanoid 3.x; keep direct nanoid 5.x untouched.
+  'postcss>nanoid': '>=3.3.17 <4'
 
 patchedDependencies:
   electron-installer-redhat@3.4.0: patches/electron-installer-redhat@3.4.0.patch
