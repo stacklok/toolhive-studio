@@ -649,6 +649,25 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
   storage?: StorageRunConfig
   token_lifespans?: GithubComStacklokToolhivePkgAuthserverTokenLifespanRunConfig
   /**
+   * TrustedIssuers lists external OIDC issuers whose tokens are accepted as
+   * subject tokens during RFC 8693 token exchange. Empty (the default) means
+   * only self-issued subject tokens are accepted.
+   *
+   * Prerequisite: the token-exchange grant requires a confidential client,
+   * and no supported deployment path provisions one today (DCR and CIMD
+   * clients are both public-only, and there is no client-seeding field on
+   * this RunConfig), so this grant is not yet usable end to end for
+   * self-issued or external subject tokens alike. Tracked in
+   * https://github.com/stacklok/toolhive/issues/6082.
+   *
+   * See tokenexchange.TrustedIssuer for the per-issuer field reference, and
+   * docs/arch/17-token-exchange-delegation.md for the trust model, consent
+   * signals, and operator-facing constraints (audience/scope bounding,
+   * subject namespace qualification, required client binding) that aren't
+   * visible from the config shape alone.
+   */
+  trusted_issuers?: Array<GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssuer>
+  /**
    * Upstreams configures connections to upstream Identity Providers.
    * At least one upstream is required - the server delegates authentication to these providers.
    * Multiple upstreams are supported for sequential authorization chains.
@@ -797,6 +816,71 @@ export type GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig = {
    */
   http_method?: string
 }
+
+export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssuer =
+  {
+    /**
+     * ActorClaim names the claim identifying the client that requested the
+     * subject token from THIS EXTERNAL ISSUER (used by AllowedActors below).
+     * Values are in the external issuer's namespace, NOT ToolHive client
+     * IDs. Defaults to "azp"; use "appid" for Microsoft Entra v1, "cid" for
+     * Okta. The special value "client_id" reads ValidatedClaims.ClientID
+     * instead of Extra (assignClaim routes it to that field) — it is still
+     * the external token's client_id claim, not a ToolHive one.
+     */
+    actor_claim?: string
+    /**
+     * AllowPrivateIPs permits OIDC discovery and JWKS fetches for THIS
+     * issuer to resolve to a private or loopback address. Use only when the
+     * issuer is hosted inside the same cluster and has no public endpoint.
+     */
+    allow_private_ips?: boolean
+    /**
+     * AllowedActors is the allowlist of ActorClaim values authorized to
+     * exchange a subject token from this issuer when it carries no
+     * "may_act" claim; empty means only may_act-bearing tokens are
+     * accepted. By itself names no ToolHive client — see
+     * AllowedDelegateClients and docs/arch/17-token-exchange-delegation.md
+     * ("Accepted limitations" #1).
+     */
+    allowed_actors?: Array<string>
+    /**
+     * AllowedDelegateClients restricts which ToolHive client IDs may
+     * exchange a subject token from this issuer, for BOTH consent paths.
+     * Required (validateTrustedIssuer rejects empty/absent); "*" permits
+     * any confidential client holding the grant. See
+     * docs/arch/17-token-exchange-delegation.md ("Accepted limitations" #1).
+     */
+    allowed_delegate_clients?: Array<string>
+    /**
+     * ExpectedAudience is the expected "aud" claim value that must appear
+     * in the token's audience list (a resource/API identifier, not a
+     * client ID — required, but not enforced; see looksLikeResourceIdentifier).
+     * See docs/arch/17-token-exchange-delegation.md ("ID/access-token
+     * discrimination") for why and its limits.
+     */
+    expected_audience?: string
+    /**
+     * InsecureAllowHTTP permits plain-HTTP OIDC discovery and JWKS fetches
+     * for THIS issuer only. Development and testing only — never set in
+     * production. Does not relax the private-IP guard; see AllowPrivateIPs.
+     * Deliberately per-issuer: this server's own InsecureAllowHTTP must not
+     * silently permit plaintext discovery for every trusted external issuer
+     * too — a network attacker who can intercept that traffic could
+     * substitute a JWKS and forge subject tokens for that issuer's
+     * namespace.
+     */
+    insecure_allow_http?: boolean
+    /**
+     * IssuerURL is the expected "iss" claim value (exact match).
+     */
+    issuer_url?: string
+    /**
+     * JWKSURL is the URL to fetch the issuer's JSON Web Key Set from.
+     * If empty, it is resolved via OIDC discovery at {IssuerURL}/.well-known/openid-configuration.
+     */
+    jwks_url?: string
+  }
 
 /**
  * DEPRECATED: Middleware configuration.

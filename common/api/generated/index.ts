@@ -305,6 +305,7 @@ export type {
   GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig,
   GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig,
   GithubComStacklokToolhivePkgAuthserverRunConfig,
+  GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssuer,
   GithubComStacklokToolhivePkgAuthserverSigningKeyRunConfig,
   GithubComStacklokToolhivePkgAuthserverTokenLifespanRunConfig,
   GithubComStacklokToolhivePkgAuthserverTokenResponseMappingRunConfig,
