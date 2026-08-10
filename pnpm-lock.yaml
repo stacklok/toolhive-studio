@@ -382,7 +382,7 @@ importers:
         specifier: ^7.5.22
         version: 7.5.22
       tsx:
-        specifier: ^4.23.10
+        specifier: ^4.23.11
         version: 4.23.11
       typescript:
         specifier: npm:@typescript/typescript6@6.0.2
