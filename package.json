@@ -93,7 +93,7 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "rimraf": "^6.1.3",
     "tar": "^7.5.22",
-    "tsx": "^4.23.5",
+    "tsx": "^4.23.10",
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "typescript-eslint": "^8.66.0",
     "unzipper": "^0.12.5",
