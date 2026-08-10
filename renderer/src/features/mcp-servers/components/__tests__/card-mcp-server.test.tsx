@@ -50,11 +50,14 @@ function createCardMcpServerTestRouter() {
   return router
 }
 
-const router = createCardMcpServerTestRouter() as unknown as ReturnType<
-  typeof createTestRouter
->
+// Fresh router per test: after RouterProvider unmounts, await router.navigate()
+// can hang on TanStack Router >=1.170.19 (transition never settles).
+let router: ReturnType<typeof createTestRouter>
 
 beforeEach(async () => {
+  router = createCardMcpServerTestRouter() as unknown as ReturnType<
+    typeof createTestRouter
+  >
   await router.navigate({
     to: '/group/$groupName',
     params: { groupName: 'default' },
