@@ -24,22 +24,22 @@ importers:
   .:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: ^4.0.34
+        specifier: ^4.0.36
         version: 4.0.36(zod@4.4.3)
       '@ai-sdk/google':
-        specifier: ^4.0.37
+        specifier: ^4.0.39
         version: 4.0.39(zod@4.4.3)
       '@ai-sdk/openai':
-        specifier: ^4.0.34
+        specifier: ^4.0.36
         version: 4.0.36(zod@4.4.3)
       '@ai-sdk/openai-compatible':
-        specifier: ^3.0.25
+        specifier: ^3.0.27
         version: 3.0.27(zod@4.4.3)
       '@ai-sdk/react':
-        specifier: ^4.0.59
+        specifier: ^4.0.61
         version: 4.0.61(react@19.2.8)(zod@4.4.3)
       '@ai-sdk/xai':
-        specifier: ^4.0.31
+        specifier: ^4.0.33
         version: 4.0.33(zod@4.4.3)
       '@fontsource-variable/inter':
         specifier: ^5.3.0
@@ -141,7 +141,7 @@ importers:
         specifier: ^3.14.9
         version: 3.14.9(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       ai:
-        specifier: ^7.0.56
+        specifier: ^7.0.58
         version: 7.0.58(zod@4.4.3)
       ai-sdk-ollama:
         specifier: ^4.1.0
