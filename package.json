@@ -75,7 +75,7 @@
     "dotenv": "^17.4.2",
     "electron": "43.3.0",
     "electron-winstaller": "^5.4.4",
-    "eslint": "^10.8.0",
+    "eslint": "^10.8.1",
     "eslint-plugin-react-hooks": "~7.1.1",
     "eslint-plugin-react-refresh": "^0.5.3",
     "globals": "^17.9.0",
