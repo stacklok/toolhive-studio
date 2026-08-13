@@ -58,6 +58,16 @@ function getProviderCredentialConfig(providerId: string, providerName: string) {
     }
   }
 
+  if (providerId === 'acp') {
+    return {
+      label: 'Enable',
+      placeholder: 'local',
+      isSecret: false,
+      helpText:
+        'No API key needed — this spawns your local `agent` (Cursor CLI) and uses its existing login. Enter any value to enable.',
+    }
+  }
+
   return {
     label: 'API Key',
     placeholder: `Enter your ${providerName} API key`,

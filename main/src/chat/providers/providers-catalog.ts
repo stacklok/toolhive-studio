@@ -5,6 +5,7 @@ import { createXai } from '@ai-sdk/xai'
 import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { createOllama } from 'ai-sdk-ollama'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
+import { createACPProvider } from '@mcpc-tech/acp-ai-provider'
 import log from '../../logger'
 import {
   CHAT_PROVIDER_INFO,
@@ -120,6 +121,23 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
 
       const openrouter = createOpenRouter({ apiKey })
       return openrouter(modelId)
+    },
+  },
+  {
+    id: 'acp',
+    name: 'ACP (Cursor Agent)',
+    models: CHAT_PROVIDER_INFO.find((p) => p.id === 'acp')?.models || [],
+    createModel: () => {
+      log.info('[CHAT] Creating ACP model: spawning local `agent acp`')
+      const acp = createACPProvider({
+        command: 'agent',
+        args: ['acp'],
+        session: {
+          cwd: process.cwd(),
+          mcpServers: [],
+        },
+      })
+      return acp.languageModel()
     },
   },
 ]

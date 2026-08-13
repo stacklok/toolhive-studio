@@ -9,45 +9,30 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from "./routes/__root"
-import { Route as SkillsRouteImport } from "./routes/skills"
-import { Route as ShutdownRouteImport } from "./routes/shutdown"
-import { Route as SettingsRouteImport } from "./routes/settings"
-import { Route as PlaygroundRouteImport } from "./routes/playground"
-import { Route as CliIssueRouteImport } from "./routes/cli-issue"
 import { Route as IndexRouteImport } from "./routes/index"
+import { Route as CliIssueRouteImport } from "./routes/cli-issue"
+import { Route as PlaygroundRouteImport } from "./routes/playground"
+import { Route as SettingsRouteImport } from "./routes/settings"
+import { Route as ShutdownRouteImport } from "./routes/shutdown"
+import { Route as SkillsRouteImport } from "./routes/skills"
+import { Route as registryRegistryRouteImport } from "./routes/(registry)/registry"
+import { Route as CustomizeToolsServerNameRouteImport } from "./routes/customize-tools.$serverName"
+import { Route as GroupGroupNameRouteImport } from "./routes/group.$groupName"
 import { Route as PlaygroundIndexRouteImport } from "./routes/playground.index"
 import { Route as PlaygroundAgentsRouteImport } from "./routes/playground.agents"
-import { Route as GroupGroupNameRouteImport } from "./routes/group.$groupName"
-import { Route as CustomizeToolsServerNameRouteImport } from "./routes/customize-tools.$serverName"
-import { Route as registryRegistryRouteImport } from "./routes/(registry)/registry"
-import { Route as SkillsBuildsTagRouteImport } from "./routes/skills_.builds.$tag"
-import { Route as SkillsNamespaceSkillNameRouteImport } from "./routes/skills_.$namespace.$skillName"
-import { Route as PlaygroundChatThreadIdRouteImport } from "./routes/playground.chat.$threadId"
-import { Route as PlaygroundAgentsNewRouteImport } from "./routes/playground.agents_.new"
-import { Route as PlaygroundAgentsAgentIdRouteImport } from "./routes/playground.agents_.$agentId"
-import { Route as LogsGroupNameServerNameRouteImport } from "./routes/logs.$groupName.$serverName"
-import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/registry_.$name"
 import { Route as registryRegistryGroupNameRouteImport } from "./routes/(registry)/registry-group_.$name"
+import { Route as registryRegistryNameRouteImport } from "./routes/(registry)/registry_.$name"
+import { Route as LogsGroupNameServerNameRouteImport } from "./routes/logs.$groupName.$serverName"
+import { Route as PlaygroundAgentsAgentIdRouteImport } from "./routes/playground.agents_.$agentId"
+import { Route as PlaygroundAgentsNewRouteImport } from "./routes/playground.agents_.new"
+import { Route as PlaygroundChatThreadIdRouteImport } from "./routes/playground.chat.$threadId"
+import { Route as SkillsNamespaceSkillNameRouteImport } from "./routes/skills_.$namespace.$skillName"
+import { Route as SkillsBuildsTagRouteImport } from "./routes/skills_.builds.$tag"
 import { Route as PlaygroundAgentsAgentIdEditRouteImport } from "./routes/playground.agents_.$agentId_.edit"
 
-const SkillsRoute = SkillsRouteImport.update({
-  id: "/skills",
-  path: "/skills",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ShutdownRoute = ShutdownRouteImport.update({
-  id: "/shutdown",
-  path: "/shutdown",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SettingsRoute = SettingsRouteImport.update({
-  id: "/settings",
-  path: "/settings",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PlaygroundRoute = PlaygroundRouteImport.update({
-  id: "/playground",
-  path: "/playground",
+const IndexRoute = IndexRouteImport.update({
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
 const CliIssueRoute = CliIssueRouteImport.update({
@@ -55,9 +40,40 @@ const CliIssueRoute = CliIssueRouteImport.update({
   path: "/cli-issue",
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: "/",
-  path: "/",
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: "/playground",
+  path: "/playground",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: "/settings",
+  path: "/settings",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ShutdownRoute = ShutdownRouteImport.update({
+  id: "/shutdown",
+  path: "/shutdown",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SkillsRoute = SkillsRouteImport.update({
+  id: "/skills",
+  path: "/skills",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const registryRegistryRoute = registryRegistryRouteImport.update({
+  id: "/(registry)/registry",
+  path: "/registry",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CustomizeToolsServerNameRoute =
+  CustomizeToolsServerNameRouteImport.update({
+    id: "/customize-tools/$serverName",
+    path: "/customize-tools/$serverName",
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const GroupGroupNameRoute = GroupGroupNameRouteImport.update({
+  id: "/group/$groupName",
+  path: "/group/$groupName",
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlaygroundIndexRoute = PlaygroundIndexRouteImport.update({
@@ -70,36 +86,25 @@ const PlaygroundAgentsRoute = PlaygroundAgentsRouteImport.update({
   path: "/agents",
   getParentRoute: () => PlaygroundRoute,
 } as any)
-const GroupGroupNameRoute = GroupGroupNameRouteImport.update({
-  id: "/group/$groupName",
-  path: "/group/$groupName",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CustomizeToolsServerNameRoute =
-  CustomizeToolsServerNameRouteImport.update({
-    id: "/customize-tools/$serverName",
-    path: "/customize-tools/$serverName",
+const registryRegistryGroupNameRoute =
+  registryRegistryGroupNameRouteImport.update({
+    id: "/(registry)/registry-group_/$name",
+    path: "/registry-group/$name",
     getParentRoute: () => rootRouteImport,
   } as any)
-const registryRegistryRoute = registryRegistryRouteImport.update({
-  id: "/(registry)/registry",
-  path: "/registry",
+const registryRegistryNameRoute = registryRegistryNameRouteImport.update({
+  id: "/(registry)/registry_/$name",
+  path: "/registry/$name",
   getParentRoute: () => rootRouteImport,
 } as any)
-const SkillsBuildsTagRoute = SkillsBuildsTagRouteImport.update({
-  id: "/skills_/builds/$tag",
-  path: "/skills/builds/$tag",
+const LogsGroupNameServerNameRoute = LogsGroupNameServerNameRouteImport.update({
+  id: "/logs/$groupName/$serverName",
+  path: "/logs/$groupName/$serverName",
   getParentRoute: () => rootRouteImport,
 } as any)
-const SkillsNamespaceSkillNameRoute =
-  SkillsNamespaceSkillNameRouteImport.update({
-    id: "/skills_/$namespace/$skillName",
-    path: "/skills/$namespace/$skillName",
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const PlaygroundChatThreadIdRoute = PlaygroundChatThreadIdRouteImport.update({
-  id: "/chat/$threadId",
-  path: "/chat/$threadId",
+const PlaygroundAgentsAgentIdRoute = PlaygroundAgentsAgentIdRouteImport.update({
+  id: "/agents_/$agentId",
+  path: "/agents/$agentId",
   getParentRoute: () => PlaygroundRoute,
 } as any)
 const PlaygroundAgentsNewRoute = PlaygroundAgentsNewRouteImport.update({
@@ -107,27 +112,22 @@ const PlaygroundAgentsNewRoute = PlaygroundAgentsNewRouteImport.update({
   path: "/agents/new",
   getParentRoute: () => PlaygroundRoute,
 } as any)
-const PlaygroundAgentsAgentIdRoute = PlaygroundAgentsAgentIdRouteImport.update({
-  id: "/agents_/$agentId",
-  path: "/agents/$agentId",
+const PlaygroundChatThreadIdRoute = PlaygroundChatThreadIdRouteImport.update({
+  id: "/chat/$threadId",
+  path: "/chat/$threadId",
   getParentRoute: () => PlaygroundRoute,
 } as any)
-const LogsGroupNameServerNameRoute = LogsGroupNameServerNameRouteImport.update({
-  id: "/logs/$groupName/$serverName",
-  path: "/logs/$groupName/$serverName",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const registryRegistryNameRoute = registryRegistryNameRouteImport.update({
-  id: "/(registry)/registry_/$name",
-  path: "/registry/$name",
-  getParentRoute: () => rootRouteImport,
-} as any)
-const registryRegistryGroupNameRoute =
-  registryRegistryGroupNameRouteImport.update({
-    id: "/(registry)/registry-group_/$name",
-    path: "/registry-group/$name",
+const SkillsNamespaceSkillNameRoute =
+  SkillsNamespaceSkillNameRouteImport.update({
+    id: "/skills_/$namespace/$skillName",
+    path: "/skills/$namespace/$skillName",
     getParentRoute: () => rootRouteImport,
   } as any)
+const SkillsBuildsTagRoute = SkillsBuildsTagRouteImport.update({
+  id: "/skills_/builds/$tag",
+  path: "/skills/builds/$tag",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PlaygroundAgentsAgentIdEditRoute =
   PlaygroundAgentsAgentIdEditRouteImport.update({
     id: "/agents_/$agentId_/edit",
@@ -288,32 +288,11 @@ export interface RootRouteChildren {
 
 declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    "/skills": {
-      id: "/skills"
-      path: "/skills"
-      fullPath: "/skills"
-      preLoaderRoute: typeof SkillsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/shutdown": {
-      id: "/shutdown"
-      path: "/shutdown"
-      fullPath: "/shutdown"
-      preLoaderRoute: typeof ShutdownRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/settings": {
-      id: "/settings"
-      path: "/settings"
-      fullPath: "/settings"
-      preLoaderRoute: typeof SettingsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/playground": {
-      id: "/playground"
-      path: "/playground"
-      fullPath: "/playground"
-      preLoaderRoute: typeof PlaygroundRouteImport
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/cli-issue": {
@@ -323,11 +302,53 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof CliIssueRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/": {
-      id: "/"
-      path: "/"
-      fullPath: "/"
-      preLoaderRoute: typeof IndexRouteImport
+    "/playground": {
+      id: "/playground"
+      path: "/playground"
+      fullPath: "/playground"
+      preLoaderRoute: typeof PlaygroundRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/settings": {
+      id: "/settings"
+      path: "/settings"
+      fullPath: "/settings"
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/shutdown": {
+      id: "/shutdown"
+      path: "/shutdown"
+      fullPath: "/shutdown"
+      preLoaderRoute: typeof ShutdownRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/skills": {
+      id: "/skills"
+      path: "/skills"
+      fullPath: "/skills"
+      preLoaderRoute: typeof SkillsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/(registry)/registry": {
+      id: "/(registry)/registry"
+      path: "/registry"
+      fullPath: "/registry"
+      preLoaderRoute: typeof registryRegistryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/customize-tools/$serverName": {
+      id: "/customize-tools/$serverName"
+      path: "/customize-tools/$serverName"
+      fullPath: "/customize-tools/$serverName"
+      preLoaderRoute: typeof CustomizeToolsServerNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/group/$groupName": {
+      id: "/group/$groupName"
+      path: "/group/$groupName"
+      fullPath: "/group/$groupName"
+      preLoaderRoute: typeof GroupGroupNameRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/playground/": {
@@ -344,67 +365,11 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof PlaygroundAgentsRouteImport
       parentRoute: typeof PlaygroundRoute
     }
-    "/group/$groupName": {
-      id: "/group/$groupName"
-      path: "/group/$groupName"
-      fullPath: "/group/$groupName"
-      preLoaderRoute: typeof GroupGroupNameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/customize-tools/$serverName": {
-      id: "/customize-tools/$serverName"
-      path: "/customize-tools/$serverName"
-      fullPath: "/customize-tools/$serverName"
-      preLoaderRoute: typeof CustomizeToolsServerNameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/(registry)/registry": {
-      id: "/(registry)/registry"
-      path: "/registry"
-      fullPath: "/registry"
-      preLoaderRoute: typeof registryRegistryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/skills_/builds/$tag": {
-      id: "/skills_/builds/$tag"
-      path: "/skills/builds/$tag"
-      fullPath: "/skills/builds/$tag"
-      preLoaderRoute: typeof SkillsBuildsTagRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/skills_/$namespace/$skillName": {
-      id: "/skills_/$namespace/$skillName"
-      path: "/skills/$namespace/$skillName"
-      fullPath: "/skills/$namespace/$skillName"
-      preLoaderRoute: typeof SkillsNamespaceSkillNameRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    "/playground/chat/$threadId": {
-      id: "/playground/chat/$threadId"
-      path: "/chat/$threadId"
-      fullPath: "/playground/chat/$threadId"
-      preLoaderRoute: typeof PlaygroundChatThreadIdRouteImport
-      parentRoute: typeof PlaygroundRoute
-    }
-    "/playground/agents_/new": {
-      id: "/playground/agents_/new"
-      path: "/agents/new"
-      fullPath: "/playground/agents/new"
-      preLoaderRoute: typeof PlaygroundAgentsNewRouteImport
-      parentRoute: typeof PlaygroundRoute
-    }
-    "/playground/agents_/$agentId": {
-      id: "/playground/agents_/$agentId"
-      path: "/agents/$agentId"
-      fullPath: "/playground/agents/$agentId"
-      preLoaderRoute: typeof PlaygroundAgentsAgentIdRouteImport
-      parentRoute: typeof PlaygroundRoute
-    }
-    "/logs/$groupName/$serverName": {
-      id: "/logs/$groupName/$serverName"
-      path: "/logs/$groupName/$serverName"
-      fullPath: "/logs/$groupName/$serverName"
-      preLoaderRoute: typeof LogsGroupNameServerNameRouteImport
+    "/(registry)/registry-group_/$name": {
+      id: "/(registry)/registry-group_/$name"
+      path: "/registry-group/$name"
+      fullPath: "/registry-group/$name"
+      preLoaderRoute: typeof registryRegistryGroupNameRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/(registry)/registry_/$name": {
@@ -414,11 +379,46 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof registryRegistryNameRouteImport
       parentRoute: typeof rootRouteImport
     }
-    "/(registry)/registry-group_/$name": {
-      id: "/(registry)/registry-group_/$name"
-      path: "/registry-group/$name"
-      fullPath: "/registry-group/$name"
-      preLoaderRoute: typeof registryRegistryGroupNameRouteImport
+    "/logs/$groupName/$serverName": {
+      id: "/logs/$groupName/$serverName"
+      path: "/logs/$groupName/$serverName"
+      fullPath: "/logs/$groupName/$serverName"
+      preLoaderRoute: typeof LogsGroupNameServerNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/playground/agents_/$agentId": {
+      id: "/playground/agents_/$agentId"
+      path: "/agents/$agentId"
+      fullPath: "/playground/agents/$agentId"
+      preLoaderRoute: typeof PlaygroundAgentsAgentIdRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
+    "/playground/agents_/new": {
+      id: "/playground/agents_/new"
+      path: "/agents/new"
+      fullPath: "/playground/agents/new"
+      preLoaderRoute: typeof PlaygroundAgentsNewRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
+    "/playground/chat/$threadId": {
+      id: "/playground/chat/$threadId"
+      path: "/chat/$threadId"
+      fullPath: "/playground/chat/$threadId"
+      preLoaderRoute: typeof PlaygroundChatThreadIdRouteImport
+      parentRoute: typeof PlaygroundRoute
+    }
+    "/skills_/$namespace/$skillName": {
+      id: "/skills_/$namespace/$skillName"
+      path: "/skills/$namespace/$skillName"
+      fullPath: "/skills/$namespace/$skillName"
+      preLoaderRoute: typeof SkillsNamespaceSkillNameRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/skills_/builds/$tag": {
+      id: "/skills_/builds/$tag"
+      path: "/skills/builds/$tag"
+      fullPath: "/skills/builds/$tag"
+      preLoaderRoute: typeof SkillsBuildsTagRouteImport
       parentRoute: typeof rootRouteImport
     }
     "/playground/agents_/$agentId_/edit": {

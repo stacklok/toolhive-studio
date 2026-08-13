@@ -112,6 +112,7 @@
     "@fontsource-variable/merriweather": "^5.3.0",
     "@fontsource/atkinson-hyperlegible": "^5.3.0",
     "@fontsource/space-mono": "^5.3.0",
+    "@mcpc-tech/acp-ai-provider": "^0.3.5",
     "@modelcontextprotocol/ext-apps": "^1.7.5",
     "@modelcontextprotocol/sdk": "^1.30.0",
     "@openrouter/ai-sdk-provider": "^3.0.0",

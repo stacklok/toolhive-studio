@@ -7,7 +7,10 @@ export default defineConfig({
   build: {
     sourcemap: true, // Required for Sentry sourcemaps
     rolldownOptions: {
-      external: ['better-sqlite3'],
+      // acp-ai-provider's ESM build uses top-level createRequire(import.meta.url),
+      // which breaks under bundling (import.meta.url isn't preserved). Externalize
+      // it so Node resolves the package's own CJS build at runtime instead.
+      external: ['better-sqlite3', '@mcpc-tech/acp-ai-provider'],
     },
   },
   resolve: {
