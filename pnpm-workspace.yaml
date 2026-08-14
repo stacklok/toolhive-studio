@@ -43,7 +43,7 @@ overrides:
   # Security patches for transitive deps (GHSA-7p8r-x3mc-p8w7,
   # GHSA-mwp4-54f8-5fhr / GHSA-4xrf-jv44-h6hh / GHSA-22jq-vg5j-6vgg,
   # GHSA-8j4g-w8fx-2239). Cap fast-uri below v4 — ajv expects the v3 API.
-  fast-uri: '>=3.1.5 <4'
+  fast-uri: '>=3.1.5 <5'
   ip-address: '>=10.4.0'
   hono: '>=4.13.1'
   # GHSA-55q2-fjhq-7xh7 — mermaid pins dompurify ^3.3.3; cap below v4.
