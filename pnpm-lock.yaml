@@ -10,7 +10,7 @@ overrides:
   js-yaml: '>=5.2.3'
   tmp: '>=0.2.7'
   icon-gen>sharp: 0.35.3
-  fast-uri: '>=3.1.5 <4'
+  fast-uri: '>=3.1.5 <5'
   ip-address: '>=10.4.0'
   hono: '>=4.13.1'
   dompurify: '>=3.4.13 <4'
