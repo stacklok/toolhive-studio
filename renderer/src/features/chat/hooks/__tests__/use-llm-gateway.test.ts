@@ -12,7 +12,7 @@ describe('ensureGatewayReady', () => {
     window.electronAPI.chat = {
       ...window.electronAPI.chat,
       llmGateway: mockLlmGateway,
-    } as typeof window.electronAPI.chat
+    } as unknown as typeof window.electronAPI.chat
   })
 
   it('returns ready when warmup succeeds', async () => {
