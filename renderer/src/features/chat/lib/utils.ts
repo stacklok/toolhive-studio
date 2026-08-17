@@ -56,3 +56,13 @@ export function isLocalServerProvider(
 ): provider is 'ollama' | 'lmstudio' {
   return provider === 'ollama' || provider === 'lmstudio'
 }
+
+/**
+ * "Harness" providers (currently just the Cursor CLI agent, via ACP) run
+ * their own tool-calling loop instead of exposing a plain text-completion
+ * model — they're grouped separately in the model picker and don't need
+ * manual credentials (registration with ToolHive happens automatically).
+ */
+export function isHarnessProvider(provider: string): provider is 'acp' {
+  return provider === 'acp'
+}

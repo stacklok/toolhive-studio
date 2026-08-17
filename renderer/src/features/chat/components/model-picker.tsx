@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { Bot, ChevronDown, Check, Search, X } from 'lucide-react'
+import { Bot, ChevronDown, Check, Search, Wrench, X } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { Input } from '@/common/components/ui/input'
 import {
@@ -20,6 +20,7 @@ import {
 } from '@/common/components/ui/tooltip'
 import { cn } from '@/common/lib/utils'
 import { useAvailableModels } from '../hooks/use-available-models'
+import { isHarnessProvider } from '../lib/utils'
 import { getProviderIcon } from './provider-icons'
 
 export interface ModelSelection {
@@ -54,12 +55,126 @@ export function ModelPicker({
   const [searchQueries, setSearchQueries] = useState<Record<string, string>>({})
   const inputRef = useRef<HTMLInputElement>(null)
 
+  const modelProviders = providersWithCredentials.filter(
+    (provider) => !isHarnessProvider(provider.id)
+  )
+  const harnessProviders = providersWithCredentials.filter((provider) =>
+    isHarnessProvider(provider.id)
+  )
+
   const getFilteredModels = (provider: { id: string; models: string[] }) => {
     const query = searchQueries[provider.id]?.toLowerCase() || ''
     if (!query) return provider.models
 
     return provider.models.filter((model: string) =>
       model.toLowerCase().includes(query)
+    )
+  }
+
+  const renderProviderSub = (provider: {
+    id: string
+    name: string
+    models: string[]
+  }) => {
+    const filteredModels = getFilteredModels(provider)
+    const hasSearch = provider.models.length > 50
+
+    return (
+      <DropdownMenuSub key={provider.id}>
+        <DropdownMenuSubTrigger>
+          <div className="flex w-full items-center justify-between">
+            <div className="flex min-w-0 items-center gap-2">
+              {getProviderIcon(provider.id)}
+              <span className="max-w-40 truncate" title={provider.name}>
+                {provider.name}
+              </span>
+            </div>
+          </div>
+        </DropdownMenuSubTrigger>
+        <DropdownMenuSubContent
+          className="flex max-h-[480px] w-auto max-w-100 flex-col
+            overflow-hidden px-2"
+          onFocus={(e) => {
+            e.preventDefault()
+            inputRef.current?.focus()
+          }}
+        >
+          <div className="shrink-0">
+            <DropdownMenuLabel className="text-muted-foreground text-xs">
+              {provider.name} Models
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+
+            {hasSearch && (
+              <div className="bg-background border-b p-2">
+                <div className="relative">
+                  <Search
+                    className="text-muted-foreground absolute top-2.5 left-2 h-4
+                      w-4"
+                  />
+                  <Input
+                    ref={inputRef}
+                    placeholder="Search models..."
+                    value={searchQueries[provider.id] || ''}
+                    onChange={(e) => {
+                      setSearchQueries((prev) => ({
+                        ...prev,
+                        [provider.id]: e.target.value,
+                      }))
+                    }}
+                    className="h-8 pl-8"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {filteredModels.length > 0 ? (
+              filteredModels.map((model) => {
+                const isSelected =
+                  value?.provider === provider.id && value.model === model
+
+                return (
+                  <DropdownMenuItem
+                    key={model}
+                    onClick={() => onChange({ provider: provider.id, model })}
+                    className="flex cursor-pointer items-center justify-between"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="h-4 w-4">
+                        {isSelected && <Check className="h-4 w-4" />}
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-mono text-sm">{model}</span>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                )
+              })
+            ) : (
+              <div className="text-muted-foreground p-2 text-center text-sm">
+                {provider.models.length === 0
+                  ? provider.id === 'ollama'
+                    ? 'Ollama is not running or no models available'
+                    : 'No models available'
+                  : `No models found matching "${searchQueries[provider.id]}"`}
+              </div>
+            )}
+          </div>
+
+          {hasSearch && (
+            <div className="bg-background shrink-0 border-t p-2">
+              <p className="text-muted-foreground text-center text-xs">
+                {searchQueries[provider.id]
+                  ? `${filteredModels.length} of ${provider.models.length} models`
+                  : `${provider.models.length} models available`}
+              </p>
+            </div>
+          )}
+        </DropdownMenuSubContent>
+      </DropdownMenuSub>
     )
   }
 
@@ -100,12 +215,6 @@ export function ModelPicker({
         align="start"
         className={cn('w-80', contentClassName)}
       >
-        <DropdownMenuLabel className="flex items-center gap-2">
-          <Bot className="h-4 w-4" />
-          AI Models
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator />
-
         {onClear && value && (
           <>
             <DropdownMenuItem
@@ -119,113 +228,28 @@ export function ModelPicker({
           </>
         )}
 
-        {providersWithCredentials.map((provider) => {
-          const filteredModels = getFilteredModels(provider)
-          const hasSearch = provider.models.length > 50
+        {modelProviders.length > 0 && (
+          <>
+            <DropdownMenuLabel className="flex items-center gap-2">
+              <Bot className="h-4 w-4" />
+              AI Models
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {modelProviders.map(renderProviderSub)}
+          </>
+        )}
 
-          return (
-            <DropdownMenuSub key={provider.id}>
-              <DropdownMenuSubTrigger>
-                <div className="flex w-full items-center justify-between">
-                  <div className="flex min-w-0 items-center gap-2">
-                    {getProviderIcon(provider.id)}
-                    <span className="max-w-40 truncate" title={provider.name}>
-                      {provider.name}
-                    </span>
-                  </div>
-                </div>
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent
-                className="flex max-h-[480px] w-auto max-w-100 flex-col
-                  overflow-hidden px-2"
-                onFocus={(e) => {
-                  e.preventDefault()
-                  inputRef.current?.focus()
-                }}
-              >
-                <div className="shrink-0">
-                  <DropdownMenuLabel className="text-muted-foreground text-xs">
-                    {provider.name} Models
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-
-                  {hasSearch && (
-                    <div className="bg-background border-b p-2">
-                      <div className="relative">
-                        <Search
-                          className="text-muted-foreground absolute top-2.5
-                            left-2 h-4 w-4"
-                        />
-                        <Input
-                          ref={inputRef}
-                          placeholder="Search models..."
-                          value={searchQueries[provider.id] || ''}
-                          onChange={(e) => {
-                            setSearchQueries((prev) => ({
-                              ...prev,
-                              [provider.id]: e.target.value,
-                            }))
-                          }}
-                          className="h-8 pl-8"
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="min-h-0 flex-1 overflow-y-auto">
-                  {filteredModels.length > 0 ? (
-                    filteredModels.map((model) => {
-                      const isSelected =
-                        value?.provider === provider.id && value.model === model
-
-                      return (
-                        <DropdownMenuItem
-                          key={model}
-                          onClick={() =>
-                            onChange({ provider: provider.id, model })
-                          }
-                          className="flex cursor-pointer items-center
-                            justify-between"
-                        >
-                          <div className="flex items-center gap-2">
-                            <div className="h-4 w-4">
-                              {isSelected && <Check className="h-4 w-4" />}
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-mono text-sm">{model}</span>
-                            </div>
-                          </div>
-                        </DropdownMenuItem>
-                      )
-                    })
-                  ) : (
-                    <div
-                      className="text-muted-foreground p-2 text-center text-sm"
-                    >
-                      {provider.models.length === 0
-                        ? provider.id === 'ollama'
-                          ? 'Ollama is not running or no models available'
-                          : 'No models available'
-                        : `No models found matching "${searchQueries[provider.id]}"`}
-                    </div>
-                  )}
-                </div>
-
-                {hasSearch && (
-                  <div className="bg-background shrink-0 border-t p-2">
-                    <p className="text-muted-foreground text-center text-xs">
-                      {searchQueries[provider.id]
-                        ? `${filteredModels.length} of ${provider.models.length} models`
-                        : `${provider.models.length} models available`}
-                    </p>
-                  </div>
-                )}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          )
-        })}
+        {harnessProviders.length > 0 && (
+          <>
+            {modelProviders.length > 0 && <DropdownMenuSeparator />}
+            <DropdownMenuLabel className="flex items-center gap-2">
+              <Wrench className="h-4 w-4" />
+              AI Harnesses
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {harnessProviders.map(renderProviderSub)}
+          </>
+        )}
 
         {onOpenSettings && (
           <>

@@ -1,7 +1,13 @@
 import log from 'electron-log/renderer'
+import { useQueryClient } from '@tanstack/react-query'
 import { ModelPicker, type ModelSelection } from './model-picker'
 import type { ChatSettings } from '../types'
+import { isHarnessProvider } from '../lib/utils'
+import { useManageClients } from '@/features/clients/hooks/use-manage-clients'
 import { trackEvent } from '@/common/lib/analytics'
+
+const ACP_GROUP_NAME = 'default'
+const ACP_CLIENT_TYPE = 'cursor'
 
 interface ModelSelectorProps {
   settings: ChatSettings
@@ -15,6 +21,41 @@ export function ModelSelector({
   onSettingsChange,
   onOpenSettings,
 }: ModelSelectorProps) {
+  // Harness providers (Cursor Agent, via ACP) need no manual credentials —
+  // instead, the moment one is selected here we register it as a ToolHive
+  // client (same mechanism as Manage Clients) so its running MCP servers
+  // reach the spawned agent process.
+  const {
+    installedClients,
+    defaultValues,
+    getClientFieldName,
+    addClientToGroup,
+  } = useManageClients(ACP_GROUP_NAME)
+  const queryClient = useQueryClient()
+
+  const ensureHarnessRegistered = async () => {
+    const isInstalled = installedClients.some(
+      (c) => c.client_type === ACP_CLIENT_TYPE
+    )
+    const isRegistered =
+      defaultValues[getClientFieldName(ACP_CLIENT_TYPE)] ?? false
+    if (isInstalled && !isRegistered) {
+      await addClientToGroup(ACP_CLIENT_TYPE, ACP_GROUP_NAME)
+    }
+    // Needed regardless of registration outcome — this app's credential
+    // gating (hasCredentials, the composer, the pre-send check) all key off
+    // a truthy apiKey, and harness providers have no real key to store.
+    await window.electronAPI.chat.saveSettings('acp', {
+      apiKey: 'enabled',
+      enabledTools: [],
+    })
+    queryClient.invalidateQueries({ queryKey: ['chat', 'settings', 'acp'] })
+    queryClient.invalidateQueries({
+      queryKey: ['chat', 'allProvidersWithSettings'],
+    })
+    queryClient.invalidateQueries({ queryKey: ['chat', 'availableModels'] })
+  }
+
   const handleModelSelect = async ({ provider, model }: ModelSelection) => {
     trackEvent(`Playground: select model ${model}`, { provider })
 
@@ -24,6 +65,10 @@ export function ModelSelector({
     }
 
     try {
+      if (isHarnessProvider(provider)) {
+        await ensureHarnessRegistered()
+      }
+
       const providerSettings =
         await window.electronAPI.chat.getSettings(provider)
 

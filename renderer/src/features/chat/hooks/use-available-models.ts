@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo } from 'react'
 import type { ChatProvider } from '../types'
-import { hasValidCredentials } from '../lib/utils'
+import { hasValidCredentials, isHarnessProvider } from '../lib/utils'
 
 interface AvailableProvider extends ChatProvider {
   hasCredentials: boolean
@@ -43,7 +43,10 @@ export function useAvailableModels() {
   })
 
   const providersWithCredentials = useMemo(
-    () => availableProviders.filter((provider) => provider.hasCredentials),
+    () =>
+      availableProviders.filter(
+        (provider) => provider.hasCredentials || isHarnessProvider(provider.id)
+      ),
     [availableProviders]
   )
 

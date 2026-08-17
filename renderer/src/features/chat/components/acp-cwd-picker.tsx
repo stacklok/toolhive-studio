@@ -36,7 +36,7 @@ export function AcpCwdPicker({ threadId }: AcpCwdPickerProps) {
           variant="ghost"
           size="sm"
           className="flex h-8 items-center gap-1.5 px-2 has-[>svg]:px-2"
-          aria-label="Choose ACP working directory"
+          aria-label="Choose Cursor Agent working directory"
           onClick={handlePick}
         >
           <FolderOpen className="size-4" />

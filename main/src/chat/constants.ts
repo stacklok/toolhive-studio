@@ -312,10 +312,10 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     ],
   },
   {
-    // POC: spawns the local `agent` (Cursor CLI) binary as an ACP server.
+    // Spawns the local `agent` (Cursor CLI) binary as an ACP server.
     // Model selection isn't supported by ACP, so this is a single fixed entry.
     id: 'acp',
-    name: 'ACP (Cursor Agent)',
+    name: 'Cursor Agent',
     models: ['cursor-agent'],
   },
 ] as const satisfies ChatProviderInfo[]

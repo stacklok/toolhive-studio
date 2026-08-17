@@ -33,8 +33,6 @@ import {
 } from '../hooks/use-chat-settings'
 import { ScrollArea } from '@/common/components/ui/scroll-area'
 import { THV_DISPLAY_NAME } from '@common/app-info'
-import { Switch } from '@/common/components/ui/switch'
-import { WrapperField } from '@/common/components/settings/tabs/components/wrapper-field'
 import { useManageClients } from '@/features/clients/hooks/use-manage-clients'
 import { trackEvent } from '@/common/lib/analytics'
 import type { ChatSettings } from '../types'
@@ -104,48 +102,21 @@ export function DialogProviderSettings({
     refetchProviders,
   } = useChatSettings()
 
-  // ACP's "Enable" switch mirrors whether the `cursor` client is registered
-  // in ToolHive's `default` group — the same fact Manage Clients shows —
-  // rather than a value staged in `providerKeys` alongside every other
-  // provider's credential.
+  // The ACP row shows a live read-only status: whether the `cursor` client
+  // is registered in ToolHive's `default` group. Registration itself now
+  // happens automatically the moment the user picks Cursor Agent in the
+  // Playground's model picker (see model-selector.tsx) — this dialog has no
+  // interactive control for it.
   const {
     installedClients,
     defaultValues: registeredClientDefaults,
     getClientFieldName,
-    addClientToGroup,
-    removeClientFromGroup,
   } = useManageClients(ACP_GROUP_NAME)
   const isCursorInstalled = installedClients.some(
     (c) => c.client_type === ACP_CLIENT_TYPE
   )
   const isCursorRegistered =
     registeredClientDefaults[getClientFieldName(ACP_CLIENT_TYPE)] ?? false
-  const [isTogglingAcp, setIsTogglingAcp] = useState(false)
-
-  const handleAcpToggle = async (checked: boolean, enabledTools: string[]) => {
-    trackEvent(`Playground: toggle ACP integration`, { enabled: checked })
-    setIsTogglingAcp(true)
-    try {
-      if (checked) {
-        await addClientToGroup(ACP_CLIENT_TYPE, ACP_GROUP_NAME)
-        await updateProviderSettingsMutation.mutateAsync({
-          provider: 'acp',
-          settings: { apiKey: 'enabled', enabledTools },
-        })
-      } else {
-        await removeClientFromGroup(ACP_CLIENT_TYPE, ACP_GROUP_NAME)
-        await updateProviderSettingsMutation.mutateAsync({
-          provider: 'acp',
-          settings: { apiKey: '', enabledTools },
-        })
-      }
-      await refetchProviders()
-    } catch (error) {
-      log.error('Failed to toggle ACP integration:', error)
-    } finally {
-      setIsTogglingAcp(false)
-    }
-  }
 
   // Sync local state with hook data on dialog open and on provider list
   // changes (refresh). Using the "adjusting state on prop change" pattern
@@ -417,42 +388,28 @@ export function DialogProviderSettings({
                       if (pk.provider.id === 'acp') {
                         return (
                           <div className="border-border/30 bg-muted/10 space-y-3 border-t px-4 pb-4">
-                            <div className="pt-2">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div>
-                                    <WrapperField
-                                      label="Enable integration"
-                                      description={
-                                        isCursorInstalled
-                                          ? `Registers the Cursor CLI with ${THV_DISPLAY_NAME}'s default group, so running MCP servers are available to the local \`agent acp\` process.`
-                                          : `Cursor CLI not detected by ${THV_DISPLAY_NAME}.`
-                                      }
-                                      htmlFor="acp-enable-switch"
-                                    >
-                                      <Switch
-                                        id="acp-enable-switch"
-                                        checked={isCursorRegistered}
-                                        disabled={
-                                          !isCursorInstalled || isTogglingAcp
-                                        }
-                                        onCheckedChange={(checked) =>
-                                          handleAcpToggle(
-                                            checked,
-                                            pk.enabledTools
-                                          )
-                                        }
-                                      />
-                                    </WrapperField>
-                                  </div>
-                                </TooltipTrigger>
-                                {!isCursorInstalled && (
-                                  <TooltipContent>
-                                    Install/log into the Cursor CLI (`agent`),
-                                    then reopen this dialog.
-                                  </TooltipContent>
+                            <div className="space-y-2 pt-2">
+                              <div className="flex items-center justify-between">
+                                <p className="text-muted-foreground text-sm">
+                                  {isCursorInstalled
+                                    ? `Registered automatically with ${THV_DISPLAY_NAME} the first time you select Cursor Agent in the Playground, so its running MCP servers reach the local \`agent acp\` process.`
+                                    : `Cursor CLI not detected by ${THV_DISPLAY_NAME}. Install/log into it (\`agent\`), then reopen this dialog.`}
+                                </p>
+                                {isCursorInstalled && (
+                                  <Badge
+                                    variant={
+                                      isCursorRegistered
+                                        ? 'secondary'
+                                        : 'outline'
+                                    }
+                                    className="ml-3 shrink-0 text-xs"
+                                  >
+                                    {isCursorRegistered
+                                      ? 'Registered'
+                                      : 'Not registered yet'}
+                                  </Badge>
                                 )}
-                              </Tooltip>
+                              </div>
                             </div>
                           </div>
                         )

@@ -126,7 +126,7 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
   },
   {
     id: 'acp',
-    name: 'ACP (Cursor Agent)',
+    name: 'Cursor Agent',
     models: CHAT_PROVIDER_INFO.find((p) => p.id === 'acp')?.models || [],
     createModel: (_modelId: string, _apiKey: string, cwd?: string) => {
       const resolvedCwd = cwd && cwd.trim() ? cwd.trim() : app.getPath('home')

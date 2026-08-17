@@ -194,8 +194,8 @@ export function McpServerSelector({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          MCP tools aren&apos;t configured here for ACP agents — manage MCP
-          servers on the MCP Servers page.
+          Cursor Agent runs its own tools — manage MCP servers on the MCP
+          Servers page.
         </TooltipContent>
       </Tooltip>
     )
