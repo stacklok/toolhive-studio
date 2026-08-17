@@ -211,6 +211,13 @@ export const chatApi = {
           name,
           enabled
         ),
+      getAcpCwd: (threadId: string): Promise<string | null> =>
+        ipcRenderer.invoke('chat:thread-settings:get-acp-cwd', threadId),
+      setAcpCwd: (
+        threadId: string,
+        cwd: string | null
+      ): Promise<{ success: boolean; error?: string }> =>
+        ipcRenderer.invoke('chat:thread-settings:set-acp-cwd', threadId, cwd),
     },
   },
 }
@@ -243,6 +250,7 @@ export interface ChatAPI {
             apiKey: string
             enabledTools?: string[]
             agentId?: string
+            cwd?: string
           }
     ) => Promise<{ streamId: string }>
     resumeStream: (chatId: string) => Promise<{
@@ -500,6 +508,11 @@ export interface ChatAPI {
         threadId: string,
         name: string,
         enabled: boolean
+      ) => Promise<{ success: boolean; error?: string }>
+      getAcpCwd: (threadId: string) => Promise<string | null>
+      setAcpCwd: (
+        threadId: string,
+        cwd: string | null
       ) => Promise<{ success: boolean; error?: string }>
     }
   }

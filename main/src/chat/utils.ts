@@ -25,7 +25,7 @@ export function createModelFromRequest(
     return provider.createModel(request.model, request.endpointURL)
   }
   if (hasApiKey(request)) {
-    return provider.createModel(request.model, request.apiKey)
+    return provider.createModel(request.model, request.apiKey, request.cwd)
   }
   throw new Error('Invalid request: missing credentials')
 }

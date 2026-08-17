@@ -52,6 +52,12 @@ export function useManageClients(groupName: string) {
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaClientsQueryKey(),
       })
+      // The Playground's ACP "Enable" switch mirrors this same registration
+      // fact — keep it from going stale if it (or Manage Clients, or any
+      // other entry point) changes group membership.
+      queryClient.invalidateQueries({
+        queryKey: ['chat', 'allProvidersWithSettings'],
+      })
     },
   })
 
@@ -77,6 +83,9 @@ export function useManageClients(groupName: string) {
       })
       queryClient.invalidateQueries({
         queryKey: getApiV1BetaGroupsQueryKey(),
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['chat', 'allProvidersWithSettings'],
       })
     },
   })

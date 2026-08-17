@@ -7,6 +7,7 @@ import {
   writeThreadSelectedModel,
   writeThreadEnabledMcpTools,
   writeThreadEnabledSkills,
+  writeThreadAcpCwd,
 } from '../../db/writers/threads-writer'
 import { writeThreadAgentId } from '../../db/writers/agents-writer'
 import {
@@ -17,6 +18,7 @@ import {
   readThreadSelectedModel,
   readThreadEnabledMcpTools,
   readThreadEnabledSkills,
+  readThreadAcpCwd,
 } from '../../db/readers/threads-reader'
 import { readThreadAgentId } from '../../db/readers/agents-reader'
 import { StorageError, ThreadNotFoundError } from '../runtime/errors'
@@ -111,6 +113,14 @@ export class ThreadsRepository extends Effect.Service<ThreadsRepository>()(
       writeThreadEnabledSkills: (threadId: string, skills: string[]) =>
         wrapSync('writeThreadEnabledSkills', () => {
           writeThreadEnabledSkills(threadId, skills)
+        }),
+
+      readThreadAcpCwd: (threadId: string) =>
+        wrapSync('readThreadAcpCwd', () => readThreadAcpCwd(threadId)),
+
+      writeThreadAcpCwd: (threadId: string, cwd: string | null) =>
+        wrapSync('writeThreadAcpCwd', () => {
+          writeThreadAcpCwd(threadId, cwd)
         }),
 
       readThreadAgentId: (threadId: string) =>

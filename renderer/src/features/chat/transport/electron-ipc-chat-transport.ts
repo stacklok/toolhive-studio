@@ -35,6 +35,7 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
         model: string
         apiKey: string
         enabledTools: string[]
+        cwd?: string
       }
   > {
     // Prefer the per-thread selection so a stream picks up the model that
@@ -90,11 +91,22 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
           ? providerSettings.apiKey || ''
           : ''
 
+      const cwd =
+        selectedModel.provider === 'acp' && chatId
+          ? (this.config.queryClient.getQueryData<string | null>([
+              'chat',
+              'thread',
+              chatId,
+              'acpCwd',
+            ]) ?? undefined)
+          : undefined
+
       return {
         provider: selectedModel.provider,
         model: selectedModel.model,
         apiKey,
         enabledTools: providerSettings?.enabledTools || [],
+        cwd,
       }
     }
   }
@@ -315,6 +327,7 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
         model: settings.model,
         apiKey: settings.apiKey,
         enabledTools: settings.enabledTools || [],
+        cwd: settings.cwd,
       }
     }
 

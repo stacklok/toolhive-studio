@@ -49,6 +49,8 @@ const CHAT_SETTINGS_KEYS = {
     ['chat', 'thread', threadId, 'selectedModel'] as const,
   threadEnabledMcpTools: (threadId: string) =>
     ['chat', 'thread', threadId, 'enabledMcpTools'] as const,
+  threadAcpCwd: (threadId: string) =>
+    ['chat', 'thread', threadId, 'acpCwd'] as const,
   settings: (provider: ChatProvider | string) =>
     ['chat', 'settings', provider] as const,
   allSettings: ['chat', 'settings'] as const,
@@ -461,4 +463,40 @@ export function useChatSettings(threadId?: string | null) {
   )
 
   return result
+}
+
+/**
+ * Per-thread working directory for ACP-based providers (e.g. the Cursor CLI
+ * agent). Cached under a query key `electron-ipc-chat-transport.ts` reads
+ * directly via `queryClient.getQueryData` when building a chat request.
+ */
+export function useAcpCwd(threadId?: string | null) {
+  const queryClient = useQueryClient()
+
+  const { data: cwd, isLoading } = useQuery({
+    queryKey: threadId
+      ? CHAT_SETTINGS_KEYS.threadAcpCwd(threadId)
+      : ['chat', 'thread', '__none__', 'acpCwd'],
+    queryFn: () => window.electronAPI.chat.threadSettings.getAcpCwd(threadId!),
+    enabled: !!threadId,
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
+  })
+
+  const setCwdMutation = useMutation({
+    mutationFn: (cwd: string | null) => {
+      if (!threadId) throw new Error('No active thread')
+      return window.electronAPI.chat.threadSettings.setAcpCwd(threadId, cwd)
+    },
+    onSuccess: (_, cwd) => {
+      if (!threadId) return
+      queryClient.setQueryData(CHAT_SETTINGS_KEYS.threadAcpCwd(threadId), cwd)
+    },
+  })
+
+  return {
+    cwd: cwd ?? null,
+    isLoading,
+    setCwd: setCwdMutation.mutateAsync,
+  }
 }

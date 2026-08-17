@@ -29,6 +29,7 @@ import { ModelSelector } from './model-selector'
 import { McpServerSelector } from './mcp-server-selector'
 import { SkillSelector } from './skill-selector'
 import { AgentSelector } from './agent-selector'
+import { AcpCwdPicker } from './acp-cwd-picker'
 import type { ChatSettings } from '../types'
 import { toast } from 'sonner'
 import { toastVariants } from '@/common/lib/toast'
@@ -256,7 +257,13 @@ function InputWithAttachments({
                 onOpenSettings={handleOpenSettings}
                 onProviderChange={handleProviderChange}
               />
-              <McpServerSelector threadId={threadId} />
+              <McpServerSelector
+                threadId={threadId}
+                isAcpProvider={settings.provider === 'acp'}
+              />
+              {settings.provider === 'acp' && (
+                <AcpCwdPicker threadId={threadId} />
+              )}
               <SkillSelector threadId={threadId} />
             </>
           )}

@@ -25,6 +25,11 @@ type BaseChatRequest = {
    * the main process falls back to the default built-in agent.
    */
   agentId?: string
+  /**
+   * Working directory for ACP-based providers (e.g. the Cursor CLI agent).
+   * Ignored by every other provider.
+   */
+  cwd?: string
 }
 
 // Chat request interface - discriminated union for different provider types
@@ -47,7 +52,11 @@ export type ChatProvider =
     })
   | (ChatProviderInfo & {
       id: Exclude<string, 'ollama' | 'lmstudio'>
-      createModel: (modelId: string, apiKey: string) => LanguageModel
+      createModel: (
+        modelId: string,
+        apiKey: string,
+        cwd?: string
+      ) => LanguageModel
     })
 
 export interface AvailableServer {

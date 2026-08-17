@@ -161,6 +161,21 @@ export function readThreadEnabledMcpTools(
   )
 }
 
+export function readThreadAcpCwd(threadId: string): string | null {
+  return withDbSpan(
+    'DB read thread ACP cwd',
+    'db.read',
+    { 'db.thread_id': threadId },
+    () => {
+      const db = getDb()
+      const row = db
+        .prepare('SELECT acp_cwd FROM threads WHERE id = ?')
+        .get(threadId) as { acp_cwd: string | null } | undefined
+      return row?.acp_cwd ?? null
+    }
+  )
+}
+
 export function readThreadEnabledSkills(threadId: string): string[] {
   return withDbSpan(
     'DB read thread enabled skills',

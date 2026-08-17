@@ -48,6 +48,19 @@ export function setThreadEnabledMcpTools(
   )
 }
 
+export function getThreadAcpCwd(threadId: string): string | null {
+  return runChatSyncOr(ThreadSettingsService.getThreadAcpCwd(threadId), null)
+}
+
+export function setThreadAcpCwd(
+  threadId: string,
+  cwd: string | null
+): { success: boolean; error?: string } {
+  return runChatToResultSync(
+    ThreadSettingsService.setThreadAcpCwd(threadId, cwd).pipe(Effect.as({}))
+  )
+}
+
 export function getThreadEnabledSkills(threadId: string): string[] {
   return runChatSyncOr(
     ThreadSettingsService.getThreadEnabledSkills(threadId),

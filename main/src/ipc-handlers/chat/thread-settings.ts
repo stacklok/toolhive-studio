@@ -6,6 +6,8 @@ import {
   setThreadEnabledMcpTools,
   getThreadEnabledSkills,
   setThreadEnabledSkill,
+  getThreadAcpCwd,
+  setThreadAcpCwd,
 } from '../../chat/thread-settings-storage'
 
 export function register() {
@@ -40,5 +42,14 @@ export function register() {
     'chat:thread-settings:set-enabled-skill',
     (_, threadId: string, name: string, enabled: boolean) =>
       setThreadEnabledSkill(threadId, name, enabled)
+  )
+
+  ipcMain.handle('chat:thread-settings:get-acp-cwd', (_, threadId: string) =>
+    getThreadAcpCwd(threadId)
+  )
+
+  ipcMain.handle(
+    'chat:thread-settings:set-acp-cwd',
+    (_, threadId: string, cwd: string | null) => setThreadAcpCwd(threadId, cwd)
   )
 }

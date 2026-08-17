@@ -216,6 +216,23 @@ export function writeThreadEnabledMcpTools(
   )
 }
 
+export function writeThreadAcpCwd(threadId: string, cwd: string | null): void {
+  if (!isDbWritable()) return
+  withDbSpan(
+    'DB write thread ACP cwd',
+    'db.write',
+    { 'db.thread_id': threadId },
+    () => {
+      const db = getDb()
+      db.prepare(
+        `UPDATE threads
+         SET acp_cwd = ?, last_edit_timestamp = ?
+         WHERE id = ?`
+      ).run(cwd, Date.now(), threadId)
+    }
+  )
+}
+
 export function writeThreadEnabledSkills(
   threadId: string,
   skills: string[] | null

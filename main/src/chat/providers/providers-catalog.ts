@@ -6,6 +6,7 @@ import { createOpenRouter } from '@openrouter/ai-sdk-provider'
 import { createOllama } from 'ai-sdk-ollama'
 import { createOpenAICompatible } from '@ai-sdk/openai-compatible'
 import { createACPProvider } from '@mcpc-tech/acp-ai-provider'
+import { app } from 'electron'
 import log from '../../logger'
 import {
   CHAT_PROVIDER_INFO,
@@ -127,13 +128,16 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
     id: 'acp',
     name: 'ACP (Cursor Agent)',
     models: CHAT_PROVIDER_INFO.find((p) => p.id === 'acp')?.models || [],
-    createModel: () => {
-      log.info('[CHAT] Creating ACP model: spawning local `agent acp`')
+    createModel: (_modelId: string, _apiKey: string, cwd?: string) => {
+      const resolvedCwd = cwd && cwd.trim() ? cwd.trim() : app.getPath('home')
+      log.info(
+        `[CHAT] Creating ACP model: spawning local \`agent acp\` in ${resolvedCwd}`
+      )
       const acp = createACPProvider({
         command: 'agent',
         args: ['acp'],
         session: {
-          cwd: process.cwd(),
+          cwd: resolvedCwd,
           mcpServers: [],
         },
       })

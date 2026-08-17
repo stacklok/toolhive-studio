@@ -16,6 +16,7 @@ import * as m004 from './migrations/004-mcp-app-ui-metadata'
 import * as m005 from './migrations/005-agents'
 import * as m006 from './migrations/006-enabled-skills'
 import * as m007 from './migrations/007-per-thread-settings'
+import * as m008 from './migrations/008-thread-acp-cwd'
 
 const migrations: Migration[] = [
   { id: 1, name: '001-initial-schema', up: m001.up },
@@ -25,6 +26,7 @@ const migrations: Migration[] = [
   { id: 5, name: '005-agents', up: m005.up },
   { id: 6, name: '006-enabled-skills', up: m006.up },
   { id: 7, name: '007-per-thread-settings', up: m007.up },
+  { id: 8, name: '008-thread-acp-cwd', up: m008.up },
 ]
 
 export function runMigrations(): void {

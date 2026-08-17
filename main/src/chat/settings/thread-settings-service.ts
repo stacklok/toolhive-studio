@@ -48,6 +48,17 @@ export class ThreadSettingsService extends Effect.Service<ThreadSettingsService>
             yield* repo.writeThreadEnabledMcpTools(threadId, next)
           }),
 
+        getThreadAcpCwd: (threadId: string) =>
+          repo
+            .readThreadAcpCwd(threadId)
+            .pipe(Effect.catchTag('StorageError', () => Effect.succeed(null))),
+
+        setThreadAcpCwd: (threadId: string, cwd: string | null) =>
+          Effect.gen(function* () {
+            yield* ensureRow(threadId)
+            yield* repo.writeThreadAcpCwd(threadId, cwd || null)
+          }),
+
         getThreadEnabledSkills: (threadId: string) =>
           repo
             .readThreadEnabledSkills(threadId)

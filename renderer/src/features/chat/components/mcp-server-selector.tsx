@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
 import log from 'electron-log/renderer'
 import { Button } from '@/common/components/ui/button'
@@ -26,9 +27,19 @@ import { trackEvent } from '@/common/lib/analytics'
 
 interface McpServerSelectorProps {
   threadId?: string | null
+  /**
+   * ACP-based agents run their own tool loop — ToolHive's per-tool
+   * enable/disable UI has no effect on them. Render a link to the MCP
+   * servers page instead of the tool picker.
+   */
+  isAcpProvider?: boolean
 }
 
-export function McpServerSelector({ threadId }: McpServerSelectorProps) {
+export function McpServerSelector({
+  threadId,
+  isAcpProvider,
+}: McpServerSelectorProps) {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [isOpen, setIsOpen] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -160,6 +171,34 @@ export function McpServerSelector({ threadId }: McpServerSelectorProps) {
   const handleOpenSettings = (open: boolean) => {
     trackEvent(`Playground: open manage mcp server settings`)
     setIsOpen(open)
+  }
+
+  if (isAcpProvider) {
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex h-8 items-center gap-1.5 px-2 has-[>svg]:px-2"
+            aria-label="Manage MCP servers"
+            onClick={() => {
+              trackEvent('Playground: navigate to MCP servers from ACP')
+              navigate({
+                to: '/group/$groupName',
+                params: { groupName: 'default' },
+              })
+            }}
+          >
+            <ServerIcon className="size-4" />
+          </Button>
+        </TooltipTrigger>
+        <TooltipContent>
+          MCP tools aren&apos;t configured here for ACP agents — manage MCP
+          servers on the MCP Servers page.
+        </TooltipContent>
+      </Tooltip>
+    )
   }
 
   return (
