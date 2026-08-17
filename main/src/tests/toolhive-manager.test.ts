@@ -189,7 +189,6 @@ describe('toolhive-manager', () => {
           windowsHide: true,
           env: expect.objectContaining({
             TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
-            TOOLHIVE_SKILLS_LOCK_ENABLED: 'true',
           }),
         }
       )
@@ -423,7 +422,6 @@ describe('toolhive-manager', () => {
           windowsHide: true,
           env: expect.objectContaining({
             TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
-            TOOLHIVE_SKILLS_LOCK_ENABLED: 'true',
           }),
         }
       )
@@ -482,7 +480,6 @@ describe('toolhive-manager', () => {
       expect(entries).toContain('/bin')
 
       expect(spawnOptions.env.TOOLHIVE_SKIP_DESKTOP_CHECK).toBe('true')
-      expect(spawnOptions.env.TOOLHIVE_SKILLS_LOCK_ENABLED).toBe('true')
     })
 
     it('omits sentry flags when telemetry is disabled', async () => {
