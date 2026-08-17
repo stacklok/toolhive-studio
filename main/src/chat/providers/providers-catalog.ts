@@ -19,14 +19,13 @@ import {
   assertLoopbackBaseURL,
   anthropicBaseURLFromGatewayEndpoint,
   googleBaseURLFromGatewayEndpoint,
-  gatewayFetch,
+  gatewayFetchFromInput,
   isClaudeGatewayModel,
   isGeminiGatewayModel,
 } from './thv-llm'
 
 function createGatewayFetch(): typeof fetch {
-  return (input, init) =>
-    gatewayFetch(typeof input === 'string' ? input : input.toString(), init)
+  return (input, init) => gatewayFetchFromInput(input, init)
 }
 
 export const CHAT_PROVIDERS: ChatProvider[] = [

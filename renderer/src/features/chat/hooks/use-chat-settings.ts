@@ -288,18 +288,16 @@ export function useChatSettings(threadId?: string | null) {
       }
     }
 
-    {
-      const apiKey =
-        providerSettings && hasApiKey(providerSettings)
-          ? providerSettings.apiKey || ''
-          : ''
+    const apiKey =
+      providerSettings && hasApiKey(providerSettings)
+        ? providerSettings.apiKey || ''
+        : ''
 
-      return {
-        provider: selectedModel?.provider || '',
-        model: selectedModel?.model || '',
-        apiKey,
-        enabledTools: allEnabledTools,
-      }
+    return {
+      provider: selectedModel?.provider || '',
+      model: selectedModel?.model || '',
+      apiKey,
+      enabledTools: allEnabledTools,
     }
   }, [selectedModel, providerSettings, enabledMcpTools, enabledMcpServers])
 

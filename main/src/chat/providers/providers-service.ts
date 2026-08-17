@@ -12,10 +12,12 @@ import { SettingsService } from '../settings/settings-service'
 import {
   fetchGatewayModels,
   getLastKnownGatewayModels,
+  invalidateLlmConfigCache,
   isLlmConfigured,
   readLlmConfig,
   resolveGatewayBaseURL,
 } from './thv-llm'
+import { buildLoopbackBaseURL, effectiveListenPort } from './thv-llm/url'
 
 async function fetchOllamaModels(baseURL?: string): Promise<string[]> {
   if (!baseURL || !baseURL.trim()) return []
@@ -130,6 +132,7 @@ export class ProvidersService extends Effect.Service<ProvidersService>()(
                 return { id: 'lmstudio', name: 'LM Studio', models }
               }
               if (providerId === THV_LLM_PROVIDER_ID) {
+                invalidateLlmConfigCache()
                 const baseURL =
                   tempCredential?.trim() ||
                   (await resolveGatewayBaseURL()) ||
@@ -272,10 +275,9 @@ export class ProvidersService extends Effect.Service<ProvidersService>()(
               playgroundEnabled &&
               isLlmConfigured(llmConfig)
             ) {
-              const baseURL = yield* Effect.tryPromise({
-                try: () => resolveGatewayBaseURL(),
-                catch: (cause) => cause,
-              }).pipe(Effect.catchAll(() => Effect.succeed('')))
+              const baseURL = buildLoopbackBaseURL(
+                effectiveListenPort(llmConfig)
+              )
 
               const gatewayModels = baseURL
                 ? yield* Effect.tryPromise({

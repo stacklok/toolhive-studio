@@ -50,12 +50,6 @@ export function isLocalServerSettings(settings: ProviderSettings): settings is {
   )
 }
 
-export function isEndpointProviderSettings(
-  settings: ProviderSettings
-): settings is Extract<ProviderSettings, { endpointURL: string }> {
-  return 'endpointURL' in settings
-}
-
 export function providerHasApiKey(
   settings: ProviderSettings
 ): settings is { providerId: string; apiKey: string; enabledTools: string[] } {

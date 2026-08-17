@@ -118,18 +118,41 @@ export function LlmGatewaySettingsPanel({
       })
       onStatusChange?.()
     },
+    onError: (error) => {
+      setSaveError(
+        error instanceof Error
+          ? error.message
+          : 'Failed to save gateway configuration'
+      )
+    },
   })
 
   const handleStart = async () => {
-    await window.electronAPI.chat.llmGateway.ensureStarted()
-    await refetch()
-    onStatusChange?.()
+    try {
+      await window.electronAPI.chat.llmGateway.ensureStarted()
+      setSaveError(null)
+      await refetch()
+      onStatusChange?.()
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : 'Failed to start the LLM proxy'
+      )
+    }
   }
 
   const handleSignIn = async () => {
-    await ensureGatewayReady()
-    await refetch()
-    onStatusChange?.()
+    try {
+      const ready = await ensureGatewayReady()
+      if (!ready.ready) {
+        setSaveError(ready.error ?? 'Sign-in did not complete')
+      } else {
+        setSaveError(null)
+      }
+      await refetch()
+      onStatusChange?.()
+    } catch (error) {
+      setSaveError(error instanceof Error ? error.message : 'Failed to sign in')
+    }
   }
 
   const isLoading = isStatusLoading || isConfigLoading

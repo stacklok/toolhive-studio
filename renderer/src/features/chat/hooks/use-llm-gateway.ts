@@ -13,15 +13,25 @@ export async function ensureGatewayReady(): Promise<{
   ready: boolean
   error?: string
 }> {
-  await window.electronAPI.chat.llmGateway.ensureStarted()
-  const warmup = await window.electronAPI.chat.llmGateway.warmupAuth()
-  if (!warmup.ready) {
+  try {
+    await window.electronAPI.chat.llmGateway.ensureStarted()
+    const warmup = await window.electronAPI.chat.llmGateway.warmupAuth()
+    if (!warmup.ready) {
+      return {
+        ready: false,
+        error:
+          warmup.error ??
+          'Complete sign-in in your browser to use Stacklok Gateway.',
+      }
+    }
+    return { ready: true }
+  } catch (error) {
     return {
       ready: false,
       error:
-        warmup.error ??
-        'Complete sign-in in your browser to use Stacklok Gateway.',
+        error instanceof Error
+          ? error.message
+          : 'Failed to connect to Stacklok Gateway.',
     }
   }
-  return { ready: true }
 }

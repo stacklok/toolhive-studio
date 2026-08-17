@@ -214,7 +214,9 @@ describe('DialogProviderSettings', () => {
       await user.click(
         screen.getByRole('button', { name: /stacklok gateway/i })
       )
-      await user.click(screen.getByTestId('remove-credentials-button'))
+      await user.click(
+        screen.getByRole('button', { name: /remove gateway connection/i })
+      )
       await user.click(screen.getByRole('button', { name: /^save$/i }))
 
       await waitFor(() => {

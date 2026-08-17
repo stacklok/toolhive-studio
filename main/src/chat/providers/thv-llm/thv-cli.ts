@@ -38,7 +38,7 @@ export function spawnThvProcess(
   })
 }
 
-export async function runThvCommand(
+async function runThvCommand(
   args: string[],
   deps: ThvCliDeps = defaultDeps,
   timeoutMs = 30_000

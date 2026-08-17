@@ -1,8 +1,6 @@
 import { ipcMain } from 'electron'
 import type { LlmGatewaySetupInput } from '../../chat/providers/thv-llm'
 import {
-  clearPlaygroundGatewaySettings,
-  enablePlaygroundGateway,
   ensureProxyStarted,
   getGatewayStatus,
   invalidateLlmConfigCache,
@@ -13,6 +11,10 @@ import {
   toLlmGatewayConfigForm,
   warmupGatewayAuth,
 } from '../../chat/providers/thv-llm'
+import {
+  clearPlaygroundGatewaySettings,
+  enablePlaygroundGateway,
+} from '../../chat/providers/thv-llm/playground'
 
 export function register() {
   ipcMain.handle('chat:llm-gateway:status', async () => getGatewayStatus())

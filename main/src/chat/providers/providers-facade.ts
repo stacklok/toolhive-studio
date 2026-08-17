@@ -1,5 +1,4 @@
 import { runChatPromiseOr } from '../runtime'
-import log from '../../logger'
 import { ProvidersService } from './providers-service'
 import { CHAT_PROVIDER_INFO } from '../constants'
 
@@ -32,21 +31,7 @@ export async function fetchProviderModelsHandler(
 export async function getAllProvidersHandler(): Promise<
   Array<{ id: string; name: string; models: string[] }>
 > {
-  try {
-    const providers = await runChatPromiseOr(
-      ProvidersService.getAllProviders(),
-      []
-    )
-    return providers
-  } catch (error) {
-    log.error(
-      '[chat] getAllProviders failed, returning static provider catalog:',
-      error
-    )
-    return CHAT_PROVIDER_INFO.map((provider) => ({
-      id: provider.id,
-      name: provider.name,
-      models: [...provider.models],
-    }))
-  }
+  // Empty fallback when unavailable — do not return the static catalog, which
+  // would look like live providers during an outage.
+  return runChatPromiseOr(ProvidersService.getAllProviders(), [])
 }

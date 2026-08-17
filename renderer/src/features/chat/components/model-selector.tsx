@@ -107,6 +107,10 @@ export function ModelSelector({
       void queryClient.invalidateQueries({
         queryKey: ['chat', 'availableModels'],
       })
+    } catch (error) {
+      setLoginMessage(
+        error instanceof Error ? error.message : 'Failed to apply model'
+      )
     } finally {
       setIsRetryingLogin(false)
     }

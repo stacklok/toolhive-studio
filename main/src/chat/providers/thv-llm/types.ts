@@ -58,10 +58,3 @@ export interface EnsureStartedResult {
   studioOwnsProxy: boolean
   error?: string
 }
-
-export interface WarmupAuthResult {
-  ready: boolean
-  authState: LlmGatewayAuthState
-  modelCount: number
-  error?: string
-}

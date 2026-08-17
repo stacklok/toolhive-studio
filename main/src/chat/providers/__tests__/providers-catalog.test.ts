@@ -36,6 +36,7 @@ vi.mock('../thv-llm', () => ({
   THV_LLM_PROXY_API_KEY: 'thv-proxy',
   assertLoopbackBaseURL: vi.fn(),
   gatewayFetch: vi.fn(),
+  gatewayFetchFromInput: vi.fn(),
   isClaudeGatewayModel: (modelId: string) => {
     const id = modelId.trim().toLowerCase()
     return id.includes('claude') || id.startsWith('anthropic.')

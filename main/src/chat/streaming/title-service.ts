@@ -10,7 +10,7 @@ import {
   THV_LLM_PROVIDER_ID,
   type EndpointProviderId,
 } from '../constants'
-import { resolveGatewayBaseURL } from '../providers/thv-llm'
+import { resolveGatewayBaseURL } from '../providers/thv-llm/proxy-manager'
 import { CHAT_PROVIDERS } from '../providers/providers-catalog'
 import { createModelFromRequest } from '../utils'
 import type { ChatRequest, ChatUIMessage } from '../types'

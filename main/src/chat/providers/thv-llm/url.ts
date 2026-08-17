@@ -14,10 +14,6 @@ export function buildLoopbackBaseURL(listenPort: number): string {
   return `http://127.0.0.1:${listenPort}/v1`
 }
 
-export function buildLoopbackAnthropicBaseURL(listenPort: number): string {
-  return `http://127.0.0.1:${listenPort}/anthropic/v1`
-}
-
 export function anthropicBaseURLFromGatewayEndpoint(
   endpointURL: string
 ): string {

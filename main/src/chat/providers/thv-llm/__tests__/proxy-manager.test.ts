@@ -52,7 +52,6 @@ vi.mock('../thv-cli', () => ({
     Boolean(config?.gateway_url?.trim()),
   readLlmConfig: (...args: unknown[]) => readLlmConfigMock(...args),
   spawnThvProcess: (...args: unknown[]) => spawnThvMock(...args),
-  runThvCommand: vi.fn(),
 }))
 
 import {
@@ -243,5 +242,29 @@ describe('thv-llm proxy manager', () => {
 
     expect(result).toBeNull()
     expect(spawnThvMock).not.toHaveBeenCalled()
+  })
+
+  it('coalesces concurrent ensureProxyStarted calls into a single spawn', async () => {
+    vi.useFakeTimers()
+
+    const child = {
+      pid: 7777,
+      exitCode: null,
+      signalCode: null,
+      unref: vi.fn(),
+      kill: vi.fn(),
+    } as unknown as ChildProcess
+    spawnThvMock.mockReturnValue(child)
+    gatewayFetchMock.mockRejectedValue(new Error('ECONNREFUSED'))
+
+    const first = ensureProxyStarted(deps)
+    const second = ensureProxyStarted(deps)
+    await vi.runAllTimersAsync()
+    const [a, b] = await Promise.all([first, second])
+    vi.useRealTimers()
+
+    expect(spawnThvMock).toHaveBeenCalledTimes(1)
+    expect(a).toEqual(b)
+    expect(a.started).toBe(true)
   })
 })

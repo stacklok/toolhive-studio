@@ -418,6 +418,7 @@ export function DialogProviderSettings({
                               className="hover:bg-destructive
                                 hover:text-destructive-foreground
                                 cursor-pointer"
+                              aria-label="Remove gateway connection"
                               data-testid="remove-credentials-button"
                             >
                               <Trash2 className="h-4 w-4" />
@@ -542,6 +543,7 @@ export function DialogProviderSettings({
                                         handleRemoveApiKey(pk.provider.id)
                                       }
                                       className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
+                                      aria-label="Remove credentials"
                                       data-testid="remove-credentials-button"
                                     >
                                       <Trash2 className="h-4 w-4" />

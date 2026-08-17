@@ -1,5 +1,9 @@
 import { Effect } from 'effect'
-import { runChatSyncOr, runChatPromiseOr, runChatToResultSync } from './runtime'
+import {
+  runChatSyncOr,
+  runChatPromiseOr,
+  runChatToResultSync,
+} from './runtime/adapters'
 import { SettingsService } from './settings/settings-service'
 import type {
   ChatSettingsProvider,

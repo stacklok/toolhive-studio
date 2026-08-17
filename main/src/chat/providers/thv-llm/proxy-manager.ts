@@ -3,6 +3,8 @@ import log from '../../../logger'
 import {
   THV_LLM_PROXY_API_KEY,
   type EnsureStartedResult,
+  type LlmGatewayAuthState,
+  type LlmGatewayStatus,
   type ThvLlmConfigJson,
 } from './types'
 import { buildLoopbackBaseURL, effectiveListenPort } from './url'
@@ -10,33 +12,31 @@ import { gatewayFetch, isAuthenticationRequiredResponse } from './fetch'
 import {
   isLlmConfigured,
   readLlmConfig,
-  runThvCommand,
   spawnThvProcess,
   type ThvCliDeps,
 } from './thv-cli'
-import {
-  isPlaygroundGatewayEnabled,
-  migratePlaygroundGatewayEnablement,
-} from './playground'
 
 let ownedProxyProcess: ChildProcess | undefined
 let studioOwnsProxy = false
+/** Last `thv llm config show` result. Cleared by invalidateLlmConfigCache
+ * (save-config, disable, get-config, warmup-auth, and boot proxy start). */
 let cachedConfig: ThvLlmConfigJson | null | undefined
 let lastKnownModels: string[] = []
+let inFlightEnsure: Promise<EnsureStartedResult> | undefined
+
+const MODELS_LIST_TIMEOUT_MS = 15_000
+const MODELS_AUTH_TIMEOUT_MS = 90_000
 
 export function resetThvLlmGatewayStateForTests(): void {
   ownedProxyProcess = undefined
   studioOwnsProxy = false
   cachedConfig = undefined
   lastKnownModels = []
+  inFlightEnsure = undefined
 }
 
 export function getLastKnownGatewayModels(): readonly string[] {
   return lastKnownModels
-}
-
-export function setLastKnownGatewayModelsForTests(models: string[]): void {
-  lastKnownModels = models
 }
 
 async function getConfiguredLlmConfig(
@@ -65,7 +65,7 @@ export async function resolveGatewayBaseURL(
   return baseURL
 }
 
-export async function isProxyReachable(baseURL: string): Promise<boolean> {
+async function isProxyReachable(baseURL: string): Promise<boolean> {
   try {
     const response = await gatewayFetch(`${baseURL}/models`, {
       headers: {
@@ -90,9 +90,18 @@ async function waitForProxy(baseURL: string, attempts = 20): Promise<boolean> {
   return false
 }
 
-export async function ensureProxyStarted(
+export function ensureProxyStarted(
   deps: ThvCliDeps = { binPath: '', spawnThv: spawnThvProcess }
 ): Promise<EnsureStartedResult> {
+  if (!inFlightEnsure) {
+    inFlightEnsure = startOwnedProxy(deps).finally(() => {
+      inFlightEnsure = undefined
+    })
+  }
+  return inFlightEnsure
+}
+
+async function startOwnedProxy(deps: ThvCliDeps): Promise<EnsureStartedResult> {
   const config = await getConfiguredLlmConfig(deps)
   if (!isLlmConfigured(config)) {
     return {
@@ -167,6 +176,8 @@ export async function ensureProxyStarted(
 export async function startConfiguredLlmProxyIfNeeded(
   deps: ThvCliDeps = { binPath: '', spawnThv: spawnThvProcess }
 ): Promise<EnsureStartedResult | null> {
+  const { migratePlaygroundGatewayEnablement, isPlaygroundGatewayEnabled } =
+    await import('./playground')
   migratePlaygroundGatewayEnablement()
   if (!isPlaygroundGatewayEnabled()) {
     log.debug(
@@ -194,7 +205,8 @@ export async function startConfiguredLlmProxyIfNeeded(
 }
 
 export async function fetchGatewayModels(
-  baseURL: string
+  baseURL: string,
+  options?: { timeoutMs?: number }
 ): Promise<{ models: string[]; authRequired: boolean; error?: string }> {
   try {
     const response = await gatewayFetch(`${baseURL}/models`, {
@@ -202,7 +214,7 @@ export async function fetchGatewayModels(
         Authorization: `Bearer ${THV_LLM_PROXY_API_KEY}`,
         'Content-Type': 'application/json',
       },
-      timeoutMs: 90_000,
+      timeoutMs: options?.timeoutMs ?? MODELS_LIST_TIMEOUT_MS,
     })
 
     const bodyText = await response.text()
@@ -281,7 +293,9 @@ export async function warmupGatewayAuth(
     }
   }
 
-  const listing = await fetchGatewayModels(baseURL)
+  const listing = await fetchGatewayModels(baseURL, {
+    timeoutMs: MODELS_AUTH_TIMEOUT_MS,
+  })
   if (listing.authRequired) {
     return {
       ready: false,
@@ -314,7 +328,7 @@ export async function warmupGatewayAuth(
 
 export async function getGatewayStatus(
   deps: ThvCliDeps = { binPath: '', spawnThv: spawnThvProcess }
-): Promise<import('./types').LlmGatewayStatus> {
+): Promise<LlmGatewayStatus> {
   const config = await getConfiguredLlmConfig(deps)
   if (!isLlmConfigured(config)) {
     return {
@@ -334,7 +348,7 @@ export async function getGatewayStatus(
   const baseURL = buildLoopbackBaseURL(listenPort)
   const proxyRunning = await isProxyReachable(baseURL)
 
-  let authState: import('./types').LlmGatewayAuthState = 'proxy_stopped'
+  let authState: LlmGatewayAuthState = 'proxy_stopped'
   let modelCount = lastKnownModels.length
   let error: string | null = null
 
@@ -386,29 +400,5 @@ export function stopOwnedProxy(): void {
   } finally {
     ownedProxyProcess = undefined
     studioOwnsProxy = false
-  }
-}
-
-export async function runThvLlmTokenForWarmup(
-  deps: ThvCliDeps = { binPath: '', spawnThv: spawnThvProcess }
-): Promise<{ ok: boolean; error?: string }> {
-  try {
-    const { exitCode, stderr } = await runThvCommand(
-      ['llm', 'token'],
-      deps,
-      120_000
-    )
-    if (exitCode !== 0) {
-      return {
-        ok: false,
-        error: stderr.trim() || 'thv llm token failed',
-      }
-    }
-    return { ok: true }
-  } catch (error) {
-    return {
-      ok: false,
-      error: error instanceof Error ? error.message : String(error),
-    }
   }
 }
