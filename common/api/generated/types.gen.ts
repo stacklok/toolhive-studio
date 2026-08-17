@@ -407,6 +407,37 @@ export type GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig = {
   software_statement?: string
 }
 
+export type GithubComStacklokToolhivePkgAuthserverDelegateClientRunConfig = {
+  /**
+   * Audiences are the RFC 8707 resource values this client may request a
+   * token for. Required, and must be a subset of RunConfig.AllowedAudiences:
+   * a declared client must not receive every allowed audience just because
+   * this was left empty.
+   */
+  audiences?: Array<string>
+  /**
+   * ClientID is the OAuth client_id this client presents at the token endpoint.
+   */
+  client_id?: string
+  /**
+   * ClientSecretEnvVar is the name of an environment variable containing
+   * the client secret. One of ClientSecretFile or ClientSecretEnvVar is
+   * required.
+   */
+  client_secret_env_var?: string
+  /**
+   * ClientSecretFile is the path to a file containing the client secret.
+   * If both this and ClientSecretEnvVar are set, the file takes precedence.
+   */
+  client_secret_file?: string
+  /**
+   * Scopes are the OAuth scopes this client may request. Required, and
+   * must be a subset of RunConfig.ScopesSupported: a declared client must
+   * not receive every supported scope just because this was left empty.
+   */
+  scopes?: Array<string>
+}
+
 /**
  * IdentityFromToken extracts user identity (subject, name, email) directly from the
  * OAuth2 token-endpoint response body using gjson dot-notation paths. When set, the
@@ -577,6 +608,23 @@ export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
  */
 export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
   /**
+   * AllowConfidentialClientRegistration permits Dynamic Client Registration
+   * of confidential clients: when true, /oauth/register accepts
+   * token_endpoint_auth_method values client_secret_basic and
+   * client_secret_post in addition to "none" (still the default on
+   * omission) and mints a client_secret returned exactly once. Confidential
+   * clients are restricted to https non-loopback redirect URIs, and
+   * registrations idle for more than DefaultDCRClientTTL (30 days) are
+   * evicted and must re-register. This gates registration only: disabling
+   * it does not revoke or reject already-minted secrets at the token
+   * endpoint.
+   *
+   * Security: /oauth/register is unauthenticated, so this issues client
+   * secrets to any caller. Combining it with InsecureAllowHTTP is rejected
+   * by Validate.
+   */
+  allow_confidential_client_registration?: boolean
+  /**
    * AllowedAudiences is the list of valid resource URIs that tokens can be issued for.
    * Per RFC 8707, the "resource" parameter in authorization and token requests is
    * validated against this list. Required for MCP compliance.
@@ -602,6 +650,21 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
   baseline_client_scopes?: Array<string>
   cimd?: GithubComStacklokToolhivePkgAuthserverCimdRunConfig
   /**
+   * DelegateClients declares confidential OAuth clients to register at
+   * authorization-server startup, including clients intended for RFC 8693
+   * token exchange.
+   *
+   * Independent of AllowConfidentialClientRegistration: declaring a client
+   * here does not require or enable self-service confidential DCR, and
+   * setting that flag does not declare or enable any client here. They
+   * govern different endpoints — this field is static configuration the
+   * operator controls directly, while the flag is admission policy for the
+   * unauthenticated /oauth/register endpoint.
+   *
+   * See DelegateClientRunConfig for the per-client field reference.
+   */
+  delegate_clients?: Array<GithubComStacklokToolhivePkgAuthserverDelegateClientRunConfig>
+  /**
    * DelegationTokenLifespan is the maximum lifetime for delegated tokens issued
    * via RFC 8693 token exchange. Specified as a Go duration string (e.g., "15m").
    * If empty, defaults to 15 minutes.
@@ -617,6 +680,36 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    */
   disable_upstream_token_injection?: boolean
   /**
+   * ForceConfidentialRedirectURIs lists redirect URIs that must be registered
+   * as confidential clients regardless of the token_endpoint_auth_method the
+   * DCR request declares. A registration whose redirect_uris contains an
+   * EXACT match for one of these entries is issued a real client_secret and
+   * reported back as token_endpoint_auth_method "client_secret_post", even
+   * if the request said "none" or omitted the field.
+   *
+   * This exists for MCP clients (Perplexity is the known case) that declare
+   * themselves public (token_endpoint_auth_method: "none") per RFC 7591 but
+   * then refuse to proceed because the response carries no client_secret —
+   * a self-contradictory request no conformant server can satisfy as
+   * written. RFC 7591 §3.2.1 permits the server to substitute metadata, so
+   * this takes such a client at its word that it wants a secret.
+   *
+   * Exact matching is deliberate: it is not a way to obtain a usable
+   * credential for another client. An attacker who registers with someone
+   * else's callback URI is issued a secret for a client whose authorization
+   * codes are delivered to that someone else's redirect endpoint, not to
+   * the attacker — the secret is useless without also controlling the
+   * callback.
+   *
+   * Requires AllowConfidentialClientRegistration; every entry must be a
+   * valid https non-loopback URI (Validate rejects loopback entries — the
+   * same restriction AllowConfidentialClientRegistration itself enforces
+   * exists so secrets do not land in distributed native apps, and this
+   * override must not bypass it). Remove an entry once the client is fixed
+   * to handle "none" registrations correctly.
+   */
+  force_confidential_redirect_uris?: Array<string>
+  /**
    * HMACSecretFiles contains file paths to HMAC secrets for signing authorization codes
    * and refresh tokens (opaque tokens).
    * First file is the current secret (must be at least 32 bytes), subsequent files
@@ -624,6 +717,20 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    * If empty, an ephemeral secret will be auto-generated (development only).
    */
   hmac_secret_files?: Array<string>
+  /**
+   * InsecureAllowConfidentialOverLoopbackHTTP opts in to confidential clients
+   * when Issuer is a plain-HTTP loopback URL. Without this flag, that
+   * combination is rejected: a loopback http:// issuer is normally fine for
+   * local development (the traffic never leaves the machine), but client
+   * secrets would otherwise travel over cleartext. Defaults to false. Has no
+   * effect when there are no confidential clients or Issuer is https.
+   *
+   * Applies identically to delegate clients and DCR-registered clients; the
+   * Kubernetes CRD blocks this combination unconditionally only because CEL
+   * cannot express the loopback exception, not because delegate clients need
+   * a stricter policy — see EmbeddedAuthServerConfig's doc comment.
+   */
+  insecure_allow_confidential_over_loopback_http?: boolean
   /**
    * InsecureAllowHTTP permits an http:// issuer URL for non-localhost hosts.
    * Only set this for in-cluster Kubernetes deployments on a trusted network.
@@ -652,13 +759,6 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    * TrustedIssuers lists external OIDC issuers whose tokens are accepted as
    * subject tokens during RFC 8693 token exchange. Empty (the default) means
    * only self-issued subject tokens are accepted.
-   *
-   * Prerequisite: the token-exchange grant requires a confidential client,
-   * and no supported deployment path provisions one today (DCR and CIMD
-   * clients are both public-only, and there is no client-seeding field on
-   * this RunConfig), so this grant is not yet usable end to end for
-   * self-issued or external subject tokens alike. Tracked in
-   * https://github.com/stacklok/toolhive/issues/6082.
    *
    * See tokenexchange.TrustedIssuer for the per-issuer field reference, and
    * docs/arch/17-token-exchange-delegation.md for the trust model, consent
@@ -1018,6 +1118,13 @@ export type GithubComStacklokToolhivePkgPluginsInstalledPlugin = {
    * InstalledAt is the timestamp when the plugin was installed.
    */
   installed_at?: string
+  /**
+   * Managed indicates this install is tracked in the project's
+   * toolhive.lock.yaml plugins: key. Only ever true for project-scoped
+   * installs. No omitempty: false is an observable state (unmanaged),
+   * not an absence.
+   */
+  managed?: boolean
   metadata?: GithubComStacklokToolhivePkgPluginsPluginMetadata
   /**
    * ProjectRoot is the project root path for project-scoped plugins. Empty for user-scoped.
@@ -1577,6 +1684,7 @@ export type GithubComStacklokToolhivePkgSkillsFailureReason =
   | 'lock-write-failed'
   | 'signature-invalid'
   | 'signer-mismatch'
+  | 'provenance-field-mismatch'
   | 'unsigned-rejected'
   | 'unknown'
 
@@ -1654,6 +1762,48 @@ export type GithubComStacklokToolhivePkgSkillsLocalBuild = {
 }
 
 /**
+ * Provenance is the signer identity the project's lock file records
+ * for this skill, when project-scoped and lock-managed.
+ */
+export type GithubComStacklokToolhivePkgSkillsProvenanceInfo = {
+  /**
+   * CertIssuer is the OIDC issuer that authenticated the signer.
+   */
+  cert_issuer?: string
+  /**
+   * Provisional marks provenance with a documented verification gap
+   * (git signatures until transparency-log validation lands).
+   */
+  provisional?: boolean
+  /**
+   * RepositoryRef is the git ref the signing workflow ran on, from Fulcio
+   * certificate extension 1.3.6.1.4.1.57264.1.14. Empty means
+   * unconstrained, matching lock files written before the field existed.
+   */
+  repository_ref?: string
+  /**
+   * RepositoryURI is the source repository from the certificate
+   * extensions, when present.
+   */
+  repository_uri?: string
+  /**
+   * RunnerEnvironment is the runner class the signing workflow executed in
+   * (e.g. "github-hosted"), from Fulcio certificate extension
+   * 1.3.6.1.4.1.57264.1.11. Empty means unconstrained.
+   */
+  runner_environment?: string
+  /**
+   * SignerIdentity is the certificate subject identity (workflow path for
+   * GitHub Actions certificates, SAN verbatim otherwise).
+   */
+  signer_identity?: string
+  /**
+   * SigstoreURL is the Sigstore instance the signature chains to.
+   */
+  sigstore_url?: string
+}
+
+/**
  * Scope for the installation
  */
 export type GithubComStacklokToolhivePkgSkillsScope = 'user' | 'project'
@@ -1699,6 +1849,12 @@ export type GithubComStacklokToolhivePkgSkillsSkillFileEntry = {
 export type GithubComStacklokToolhivePkgSkillsSkillInfo = {
   installed_skill?: GithubComStacklokToolhivePkgSkillsInstalledSkill
   metadata?: GithubComStacklokToolhivePkgSkillsSkillMetadata
+  provenance?: GithubComStacklokToolhivePkgSkillsProvenanceInfo
+  /**
+   * Unsigned reports that the lock file records an explicit unsigned
+   * exception for this skill.
+   */
+  unsigned?: boolean
 }
 
 /**
@@ -2683,7 +2839,12 @@ export type PkgApiV1InstallSkillRequest = {
  * Response after successfully installing a skill
  */
 export type PkgApiV1InstallSkillResponse = {
+  provenance?: GithubComStacklokToolhivePkgSkillsProvenanceInfo
   skill?: GithubComStacklokToolhivePkgSkillsInstalledSkill
+  /**
+   * Whether the install was recorded as an explicit unsigned exception.
+   */
+  unsigned?: boolean
 }
 
 /**
@@ -2833,6 +2994,15 @@ export type PkgApiV1PushPluginRequest = {
  * Request to push a built skill artifact
  */
 export type PkgApiV1PushSkillRequest = {
+  /**
+   * Key is the path to a cosign private key used to sign the pushed
+   * artifact
+   */
+  key?: string
+  /**
+   * NoSign pushes without signing
+   */
+  no_sign?: boolean
   /**
    * OCI reference to push
    */
