@@ -29,6 +29,31 @@ vi.mock('../provider-icons', () => ({
 const mockChatAPI = {
   getProviders: vi.fn(),
   getSettings: vi.fn(),
+  llmGateway: {
+    getStatus: vi.fn().mockResolvedValue({
+      configured: false,
+      proxyRunning: false,
+      authState: 'not_configured',
+      listenPort: null,
+      baseURL: null,
+      gatewayURL: null,
+      modelCount: 0,
+      error: null,
+      studioOwnsProxy: false,
+    }),
+    getConfig: vi.fn().mockResolvedValue({
+      gatewayUrl: '',
+      issuer: '',
+      clientId: '',
+      audience: '',
+      configured: false,
+    }),
+    saveConfig: vi.fn().mockResolvedValue({ ok: true }),
+    disable: vi.fn().mockResolvedValue({ ok: true }),
+    ensureStarted: vi.fn(),
+    warmupAuth: vi.fn(),
+    invalidateConfig: vi.fn(),
+  },
 }
 
 function renderPicker(

@@ -4,9 +4,18 @@ import {
   CHAT_PROVIDER_INFO,
   DEFAULT_LMSTUDIO_URL,
   DEFAULT_OLLAMA_URL,
+  THV_LLM_PROVIDER_ID,
+  THV_LLM_PROVIDER_NAME,
 } from '../constants'
 import { ProviderError } from '../runtime/errors'
 import { SettingsService } from '../settings/settings-service'
+import {
+  fetchGatewayModels,
+  getLastKnownGatewayModels,
+  isLlmConfigured,
+  readLlmConfig,
+  resolveGatewayBaseURL,
+} from './thv-llm'
 
 async function fetchOllamaModels(baseURL?: string): Promise<string[]> {
   if (!baseURL || !baseURL.trim()) return []
@@ -34,6 +43,30 @@ async function fetchLMStudioModels(baseURL?: string): Promise<string[]> {
   return data.models
     .filter((model) => model.type === 'llm' || model.type === 'vlm')
     .map((model) => model.key)
+}
+
+async function fetchThvLlmModels(baseURL?: string): Promise<string[]> {
+  if (!baseURL?.trim()) {
+    return [...getLastKnownGatewayModels()]
+  }
+
+  const result = await fetchGatewayModels(baseURL)
+  if (result.models.length > 0) {
+    return result.models
+  }
+
+  if (result.authRequired) {
+    log.debug(
+      '[thv-llm] model list requires authentication; using cached models if any'
+    )
+    return [...getLastKnownGatewayModels()]
+  }
+
+  if (result.error) {
+    log.debug('[thv-llm] model list failed:', result.error)
+  }
+
+  return [...getLastKnownGatewayModels()]
 }
 
 async function fetchOpenRouterModels(): Promise<string[]> {
@@ -95,6 +128,18 @@ export class ProvidersService extends Effect.Service<ProvidersService>()(
                     : DEFAULT_LMSTUDIO_URL
                 const models = await fetchLMStudioModels(baseURL)
                 return { id: 'lmstudio', name: 'LM Studio', models }
+              }
+              if (providerId === THV_LLM_PROVIDER_ID) {
+                const baseURL =
+                  tempCredential?.trim() ||
+                  (await resolveGatewayBaseURL()) ||
+                  ''
+                const models = await fetchThvLlmModels(baseURL)
+                return {
+                  id: THV_LLM_PROVIDER_ID,
+                  name: THV_LLM_PROVIDER_NAME,
+                  models,
+                }
               }
               return null
             },
@@ -203,6 +248,56 @@ export class ProvidersService extends Effect.Service<ProvidersService>()(
                     'Failed to fetch OpenRouter models, using fallback:',
                     error
                   )
+                }
+              }
+            }
+
+            const llmConfig = yield* Effect.tryPromise({
+              try: () => readLlmConfig(),
+              catch: (cause) => cause,
+            }).pipe(Effect.catchAll(() => Effect.succeed(null)))
+
+            const gatewaySettings =
+              yield* settings.getChatSettings(THV_LLM_PROVIDER_ID)
+            const playgroundEnabled = Boolean(
+              'endpointURL' in gatewaySettings &&
+              gatewaySettings.endpointURL.trim()
+            )
+
+            const thvLlmIndex = providers.findIndex(
+              (p) => p.id === THV_LLM_PROVIDER_ID
+            )
+            if (
+              thvLlmIndex !== -1 &&
+              playgroundEnabled &&
+              isLlmConfigured(llmConfig)
+            ) {
+              const baseURL = yield* Effect.tryPromise({
+                try: () => resolveGatewayBaseURL(),
+                catch: (cause) => cause,
+              }).pipe(Effect.catchAll(() => Effect.succeed('')))
+
+              const gatewayModels = baseURL
+                ? yield* Effect.tryPromise({
+                    try: () => fetchThvLlmModels(baseURL),
+                    catch: (cause) => cause,
+                  }).pipe(
+                    Effect.catchAll((error) => {
+                      log.error(
+                        'Failed to fetch Stacklok Gateway models:',
+                        error
+                      )
+                      return Effect.succeed([...getLastKnownGatewayModels()])
+                    })
+                  )
+                : [...getLastKnownGatewayModels()]
+
+              const original = providers[thvLlmIndex]
+              if (original) {
+                providers[thvLlmIndex] = {
+                  id: original.id,
+                  name: original.name,
+                  models: gatewayModels,
                 }
               }
             }

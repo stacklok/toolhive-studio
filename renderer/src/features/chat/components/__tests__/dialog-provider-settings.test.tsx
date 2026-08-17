@@ -17,6 +17,33 @@ const mockChatAPI = {
   saveSettings: vi.fn(),
   clearSettings: vi.fn(),
   fetchProviderModels: vi.fn(),
+  llmGateway: {
+    getStatus: vi.fn().mockResolvedValue({
+      configured: false,
+      proxyRunning: false,
+      authState: 'not_configured',
+      listenPort: null,
+      baseURL: null,
+      gatewayURL: null,
+      modelCount: 0,
+      error: null,
+      studioOwnsProxy: false,
+    }),
+    getConfig: vi.fn().mockResolvedValue({
+      gatewayUrl: '',
+      issuer: '',
+      clientId: '',
+      audience: '',
+      callbackPort: 8080,
+      proxyPort: 14000,
+      configured: false,
+    }),
+    saveConfig: vi.fn().mockResolvedValue({ ok: true }),
+    disable: vi.fn().mockResolvedValue({ ok: true }),
+    ensureStarted: vi.fn(),
+    warmupAuth: vi.fn(),
+    invalidateConfig: vi.fn(),
+  },
 }
 
 const createWrapper = () => {
@@ -134,6 +161,64 @@ describe('DialogProviderSettings', () => {
 
       await waitFor(() => {
         expect(screen.getByText(/Found 3 model/i)).toBeInTheDocument()
+      })
+    })
+  })
+
+  describe('Stacklok Gateway', () => {
+    it('lists the gateway and removes it from Playground on save', async () => {
+      const user = userEvent.setup()
+
+      mockChatAPI.getProviders.mockResolvedValue([
+        {
+          id: 'thv-llm',
+          name: 'Stacklok Gateway',
+          models: ['gpt-4.1'],
+        },
+      ])
+      mockChatAPI.getSettings.mockResolvedValue({
+        endpointURL: 'enabled',
+        enabledTools: [],
+      })
+      mockChatAPI.llmGateway.getConfig.mockResolvedValue({
+        gatewayUrl: 'https://llm-gateway.stacklok.dev',
+        issuer: 'https://issuer.example.com',
+        clientId: 'client',
+        audience: '',
+        callbackPort: 8080,
+        proxyPort: 14000,
+        configured: true,
+      })
+      mockChatAPI.llmGateway.getStatus.mockResolvedValue({
+        configured: true,
+        proxyRunning: true,
+        authState: 'ready',
+        listenPort: 14000,
+        baseURL: 'http://127.0.0.1:14000/v1',
+        gatewayURL: 'https://llm-gateway.stacklok.dev',
+        modelCount: 1,
+        error: null,
+        studioOwnsProxy: true,
+      })
+
+      render(<DialogProviderSettings isOpen={true} onOpenChange={vi.fn()} />, {
+        wrapper: createWrapper(),
+      })
+
+      await waitFor(() => {
+        expect(
+          screen.getByRole('button', { name: /stacklok gateway/i })
+        ).toBeInTheDocument()
+      })
+
+      await user.click(
+        screen.getByRole('button', { name: /stacklok gateway/i })
+      )
+      await user.click(screen.getByTestId('remove-credentials-button'))
+      await user.click(screen.getByRole('button', { name: /^save$/i }))
+
+      await waitFor(() => {
+        expect(mockChatAPI.llmGateway.disable).toHaveBeenCalled()
       })
     })
   })

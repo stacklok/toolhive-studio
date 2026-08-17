@@ -5,7 +5,12 @@ import {
   fallbackTitleFromParts,
 } from '@common/chat/thread-title'
 import log from '../../logger'
-import { LOCAL_PROVIDER_IDS } from '../constants'
+import {
+  ENDPOINT_PROVIDER_IDS,
+  THV_LLM_PROVIDER_ID,
+  type EndpointProviderId,
+} from '../constants'
+import { resolveGatewayBaseURL } from '../providers/thv-llm'
 import { CHAT_PROVIDERS } from '../providers/providers-catalog'
 import { createModelFromRequest } from '../utils'
 import type { ChatRequest, ChatUIMessage } from '../types'
@@ -34,10 +39,8 @@ const OPENROUTER_TITLE_PROVIDER_OPTIONS = {
   },
 }
 
-function isLocalProvider(providerId: string): boolean {
-  return LOCAL_PROVIDER_IDS.includes(
-    providerId as (typeof LOCAL_PROVIDER_IDS)[number]
-  )
+function isEndpointProvider(providerId: string): boolean {
+  return ENDPOINT_PROVIDER_IDS.includes(providerId as EndpointProviderId)
 }
 
 function extractMessageText(message: ChatUIMessage): string {
@@ -161,7 +164,10 @@ export class TitleService extends Effect.Service<TitleService>()(
                 typeof settingsRepo.readProvider
               >[0]
             )
-            if (!providerSettings) {
+            if (
+              !providerSettings &&
+              selected.provider !== THV_LLM_PROVIDER_ID
+            ) {
               return yield* Effect.fail(
                 new ProviderError({
                   providerId: selected.provider,
@@ -170,21 +176,29 @@ export class TitleService extends Effect.Service<TitleService>()(
               )
             }
 
+            const endpointURL =
+              selected.provider === THV_LLM_PROVIDER_ID
+                ? ((yield* Effect.tryPromise({
+                    try: () => resolveGatewayBaseURL(),
+                    catch: (cause) => cause,
+                  }).pipe(Effect.catchAll(() => Effect.succeed(null)))) ?? '')
+                : (providerSettings?.endpointURL ?? '')
+
             const request = (
-              isLocalProvider(selected.provider)
+              isEndpointProvider(selected.provider)
                 ? {
                     chatId: threadId,
                     messages: contextMessages,
                     provider: selected.provider,
                     model: selected.model,
-                    endpointURL: providerSettings.endpointURL ?? '',
+                    endpointURL,
                   }
                 : {
                     chatId: threadId,
                     messages: contextMessages,
                     provider: selected.provider,
                     model: selected.model,
-                    apiKey: providerSettings.apiKey ?? '',
+                    apiKey: providerSettings?.apiKey ?? '',
                   }
             ) as ChatRequest
 

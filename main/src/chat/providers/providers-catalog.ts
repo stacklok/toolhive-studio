@@ -10,8 +10,24 @@ import {
   CHAT_PROVIDER_INFO,
   DEFAULT_OLLAMA_URL,
   DEFAULT_LMSTUDIO_URL,
+  THV_LLM_PROVIDER_ID,
+  THV_LLM_PROVIDER_NAME,
 } from '../constants'
 import type { ChatProvider } from '../types'
+import {
+  THV_LLM_PROXY_API_KEY,
+  assertLoopbackBaseURL,
+  anthropicBaseURLFromGatewayEndpoint,
+  googleBaseURLFromGatewayEndpoint,
+  gatewayFetch,
+  isClaudeGatewayModel,
+  isGeminiGatewayModel,
+} from './thv-llm'
+
+function createGatewayFetch(): typeof fetch {
+  return (input, init) =>
+    gatewayFetch(typeof input === 'string' ? input : input.toString(), init)
+}
 
 export const CHAT_PROVIDERS: ChatProvider[] = [
   {
@@ -120,6 +136,65 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
 
       const openrouter = createOpenRouter({ apiKey })
       return openrouter(modelId)
+    },
+  },
+  {
+    id: THV_LLM_PROVIDER_ID,
+    name: THV_LLM_PROVIDER_NAME,
+    models:
+      CHAT_PROVIDER_INFO.find((p) => p.id === THV_LLM_PROVIDER_ID)?.models ||
+      [],
+    createModel: (modelId: string, endpointURL: string) => {
+      assertLoopbackBaseURL(endpointURL)
+
+      // The proxy is transparent: it injects a JWT and forwards path+body.
+      // Match official clients — Claude Code uses Anthropic Messages
+      // (`/anthropic/v1/messages`); Gemini CLI uses Google generateContent
+      // (`/v1beta/models/{id}:generateContent`). GPT stays on OpenAI
+      // Chat Completions (`/v1/chat/completions`).
+      if (isClaudeGatewayModel(modelId)) {
+        const anthropicBaseURL =
+          anthropicBaseURLFromGatewayEndpoint(endpointURL)
+        assertLoopbackBaseURL(anthropicBaseURL)
+
+        log.info(
+          `[CHAT] Creating Stacklok Gateway Anthropic model: ${modelId} with baseURL: ${anthropicBaseURL}`
+        )
+
+        const anthropic = createAnthropic({
+          baseURL: anthropicBaseURL,
+          apiKey: THV_LLM_PROXY_API_KEY,
+          fetch: createGatewayFetch(),
+        })
+        return anthropic(modelId)
+      }
+
+      if (isGeminiGatewayModel(modelId)) {
+        const googleBaseURL = googleBaseURLFromGatewayEndpoint(endpointURL)
+        assertLoopbackBaseURL(googleBaseURL)
+
+        log.info(
+          `[CHAT] Creating Stacklok Gateway Google model: ${modelId} with baseURL: ${googleBaseURL}`
+        )
+
+        const google = createGoogle({
+          baseURL: googleBaseURL,
+          apiKey: THV_LLM_PROXY_API_KEY,
+          fetch: createGatewayFetch(),
+        })
+        return google(modelId)
+      }
+
+      log.info(
+        `[CHAT] Creating Stacklok Gateway model: ${modelId} with baseURL: ${endpointURL}`
+      )
+
+      const openai = createOpenAI({
+        baseURL: endpointURL,
+        apiKey: THV_LLM_PROXY_API_KEY,
+        fetch: createGatewayFetch(),
+      })
+      return openai.chat(modelId)
     },
   },
 ]

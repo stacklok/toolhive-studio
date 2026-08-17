@@ -6,6 +6,11 @@ type ProviderSettings =
       endpointURL: string
       enabledTools: string[]
     }
+  | {
+      providerId: 'thv-llm'
+      endpointURL: string
+      enabledTools: string[]
+    }
   | { providerId: string; apiKey: string; enabledTools: string[] }
 
 type CredentialSettings = ChatSettings | ProviderSettings
@@ -45,6 +50,12 @@ export function isLocalServerSettings(settings: ProviderSettings): settings is {
   )
 }
 
+export function isEndpointProviderSettings(
+  settings: ProviderSettings
+): settings is Extract<ProviderSettings, { endpointURL: string }> {
+  return 'endpointURL' in settings
+}
+
 export function providerHasApiKey(
   settings: ProviderSettings
 ): settings is { providerId: string; apiKey: string; enabledTools: string[] } {
@@ -56,3 +67,5 @@ export function isLocalServerProvider(
 ): provider is 'ollama' | 'lmstudio' {
   return provider === 'ollama' || provider === 'lmstudio'
 }
+
+export { isGatewayProvider } from './gateway-provider'

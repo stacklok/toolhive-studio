@@ -215,6 +215,33 @@ describe('Electron IPC Chat Transport', () => {
       )
     })
 
+    it('streams through the ToolHive LLM gateway without an API key', async () => {
+      queryClient.setQueryData(['chat', 'selectedModel'], {
+        provider: 'thv-llm',
+        model: 'moonshotai/kimi-k2',
+      })
+      queryClient.setQueryData(['chat', 'settings', 'thv-llm'], {
+        providerId: 'thv-llm',
+        endpointURL: '',
+        enabledTools: [],
+      })
+      ;(window.electronAPI.chat.stream as Mock).mockResolvedValue({
+        streamId: 'stream-123',
+      })
+
+      const stream = await transport.sendMessages(defaultOptions)
+
+      expect(window.electronAPI.chat.stream as Mock).toHaveBeenCalledWith({
+        chatId: 'test-chat',
+        messages: defaultOptions.messages,
+        provider: 'thv-llm',
+        model: 'moonshotai/kimi-k2',
+        endpointURL: '',
+        enabledTools: [],
+      })
+      expect(stream).toBeInstanceOf(ReadableStream)
+    })
+
     it('calls electron API with correct parameters', async () => {
       ;(window.electronAPI.chat.stream as Mock).mockResolvedValue({
         streamId: 'stream-123',

@@ -123,6 +123,10 @@ vi.mock('../toolhive-manager', () => ({
   binPath: '/mock/bin/path',
 }))
 
+vi.mock('../chat/providers/thv-llm', () => ({
+  stopOwnedProxy: vi.fn(),
+}))
+
 vi.mock('../unix-socket-fetch', () => ({
   createMainProcessFetch: vi.fn(() => vi.fn()),
 }))

@@ -1,12 +1,12 @@
 import type { LanguageModel } from 'ai'
 import type { ChatRequest, ChatProvider } from './types'
-import { LOCAL_PROVIDER_IDS, type LocalProviderId } from './constants'
+import { ENDPOINT_PROVIDER_IDS, type EndpointProviderId } from './constants'
 
-function isLocalServerRequest(
+function isEndpointProviderRequest(
   request: ChatRequest
-): request is Extract<ChatRequest, { provider: LocalProviderId }> {
+): request is Extract<ChatRequest, { endpointURL: string }> {
   return (
-    LOCAL_PROVIDER_IDS.includes(request.provider as LocalProviderId) &&
+    ENDPOINT_PROVIDER_IDS.includes(request.provider as EndpointProviderId) &&
     'endpointURL' in request
   )
 }
@@ -21,7 +21,7 @@ export function createModelFromRequest(
   provider: ChatProvider,
   request: ChatRequest
 ): LanguageModel {
-  if (isLocalServerRequest(request)) {
+  if (isEndpointProviderRequest(request)) {
     return provider.createModel(request.model, request.endpointURL)
   }
   if (hasApiKey(request)) {

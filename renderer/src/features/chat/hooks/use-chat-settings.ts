@@ -5,10 +5,17 @@ import {
   isLocalServerSettings,
   providerHasApiKey as hasApiKey,
 } from '../lib/utils'
+import { THV_LLM_PROVIDER_ID } from '../lib/gateway-provider'
 
 export type ProviderWithSettings =
   | {
       provider: ChatProvider & { id: 'ollama' | 'lmstudio' }
+      endpointURL: string
+      hasKey: boolean
+      enabledTools: string[]
+    }
+  | {
+      provider: ChatProvider & { id: 'thv-llm' }
       endpointURL: string
       hasKey: boolean
       enabledTools: string[]
@@ -22,7 +29,10 @@ export type ProviderWithSettings =
 
 export function isLocalServerProvider(
   provider: ProviderWithSettings
-): provider is Extract<ProviderWithSettings, { endpointURL: string }> {
+): provider is Extract<
+  ProviderWithSettings,
+  { provider: ChatProvider & { id: 'ollama' | 'lmstudio' } }
+> {
   return (
     (provider.provider.id === 'ollama' ||
       provider.provider.id === 'lmstudio') &&
@@ -31,15 +41,22 @@ export function isLocalServerProvider(
 }
 
 export function getProviderCredential(provider: ProviderWithSettings): string {
-  return isLocalServerProvider(provider)
-    ? provider.endpointURL
-    : provider.apiKey
+  if ('endpointURL' in provider) {
+    return provider.endpointURL
+  }
+  return provider.apiKey
 }
 
 function isChatProviderLocalServer(
   provider: ChatProvider
 ): provider is ChatProvider & { id: 'ollama' | 'lmstudio' } {
   return provider.id === 'ollama' || provider.id === 'lmstudio'
+}
+
+function isChatProviderGateway(
+  provider: ChatProvider
+): provider is ChatProvider & { id: 'thv-llm' } {
+  return provider.id === THV_LLM_PROVIDER_ID
 }
 
 // Query keys
@@ -116,6 +133,17 @@ function useAllProvidersWithSettings() {
               provider.id
             )
 
+            if (isChatProviderGateway(provider)) {
+              const endpointURL =
+                'endpointURL' in settings ? settings.endpointURL || '' : ''
+              return {
+                provider,
+                endpointURL,
+                hasKey: Boolean(endpointURL.trim()),
+                enabledTools: settings.enabledTools || [],
+              }
+            }
+
             if (isChatProviderLocalServer(provider)) {
               const endpointURL =
                 'endpointURL' in settings ? settings.endpointURL || '' : ''
@@ -135,6 +163,14 @@ function useAllProvidersWithSettings() {
               }
             }
           } catch {
+            if (isChatProviderGateway(provider)) {
+              return {
+                provider,
+                endpointURL: '',
+                hasKey: false,
+                enabledTools: [],
+              }
+            }
             if (isChatProviderLocalServer(provider)) {
               return {
                 provider,
@@ -236,7 +272,23 @@ export function useChatSettings(threadId?: string | null) {
         endpointURL,
         enabledTools: allEnabledTools,
       }
-    } else {
+    }
+
+    if (selectedModel?.provider === THV_LLM_PROVIDER_ID) {
+      const endpointURL =
+        providerSettings && 'endpointURL' in providerSettings
+          ? providerSettings.endpointURL || ''
+          : ''
+
+      return {
+        provider: THV_LLM_PROVIDER_ID,
+        model: selectedModel.model || '',
+        endpointURL,
+        enabledTools: allEnabledTools,
+      }
+    }
+
+    {
       const apiKey =
         providerSettings && hasApiKey(providerSettings)
           ? providerSettings.apiKey || ''
@@ -311,7 +363,9 @@ export function useChatSettings(threadId?: string | null) {
         | { endpointURL: string; enabledTools: string[] }
     }) => {
       const settingsToSave =
-        provider === 'ollama' || provider === 'lmstudio'
+        provider === 'ollama' ||
+        provider === 'lmstudio' ||
+        provider === THV_LLM_PROVIDER_ID
           ? 'endpointURL' in newSettings
             ? {
                 endpointURL: newSettings.endpointURL,
@@ -372,17 +426,22 @@ export function useChatSettings(threadId?: string | null) {
 
         await updateProviderSettingsMutation.mutateAsync({
           provider: selectedModel.provider,
-          settings: isLocalServerSettings(currentProviderSettings)
-            ? {
-                endpointURL: currentProviderSettings.endpointURL || '',
-                enabledTools: tools,
-              }
-            : {
-                apiKey: hasApiKey(currentProviderSettings)
-                  ? currentProviderSettings.apiKey || ''
-                  : '',
-                enabledTools: tools,
-              },
+          settings:
+            isLocalServerSettings(currentProviderSettings) ||
+            selectedModel.provider === THV_LLM_PROVIDER_ID
+              ? {
+                  endpointURL:
+                    'endpointURL' in currentProviderSettings
+                      ? currentProviderSettings.endpointURL || ''
+                      : '',
+                  enabledTools: tools,
+                }
+              : {
+                  apiKey: hasApiKey(currentProviderSettings)
+                    ? currentProviderSettings.apiKey || ''
+                    : '',
+                  enabledTools: tools,
+                },
         })
       } catch (error) {
         console.error('Failed to update enabled tools:', error)

@@ -162,6 +162,9 @@ export async function startToolhive(): Promise<void> {
           ...process.env,
           PATH: createEnhancedPath(),
           TOOLHIVE_SKIP_DESKTOP_CHECK: 'true',
+          // Feature-gate for project-level skills lock file (toolhive.lock.yaml).
+          // Remove once the lockfile feature is GA in thv.
+          TOOLHIVE_SKILLS_LOCK_ENABLED: 'true',
         },
       })
       toolhiveProcess = child

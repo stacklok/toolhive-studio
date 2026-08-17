@@ -34,7 +34,9 @@ import {
 import { ScrollArea } from '@/common/components/ui/scroll-area'
 import { trackEvent } from '@/common/lib/analytics'
 import type { ChatSettings } from '../types'
-import { hasCredentials } from '../lib/utils'
+import { hasCredentials, isGatewayProvider } from '../lib/utils'
+import { LlmGatewaySettingsPanel } from './llm-gateway-settings-panel'
+import { THV_LLM_PROVIDER_ID } from '../lib/gateway-provider'
 
 // Provider-specific configuration for credential input
 function getProviderCredentialConfig(providerId: string, providerName: string) {
@@ -55,6 +57,15 @@ function getProviderCredentialConfig(providerId: string, providerName: string) {
       isSecret: false,
       helpText:
         'Enter the URL of your LM Studio server (default: http://localhost:1234)',
+    }
+  }
+
+  if (providerId === THV_LLM_PROVIDER_ID) {
+    return {
+      label: 'Gateway',
+      placeholder: '',
+      isSecret: false,
+      helpText: undefined,
     }
   }
 
@@ -165,7 +176,7 @@ export function DialogProviderSettings({
       prev.map((pk) => {
         if (pk.provider.id !== providerId) return pk
 
-        if (isLocalServerProvider(pk)) {
+        if (isLocalServerProvider(pk) || isGatewayProvider(pk.provider.id)) {
           return { ...pk, endpointURL: '', hasKey: false }
         } else {
           return { ...pk, apiKey: '', hasKey: false }
@@ -239,6 +250,13 @@ export function DialogProviderSettings({
       trackEvent(`Playground: save provider settings`)
       await Promise.all(
         providerKeys.map(async (pk) => {
+          if (isGatewayProvider(pk.provider.id)) {
+            if (!pk.hasKey) {
+              await window.electronAPI.chat.llmGateway.disable()
+            }
+            return
+          }
+
           const originalProvider = allProvidersWithSettings.find(
             (p) => p.provider.id === pk.provider.id
           )
@@ -260,6 +278,17 @@ export function DialogProviderSettings({
         })
       )
 
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ['chat', 'allProvidersWithSettings'],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: ['chat', 'availableModels'],
+        }),
+        queryClient.invalidateQueries({ queryKey: ['chat', 'selectedModel'] }),
+        queryClient.invalidateQueries({ queryKey: ['chat', 'llmGateway'] }),
+      ])
+
       const updatedProvidersWithKeys = providerKeys.filter(
         (pk) => pk.hasKey && getProviderCredential(pk).trim()
       )
@@ -277,21 +306,31 @@ export function DialogProviderSettings({
         (!hasCredentials(settings) || !currentProviderHasCredentials)
       ) {
         const credential = getProviderCredential(firstProviderWithCredentials)
-        const newSettings: ChatSettings = isLocalServerProvider(
-          firstProviderWithCredentials
-        )
-          ? {
-              provider: firstProviderWithCredentials.provider.id,
-              model: firstProviderWithCredentials.provider.models[0] || '',
-              endpointURL: credential,
-              enabledTools: settings.enabledTools,
-            }
-          : {
-              provider: firstProviderWithCredentials.provider.id,
-              model: firstProviderWithCredentials.provider.models[0] || '',
-              apiKey: credential,
-              enabledTools: settings.enabledTools,
-            }
+        let newSettings: ChatSettings
+        if (isLocalServerProvider(firstProviderWithCredentials)) {
+          newSettings = {
+            provider: firstProviderWithCredentials.provider.id,
+            model: firstProviderWithCredentials.provider.models[0] || '',
+            endpointURL: credential,
+            enabledTools: settings.enabledTools,
+          }
+        } else if (
+          isGatewayProvider(firstProviderWithCredentials.provider.id)
+        ) {
+          newSettings = {
+            provider: THV_LLM_PROVIDER_ID,
+            model: firstProviderWithCredentials.provider.models[0] || '',
+            endpointURL: credential,
+            enabledTools: settings.enabledTools,
+          }
+        } else {
+          newSettings = {
+            provider: firstProviderWithCredentials.provider.id,
+            model: firstProviderWithCredentials.provider.models[0] || '',
+            apiKey: credential,
+            enabledTools: settings.enabledTools,
+          }
+        }
 
         updateSettings(newSettings)
       }
@@ -302,6 +341,7 @@ export function DialogProviderSettings({
       log.error('Failed to save provider settings:', error)
     }
   }, [
+    queryClient,
     providerKeys,
     allProvidersWithSettings,
     settings,
@@ -363,159 +403,193 @@ export function DialogProviderSettings({
                   </CollapsibleTrigger>
 
                   <CollapsibleContent>
-                    {(() => {
-                      const credentialConfig = getProviderCredentialConfig(
-                        pk.provider.id,
-                        pk.provider.name
-                      )
-                      return (
-                        <div className="border-border/30 bg-muted/10 space-y-3 border-t px-4 pb-4">
-                          <div className="space-y-2 pt-2">
-                            <div className="space-y-2">
-                              <div>
-                                <Label
-                                  htmlFor={`apikey-${pk.provider.id}`}
-                                  className="text-sm font-medium"
-                                >
-                                  {credentialConfig.label}
-                                </Label>
-                                {credentialConfig.helpText && (
-                                  <p className="text-muted-foreground mt-1 text-xs">
-                                    {credentialConfig.helpText}
-                                  </p>
-                                )}
-                              </div>
-                              <div className="flex gap-2">
-                                <div className="relative flex-1">
-                                  <Input
-                                    id={`apikey-${pk.provider.id}`}
-                                    type={
-                                      credentialConfig.isSecret &&
-                                      !showApiKeys[pk.provider.id]
-                                        ? 'password'
-                                        : 'text'
-                                    }
-                                    value={getProviderCredential(pk)}
-                                    onChange={(e) =>
-                                      handleApiKeyChange(
-                                        pk.provider.id,
-                                        e.target.value
-                                      )
-                                    }
-                                    placeholder={credentialConfig.placeholder}
-                                    className="pr-10"
-                                  />
-                                  {credentialConfig.isSecret && (
-                                    <Button
-                                      type="button"
-                                      variant="ghost"
-                                      size="sm"
-                                      className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
-                                      onClick={() =>
-                                        toggleShowApiKey(pk.provider.id)
-                                      }
-                                    >
-                                      {showApiKeys[pk.provider.id] ? (
-                                        <EyeOff className="text-muted-foreground h-4 w-4" />
-                                      ) : (
-                                        <Eye className="text-muted-foreground h-4 w-4" />
-                                      )}
-                                    </Button>
+                    {pk.provider.id === THV_LLM_PROVIDER_ID ? (
+                      <div
+                        className="border-border/30 bg-muted/10 border-t px-4
+                          pb-4"
+                      >
+                        {pk.hasKey ? (
+                          <div className="flex justify-end pt-2">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="icon"
+                              onClick={() => handleRemoveApiKey(pk.provider.id)}
+                              className="hover:bg-destructive
+                                hover:text-destructive-foreground
+                                cursor-pointer"
+                              data-testid="remove-credentials-button"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : null}
+                        <LlmGatewaySettingsPanel
+                          onStatusChange={() => {
+                            void queryClient.invalidateQueries({
+                              queryKey: ['chat', 'availableModels'],
+                            })
+                            void queryClient.invalidateQueries({
+                              queryKey: ['chat', 'allProvidersWithSettings'],
+                            })
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      (() => {
+                        const credentialConfig = getProviderCredentialConfig(
+                          pk.provider.id,
+                          pk.provider.name
+                        )
+                        return (
+                          <div className="border-border/30 bg-muted/10 space-y-3 border-t px-4 pb-4">
+                            <div className="space-y-2 pt-2">
+                              <div className="space-y-2">
+                                <div>
+                                  <Label
+                                    htmlFor={`apikey-${pk.provider.id}`}
+                                    className="text-sm font-medium"
+                                  >
+                                    {credentialConfig.label}
+                                  </Label>
+                                  {credentialConfig.helpText && (
+                                    <p className="text-muted-foreground mt-1 text-xs">
+                                      {credentialConfig.helpText}
+                                    </p>
                                   )}
                                 </div>
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
+                                <div className="flex gap-2">
+                                  <div className="relative flex-1">
+                                    <Input
+                                      id={`apikey-${pk.provider.id}`}
+                                      type={
+                                        credentialConfig.isSecret &&
+                                        !showApiKeys[pk.provider.id]
+                                          ? 'password'
+                                          : 'text'
+                                      }
+                                      value={getProviderCredential(pk)}
+                                      onChange={(e) =>
+                                        handleApiKeyChange(
+                                          pk.provider.id,
+                                          e.target.value
+                                        )
+                                      }
+                                      placeholder={credentialConfig.placeholder}
+                                      className="pr-10"
+                                    />
+                                    {credentialConfig.isSecret && (
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="sm"
+                                        className="absolute top-0 right-0 h-full px-3 py-2 hover:bg-transparent"
+                                        onClick={() =>
+                                          toggleShowApiKey(pk.provider.id)
+                                        }
+                                      >
+                                        {showApiKeys[pk.provider.id] ? (
+                                          <EyeOff className="text-muted-foreground h-4 w-4" />
+                                        ) : (
+                                          <Eye className="text-muted-foreground h-4 w-4" />
+                                        )}
+                                      </Button>
+                                    )}
+                                  </div>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleRefreshModels(pk)}
+                                        disabled={
+                                          isRefreshing ||
+                                          (pk.provider.id === 'ollama' ||
+                                          pk.provider.id === 'lmstudio'
+                                            ? !getProviderCredential(pk).trim()
+                                            : !pk.hasKey ||
+                                              !getProviderCredential(pk).trim())
+                                        }
+                                        className="px-3"
+                                        data-testid="refresh-models-button"
+                                      >
+                                        <RefreshCw
+                                          className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                                        />
+                                      </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                      <p>
+                                        {!getProviderCredential(pk).trim()
+                                          ? pk.provider.id === 'ollama' ||
+                                            pk.provider.id === 'lmstudio'
+                                            ? 'Enter a server URL to fetch available models'
+                                            : 'Enter an API key to fetch available models'
+                                          : pk.provider.id === 'ollama' ||
+                                              pk.provider.id === 'lmstudio'
+                                            ? `Fetch available models from the ${pk.provider.name} server URL (will use the current input)`
+                                            : 'Fetch available models using the configured API key'}
+                                      </p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                  {pk.hasKey && (
                                     <Button
                                       type="button"
                                       variant="outline"
-                                      size="sm"
-                                      onClick={() => handleRefreshModels(pk)}
-                                      disabled={
-                                        isRefreshing ||
-                                        (pk.provider.id === 'ollama' ||
-                                        pk.provider.id === 'lmstudio'
-                                          ? !getProviderCredential(pk).trim()
-                                          : !pk.hasKey ||
-                                            !getProviderCredential(pk).trim())
+                                      size="icon"
+                                      onClick={() =>
+                                        handleRemoveApiKey(pk.provider.id)
                                       }
-                                      className="px-3"
-                                      data-testid="refresh-models-button"
+                                      className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
+                                      data-testid="remove-credentials-button"
                                     >
-                                      <RefreshCw
-                                        className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-                                      />
+                                      <Trash2 className="h-4 w-4" />
                                     </Button>
-                                  </TooltipTrigger>
-                                  <TooltipContent>
-                                    <p>
-                                      {!getProviderCredential(pk).trim()
-                                        ? pk.provider.id === 'ollama' ||
-                                          pk.provider.id === 'lmstudio'
-                                          ? 'Enter a server URL to fetch available models'
-                                          : 'Enter an API key to fetch available models'
-                                        : pk.provider.id === 'ollama' ||
-                                            pk.provider.id === 'lmstudio'
-                                          ? `Fetch available models from the ${pk.provider.name} server URL (will use the current input)`
-                                          : 'Fetch available models using the configured API key'}
-                                    </p>
-                                  </TooltipContent>
-                                </Tooltip>
-                                {pk.hasKey && (
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    size="icon"
-                                    onClick={() =>
-                                      handleRemoveApiKey(pk.provider.id)
-                                    }
-                                    className="hover:bg-destructive hover:text-destructive-foreground cursor-pointer"
-                                    data-testid="remove-credentials-button"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                )}
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            {validationStatus[pk.provider.id] && (
-                              <div
-                                className={`rounded-md border p-3 ${
-                                  validationStatus[pk.provider.id]?.valid
-                                    ? 'border-success/20 bg-success/10'
-                                    : 'border-destructive/20 bg-destructive/10'
-                                }`}
-                              >
-                                <p
-                                  className={`text-sm ${
+                              {validationStatus[pk.provider.id] && (
+                                <div
+                                  className={`rounded-md border p-3 ${
                                     validationStatus[pk.provider.id]?.valid
-                                      ? 'text-success'
-                                      : 'text-destructive'
+                                      ? 'border-success/20 bg-success/10'
+                                      : 'border-destructive/20 bg-destructive/10'
                                   }`}
                                 >
-                                  {validationStatus[pk.provider.id]?.valid
-                                    ? `✓ Connection successful! Found ${validationStatus[pk.provider.id]?.modelCount} model${validationStatus[pk.provider.id]?.modelCount === 1 ? '' : 's'}.`
-                                    : `✗ Connection failed. Please check the URL and ensure ${pk.provider.name} is running.`}
-                                </p>
-                              </div>
-                            )}
-                            {pk.hasKey &&
-                              pk.provider.models.length === 0 &&
-                              !validationStatus[pk.provider.id] &&
-                              (isLocalServerProvider(pk)
-                                ? pk.endpointURL.trim() !== ''
-                                : true) && (
-                                <div className="border-warning/20 bg-warning/10 rounded-md border p-3">
-                                  <p className="text-warning text-sm">
-                                    {pk.provider.id === 'ollama' ||
-                                    pk.provider.id === 'lmstudio'
-                                      ? `${pk.provider.name} server is not running or no models are installed. Please start ${pk.provider.name} and ensure you have models available, then click the refresh button above.`
-                                      : 'This provider appears to be offline or has no models available. Click the refresh button above to check again.'}
+                                  <p
+                                    className={`text-sm ${
+                                      validationStatus[pk.provider.id]?.valid
+                                        ? 'text-success'
+                                        : 'text-destructive'
+                                    }`}
+                                  >
+                                    {validationStatus[pk.provider.id]?.valid
+                                      ? `✓ Connection successful! Found ${validationStatus[pk.provider.id]?.modelCount} model${validationStatus[pk.provider.id]?.modelCount === 1 ? '' : 's'}.`
+                                      : `✗ Connection failed. Please check the URL and ensure ${pk.provider.name} is running.`}
                                   </p>
                                 </div>
                               )}
+                              {pk.hasKey &&
+                                pk.provider.models.length === 0 &&
+                                !validationStatus[pk.provider.id] &&
+                                (isLocalServerProvider(pk)
+                                  ? pk.endpointURL.trim() !== ''
+                                  : true) && (
+                                  <div className="border-warning/20 bg-warning/10 rounded-md border p-3">
+                                    <p className="text-warning text-sm">
+                                      {pk.provider.id === 'ollama' ||
+                                      pk.provider.id === 'lmstudio'
+                                        ? `${pk.provider.name} server is not running or no models are installed. Please start ${pk.provider.name} and ensure you have models available, then click the refresh button above.`
+                                        : 'This provider appears to be offline or has no models available. Click the refresh button above to check again.'}
+                                    </p>
+                                  </div>
+                                )}
+                            </div>
                           </div>
-                        </div>
-                      )
-                    })()}
+                        )
+                      })()
+                    )}
                   </CollapsibleContent>
                 </Collapsible>
               ))

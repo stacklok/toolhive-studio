@@ -132,6 +132,9 @@ vi.mock('../../hooks/use-mcp-app-metadata', () => ({
 vi.mock('../../lib/utils', () => ({
   hasCredentials: (settings: Record<string, unknown>) =>
     !!settings.apiKey || !!settings.endpointURL,
+  isGatewayProvider: (provider: string) => provider === 'thv-llm',
+  isLocalServerProvider: (provider: string) =>
+    provider === 'ollama' || provider === 'lmstudio',
 }))
 
 const now = Date.now()
