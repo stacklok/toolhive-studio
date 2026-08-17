@@ -184,6 +184,16 @@ export class TitleService extends Effect.Service<TitleService>()(
                   }).pipe(Effect.catchAll(() => Effect.succeed(null)))) ?? '')
                 : (providerSettings?.endpointURL ?? '')
 
+            if (selected.provider === THV_LLM_PROVIDER_ID && !endpointURL) {
+              return yield* Effect.fail(
+                new ProviderError({
+                  providerId: THV_LLM_PROVIDER_ID,
+                  userMessage:
+                    'Stacklok Gateway is not configured. Open Provider Settings and save your gateway connection.',
+                })
+              )
+            }
+
             const request = (
               isEndpointProvider(selected.provider)
                 ? {
