@@ -2,12 +2,13 @@ import log from 'electron-log/renderer'
 import { useQueryClient } from '@tanstack/react-query'
 import { ModelPicker, type ModelSelection } from './model-picker'
 import type { ChatSettings } from '../types'
-import { isHarnessProvider } from '../lib/utils'
+import {
+  isHarnessProvider,
+  getHarnessClientType,
+  HARNESS_GROUP_NAME,
+} from '../lib/utils'
 import { useManageClients } from '@/features/clients/hooks/use-manage-clients'
 import { trackEvent } from '@/common/lib/analytics'
-
-const ACP_GROUP_NAME = 'default'
-const ACP_CLIENT_TYPE = 'cursor'
 
 interface ModelSelectorProps {
   settings: ChatSettings
@@ -30,26 +31,28 @@ export function ModelSelector({
     defaultValues,
     getClientFieldName,
     addClientToGroup,
-  } = useManageClients(ACP_GROUP_NAME)
+  } = useManageClients(HARNESS_GROUP_NAME)
   const queryClient = useQueryClient()
 
-  const ensureHarnessRegistered = async () => {
+  const ensureHarnessRegistered = async (provider: string) => {
+    const clientType = getHarnessClientType(provider)
+    if (!clientType) return
+
     const isInstalled = installedClients.some(
-      (c) => c.client_type === ACP_CLIENT_TYPE
+      (c) => c.client_type === clientType
     )
-    const isRegistered =
-      defaultValues[getClientFieldName(ACP_CLIENT_TYPE)] ?? false
+    const isRegistered = defaultValues[getClientFieldName(clientType)] ?? false
     if (isInstalled && !isRegistered) {
-      await addClientToGroup(ACP_CLIENT_TYPE, ACP_GROUP_NAME)
+      await addClientToGroup(clientType, HARNESS_GROUP_NAME)
     }
     // Needed regardless of registration outcome — this app's credential
     // gating (hasCredentials, the composer, the pre-send check) all key off
     // a truthy apiKey, and harness providers have no real key to store.
-    await window.electronAPI.chat.saveSettings('acp', {
+    await window.electronAPI.chat.saveSettings(provider, {
       apiKey: 'enabled',
       enabledTools: [],
     })
-    queryClient.invalidateQueries({ queryKey: ['chat', 'settings', 'acp'] })
+    queryClient.invalidateQueries({ queryKey: ['chat', 'settings', provider] })
     queryClient.invalidateQueries({
       queryKey: ['chat', 'allProvidersWithSettings'],
     })
@@ -66,7 +69,7 @@ export function ModelSelector({
 
     try {
       if (isHarnessProvider(provider)) {
-        await ensureHarnessRegistered()
+        await ensureHarnessRegistered(provider)
       }
 
       const providerSettings =

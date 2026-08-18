@@ -66,3 +66,19 @@ export function isLocalServerProvider(
 export function isHarnessProvider(provider: string): provider is 'acp' {
   return provider === 'acp'
 }
+
+/** ToolHive group harness providers get registered into. */
+export const HARNESS_GROUP_NAME = 'default'
+
+const HARNESS_CLIENT_TYPES: Record<string, string> = {
+  acp: 'cursor',
+}
+
+/**
+ * The ToolHive client type (as returned by the discovery-clients API) that
+ * backs a harness provider — e.g. the `acp` provider is really the `cursor`
+ * CLI. A harness provider is only usable when this client is installed.
+ */
+export function getHarnessClientType(provider: string): string | undefined {
+  return HARNESS_CLIENT_TYPES[provider]
+}

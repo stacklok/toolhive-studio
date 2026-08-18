@@ -36,10 +36,13 @@ import { THV_DISPLAY_NAME } from '@common/app-info'
 import { useManageClients } from '@/features/clients/hooks/use-manage-clients'
 import { trackEvent } from '@/common/lib/analytics'
 import type { ChatSettings } from '../types'
-import { hasCredentials } from '../lib/utils'
+import {
+  hasCredentials,
+  getHarnessClientType,
+  HARNESS_GROUP_NAME,
+} from '../lib/utils'
 
-const ACP_GROUP_NAME = 'default'
-const ACP_CLIENT_TYPE = 'cursor'
+const ACP_CLIENT_TYPE = getHarnessClientType('acp')!
 
 // Provider-specific configuration for credential input
 function getProviderCredentialConfig(providerId: string, providerName: string) {
@@ -111,7 +114,7 @@ export function DialogProviderSettings({
     installedClients,
     defaultValues: registeredClientDefaults,
     getClientFieldName,
-  } = useManageClients(ACP_GROUP_NAME)
+  } = useManageClients(HARNESS_GROUP_NAME)
   const isCursorInstalled = installedClients.some(
     (c) => c.client_type === ACP_CLIENT_TYPE
   )
