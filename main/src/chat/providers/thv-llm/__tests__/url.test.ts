@@ -14,6 +14,8 @@ describe('thv-llm url helpers', () => {
   it('uses default port when proxy listen_port is missing', () => {
     expect(effectiveListenPort({})).toBe(14000)
     expect(effectiveListenPort({ proxy: {} })).toBe(14000)
+    expect(effectiveListenPort({ proxy: { listen_port: 0 } })).toBe(14000)
+    expect(effectiveListenPort({ proxy: { listen_port: 15000 } })).toBe(15000)
   })
 
   it('builds loopback base URL from listen port', () => {
@@ -49,13 +51,20 @@ describe('thv-llm url helpers', () => {
   it('accepts localhost and 127.0.0.1 as loopback hosts', () => {
     expect(isLoopbackHost('localhost')).toBe(true)
     expect(isLoopbackHost('127.0.0.1')).toBe(true)
+    expect(isLoopbackHost('127.0.0.2')).toBe(true)
     expect(isLoopbackHost('10.0.0.1')).toBe(false)
     expect(isLoopbackHost('example.com')).toBe(false)
+    expect(isLoopbackHost('127.0.0')).toBe(false)
+    expect(isLoopbackHost('127.256.0.1')).toBe(false)
   })
 
   it('assertLoopbackBaseURL rejects non-loopback hosts', () => {
     expect(() => assertLoopbackBaseURL('http://10.0.0.1/v1')).toThrow(
       /loopback-only/
+    )
+    expect(() => assertLoopbackBaseURL('not-a-url')).toThrow(/Invalid gateway/)
+    expect(() => assertLoopbackBaseURL('https://127.0.0.1/v1')).toThrow(
+      /must use http/
     )
   })
 

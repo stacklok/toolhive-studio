@@ -58,9 +58,12 @@ import {
   ensureProxyStarted,
   fetchGatewayModels,
   getGatewayStatus,
+  getLastKnownGatewayModels,
   resetThvLlmGatewayStateForTests,
+  resolveGatewayBaseURL,
   startConfiguredLlmProxyIfNeeded,
   stopOwnedProxy,
+  warmupGatewayAuth,
 } from '../proxy-manager'
 
 const configuredConfig = {
@@ -266,5 +269,159 @@ describe('thv-llm proxy manager', () => {
     expect(spawnThvMock).toHaveBeenCalledTimes(1)
     expect(a).toEqual(b)
     expect(a.started).toBe(true)
+  })
+
+  it('resolves the loopback base URL from llm config', async () => {
+    await expect(resolveGatewayBaseURL(deps)).resolves.toBe(
+      'http://127.0.0.1:14000/v1'
+    )
+  })
+
+  it('returns null when resolving a base URL without llm config', async () => {
+    readLlmConfigMock.mockResolvedValue(null)
+    await expect(resolveGatewayBaseURL(deps)).resolves.toBeNull()
+  })
+
+  it('lists gateway models and remembers them for later failures', async () => {
+    mockReachableProxy(['gpt-4.1', 'claude-sonnet-5'])
+
+    await expect(
+      fetchGatewayModels('http://127.0.0.1:14000/v1')
+    ).resolves.toEqual({
+      models: ['gpt-4.1', 'claude-sonnet-5'],
+      authRequired: false,
+    })
+    expect(getLastKnownGatewayModels()).toEqual(['gpt-4.1', 'claude-sonnet-5'])
+
+    gatewayFetchMock.mockResolvedValue(
+      new Response('unavailable', { status: 503 })
+    )
+
+    await expect(
+      fetchGatewayModels('http://127.0.0.1:14000/v1')
+    ).resolves.toMatchObject({
+      models: ['gpt-4.1', 'claude-sonnet-5'],
+      authRequired: false,
+      error: expect.stringContaining('503'),
+    })
+  })
+
+  it('returns a listing error when the models request throws', async () => {
+    gatewayFetchMock.mockRejectedValue(new Error('ECONNREFUSED'))
+
+    await expect(
+      fetchGatewayModels('http://127.0.0.1:14000/v1')
+    ).resolves.toEqual({
+      models: [],
+      authRequired: false,
+      error: 'ECONNREFUSED',
+    })
+  })
+
+  it('reports ready status when the proxy lists models', async () => {
+    mockReachableProxy(['gpt-4.1'])
+
+    const status = await getGatewayStatus(deps)
+
+    expect(status).toMatchObject({
+      configured: true,
+      proxyRunning: true,
+      authState: 'ready',
+      listenPort: 14000,
+      baseURL: 'http://127.0.0.1:14000/v1',
+      gatewayURL: 'https://gateway.example.com',
+      modelCount: 1,
+      error: null,
+    })
+  })
+
+  it('reports proxy_stopped when the loopback proxy is unreachable', async () => {
+    gatewayFetchMock.mockRejectedValue(new Error('ECONNREFUSED'))
+
+    const status = await getGatewayStatus(deps)
+
+    expect(status.proxyRunning).toBe(false)
+    expect(status.authState).toBe('proxy_stopped')
+    expect(status.configured).toBe(true)
+  })
+
+  it('reports an error when the gateway returns no models', async () => {
+    gatewayFetchMock.mockResolvedValue(
+      new Response(JSON.stringify({ data: [] }), { status: 200 })
+    )
+
+    const status = await getGatewayStatus(deps)
+
+    expect(status.authState).toBe('error')
+    expect(status.error).toBe('Gateway returned no models')
+  })
+
+  it('warms up as not_configured when llm config is missing', async () => {
+    readLlmConfigMock.mockResolvedValue(null)
+
+    await expect(warmupGatewayAuth(deps)).resolves.toEqual({
+      ready: false,
+      authState: 'not_configured',
+      modelCount: 0,
+      error: 'Stacklok Gateway is not configured',
+    })
+  })
+
+  it('warms up as authenticating when model listing needs sign-in', async () => {
+    mockAuthRequiredProxy()
+
+    await expect(warmupGatewayAuth(deps)).resolves.toMatchObject({
+      ready: false,
+      authState: 'authenticating',
+      modelCount: 0,
+    })
+  })
+
+  it('warms up as ready when models are listed', async () => {
+    mockReachableProxy(['gpt-4.1'])
+
+    await expect(warmupGatewayAuth(deps)).resolves.toMatchObject({
+      ready: true,
+      authState: 'ready',
+      modelCount: 1,
+    })
+  })
+
+  it('warms up as error when proxy spawn fails', async () => {
+    gatewayFetchMock.mockRejectedValue(new Error('ECONNREFUSED'))
+    spawnThvMock.mockImplementation(() => {
+      throw new Error('spawn failed')
+    })
+
+    await expect(warmupGatewayAuth(deps)).resolves.toEqual({
+      ready: false,
+      authState: 'error',
+      modelCount: 0,
+      error: 'spawn failed',
+    })
+  })
+
+  it('warms up as proxy_stopped when the spawned proxy never becomes reachable', async () => {
+    vi.useFakeTimers()
+    const child = {
+      pid: 4242,
+      exitCode: null,
+      signalCode: null,
+      unref: vi.fn(),
+      kill: vi.fn(),
+    } as unknown as ChildProcess
+    spawnThvMock.mockReturnValue(child)
+    gatewayFetchMock.mockRejectedValue(new Error('ECONNREFUSED'))
+
+    const resultPromise = warmupGatewayAuth(deps)
+    await vi.runAllTimersAsync()
+    const result = await resultPromise
+    vi.useRealTimers()
+
+    expect(result).toMatchObject({
+      ready: false,
+      authState: 'proxy_stopped',
+      modelCount: 0,
+    })
   })
 })

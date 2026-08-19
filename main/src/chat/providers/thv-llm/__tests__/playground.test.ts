@@ -85,6 +85,22 @@ describe('playground gateway enablement', () => {
     expect(handleSaveSettingsMock).not.toHaveBeenCalled()
   })
 
+  it('does not migrate when Playground is already opted in', () => {
+    getChatSettingsMock.mockReturnValue({
+      providerId: 'thv-llm',
+      endpointURL: 'enabled',
+      enabledTools: [],
+    })
+    getSelectedModelMock.mockReturnValue({
+      provider: 'thv-llm',
+      model: 'gpt-4.1',
+    })
+
+    migratePlaygroundGatewayEnablement()
+
+    expect(handleSaveSettingsMock).not.toHaveBeenCalled()
+  })
+
   it('clears Playground settings and selected model on disable', () => {
     getSelectedModelMock.mockReturnValue({
       provider: 'thv-llm',
@@ -95,6 +111,18 @@ describe('playground gateway enablement', () => {
 
     expect(clearChatSettingsMock).toHaveBeenCalledWith('thv-llm')
     expect(saveSelectedModelMock).toHaveBeenCalledWith('', '')
+  })
+
+  it('clears Playground settings without resetting a different selected provider', () => {
+    getSelectedModelMock.mockReturnValue({
+      provider: 'openai',
+      model: 'gpt-4.1',
+    })
+
+    clearPlaygroundGatewaySettings()
+
+    expect(clearChatSettingsMock).toHaveBeenCalledWith('thv-llm')
+    expect(saveSelectedModelMock).not.toHaveBeenCalled()
   })
 
   it('enablePlaygroundGateway writes the opt-in marker', () => {

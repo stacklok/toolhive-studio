@@ -43,4 +43,23 @@ describe('ensureGatewayReady', () => {
       error: 'proxy timeout',
     })
   })
+
+  it('uses a default message when warmup fails without one', async () => {
+    mockLlmGateway.ensureStarted.mockResolvedValue({ started: true })
+    mockLlmGateway.warmupAuth.mockResolvedValue({ ready: false })
+
+    await expect(ensureGatewayReady()).resolves.toEqual({
+      ready: false,
+      error: 'Complete sign-in in your browser to use Stacklok Gateway.',
+    })
+  })
+
+  it('uses a default message when IPC throws a non-Error', async () => {
+    mockLlmGateway.ensureStarted.mockRejectedValue('unavailable')
+
+    await expect(ensureGatewayReady()).resolves.toEqual({
+      ready: false,
+      error: 'Failed to connect to Stacklok Gateway.',
+    })
+  })
 })

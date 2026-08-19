@@ -114,6 +114,26 @@ describe('enrichGatewayChatRequest', () => {
     ).resolves.toMatchObject({ endpointURL: LOOPBACK })
   })
 
+  it('throws when the loopback base URL cannot be resolved', async () => {
+    resolveGatewayBaseURLMock.mockResolvedValue(null)
+
+    await expect(
+      enrichGatewayChatRequest(gatewayRequest('enabled'))
+    ).rejects.toThrow('Stacklok Gateway is not configured')
+  })
+
+  it('uses a default warmup message when none is provided', async () => {
+    warmupGatewayAuthMock.mockResolvedValue({
+      ready: false,
+      authState: 'error',
+      modelCount: 0,
+    })
+
+    await expect(
+      enrichGatewayChatRequest(gatewayRequest('enabled'))
+    ).rejects.toThrow('Stacklok Gateway is not ready')
+  })
+
   it('propagates warmup failures', async () => {
     warmupGatewayAuthMock.mockResolvedValue({
       ready: false,
