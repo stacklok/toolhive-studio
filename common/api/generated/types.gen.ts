@@ -930,6 +930,14 @@ export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssu
      */
     actor_claim?: string
     /**
+     * AllowMayAct permits this external issuer's may_act claim to authorize
+     * delegation. It defaults to false; external issuers must be opted in
+     * explicitly because may_act bypasses AllowedActors. It does not affect
+     * self-issued subject tokens. When enabled, AllowedDelegateClients must
+     * name specific ToolHive clients rather than use the wildcard.
+     */
+    allow_may_act?: boolean
+    /**
      * AllowPrivateIPs permits OIDC discovery and JWKS fetches for THIS
      * issuer to resolve to a private or loopback address. Use only when the
      * issuer is hosted inside the same cluster and has no public endpoint.
@@ -938,10 +946,10 @@ export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssu
     /**
      * AllowedActors is the allowlist of ActorClaim values authorized to
      * exchange a subject token from this issuer when it carries no
-     * "may_act" claim; empty means only may_act-bearing tokens are
-     * accepted. By itself names no ToolHive client — see
-     * AllowedDelegateClients and docs/arch/17-token-exchange-delegation.md
-     * ("Accepted limitations" #1).
+     * "may_act" claim. Empty denies every token unless AllowMayAct is true
+     * and the token carries a permitted may_act claim. By itself names no
+     * ToolHive client — see AllowedDelegateClients and
+     * docs/arch/17-token-exchange-delegation.md ("Accepted limitations" #1).
      */
     allowed_actors?: Array<string>
     /**
