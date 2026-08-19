@@ -73,7 +73,10 @@ describe('thv-cli llm config', () => {
 
   beforeEach(() => {
     spawnThv = vi.fn()
-    deps = { binPath: '/tmp/thv', spawnThv }
+    deps = {
+      binPath: '/tmp/thv',
+      spawnThv: spawnThv as ThvCliDeps['spawnThv'],
+    }
   })
 
   describe('isLlmConfigured', () => {

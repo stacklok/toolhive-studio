@@ -92,19 +92,20 @@ const configuredLlm = {
 
 function settingsLayer(playgroundEnabled: boolean) {
   return Layer.mock(SettingsService, {
-    getChatSettings: (providerId: string) => {
+    _tag: 'chat/SettingsService',
+    getChatSettings: (providerId) => {
       if (providerId === 'thv-llm') {
         return Effect.succeed({
-          providerId: 'thv-llm' as const,
+          providerId: 'thv-llm',
           endpointURL: playgroundEnabled ? 'enabled' : '',
-          enabledTools: [],
+          enabledTools: [] as string[],
         })
       }
       if (providerId === 'ollama' || providerId === 'lmstudio') {
         return Effect.succeed({
           providerId,
           endpointURL: '',
-          enabledTools: [],
+          enabledTools: [] as string[],
         })
       }
       return Effect.succeed({
