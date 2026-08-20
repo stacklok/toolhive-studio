@@ -1,5 +1,9 @@
 import { Effect } from 'effect'
-import { runChatSyncOr, runChatPromiseOr, runChatToResultSync } from './runtime'
+import {
+  runChatSyncOr,
+  runChatPromiseOr,
+  runChatToResultSync,
+} from './runtime/adapters'
 import { SettingsService } from './settings/settings-service'
 import type {
   ChatSettingsProvider,
@@ -8,7 +12,9 @@ import type {
 import {
   CHAT_PROVIDER_INFO,
   LOCAL_PROVIDER_IDS,
+  GATEWAY_PROVIDER_IDS,
   type LocalProviderId,
+  type GatewayProviderId,
 } from './constants'
 
 type ProviderId = (typeof CHAT_PROVIDER_INFO)[number]['id']
@@ -19,12 +25,24 @@ function isLocalProvider(
   return LOCAL_PROVIDER_IDS.includes(providerId as LocalProviderId)
 }
 
+function isGatewayProvider(
+  providerId: ProviderId
+): providerId is GatewayProviderId {
+  return GATEWAY_PROVIDER_IDS.includes(providerId as GatewayProviderId)
+}
+
 function defaultChatSettings(providerId: ProviderId): ChatSettingsProvider {
   if (isLocalProvider(providerId)) {
     return { providerId, endpointURL: '', enabledTools: [] }
   }
+  if (isGatewayProvider(providerId)) {
+    return { providerId, endpointURL: '', enabledTools: [] }
+  }
   return {
-    providerId,
+    providerId: providerId as Exclude<
+      ProviderId,
+      LocalProviderId | GatewayProviderId
+    >,
     apiKey: '',
     enabledTools: [],
   }

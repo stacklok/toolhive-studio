@@ -109,6 +109,23 @@ const PROVIDER_ICONS: Record<string, React.ReactElement> = {
       </g>
     </svg>
   ),
+
+  'thv-llm': (
+    <svg
+      className="size-4"
+      viewBox="-1 12 26 24"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      stroke="currentColor"
+    >
+      <title>Stacklok</title>
+      <path
+        d="M0.79 34L12.34 20.2L23.89 34M0.79 34L12.34 24.85L23.89 34M0.79 34L12.34 29.24L23.89 34M0.79 34L12.34 14L23.89 34"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  ),
 }
 
 // Provider names for tooltips
@@ -120,6 +137,7 @@ const PROVIDER_NAMES: Record<string, string> = {
   ollama: 'Ollama',
   lmstudio: 'LM Studio',
   openrouter: 'OpenRouter',
+  'thv-llm': 'Stacklok Gateway',
 }
 // Get provider icon wrapped with tooltip
 function getProviderIconWithTooltip(

@@ -1,10 +1,27 @@
+import {
+  THV_LLM_PROVIDER_ID,
+  THV_LLM_PROVIDER_NAME,
+} from './providers/thv-llm/types'
+
 // Default endpoint URLs for local server providers
 export const DEFAULT_OLLAMA_URL = 'http://localhost:11434'
 export const DEFAULT_LMSTUDIO_URL = 'http://localhost:1234'
 
-// Local server provider IDs
+// Local server provider IDs (user-configured endpoint URL)
 export const LOCAL_PROVIDER_IDS = ['ollama', 'lmstudio'] as const
 export type LocalProviderId = (typeof LOCAL_PROVIDER_IDS)[number]
+
+// Optional gateway provider (loopback proxy; enabled from Provider Settings)
+export const GATEWAY_PROVIDER_IDS = [THV_LLM_PROVIDER_ID] as const
+export type GatewayProviderId = (typeof GATEWAY_PROVIDER_IDS)[number]
+
+export const ENDPOINT_PROVIDER_IDS = [
+  ...LOCAL_PROVIDER_IDS,
+  ...GATEWAY_PROVIDER_IDS,
+] as const
+export type EndpointProviderId = (typeof ENDPOINT_PROVIDER_IDS)[number]
+
+export { THV_LLM_PROVIDER_ID, THV_LLM_PROVIDER_NAME }
 
 // Provider configuration for IPC (serializable)
 export interface ChatProviderInfo {
@@ -184,6 +201,11 @@ export const CHAT_PROVIDER_INFO: ChatProviderInfo[] = [
     id: 'lmstudio',
     name: 'LM Studio',
     models: [], // Models will be dynamically fetched from LM Studio API
+  },
+  {
+    id: THV_LLM_PROVIDER_ID,
+    name: THV_LLM_PROVIDER_NAME,
+    models: [],
   },
   {
     id: 'openrouter',

@@ -28,6 +28,12 @@ export type ChatSettings =
       enabledTools?: string[]
     }
   | {
+      provider: 'thv-llm'
+      model: string
+      endpointURL: string
+      enabledTools?: string[]
+    }
+  | {
       provider: string
       model: string
       apiKey: string

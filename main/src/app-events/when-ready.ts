@@ -13,6 +13,10 @@ import {
   isToolhiveRunning,
   stopToolhive,
 } from '../toolhive-manager'
+import {
+  startConfiguredLlmProxyIfNeeded,
+  stopOwnedProxy,
+} from '../chat/providers/thv-llm'
 import { registerApiFetchHandlers } from '../unix-socket-fetch'
 import { getMainWindow, createMainWindow, hideMainWindow } from '../main-window'
 import { extractDeepLinkFromArgs, handleDeepLink } from '../deep-links'
@@ -71,6 +75,8 @@ export function register() {
     // Start ToolHive with tray reference
     await startToolhive()
 
+    void startConfiguredLlmProxyIfNeeded()
+
     // Register IPC handlers for renderer -> main -> thv API bridge
     registerApiFetchHandlers()
 
@@ -110,6 +116,7 @@ export function register() {
             log.info(
               `[session-end] Windows session ending (reasons: ${event.reasons.join(', ')}), forcing cleanup...`
             )
+            stopOwnedProxy()
             stopToolhive()
             safeTrayDestroy()
           })

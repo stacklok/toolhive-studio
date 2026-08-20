@@ -1,6 +1,7 @@
 import { app } from 'electron'
 import { getTearingDownState } from '../app-state'
 import { stopToolhive } from '../toolhive-manager'
+import { stopOwnedProxy } from '../chat/providers/thv-llm'
 import { safeTrayDestroy } from '../system-tray'
 import { closeDb } from '../db/database'
 import log from '../logger'
@@ -11,6 +12,7 @@ export function register() {
     log.info('[quit event] Ensuring ToolHive cleanup...')
     // Only cleanup if not already tearing down to avoid double cleanup
     if (!getTearingDownState()) {
+      stopOwnedProxy()
       stopToolhive()
       safeTrayDestroy()
     }

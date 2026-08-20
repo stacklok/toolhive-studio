@@ -13,6 +13,31 @@ const mockChatAPI = {
   saveSelectedModel: vi.fn(),
   saveSettings: vi.fn(),
   clearSettings: vi.fn(),
+  llmGateway: {
+    getStatus: vi.fn().mockResolvedValue({
+      configured: false,
+      proxyRunning: false,
+      authState: 'not_configured',
+      listenPort: null,
+      baseURL: null,
+      gatewayURL: null,
+      modelCount: 0,
+      error: null,
+      studioOwnsProxy: false,
+    }),
+    getConfig: vi.fn().mockResolvedValue({
+      gatewayUrl: '',
+      issuer: '',
+      clientId: '',
+      audience: '',
+      configured: false,
+    }),
+    saveConfig: vi.fn().mockResolvedValue({ ok: true }),
+    disable: vi.fn().mockResolvedValue({ ok: true }),
+    ensureStarted: vi.fn(),
+    warmupAuth: vi.fn(),
+    invalidateConfig: vi.fn(),
+  },
 }
 
 // Test wrapper with QueryClient
@@ -172,6 +197,59 @@ describe('useChatSettings', () => {
         hasKey: false,
         enabledTools: [],
       })
+    })
+
+    it('does not inject Stacklok Gateway when it is absent from getProviders', async () => {
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatSettings(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      expect(
+        result.current.allProvidersWithSettings.some(
+          (entry) => entry.provider.id === 'thv-llm'
+        )
+      ).toBe(false)
+    })
+
+    it('marks Stacklok Gateway configured only when Playground has enabled it', async () => {
+      mockChatAPI.getProviders.mockResolvedValue([
+        {
+          id: 'thv-llm',
+          name: 'Stacklok Gateway',
+          models: ['gpt-4.1'],
+        },
+      ])
+      mockChatAPI.getSettings.mockResolvedValue({
+        endpointURL: 'enabled',
+        enabledTools: [],
+      })
+
+      const { Wrapper } = createTestUtils()
+      const { result } = renderHook(() => useChatSettings(), {
+        wrapper: Wrapper,
+      })
+
+      await waitFor(() => {
+        expect(result.current.isLoading).toBe(false)
+      })
+
+      expect(result.current.allProvidersWithSettings).toEqual([
+        {
+          provider: {
+            id: 'thv-llm',
+            name: 'Stacklok Gateway',
+            models: ['gpt-4.1'],
+          },
+          endpointURL: 'enabled',
+          hasKey: true,
+          enabledTools: [],
+        },
+      ])
     })
   })
 

@@ -21,6 +21,7 @@ import {
 import { cn } from '@/common/lib/utils'
 import { useAvailableModels } from '../hooks/use-available-models'
 import { getProviderIcon } from './provider-icons'
+import { THV_LLM_PROVIDER_ID } from '../lib/gateway-provider'
 
 export interface ModelSelection {
   provider: string
@@ -207,7 +208,9 @@ export function ModelPicker({
                       {provider.models.length === 0
                         ? provider.id === 'ollama'
                           ? 'Ollama is not running or no models available'
-                          : 'No models available'
+                          : provider.id === THV_LLM_PROVIDER_ID
+                            ? 'Start the LLM proxy and sign in to list models'
+                            : 'No models available'
                         : `No models found matching "${searchQueries[provider.id]}"`}
                     </div>
                   )}

@@ -24,7 +24,9 @@ import {
 import {
   CHAT_PROVIDER_INFO,
   LOCAL_PROVIDER_IDS,
+  GATEWAY_PROVIDER_IDS,
   type LocalProviderId,
+  type GatewayProviderId,
 } from '../constants'
 import { StorageError, ValidationError } from '../runtime/errors'
 import { chatLogInfo, chatLogWarning } from '../runtime/logging'
@@ -39,7 +41,12 @@ export type ChatSettingsProvider =
       enabledTools: string[]
     }
   | {
-      providerId: Exclude<ProviderId, 'ollama' | 'lmstudio'>
+      providerId: GatewayProviderId
+      endpointURL: string
+      enabledTools: string[]
+    }
+  | {
+      providerId: Exclude<ProviderId, LocalProviderId | GatewayProviderId>
       apiKey: string
       /** Legacy field kept for IPC shape; MCP tool enablement is stored separately. */
       enabledTools: string[]
@@ -52,6 +59,11 @@ export interface ChatSettingsSelectedModel {
 
 const isLocalProvider = (providerId: string): providerId is LocalProviderId =>
   LOCAL_PROVIDER_IDS.includes(providerId as LocalProviderId)
+
+const isGatewayProvider = (
+  providerId: string
+): providerId is GatewayProviderId =>
+  GATEWAY_PROVIDER_IDS.includes(providerId as GatewayProviderId)
 
 function wrapSync<A>(
   operation: string,
@@ -168,17 +180,22 @@ export class SettingsService extends Effect.Service<SettingsService>()(
 
       const defaultProviderSettings = (
         providerId: ProviderId
-      ): ChatSettingsProvider =>
-        isLocalProvider(providerId)
-          ? { providerId, endpointURL: '', enabledTools: [] }
-          : {
-              providerId: providerId as Exclude<
-                ProviderId,
-                'ollama' | 'lmstudio'
-              >,
-              apiKey: '',
-              enabledTools: [],
-            }
+      ): ChatSettingsProvider => {
+        if (isLocalProvider(providerId)) {
+          return { providerId, endpointURL: '', enabledTools: [] }
+        }
+        if (isGatewayProvider(providerId)) {
+          return { providerId, endpointURL: '', enabledTools: [] }
+        }
+        return {
+          providerId: providerId as Exclude<
+            ProviderId,
+            LocalProviderId | GatewayProviderId
+          >,
+          apiKey: '',
+          enabledTools: [],
+        }
+      }
 
       return {
         getChatSettings: (providerId: ProviderId) =>
@@ -192,10 +209,17 @@ export class SettingsService extends Effect.Service<SettingsService>()(
                 enabledTools: [],
               }
             }
+            if (isGatewayProvider(providerId)) {
+              return {
+                providerId,
+                endpointURL: dbProvider.endpointURL ?? '',
+                enabledTools: [],
+              }
+            }
             return {
               providerId: providerId as Exclude<
                 ProviderId,
-                'ollama' | 'lmstudio'
+                LocalProviderId | GatewayProviderId
               >,
               apiKey: dbProvider.apiKey ?? '',
               enabledTools: [],
@@ -329,7 +353,8 @@ export class SettingsService extends Effect.Service<SettingsService>()(
 
             const providerIdTyped = providerId as ProviderId
             const credentialValue =
-              providerIdTyped === 'ollama' || providerIdTyped === 'lmstudio'
+              isLocalProvider(providerIdTyped) ||
+              isGatewayProvider(providerIdTyped)
                 ? 'endpointURL' in settings
                   ? settings.endpointURL
                   : ''
@@ -342,7 +367,10 @@ export class SettingsService extends Effect.Service<SettingsService>()(
               return
             }
 
-            if (isLocalProvider(providerIdTyped)) {
+            if (
+              isLocalProvider(providerIdTyped) ||
+              isGatewayProvider(providerIdTyped)
+            ) {
               yield* repo.writeProvider(providerIdTyped, {
                 endpointURL: credentialValue,
               })

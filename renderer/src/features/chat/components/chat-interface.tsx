@@ -21,6 +21,7 @@ import { hasCredentials } from '../lib/utils'
 import { getEmptyStateCopy } from '../lib/empty-state-copy'
 import { useAgents, useThreadAgentId } from '../../agents/hooks/use-agents'
 import { DEFAULT_AGENT_ID } from '@common/types/agents'
+import { isGatewayProvider } from '../lib/utils'
 
 interface ChatInterfaceProps {
   threadId?: string | null
@@ -139,7 +140,9 @@ export function ChatInterface({
   const { data: threadAgentId } = useThreadAgentId(threadId ?? undefined)
   const selectedAgentId = threadAgentId || DEFAULT_AGENT_ID
   const selectedAgent = agents.find((a) => a.id === selectedAgentId)
-  const emptyStateCopy = getEmptyStateCopy(selectedAgent)
+  const emptyStateCopy = getEmptyStateCopy(selectedAgent, {
+    usesGatewayProvider: isGatewayProvider(settings.provider),
+  })
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

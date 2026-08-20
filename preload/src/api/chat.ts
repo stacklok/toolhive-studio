@@ -212,6 +212,24 @@ export const chatApi = {
           enabled
         ),
     },
+    llmGateway: {
+      getStatus: () => ipcRenderer.invoke('chat:llm-gateway:status'),
+      ensureStarted: () =>
+        ipcRenderer.invoke('chat:llm-gateway:ensure-started'),
+      warmupAuth: () => ipcRenderer.invoke('chat:llm-gateway:warmup-auth'),
+      invalidateConfig: () =>
+        ipcRenderer.invoke('chat:llm-gateway:invalidate-config'),
+      getConfig: () => ipcRenderer.invoke('chat:llm-gateway:get-config'),
+      saveConfig: (input: {
+        gatewayUrl: string
+        issuer: string
+        clientId: string
+        audience?: string
+        callbackPort?: number
+        proxyPort?: number
+      }) => ipcRenderer.invoke('chat:llm-gateway:save-config', input),
+      disable: () => ipcRenderer.invoke('chat:llm-gateway:disable'),
+    },
   },
 }
 
@@ -230,6 +248,15 @@ export interface ChatAPI {
             chatId: string
             messages: ChatUIMessage[]
             provider: 'ollama' | 'lmstudio'
+            model: string
+            endpointURL: string
+            enabledTools?: string[]
+            agentId?: string
+          }
+        | {
+            chatId: string
+            messages: ChatUIMessage[]
+            provider: 'thv-llm'
             model: string
             endpointURL: string
             enabledTools?: string[]
@@ -257,6 +284,11 @@ export interface ChatAPI {
     getSettings: (providerId: string) => Promise<
       | {
           providerId: 'ollama' | 'lmstudio'
+          endpointURL: string
+          enabledTools: string[]
+        }
+      | {
+          providerId: 'thv-llm'
           endpointURL: string
           enabledTools: string[]
         }
@@ -501,6 +533,61 @@ export interface ChatAPI {
         name: string,
         enabled: boolean
       ) => Promise<{ success: boolean; error?: string }>
+    }
+
+    llmGateway: {
+      getStatus: () => Promise<{
+        configured: boolean
+        proxyRunning: boolean
+        authState:
+          | 'not_configured'
+          | 'proxy_stopped'
+          | 'authenticating'
+          | 'ready'
+          | 'error'
+        listenPort: number | null
+        baseURL: string | null
+        gatewayURL: string | null
+        modelCount: number
+        error: string | null
+        studioOwnsProxy: boolean
+      }>
+      ensureStarted: () => Promise<{
+        started: boolean
+        alreadyRunning: boolean
+        studioOwnsProxy: boolean
+        error?: string
+      }>
+      warmupAuth: () => Promise<{
+        ready: boolean
+        authState:
+          | 'ready'
+          | 'authenticating'
+          | 'error'
+          | 'not_configured'
+          | 'proxy_stopped'
+        modelCount: number
+        error?: string
+      }>
+      invalidateConfig: () => Promise<void>
+      getConfig: () => Promise<{
+        gatewayUrl: string
+        issuer: string
+        clientId: string
+        audience?: string
+        callbackPort?: number
+        proxyPort?: number
+        configured: boolean
+      }>
+      saveConfig: (input: {
+        gatewayUrl: string
+        issuer: string
+        clientId: string
+        audience?: string
+        callbackPort?: number
+        proxyPort?: number
+      }) => Promise<{ ok: boolean; error?: string }>
+      disable: () => Promise<{ ok: boolean }>
     }
   }
 }
