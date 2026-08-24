@@ -71,7 +71,7 @@
     "@types/unzipper": "^0.10.11",
     "@typescript/native": "npm:typescript@7.0.2",
     "@vitejs/plugin-react": "^6.0.5",
-    "@vitest/coverage-v8": "^4.1.10",
+    "@vitest/coverage-v8": "^4.1.11",
     "dotenv": "^17.4.2",
     "electron": "43.4.1",
     "electron-winstaller": "^5.4.4",
@@ -98,7 +98,7 @@
     "typescript-eslint": "^8.67.0",
     "unzipper": "^0.12.5",
     "vite": "^8.2.2",
-    "vitest": "^4.1.10",
+    "vitest": "^4.1.11",
     "vitest-fail-on-console": "^0.10.1"
   },
   "dependencies": {
