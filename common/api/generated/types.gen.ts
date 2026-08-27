@@ -625,6 +625,20 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    */
   allow_confidential_client_registration?: boolean
   /**
+   * AllowPrivateKeyJWTRegistration permits Dynamic Client Registration of
+   * clients using private_key_jwt authentication. This is independent of
+   * AllowConfidentialClientRegistration and defaults to false. Registration
+   * behavior is controlled independently by the DCR handler and discovery
+   * metadata.
+   *
+   * Security: /oauth/register is unauthenticated. Unlike
+   * AllowConfidentialClientRegistration, this is NOT rejected when combined
+   * with InsecureAllowHTTP: registration never returns a secret for a
+   * private_key_jwt client, so there is nothing for cleartext HTTP to
+   * expose.
+   */
+  allow_private_key_jwt_registration?: boolean
+  /**
    * AllowedAudiences is the list of valid resource URIs that tokens can be issued for.
    * Per RFC 8707, the "resource" parameter in authorization and token requests is
    * validated against this list. Required for MCP compliance.
@@ -725,10 +739,15 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    * secrets would otherwise travel over cleartext. Defaults to false. Has no
    * effect when there are no confidential clients or Issuer is https.
    *
-   * Applies identically to delegate clients and DCR-registered clients; the
-   * Kubernetes CRD blocks this combination unconditionally only because CEL
-   * cannot express the loopback exception, not because delegate clients need
-   * a stricter policy — see EmbeddedAuthServerConfig's doc comment.
+   * Applies identically to delegate clients and DCR-registered clients. The
+   * Kubernetes CRD requires the explicit opt-in for a delegate client with an
+   * HTTP issuer; the shared transport validator enforces that its host is
+   * loopback — see EmbeddedAuthServerConfig's doc comment.
+   *
+   * private_key_jwt registration has no equivalent flag or transport
+   * restriction: unlike confidential registration, it never returns a
+   * client_secret (or any other secret) in the DCR response, so there is
+   * nothing here for cleartext HTTP to expose.
    */
   insecure_allow_confidential_over_loopback_http?: boolean
   /**
@@ -757,8 +776,10 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
   token_lifespans?: GithubComStacklokToolhivePkgAuthserverTokenLifespanRunConfig
   /**
    * TrustedIssuers lists external OIDC issuers whose tokens are accepted as
-   * subject tokens during RFC 8693 token exchange. Empty (the default) means
-   * only self-issued subject tokens are accepted.
+   * RFC 8693 subject tokens or RFC 7523 JWT-bearer assertions. Issuers with
+   * jwtBearerGrant enabled may be used for the JWT-bearer grant without an
+   * RFC 8693 delegation policy. Empty (the default) means only self-issued
+   * subject tokens are accepted.
    *
    * See tokenexchange.TrustedIssuer for the per-issuer field reference, and
    * docs/arch/17-token-exchange-delegation.md for the trust model, consent
@@ -917,6 +938,36 @@ export type GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig = {
   http_method?: string
 }
 
+/**
+ * JWTBearerGrant optionally enables the plain RFC 7523 JWT-bearer grant.
+ * It accepts assertions from this issuer without client authentication and
+ * limits their maximum age, subjects, and RFC 8707 resources. It is
+ * independent from RFC 8693 delegation policy.
+ */
+export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerGrantPolicy =
+  {
+    /**
+     * AcceptedAudiences is the set of "this AS" identity strings an
+     * assertion's "aud" claim must intersect — e.g. to support migrating
+     * this server's issuer/token-endpoint URL, or exposing it under more
+     * than one valid name. Each value uniquely identifies this
+     * authorization server for this grant; it is NOT a resource/API
+     * identifier — a bare resource audience is deliberately not accepted
+     * here, that would let any RFC 8707 resource-scoped token satisfy the
+     * grant instead of only tokens minted for this AS. Defaults to
+     * [tokenEndpoint] when empty, preserving prior exact-match behavior.
+     */
+    accepted_audiences?: Array<string>
+    max_assertion_age?: string
+    subject_bindings?: Array<GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerSubjectBinding>
+  }
+
+export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerSubjectBinding =
+  {
+    allowed_resources?: Array<string>
+    subject?: string
+  }
+
 export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssuer =
   {
     /**
@@ -930,11 +981,24 @@ export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssu
      */
     actor_claim?: string
     /**
+     * ActorMatcher is an admin-authored CEL expression evaluated against the
+     * complete signature-verified JWT claims map as "claims". A true result
+     * authorizes delegation alongside AllowedActors; a syntax or type error
+     * fails configuration validation. An expression that compiles but does
+     * not return bool is NOT caught at that point, though — it compiles
+     * successfully and is only rejected the first time it is evaluated
+     * against a real token, denying that token (and every one after it, since
+     * the expression will never return bool). Any other runtime evaluation
+     * error denies the token the same way.
+     */
+    actor_matcher?: string
+    /**
      * AllowMayAct permits this external issuer's may_act claim to authorize
      * delegation. It defaults to false; external issuers must be opted in
-     * explicitly because may_act bypasses AllowedActors. It does not affect
-     * self-issued subject tokens. When enabled, AllowedDelegateClients must
-     * name specific ToolHive clients rather than use the wildcard.
+     * explicitly because may_act bypasses AllowedActors and ActorMatcher. It
+     * does not affect self-issued subject tokens. When enabled,
+     * AllowedDelegateClients must name specific ToolHive clients rather than
+     * use the wildcard.
      */
     allow_may_act?: boolean
     /**
@@ -946,8 +1010,10 @@ export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssu
     /**
      * AllowedActors is the allowlist of ActorClaim values authorized to
      * exchange a subject token from this issuer when it carries no
-     * "may_act" claim. Empty denies every token unless AllowMayAct is true
-     * and the token carries a permitted may_act claim. By itself names no
+     * "may_act" claim. ActorMatcher can additionally authorize a token by
+     * matching its complete verified claims map; either signal is sufficient.
+     * When both are empty, only may_act-bearing tokens are accepted, and only
+     * if AllowMayAct is also true for this issuer. By itself names no
      * ToolHive client — see AllowedDelegateClients and
      * docs/arch/17-token-exchange-delegation.md ("Accepted limitations" #1).
      */
@@ -962,8 +1028,10 @@ export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssu
     allowed_delegate_clients?: Array<string>
     /**
      * ExpectedAudience is the expected "aud" claim value that must appear
-     * in the token's audience list (a resource/API identifier, not a
-     * client ID — required, but not enforced; see looksLikeResourceIdentifier).
+     * in an RFC 8693 subject token's audience list (a resource/API identifier,
+     * not a client ID — required for delegation unless JWTBearerGrant is
+     * configured; see looksLikeResourceIdentifier). RFC 7523 assertions use
+     * the token endpoint as their audience instead.
      * See docs/arch/17-token-exchange-delegation.md ("ID/access-token
      * discrimination") for why and its limits.
      */
@@ -988,6 +1056,7 @@ export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssu
      * If empty, it is resolved via OIDC discovery at {IssuerURL}/.well-known/openid-configuration.
      */
     jwks_url?: string
+    jwt_bearer_grant?: GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerGrantPolicy
   }
 
 /**
@@ -1033,6 +1102,7 @@ export type GithubComStacklokToolhivePkgClientClientApp =
   | 'kimi-cli'
   | 'factory'
   | 'copilot-cli'
+  | 'qoder'
 
 export type GithubComStacklokToolhivePkgClientClientAppStatus = {
   client_type?: GithubComStacklokToolhivePkgClientClientApp
@@ -1273,6 +1343,54 @@ export type GithubComStacklokToolhivePkgPluginsPluginMetadata = {
  * Scope for the installation
  */
 export type GithubComStacklokToolhivePkgPluginsScope = 'user' | 'project'
+
+export type GithubComStacklokToolhivePkgPluginsSyncResult = {
+  /**
+   * AlreadyCurrent lists skills that already matched the lock file.
+   */
+  already_current?: Array<string>
+  /**
+   * Drifted lists skills whose on-disk contentDigest differed from the lock
+   * file. Normally these are reinstalled to match it; when Check is set,
+   * nothing is written and this field reports the drift only.
+   */
+  drifted?: Array<string>
+  /**
+   * Failed lists skills that could not be synced, with the reason for each.
+   * Drift alone is never reported here — see Drifted.
+   */
+  failed?: Array<GithubComStacklokToolhivePkgSkillsSyncFailure>
+  /**
+   * Installed lists skills that were installed or reinstalled to match the lock file.
+   */
+  installed?: Array<string>
+  /**
+   * Missing lists lock entries with no corresponding install record at all
+   * — the fresh-clone state. Normally these are installed at their pinned
+   * reference; when Check is set, nothing is written and this field
+   * reports the gap only.
+   */
+  missing?: Array<string>
+  /**
+   * NeverManaged lists project-scoped skills never recorded as lock-managed.
+   */
+  never_managed?: Array<string>
+  /**
+   * Pruned lists removed-from-lock skills that were uninstalled because Prune was set.
+   */
+  pruned?: Array<string>
+  /**
+   * RemovedFromLock lists previously managed skills absent from the lock file.
+   */
+  removed_from_lock?: Array<string>
+}
+
+export type GithubComStacklokToolhivePkgPluginsUpgradeResult = {
+  /**
+   * Outcomes contains one entry per skill considered for upgrade.
+   */
+  outcomes?: Array<GithubComStacklokToolhivePkgSkillsUpgradeOutcome>
+}
 
 export type GithubComStacklokToolhivePkgPluginsValidationResult = {
   /**
@@ -2769,6 +2887,12 @@ export type PkgApiV1HeaderForwardConfig = {
  */
 export type PkgApiV1InstallPluginRequest = {
   /**
+   * AllowUnsigned permits installing a project-scoped plugin without a
+   * verified signature; the exception is recorded in the project's lock
+   * file.
+   */
+  allow_unsigned?: boolean
+  /**
    * Clients lists target client identifiers (e.g., "claude-code"),
    * or ["all"] to target every plugin-supporting client.
    * Omitting this field installs to all available clients.
@@ -3003,6 +3127,11 @@ export type PkgApiV1PushPluginRequest = {
  */
 export type PkgApiV1PushSkillRequest = {
   /**
+   * IdentityToken is a short-lived OIDC identity token used for keyless
+   * signing, mutually exclusive with Key
+   */
+  identity_token?: string
+  /**
    * Key is the path to a cosign private key used to sign the pushed
    * artifact
    */
@@ -3207,6 +3336,38 @@ export type PkgApiV1SkillsV01Response = {
 }
 
 /**
+ * Request to restore a project's installed plugins to match its lock file
+ */
+export type PkgApiV1SyncPluginsRequest = {
+  /**
+   * Adopt writes lock entries for existing unmanaged project-scope installs
+   */
+  adopt?: boolean
+  /**
+   * AllowUnsigned permits adopting plugins whose signature state cannot be
+   * established, recording them as unsigned
+   */
+  allow_unsigned?: boolean
+  /**
+   * Check verifies on-disk content against the lock file without installing or writing anything
+   */
+  check?: boolean
+  /**
+   * Clients lists target client identifiers. Empty means every
+   * plugin-supporting client detected on this host.
+   */
+  clients?: Array<string>
+  /**
+   * ProjectRoot is the project root path whose lock file should be synced
+   */
+  project_root?: string
+  /**
+   * Prune removes project-scoped plugins installed but not present in the lock file
+   */
+  prune?: boolean
+}
+
+/**
  * Request to restore a project's installed skills to match its lock file
  */
 export type PkgApiV1SyncSkillsRequest = {
@@ -3389,6 +3550,37 @@ export type PkgApiV1UpgradeCheckBulkResponse = {
  */
 export type PkgApiV1UpgradeCheckResponse = {
   result?: GithubComStacklokToolhivePkgWorkloadsUpgradeCheckResult
+}
+
+/**
+ * Request to re-resolve a project's lock entries and install newer content
+ */
+export type PkgApiV1UpgradePluginsRequest = {
+  /**
+   * AllowRefChange permits resolvedReference changes during upgrade
+   */
+  allow_ref_change?: boolean
+  /**
+   * Clients lists target client identifiers. Empty means every
+   * plugin-supporting client detected on this host.
+   */
+  clients?: Array<string>
+  /**
+   * FailOnChanges exits with an error when any mutable source would upgrade
+   */
+  fail_on_changes?: boolean
+  /**
+   * Names restricts the upgrade to specific plugin names. Empty means every entry.
+   */
+  names?: Array<string>
+  /**
+   * Preview reports what would change without installing (still fetches to compare digests)
+   */
+  preview?: boolean
+  /**
+   * ProjectRoot is the project root path whose lock file should be upgraded
+   */
+  project_root?: string
 }
 
 /**
@@ -3833,7 +4025,19 @@ export type RegistryPlugin = {
 }
 
 /**
- * Provenance contains verification and signing metadata
+ * Provenance is the expected signer identity for this skill, checked on
+ * first install instead of trust-on-first-use. Absent means unconstrained
+ * — most catalog entries won't have this for a while, and that must not
+ * break installs; it's an opt-in tightening per entry, not a requirement.
+ *
+ * Each field constrains independently, and an empty string leaves that
+ * dimension unconstrained. Attestation is the exception: setting it at
+ * all, even to an empty struct, requires the artifact to be attested, so
+ * verification fails against a signature carrying no statement. Its own
+ * PredicateType and Predicate then follow the usual rule and constrain
+ * only when set. Predicate must be a JSON object; anything else can never
+ * match, and Validate rejects it rather than letting it through as a
+ * constraint that silently fails every artifact.
  */
 export type RegistryProvenance = {
   attestation?: RegistryVerifiedAttestation
@@ -4008,6 +4212,7 @@ export type RegistrySkill = {
    * Packages is the list of packages for the skill.
    */
   packages?: Array<RegistrySkillPackage>
+  provenance?: RegistryProvenance
   repository?: RegistrySkillRepository
   /**
    * Status is the status of the skill.
@@ -4322,7 +4527,10 @@ export type TelemetryConfig = {
   }
   /**
    * EnablePrometheusMetricsPath controls whether to expose Prometheus-style /metrics endpoint.
-   * The metrics are served on the main transport port at /metrics.
+   * The metrics are served at /metrics on a dedicated diagnostics port rather than on the
+   * main transport port, so the endpoint can be restricted by port and is not routed
+   * alongside application traffic. The endpoint is unauthenticated either way.
+   * See PrometheusPort and pkg/diagnostics.
    * This is separate from OTLP metrics which are sent to the Endpoint.
    * +kubebuilder:default=false
    * +optional
@@ -4362,6 +4570,32 @@ export type TelemetryConfig = {
    * +optional
    */
   metricsEnabled?: boolean
+  /**
+   * MetricsOnTransportPort controls whether /metrics is ALSO served on the main
+   * transport port, in addition to the diagnostics port. It exists to give
+   * deployments a migration window: while true, an existing scrape configuration
+   * aimed at the transport port keeps working, and a new one aimed at
+   * PrometheusPort works too, so a scraper can be moved and verified before the
+   * old location goes away. See https://github.com/stacklok/toolhive/issues/6384 for
+   * the removal timeline.
+   *
+   * +optional
+   */
+  metricsOnTransportPort?: boolean
+  /**
+   * PrometheusPort is the port the Prometheus /metrics endpoint is served on when
+   * EnablePrometheusMetricsPath is true. It is deliberately not the main transport port,
+   * so that access can be restricted with a NetworkPolicy: NetworkPolicy matches on port,
+   * not on HTTP path, so a shared port makes "allow MCP traffic, deny metrics scraping"
+   * impossible to express. The endpoint itself is unauthenticated, so restricting who can
+   * reach this port is how it is protected.
+   *
+   * Zero selects the default diagnostics port (9464, the OpenTelemetry specification's
+   * Prometheus exporter default). If that port is taken the listener falls back to an
+   * available one and logs the resolved address. Do not route this port publicly.
+   * +optional
+   */
+  prometheusPort?: number
   /**
    * SamplingRate is the trace sampling rate (0.0-1.0) as a string.
    * Only used when TracingEnabled is true.
@@ -5204,6 +5438,102 @@ export type PostApiV1BetaPluginsPushResponses = {
 
 export type PostApiV1BetaPluginsPushResponse =
   PostApiV1BetaPluginsPushResponses[keyof PostApiV1BetaPluginsPushResponses]
+
+export type PostApiV1BetaPluginsSyncData = {
+  /**
+   * Sync request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | PkgApiV1SyncPluginsRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/plugins/sync'
+}
+
+export type PostApiV1BetaPluginsSyncErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Forbidden (feature not enabled)
+   */
+  403: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+  /**
+   * Not Implemented
+   */
+  501: string
+}
+
+export type PostApiV1BetaPluginsSyncError =
+  PostApiV1BetaPluginsSyncErrors[keyof PostApiV1BetaPluginsSyncErrors]
+
+export type PostApiV1BetaPluginsSyncResponses = {
+  /**
+   * OK
+   */
+  200: GithubComStacklokToolhivePkgPluginsSyncResult
+}
+
+export type PostApiV1BetaPluginsSyncResponse =
+  PostApiV1BetaPluginsSyncResponses[keyof PostApiV1BetaPluginsSyncResponses]
+
+export type PostApiV1BetaPluginsUpgradeData = {
+  /**
+   * Upgrade request
+   */
+  body:
+    | {
+        [key: string]: unknown
+      }
+    | PkgApiV1UpgradePluginsRequest
+  path?: never
+  query?: never
+  url: '/api/v1beta/plugins/upgrade'
+}
+
+export type PostApiV1BetaPluginsUpgradeErrors = {
+  /**
+   * Bad Request
+   */
+  400: string
+  /**
+   * Forbidden (feature not enabled)
+   */
+  403: string
+  /**
+   * Not Found (a requested name is not in the lock file)
+   */
+  404: string
+  /**
+   * Internal Server Error
+   */
+  500: string
+  /**
+   * Not Implemented
+   */
+  501: string
+}
+
+export type PostApiV1BetaPluginsUpgradeError =
+  PostApiV1BetaPluginsUpgradeErrors[keyof PostApiV1BetaPluginsUpgradeErrors]
+
+export type PostApiV1BetaPluginsUpgradeResponses = {
+  /**
+   * OK
+   */
+  200: GithubComStacklokToolhivePkgPluginsUpgradeResult
+}
+
+export type PostApiV1BetaPluginsUpgradeResponse =
+  PostApiV1BetaPluginsUpgradeResponses[keyof PostApiV1BetaPluginsUpgradeResponses]
 
 export type PostApiV1BetaPluginsValidateData = {
   /**

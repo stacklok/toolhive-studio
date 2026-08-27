@@ -159,6 +159,12 @@ import type {
   PostApiV1BetaPluginsPushErrors,
   PostApiV1BetaPluginsPushResponses,
   PostApiV1BetaPluginsResponses,
+  PostApiV1BetaPluginsSyncData,
+  PostApiV1BetaPluginsSyncErrors,
+  PostApiV1BetaPluginsSyncResponses,
+  PostApiV1BetaPluginsUpgradeData,
+  PostApiV1BetaPluginsUpgradeErrors,
+  PostApiV1BetaPluginsUpgradeResponses,
   PostApiV1BetaPluginsValidateData,
   PostApiV1BetaPluginsValidateErrors,
   PostApiV1BetaPluginsValidateResponses,
@@ -641,6 +647,58 @@ export const postApiV1BetaPluginsPush = <ThrowOnError extends boolean = false>(
     ThrowOnError
   >({
     url: '/api/v1beta/plugins/push',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Sync project plugins from the lock file
+ *
+ * Restore a project's installed plugins to match toolhive.lock.yaml
+ */
+export const postApiV1BetaPluginsSync = <ThrowOnError extends boolean = false>(
+  options: Options<PostApiV1BetaPluginsSyncData, ThrowOnError>
+): RequestResult<
+  PostApiV1BetaPluginsSyncResponses,
+  PostApiV1BetaPluginsSyncErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1BetaPluginsSyncResponses,
+    PostApiV1BetaPluginsSyncErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/plugins/sync',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  })
+
+/**
+ * Upgrade project plugins
+ *
+ * Re-resolve a project's lock entries and install newer content where available
+ */
+export const postApiV1BetaPluginsUpgrade = <
+  ThrowOnError extends boolean = false,
+>(
+  options: Options<PostApiV1BetaPluginsUpgradeData, ThrowOnError>
+): RequestResult<
+  PostApiV1BetaPluginsUpgradeResponses,
+  PostApiV1BetaPluginsUpgradeErrors,
+  ThrowOnError
+> =>
+  (options.client ?? client).post<
+    PostApiV1BetaPluginsUpgradeResponses,
+    PostApiV1BetaPluginsUpgradeErrors,
+    ThrowOnError
+  >({
+    url: '/api/v1beta/plugins/upgrade',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1360,6 +1418,9 @@ export const getApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
  * Create a new workload
  *
  * Create and start a new workload
+ * runtime_config is only accepted for protocol-scheme images
+ * (uvx://, npx://, go://); supplying it with an ordinary image
+ * reference or a remote url is rejected with 400.
  */
 export const postApiV1BetaWorkloads = <ThrowOnError extends boolean = false>(
   options: Options<PostApiV1BetaWorkloadsData, ThrowOnError>
@@ -1531,6 +1592,10 @@ export const getApiV1BetaWorkloadsByName = <
  * Update workload
  *
  * Update an existing workload configuration
+ * runtime_config on a non-protocol-scheme image is accepted only when it
+ * exactly matches the workload's persisted config and the image and url
+ * are unchanged (an inert echo, e.g. from a prior GET); otherwise it is
+ * rejected with 400.
  */
 export const postApiV1BetaWorkloadsByNameEdit = <
   ThrowOnError extends boolean = false,
