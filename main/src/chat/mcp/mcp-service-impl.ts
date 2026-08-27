@@ -35,6 +35,9 @@ interface UiResourceMetadata {
 export interface McpToolSession {
   tools: ToolSet
   enabledTools: Record<string, string[]>
+  /** Enabled servers whose workloads were actually found. Missing/stopped
+   * servers do not count — chat should still work without MCP. */
+  enabledServersWithWorkload: number
   close: () => Promise<void>
 }
 
@@ -375,6 +378,7 @@ export async function createMcpTools(
   const mcpTools: ToolSet = {}
   const closeByServer = new Map<string, () => Promise<void>>()
   let enabledTools: Record<string, string[]> = {}
+  let enabledServersWithWorkload = 0
   const nextCachedUiMetadata: Record<string, ToolUiMetadataEntry> = {}
   let discoverySucceeded = false
 
@@ -409,6 +413,7 @@ export async function createMcpTools(
           log.debug(`Skipping ${serverName}: workload not found`)
           return Promise.resolve(null)
         }
+        enabledServersWithWorkload += 1
         return discoverToolsForServer({
           serverName,
           toolNames,
@@ -457,5 +462,5 @@ export async function createMcpTools(
     }
   }
 
-  return { tools: mcpTools, enabledTools, close }
+  return { tools: mcpTools, enabledTools, enabledServersWithWorkload, close }
 }

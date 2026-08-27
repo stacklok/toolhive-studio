@@ -862,13 +862,13 @@ describe('createMcpTools', () => {
     expect(Sentry.addBreadcrumb).not.toHaveBeenCalled()
   })
 
-  it('logs and skips servers whose workload is not found', async () => {
+  it('skips missing workloads and still allows chat with no MCP tools', async () => {
     mockGetApiV1BetaWorkloads.mockResolvedValue({ data: { workloads: [] } })
     mockReadEnabledMcpTools.mockReturnValue({ 'ghost-server': ['tool-x'] })
 
-    await expect(createMcpTools()).rejects.toThrow(
-      'No MCP tools are available from the enabled servers.'
-    )
+    const { tools } = await createMcpTools()
+
+    expect(tools).toEqual({})
     expect(log.debug).toHaveBeenCalledWith(
       'Skipping ghost-server: workload not found'
     )
