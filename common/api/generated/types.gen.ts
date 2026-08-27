@@ -6,161 +6,9 @@ export type ClientOptions = {
 
 /**
  * DEPRECATED: Middleware configuration.
- * OIDCConfig contains OIDC configuration
- */
-export type AuthTokenValidatorConfig = {
-  /**
-   * AllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses
-   */
-  allowPrivateIP?: boolean
-  /**
-   * Audience is the expected audience for the token
-   */
-  audience?: string
-  /**
-   * AuthTokenFile is the path to file containing bearer token for authentication
-   */
-  authTokenFile?: string
-  /**
-   * CACertPath is the path to the CA certificate bundle for HTTPS requests
-   */
-  cacertPath?: string
-  /**
-   * ClientID is the OIDC client ID
-   */
-  clientID?: string
-  /**
-   * ClientSecret is the optional OIDC client secret for introspection
-   */
-  clientSecret?: string
-  /**
-   * InsecureAllowHTTP allows HTTP (non-HTTPS) OIDC issuers for development/testing
-   * WARNING: This is insecure and should NEVER be used in production
-   */
-  insecureAllowHTTP?: boolean
-  /**
-   * IntrospectionURL is the optional introspection endpoint for validating tokens
-   */
-  introspectionURL?: string
-  /**
-   * Issuer is the OIDC issuer URL (e.g., https://accounts.google.com)
-   */
-  issuer?: string
-  /**
-   * JWKSURL is the URL to fetch the JWKS from
-   */
-  jwksurl?: string
-  /**
-   * ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)
-   */
-  resourceURL?: string
-  /**
-   * Scopes is the list of OAuth scopes to advertise in the well-known endpoint (RFC 9728)
-   * If empty, defaults to ["openid"]
-   */
-  scopes?: Array<string>
-}
-
-export type CoreWorkload = {
-  /**
-   * CreatedAt is the timestamp when the workload was created.
-   */
-  created_at?: string
-  /**
-   * Group is the name of the group this workload belongs to, if any.
-   */
-  group?: string
-  /**
-   * Labels are the container labels (excluding standard ToolHive labels)
-   */
-  labels?: {
-    [key: string]: string
-  }
-  /**
-   * Name is the name of the workload.
-   * It is used as a unique identifier.
-   */
-  name?: string
-  /**
-   * Package specifies the Workload Package used to create this Workload.
-   */
-  package?: string
-  /**
-   * Port is the port on which the workload is exposed.
-   * This is embedded in the URL.
-   */
-  port?: number
-  /**
-   * ProxyMode is the proxy mode that clients should use to connect.
-   * For stdio transports, this will be the proxy mode (sse or streamable-http).
-   * For direct transports (sse/streamable-http), this will be the same as TransportType.
-   */
-  proxy_mode?: string
-  /**
-   * Remote indicates whether this is a remote workload (true) or a container workload (false).
-   */
-  remote?: boolean
-  /**
-   * StartedAt is when the container was last started (changes on restart)
-   */
-  started_at?: string
-  /**
-   * Status is the current status of the workload.
-   */
-  status?:
-    | 'running'
-    | 'stopped'
-    | 'error'
-    | 'starting'
-    | 'stopping'
-    | 'unhealthy'
-    | 'removing'
-    | 'unknown'
-    | 'unauthenticated'
-    | 'auth_retrying'
-    | 'policy_stopped'
-  /**
-   * StatusContext provides additional context about the workload's status.
-   * The exact meaning is determined by the status and the underlying runtime.
-   */
-  status_context?: string
-  /**
-   * ToolsFilter is the filter on tools applied to the workload.
-   */
-  tools?: Array<string>
-  /**
-   * TransportType is the type of transport used for this workload.
-   */
-  transport_type?: 'stdio' | 'sse' | 'streamable-http' | 'inspector'
-  /**
-   * URL is the URL of the workload exposed by the ToolHive proxy.
-   */
-  url?: string
-}
-
-/**
- * RateLimitConfig contains the CRD rate limiting configuration.
- * When set, rate limiting middleware is added to the proxy middleware chain.
- */
-export type GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitConfig = {
-  perUser?: GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket
-  shared?: GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket
-  /**
-   * Tools defines per-tool rate limit overrides.
-   * Each entry applies additional rate limits to calls targeting a specific tool name.
-   * A request must pass both the server-level limit and the per-tool limit.
-   * +listType=map
-   * +listMapKey=name
-   * +optional
-   */
-  tools?: Array<GithubComStacklokToolhivePkgRatelimitTypesToolRateLimitConfig>
-}
-
-/**
- * DEPRECATED: Middleware configuration.
  * AuditConfig contains the audit logging configuration
  */
-export type GithubComStacklokToolhivePkgAuditConfig = {
+export type AuditConfig = {
   /**
    * Component is the component name to use in audit events.
    * +optional
@@ -229,93 +77,60 @@ export type GithubComStacklokToolhivePkgAuditConfig = {
 }
 
 /**
- * AWSStsConfig contains AWS STS token exchange configuration for accessing AWS services
+ * DEPRECATED: Middleware configuration.
+ * OIDCConfig contains OIDC configuration
  */
-export type GithubComStacklokToolhivePkgAuthAwsstsConfig = {
+export type AuthTokenValidatorConfig = {
   /**
-   * FallbackRoleArn is the IAM role ARN to assume when no role mapping matches.
+   * AllowPrivateIP allows JWKS/OIDC endpoints on private IP addresses
    */
-  fallback_role_arn?: string
+  allowPrivateIP?: boolean
   /**
-   * Region is the AWS region for STS and SigV4 signing.
+   * Audience is the expected audience for the token
    */
-  region?: string
+  audience?: string
   /**
-   * RoleClaim is the JWT claim to use for role mapping (default: "groups").
+   * AuthTokenFile is the path to file containing bearer token for authentication
    */
-  role_claim?: string
+  authTokenFile?: string
   /**
-   * RoleMappings maps JWT claim values to IAM roles with priority.
+   * CACertPath is the path to the CA certificate bundle for HTTPS requests
    */
-  role_mappings?: Array<GithubComStacklokToolhivePkgAuthAwsstsRoleMapping>
+  cacertPath?: string
   /**
-   * Service is the AWS service name for SigV4 signing (default: "aws-mcp").
+   * ClientID is the OIDC client ID
    */
-  service?: string
+  clientID?: string
   /**
-   * SessionDuration is the duration in seconds for assumed role credentials (default: 3600).
+   * ClientSecret is the optional OIDC client secret for introspection
    */
-  session_duration?: number
+  clientSecret?: string
   /**
-   * SessionNameClaim is the JWT claim to use for role session name (default: "sub").
+   * InsecureAllowHTTP allows HTTP (non-HTTPS) OIDC issuers for development/testing
+   * WARNING: This is insecure and should NEVER be used in production
    */
-  session_name_claim?: string
+  insecureAllowHTTP?: boolean
   /**
-   * SubjectProviderName identifies which upstream provider's access token to use
-   * for STS AssumeRoleWithWebIdentity. Used by vMCP only. When empty, the bearer
-   * token from the incoming HTTP request is used.
+   * IntrospectionURL is the optional introspection endpoint for validating tokens
    */
-  subject_provider_name?: string
-}
-
-export type GithubComStacklokToolhivePkgAuthAwsstsRoleMapping = {
+  introspectionURL?: string
   /**
-   * Claim is the simple claim value to match (e.g., group name).
-   * Internally compiles to a CEL expression: "<claim_value>" in claims["<role_claim>"]
-   * Mutually exclusive with Matcher.
+   * Issuer is the OIDC issuer URL (e.g., https://accounts.google.com)
    */
-  claim?: string
+  issuer?: string
   /**
-   * Matcher is a CEL expression for complex matching against JWT claims.
-   * The expression has access to a "claims" variable containing all JWT claims.
-   * Examples:
-   * - "admins" in claims["groups"]
-   * - claims["sub"] == "user123" && !("act" in claims)
-   * Mutually exclusive with Claim.
+   * JWKSURL is the URL to fetch the JWKS from
    */
-  matcher?: string
+  jwksurl?: string
   /**
-   * Priority determines selection order (lower number = higher priority).
-   * When multiple mappings match, the one with the lowest priority is selected.
-   * When nil (omitted), the mapping has the lowest possible priority, and
-   * configuration order acts as tie-breaker via stable sort.
+   * ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)
    */
-  priority?: number
+  resourceURL?: string
   /**
-   * RoleArn is the IAM role ARN to assume when this mapping matches.
+   * Scopes is the list of OAuth scopes to advertise in the well-known endpoint (RFC 9728)
+   * If empty, defaults to ["openid"]
    */
-  role_arn?: string
-}
-
-/**
- * UpstreamSwapConfig contains configuration for upstream token swap middleware.
- * When set along with EmbeddedAuthServerConfig, this middleware exchanges ToolHive JWTs
- * for upstream IdP tokens before forwarding requests to the MCP server.
- */
-export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
-  /**
-   * CustomHeaderName is the header name when HeaderStrategy is "custom".
-   */
-  custom_header_name?: string
-  /**
-   * HeaderStrategy determines how to inject the token: "replace" (default) or "custom".
-   */
-  header_strategy?: string
-  /**
-   * ProviderName identifies which upstream provider's tokens to retrieve for injection.
-   * This is required and must match a configured upstream provider name.
-   */
-  provider_name?: string
+  scopes?: Array<string>
 }
 
 /**
@@ -323,7 +138,7 @@ export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
  * embedded authorization server accepts HTTPS URLs as client_id values
  * and resolves them via the CIMD protocol instead of requiring DCR.
  */
-export type GithubComStacklokToolhivePkgAuthserverCimdRunConfig = {
+export type AuthserverCimdRunConfig = {
   /**
    * CacheFallbackTTL is the fixed TTL applied to every cached CIMD document.
    * Cache-Control header parsing is not yet implemented; all entries use this value.
@@ -349,7 +164,7 @@ export type GithubComStacklokToolhivePkgAuthserverCimdRunConfig = {
  * ClientSecretFile / ClientSecretEnvVar, and ClientID must be left empty.
  * Mutually exclusive with ClientID.
  */
-export type GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig = {
+export type AuthserverDcrUpstreamConfig = {
   /**
    * DiscoveryURL is the exact RFC 8414 / OIDC Discovery document URL to
    * fetch at runtime. The resolver issues a single GET against this URL
@@ -407,7 +222,7 @@ export type GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig = {
   software_statement?: string
 }
 
-export type GithubComStacklokToolhivePkgAuthserverDelegateClientRunConfig = {
+export type AuthserverDelegateClientRunConfig = {
   /**
    * Audiences are the RFC 8707 resource values this client may request a
    * token for. Required, and must be a subset of RunConfig.AllowedAudiences:
@@ -445,7 +260,7 @@ export type GithubComStacklokToolhivePkgAuthserverDelegateClientRunConfig = {
  * (cmd/thv-operator/api/v1beta1.IdentityFromTokenConfig) — the authoritative
  * trust-model and uniqueness documentation lives there.
  */
-export type GithubComStacklokToolhivePkgAuthserverIdentityFromTokenRunConfig = {
+export type AuthserverIdentityFromTokenRunConfig = {
   /**
    * EmailPath is the dot-notation path to the email address field.
    */
@@ -465,7 +280,7 @@ export type GithubComStacklokToolhivePkgAuthserverIdentityFromTokenRunConfig = {
  * OAuth2Config contains OAuth 2.0-specific configuration.
  * Required when Type is "oauth2", must be nil when Type is "oidc".
  */
-export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
+export type AuthserverOAuth2UpstreamRunConfig = {
   /**
    * AdditionalAuthorizationParams are extra query parameters to include in
    * authorization requests. Useful for provider-specific parameters like
@@ -491,6 +306,10 @@ export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
    */
   authorization_endpoint?: string
   /**
+   * CAFilePath is the path to a PEM CA bundle added to the system roots.
+   */
+  ca_file_path?: string
+  /**
    * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
    * Mutually exclusive with DCRConfig: when DCRConfig is set, ClientID is obtained
    * at runtime via RFC 7591 Dynamic Client Registration and must be left empty.
@@ -506,8 +325,8 @@ export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
    * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
    */
   client_secret_file?: string
-  dcr_config?: GithubComStacklokToolhivePkgAuthserverDcrUpstreamConfig
-  identity_from_token?: GithubComStacklokToolhivePkgAuthserverIdentityFromTokenRunConfig
+  dcr_config?: AuthserverDcrUpstreamConfig
+  identity_from_token?: AuthserverIdentityFromTokenRunConfig
   /**
    * InsecureAllowHTTP permits plain-HTTP authorization and token endpoint URLs
    * for this upstream. Only for in-cluster development environments (e.g. an
@@ -528,15 +347,15 @@ export type GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig = {
    * TokenEndpoint is the URL for the OAuth token endpoint.
    */
   token_endpoint?: string
-  token_response_mapping?: GithubComStacklokToolhivePkgAuthserverTokenResponseMappingRunConfig
-  userinfo?: GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig
+  token_response_mapping?: AuthserverTokenResponseMappingRunConfig
+  userinfo?: AuthserverUserInfoRunConfig
 }
 
 /**
  * OIDCConfig contains OIDC-specific configuration.
  * Required when Type is "oidc", must be nil when Type is "oauth2".
  */
-export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
+export type AuthserverOidcUpstreamRunConfig = {
   /**
    * AdditionalAuthorizationParams are extra query parameters to include in
    * authorization requests. Useful for provider-specific parameters like
@@ -553,6 +372,10 @@ export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
    * non-localhost hosts. Defaults to false.
    */
   allow_private_ips?: boolean
+  /**
+   * CAFilePath is the path to a PEM CA bundle added to the system roots.
+   */
+  ca_file_path?: string
   /**
    * ClientID is the OAuth 2.0 client identifier registered with the upstream IDP.
    */
@@ -598,7 +421,7 @@ export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
    * stable per user (e.g. Entra/Azure AD's "oid"). See upstream.OIDCConfig.
    */
   subject_claim?: string
-  userinfo_override?: GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig
+  userinfo_override?: AuthserverUserInfoRunConfig
 }
 
 /**
@@ -606,7 +429,7 @@ export type GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig = {
  * When set, the proxy runner will start an embedded auth server that delegates to upstream IDPs.
  * This is the serializable RunConfig; secrets are referenced by file paths or env var names.
  */
-export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
+export type AuthserverRunConfig = {
   /**
    * AllowConfidentialClientRegistration permits Dynamic Client Registration
    * of confidential clients: when true, /oauth/register accepts
@@ -662,7 +485,7 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    * ScopesSupported explicitly.
    */
   baseline_client_scopes?: Array<string>
-  cimd?: GithubComStacklokToolhivePkgAuthserverCimdRunConfig
+  cimd?: AuthserverCimdRunConfig
   /**
    * DelegateClients declares confidential OAuth clients to register at
    * authorization-server startup, including clients intended for RFC 8693
@@ -677,7 +500,7 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    *
    * See DelegateClientRunConfig for the per-client field reference.
    */
-  delegate_clients?: Array<GithubComStacklokToolhivePkgAuthserverDelegateClientRunConfig>
+  delegate_clients?: Array<AuthserverDelegateClientRunConfig>
   /**
    * DelegationTokenLifespan is the maximum lifetime for delegated tokens issued
    * via RFC 8693 token exchange. Specified as a Go duration string (e.g., "15m").
@@ -771,9 +594,9 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    * If empty, defaults to registration.DefaultScopes (["openid", "profile", "email", "offline_access"]).
    */
   scopes_supported?: Array<string>
-  signing_key_config?: GithubComStacklokToolhivePkgAuthserverSigningKeyRunConfig
+  signing_key_config?: AuthserverSigningKeyRunConfig
   storage?: StorageRunConfig
-  token_lifespans?: GithubComStacklokToolhivePkgAuthserverTokenLifespanRunConfig
+  token_lifespans?: AuthserverTokenLifespanRunConfig
   /**
    * TrustedIssuers lists external OIDC issuers whose tokens are accepted as
    * RFC 8693 subject tokens or RFC 7523 JWT-bearer assertions. Issuers with
@@ -787,20 +610,20 @@ export type GithubComStacklokToolhivePkgAuthserverRunConfig = {
    * subject namespace qualification, required client binding) that aren't
    * visible from the config shape alone.
    */
-  trusted_issuers?: Array<GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssuer>
+  trusted_issuers?: Array<TokenexchangeTrustedIssuer>
   /**
    * Upstreams configures connections to upstream Identity Providers.
    * At least one upstream is required - the server delegates authentication to these providers.
    * Multiple upstreams are supported for sequential authorization chains.
    */
-  upstreams?: Array<GithubComStacklokToolhivePkgAuthserverUpstreamRunConfig>
+  upstreams?: Array<AuthserverUpstreamRunConfig>
 }
 
 /**
  * SigningKeyConfig configures the signing key provider for JWT operations.
  * If nil or empty, an ephemeral signing key will be auto-generated (development only).
  */
-export type GithubComStacklokToolhivePkgAuthserverSigningKeyRunConfig = {
+export type AuthserverSigningKeyRunConfig = {
   /**
    * FallbackKeyFiles are filenames of additional keys for verification (relative to KeyDir).
    * These keys are included in the JWKS endpoint for token verification but are NOT
@@ -824,7 +647,7 @@ export type GithubComStacklokToolhivePkgAuthserverSigningKeyRunConfig = {
  * TokenLifespans configures the duration that various tokens are valid.
  * If nil, defaults are applied (access: 1h, refresh: 7d, authCode: 10m).
  */
-export type GithubComStacklokToolhivePkgAuthserverTokenLifespanRunConfig = {
+export type AuthserverTokenLifespanRunConfig = {
   /**
    * AccessTokenLifespan is the duration that access tokens are valid.
    * If empty, defaults to 1 hour.
@@ -847,69 +670,64 @@ export type GithubComStacklokToolhivePkgAuthserverTokenLifespanRunConfig = {
  * When set, the token exchange bypasses golang.org/x/oauth2 and extracts fields using
  * the configured dot-notation paths.
  */
-export type GithubComStacklokToolhivePkgAuthserverTokenResponseMappingRunConfig =
-  {
-    /**
-     * AccessTokenPath is the dot-notation path to the access token (required).
-     */
-    access_token_path?: string
-    /**
-     * ExpiresInPath is the dot-notation path to the expires_in value. Defaults to "expires_in".
-     */
-    expires_in_path?: string
-    /**
-     * RefreshTokenPath is the dot-notation path to the refresh token. Defaults to "refresh_token".
-     */
-    refresh_token_path?: string
-    /**
-     * ScopePath is the dot-notation path to the scope. Defaults to "scope".
-     */
-    scope_path?: string
-  }
+export type AuthserverTokenResponseMappingRunConfig = {
+  /**
+   * AccessTokenPath is the dot-notation path to the access token (required).
+   */
+  access_token_path?: string
+  /**
+   * ExpiresInPath is the dot-notation path to the expires_in value. Defaults to "expires_in".
+   */
+  expires_in_path?: string
+  /**
+   * RefreshTokenPath is the dot-notation path to the refresh token. Defaults to "refresh_token".
+   */
+  refresh_token_path?: string
+  /**
+   * ScopePath is the dot-notation path to the scope. Defaults to "scope".
+   */
+  scope_path?: string
+}
 
-/**
- * Type specifies the provider type: "oidc" or "oauth2".
- */
-export type GithubComStacklokToolhivePkgAuthserverUpstreamProviderType =
-  'oidc' | 'oauth2'
-
-export type GithubComStacklokToolhivePkgAuthserverUpstreamRunConfig = {
+export type AuthserverUpstreamRunConfig = {
   /**
    * Name uniquely identifies this upstream.
    * Used for routing decisions and session binding in multi-upstream scenarios.
    * If empty when only one upstream is configured, defaults to "default".
    */
   name?: string
-  oauth2_config?: GithubComStacklokToolhivePkgAuthserverOAuth2UpstreamRunConfig
-  oidc_config?: GithubComStacklokToolhivePkgAuthserverOidcUpstreamRunConfig
-  type?: GithubComStacklokToolhivePkgAuthserverUpstreamProviderType
+  oauth2_config?: AuthserverOAuth2UpstreamRunConfig
+  oidc_config?: AuthserverOidcUpstreamRunConfig
+  /**
+   * Type specifies the provider type: "oidc" or "oauth2".
+   */
+  type?: string
 }
 
 /**
  * FieldMapping contains custom field mapping configuration for non-standard providers.
  * If nil, standard OIDC field names are used ("sub", "name", "email").
  */
-export type GithubComStacklokToolhivePkgAuthserverUserInfoFieldMappingRunConfig =
-  {
-    /**
-     * EmailFields is an ordered list of field names to try for the email address.
-     * The first non-empty value found will be used.
-     * Default: ["email"]
-     */
-    email_fields?: Array<string>
-    /**
-     * NameFields is an ordered list of field names to try for the display name.
-     * The first non-empty value found will be used.
-     * Default: ["name"]
-     */
-    name_fields?: Array<string>
-    /**
-     * SubjectFields is an ordered list of field names to try for the user ID.
-     * The first non-empty value found will be used.
-     * Default: ["sub"]
-     */
-    subject_fields?: Array<string>
-  }
+export type AuthserverUserInfoFieldMappingRunConfig = {
+  /**
+   * EmailFields is an ordered list of field names to try for the email address.
+   * The first non-empty value found will be used.
+   * Default: ["email"]
+   */
+  email_fields?: Array<string>
+  /**
+   * NameFields is an ordered list of field names to try for the display name.
+   * The first non-empty value found will be used.
+   * Default: ["name"]
+   */
+  name_fields?: Array<string>
+  /**
+   * SubjectFields is an ordered list of field names to try for the user ID.
+   * The first non-empty value found will be used.
+   * Default: ["sub"]
+   */
+  subject_fields?: Array<string>
+}
 
 /**
  * UserInfo contains configuration for fetching user information.
@@ -918,7 +736,7 @@ export type GithubComStacklokToolhivePkgAuthserverUserInfoFieldMappingRunConfig 
  * of calling a userinfo endpoint. OIDC providers always derive Subject from
  * the ID token and are unaffected.
  */
-export type GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig = {
+export type AuthserverUserInfoRunConfig = {
   /**
    * AdditionalHeaders contains extra headers to include in the userinfo request.
    * Useful for providers that require specific headers (e.g., GitHub's Accept header).
@@ -930,7 +748,7 @@ export type GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig = {
    * EndpointURL is the URL of the userinfo endpoint.
    */
   endpoint_url?: string
-  field_mapping?: GithubComStacklokToolhivePkgAuthserverUserInfoFieldMappingRunConfig
+  field_mapping?: AuthserverUserInfoFieldMappingRunConfig
   /**
    * HTTPMethod is the HTTP method to use for the userinfo request.
    * If not specified, defaults to GET.
@@ -938,126 +756,172 @@ export type GithubComStacklokToolhivePkgAuthserverUserInfoRunConfig = {
   http_method?: string
 }
 
+export type CoreWorkload = {
+  /**
+   * CreatedAt is the timestamp when the workload was created.
+   */
+  created_at?: string
+  /**
+   * Group is the name of the group this workload belongs to, if any.
+   */
+  group?: string
+  /**
+   * Labels are the container labels (excluding standard ToolHive labels)
+   */
+  labels?: {
+    [key: string]: string
+  }
+  /**
+   * Name is the name of the workload.
+   * It is used as a unique identifier.
+   */
+  name?: string
+  /**
+   * Package specifies the Workload Package used to create this Workload.
+   */
+  package?: string
+  /**
+   * Port is the port on which the workload is exposed.
+   * This is embedded in the URL.
+   */
+  port?: number
+  /**
+   * ProxyMode is the proxy mode that clients should use to connect.
+   * For stdio transports, this will be the proxy mode (sse or streamable-http).
+   * For direct transports (sse/streamable-http), this will be the same as TransportType.
+   */
+  proxy_mode?: string
+  /**
+   * Remote indicates whether this is a remote workload (true) or a container workload (false).
+   */
+  remote?: boolean
+  /**
+   * StartedAt is when the container was last started (changes on restart)
+   */
+  started_at?: string
+  /**
+   * Status is the current status of the workload.
+   */
+  status?:
+    | 'running'
+    | 'stopped'
+    | 'error'
+    | 'starting'
+    | 'stopping'
+    | 'unhealthy'
+    | 'removing'
+    | 'unknown'
+    | 'unauthenticated'
+    | 'auth_retrying'
+    | 'policy_stopped'
+  /**
+   * StatusContext provides additional context about the workload's status.
+   * The exact meaning is determined by the status and the underlying runtime.
+   */
+  status_context?: string
+  /**
+   * ToolsFilter is the filter on tools applied to the workload.
+   */
+  tools?: Array<string>
+  /**
+   * TransportType is the type of transport used for this workload.
+   */
+  transport_type?: 'stdio' | 'sse' | 'streamable-http' | 'inspector'
+  /**
+   * URL is the URL of the workload exposed by the ToolHive proxy.
+   */
+  url?: string
+}
+
 /**
- * JWTBearerGrant optionally enables the plain RFC 7523 JWT-bearer grant.
- * It accepts assertions from this issuer without client authentication and
- * limits their maximum age, subjects, and RFC 8707 resources. It is
- * independent from RFC 8693 delegation policy.
+ * AWSStsConfig contains AWS STS token exchange configuration for accessing AWS services
  */
-export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerGrantPolicy =
-  {
-    /**
-     * AcceptedAudiences is the set of "this AS" identity strings an
-     * assertion's "aud" claim must intersect — e.g. to support migrating
-     * this server's issuer/token-endpoint URL, or exposing it under more
-     * than one valid name. Each value uniquely identifies this
-     * authorization server for this grant; it is NOT a resource/API
-     * identifier — a bare resource audience is deliberately not accepted
-     * here, that would let any RFC 8707 resource-scoped token satisfy the
-     * grant instead of only tokens minted for this AS. Defaults to
-     * [tokenEndpoint] when empty, preserving prior exact-match behavior.
-     */
-    accepted_audiences?: Array<string>
-    max_assertion_age?: string
-    subject_bindings?: Array<GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerSubjectBinding>
-  }
+export type GithubComStacklokToolhivePkgAuthAwsstsConfig = {
+  /**
+   * FallbackRoleArn is the IAM role ARN to assume when no role mapping matches.
+   */
+  fallback_role_arn?: string
+  /**
+   * Region is the AWS region for STS and SigV4 signing.
+   */
+  region?: string
+  /**
+   * RoleClaim is the JWT claim to use for role mapping (default: "groups").
+   */
+  role_claim?: string
+  /**
+   * RoleMappings maps JWT claim values to IAM roles with priority.
+   */
+  role_mappings?: Array<GithubComStacklokToolhivePkgAuthAwsstsRoleMapping>
+  /**
+   * Service is the AWS service name for SigV4 signing (default: "aws-mcp").
+   */
+  service?: string
+  /**
+   * SessionDuration is the duration in seconds for assumed role credentials (default: 3600).
+   */
+  session_duration?: number
+  /**
+   * SessionNameClaim is the JWT claim to use for role session name (default: "sub").
+   */
+  session_name_claim?: string
+  /**
+   * SubjectProviderName identifies which upstream provider's access token to use
+   * for STS AssumeRoleWithWebIdentity. Used by vMCP only. When empty, the bearer
+   * token from the incoming HTTP request is used.
+   */
+  subject_provider_name?: string
+}
 
-export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerSubjectBinding =
-  {
-    allowed_resources?: Array<string>
-    subject?: string
-  }
+export type GithubComStacklokToolhivePkgAuthAwsstsRoleMapping = {
+  /**
+   * Claim is the simple claim value to match (e.g., group name).
+   * Internally compiles to a CEL expression: "<claim_value>" in claims["<role_claim>"]
+   * Mutually exclusive with Matcher.
+   */
+  claim?: string
+  /**
+   * Matcher is a CEL expression for complex matching against JWT claims.
+   * The expression has access to a "claims" variable containing all JWT claims.
+   * Examples:
+   * - "admins" in claims["groups"]
+   * - claims["sub"] == "user123" && !("act" in claims)
+   * Mutually exclusive with Claim.
+   */
+  matcher?: string
+  /**
+   * Priority determines selection order (lower number = higher priority).
+   * When multiple mappings match, the one with the lowest priority is selected.
+   * When nil (omitted), the mapping has the lowest possible priority, and
+   * configuration order acts as tie-breaker via stable sort.
+   */
+  priority?: number
+  /**
+   * RoleArn is the IAM role ARN to assume when this mapping matches.
+   */
+  role_arn?: string
+}
 
-export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeTrustedIssuer =
-  {
-    /**
-     * ActorClaim names the claim identifying the client that requested the
-     * subject token from THIS EXTERNAL ISSUER (used by AllowedActors below).
-     * Values are in the external issuer's namespace, NOT ToolHive client
-     * IDs. Defaults to "azp"; use "appid" for Microsoft Entra v1, "cid" for
-     * Okta. The special value "client_id" reads ValidatedClaims.ClientID
-     * instead of Extra (assignClaim routes it to that field) — it is still
-     * the external token's client_id claim, not a ToolHive one.
-     */
-    actor_claim?: string
-    /**
-     * ActorMatcher is an admin-authored CEL expression evaluated against the
-     * complete signature-verified JWT claims map as "claims". A true result
-     * authorizes delegation alongside AllowedActors; a syntax or type error
-     * fails configuration validation. An expression that compiles but does
-     * not return bool is NOT caught at that point, though — it compiles
-     * successfully and is only rejected the first time it is evaluated
-     * against a real token, denying that token (and every one after it, since
-     * the expression will never return bool). Any other runtime evaluation
-     * error denies the token the same way.
-     */
-    actor_matcher?: string
-    /**
-     * AllowMayAct permits this external issuer's may_act claim to authorize
-     * delegation. It defaults to false; external issuers must be opted in
-     * explicitly because may_act bypasses AllowedActors and ActorMatcher. It
-     * does not affect self-issued subject tokens. When enabled,
-     * AllowedDelegateClients must name specific ToolHive clients rather than
-     * use the wildcard.
-     */
-    allow_may_act?: boolean
-    /**
-     * AllowPrivateIPs permits OIDC discovery and JWKS fetches for THIS
-     * issuer to resolve to a private or loopback address. Use only when the
-     * issuer is hosted inside the same cluster and has no public endpoint.
-     */
-    allow_private_ips?: boolean
-    /**
-     * AllowedActors is the allowlist of ActorClaim values authorized to
-     * exchange a subject token from this issuer when it carries no
-     * "may_act" claim. ActorMatcher can additionally authorize a token by
-     * matching its complete verified claims map; either signal is sufficient.
-     * When both are empty, only may_act-bearing tokens are accepted, and only
-     * if AllowMayAct is also true for this issuer. By itself names no
-     * ToolHive client — see AllowedDelegateClients and
-     * docs/arch/17-token-exchange-delegation.md ("Accepted limitations" #1).
-     */
-    allowed_actors?: Array<string>
-    /**
-     * AllowedDelegateClients restricts which ToolHive client IDs may
-     * exchange a subject token from this issuer, for BOTH consent paths.
-     * Required (validateTrustedIssuer rejects empty/absent); "*" permits
-     * any confidential client holding the grant. See
-     * docs/arch/17-token-exchange-delegation.md ("Accepted limitations" #1).
-     */
-    allowed_delegate_clients?: Array<string>
-    /**
-     * ExpectedAudience is the expected "aud" claim value that must appear
-     * in an RFC 8693 subject token's audience list (a resource/API identifier,
-     * not a client ID — required for delegation unless JWTBearerGrant is
-     * configured; see looksLikeResourceIdentifier). RFC 7523 assertions use
-     * the token endpoint as their audience instead.
-     * See docs/arch/17-token-exchange-delegation.md ("ID/access-token
-     * discrimination") for why and its limits.
-     */
-    expected_audience?: string
-    /**
-     * InsecureAllowHTTP permits plain-HTTP OIDC discovery and JWKS fetches
-     * for THIS issuer only. Development and testing only — never set in
-     * production. Does not relax the private-IP guard; see AllowPrivateIPs.
-     * Deliberately per-issuer: this server's own InsecureAllowHTTP must not
-     * silently permit plaintext discovery for every trusted external issuer
-     * too — a network attacker who can intercept that traffic could
-     * substitute a JWKS and forge subject tokens for that issuer's
-     * namespace.
-     */
-    insecure_allow_http?: boolean
-    /**
-     * IssuerURL is the expected "iss" claim value (exact match).
-     */
-    issuer_url?: string
-    /**
-     * JWKSURL is the URL to fetch the issuer's JSON Web Key Set from.
-     * If empty, it is resolved via OIDC discovery at {IssuerURL}/.well-known/openid-configuration.
-     */
-    jwks_url?: string
-    jwt_bearer_grant?: GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerGrantPolicy
-  }
+/**
+ * UpstreamSwapConfig contains configuration for upstream token swap middleware.
+ * When set along with EmbeddedAuthServerConfig, this middleware exchanges ToolHive JWTs
+ * for upstream IdP tokens before forwarding requests to the MCP server.
+ */
+export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
+  /**
+   * CustomHeaderName is the header name when HeaderStrategy is "custom".
+   */
+  custom_header_name?: string
+  /**
+   * HeaderStrategy determines how to inject the token: "replace" (default) or "custom".
+   */
+  header_strategy?: string
+  /**
+   * ProviderName identifies which upstream provider's tokens to retrieve for injection.
+   * This is required and must match a configured upstream provider name.
+   */
+  provider_name?: string
+}
 
 /**
  * DEPRECATED: Middleware configuration.
@@ -1408,33 +1272,6 @@ export type GithubComStacklokToolhivePkgPluginsValidationResult = {
 }
 
 /**
- * PerUser token bucket configuration for this tool.
- * +optional
- */
-export type GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket = {
-  /**
-   * MaxTokens is the maximum number of tokens (bucket capacity).
-   * This is also the burst size: the maximum number of requests that can be served
-   * instantaneously before the bucket is depleted.
-   * +kubebuilder:validation:Required
-   * +kubebuilder:validation:Minimum=1
-   */
-  maxTokens?: number
-  refillPeriod?: V1Duration
-}
-
-export type GithubComStacklokToolhivePkgRatelimitTypesToolRateLimitConfig = {
-  /**
-   * Name is the MCP tool name this limit applies to.
-   * +kubebuilder:validation:Required
-   * +kubebuilder:validation:MinLength=1
-   */
-  name?: string
-  perUser?: GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket
-  shared?: GithubComStacklokToolhivePkgRatelimitTypesRateLimitBucket
-}
-
-/**
  * AuthConfig contains the non-secret OAuth configuration when auth is configured.
  * Nil when auth_status is "none".
  */
@@ -1504,7 +1341,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * exposing the proxy publicly must configure an explicit allowlist.
    */
   allowed_origins?: Array<string>
-  audit_config?: GithubComStacklokToolhivePkgAuditConfig
+  audit_config?: AuditConfig
   /**
    * DEPRECATED: Middleware configuration.
    * AuditConfigPath is the path to the audit configuration file
@@ -1539,7 +1376,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Debug indicates whether debug mode is enabled
    */
   debug?: boolean
-  embedded_auth_server_config?: GithubComStacklokToolhivePkgAuthserverRunConfig
+  embedded_auth_server_config?: AuthserverRunConfig
   /**
    * EndpointPrefix is an explicit prefix to prepend to SSE endpoint URLs.
    * This is used to handle path-based ingress routing scenarios.
@@ -1625,7 +1462,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Publish lists ports to publish to the host in format "hostPort:containerPort"
    */
   publish?: Array<string>
-  rate_limit_config?: GithubComStacklokToolhiveCmdThvOperatorApiV1Beta1RateLimitConfig
+  rate_limit_config?: V1Beta1RateLimitConfig
   /**
    * RateLimitNamespace is the Kubernetes namespace for Redis key derivation.
    */
@@ -3561,6 +3398,11 @@ export type PkgApiV1UpgradePluginsRequest = {
    */
   allow_ref_change?: boolean
   /**
+   * AllowSignerChange permits upgrading to an artifact signed by a
+   * different identity than the recorded one
+   */
+  allow_signer_change?: boolean
+  /**
    * Clients lists target client identifiers. Empty means every
    * plugin-supporting client detected on this host.
    */
@@ -4717,6 +4559,124 @@ export type TokenexchangeConfig = {
   token_url?: string
 }
 
+/**
+ * JWTBearerGrant optionally enables the plain RFC 7523 JWT-bearer grant.
+ * It accepts assertions from this issuer without client authentication and
+ * limits their maximum age, subjects, and RFC 8707 resources. It is
+ * independent from RFC 8693 delegation policy.
+ */
+export type TokenexchangeJwtBearerGrantPolicy = {
+  /**
+   * AcceptedAudiences is the set of "this AS" identity strings an
+   * assertion's "aud" claim must intersect — e.g. to support migrating
+   * this server's issuer/token-endpoint URL, or exposing it under more
+   * than one valid name. Each value uniquely identifies this
+   * authorization server for this grant; it is NOT a resource/API
+   * identifier — a bare resource audience is deliberately not accepted
+   * here, that would let any RFC 8707 resource-scoped token satisfy the
+   * grant instead of only tokens minted for this AS. Defaults to
+   * [tokenEndpoint] when empty, preserving prior exact-match behavior.
+   */
+  accepted_audiences?: Array<string>
+  max_assertion_age?: string
+  subject_bindings?: Array<TokenexchangeJwtBearerSubjectBinding>
+}
+
+export type TokenexchangeJwtBearerSubjectBinding = {
+  allowed_resources?: Array<string>
+  subject?: string
+}
+
+export type TokenexchangeTrustedIssuer = {
+  /**
+   * ActorClaim names the claim identifying the client that requested the
+   * subject token from THIS EXTERNAL ISSUER (used by AllowedActors below).
+   * Values are in the external issuer's namespace, NOT ToolHive client
+   * IDs. Defaults to "azp"; use "appid" for Microsoft Entra v1, "cid" for
+   * Okta. The special value "client_id" reads ValidatedClaims.ClientID
+   * instead of Extra (assignClaim routes it to that field) — it is still
+   * the external token's client_id claim, not a ToolHive one.
+   */
+  actor_claim?: string
+  /**
+   * ActorMatcher is an admin-authored CEL expression evaluated against the
+   * complete signature-verified JWT claims map as "claims". A true result
+   * authorizes delegation alongside AllowedActors; a syntax or type error
+   * fails configuration validation. An expression that compiles but does
+   * not return bool is NOT caught at that point, though — it compiles
+   * successfully and is only rejected the first time it is evaluated
+   * against a real token, denying that token (and every one after it, since
+   * the expression will never return bool). Any other runtime evaluation
+   * error denies the token the same way.
+   */
+  actor_matcher?: string
+  /**
+   * AllowMayAct permits this external issuer's may_act claim to authorize
+   * delegation. It defaults to false; external issuers must be opted in
+   * explicitly because may_act bypasses AllowedActors and ActorMatcher. It
+   * does not affect self-issued subject tokens. When enabled,
+   * AllowedDelegateClients must name specific ToolHive clients rather than
+   * use the wildcard.
+   */
+  allow_may_act?: boolean
+  /**
+   * AllowPrivateIPs permits OIDC discovery and JWKS fetches for THIS
+   * issuer to resolve to a private or loopback address. Use only when the
+   * issuer is hosted inside the same cluster and has no public endpoint.
+   */
+  allow_private_ips?: boolean
+  /**
+   * AllowedActors is the allowlist of ActorClaim values authorized to
+   * exchange a subject token from this issuer when it carries no
+   * "may_act" claim. ActorMatcher can additionally authorize a token by
+   * matching its complete verified claims map; either signal is sufficient.
+   * When both are empty, only may_act-bearing tokens are accepted, and only
+   * if AllowMayAct is also true for this issuer. By itself names no
+   * ToolHive client — see AllowedDelegateClients and
+   * docs/arch/17-token-exchange-delegation.md ("Accepted limitations" #1).
+   */
+  allowed_actors?: Array<string>
+  /**
+   * AllowedDelegateClients restricts which ToolHive client IDs may
+   * exchange a subject token from this issuer, for BOTH consent paths.
+   * Required (validateTrustedIssuer rejects empty/absent); "*" permits
+   * any confidential client holding the grant. See
+   * docs/arch/17-token-exchange-delegation.md ("Accepted limitations" #1).
+   */
+  allowed_delegate_clients?: Array<string>
+  /**
+   * ExpectedAudience is the expected "aud" claim value that must appear
+   * in an RFC 8693 subject token's audience list (a resource/API identifier,
+   * not a client ID — required for delegation unless JWTBearerGrant is
+   * configured; see looksLikeResourceIdentifier). RFC 7523 assertions use
+   * the token endpoint as their audience instead.
+   * See docs/arch/17-token-exchange-delegation.md ("ID/access-token
+   * discrimination") for why and its limits.
+   */
+  expected_audience?: string
+  /**
+   * InsecureAllowHTTP permits plain-HTTP OIDC discovery and JWKS fetches
+   * for THIS issuer only. Development and testing only — never set in
+   * production. Does not relax the private-IP guard; see AllowPrivateIPs.
+   * Deliberately per-issuer: this server's own InsecureAllowHTTP must not
+   * silently permit plaintext discovery for every trusted external issuer
+   * too — a network attacker who can intercept that traffic could
+   * substitute a JWKS and forge subject tokens for that issuer's
+   * namespace.
+   */
+  insecure_allow_http?: boolean
+  /**
+   * IssuerURL is the expected "iss" claim value (exact match).
+   */
+  issuer_url?: string
+  /**
+   * JWKSURL is the URL to fetch the issuer's JSON Web Key Set from.
+   * If empty, it is resolved via OIDC discovery at {IssuerURL}/.well-known/openid-configuration.
+   */
+  jwks_url?: string
+  jwt_bearer_grant?: TokenexchangeJwtBearerGrantPolicy
+}
+
 export type TypesMiddlewareConfig = {
   /**
    * Parameters is a JSON object containing the middleware parameters.
@@ -4729,6 +4689,33 @@ export type TypesMiddlewareConfig = {
    * Type is a string representing the middleware type.
    */
   type?: string
+}
+
+/**
+ * PerUser token bucket configuration for this tool.
+ * +optional
+ */
+export type TypesRateLimitBucket = {
+  /**
+   * MaxTokens is the maximum number of tokens (bucket capacity).
+   * This is also the burst size: the maximum number of requests that can be served
+   * instantaneously before the bucket is depleted.
+   * +kubebuilder:validation:Required
+   * +kubebuilder:validation:Minimum=1
+   */
+  maxTokens?: number
+  refillPeriod?: V1Duration
+}
+
+export type TypesToolRateLimitConfig = {
+  /**
+   * Name is the MCP tool name this limit applies to.
+   * +kubebuilder:validation:Required
+   * +kubebuilder:validation:MinLength=1
+   */
+  name?: string
+  perUser?: TypesRateLimitBucket
+  shared?: TypesRateLimitBucket
 }
 
 export type V0ServerJson = {
@@ -4759,6 +4746,24 @@ export type V0ServerMeta = {
  */
 export type V1Duration = {
   [key: string]: unknown
+}
+
+/**
+ * RateLimitConfig contains the CRD rate limiting configuration.
+ * When set, rate limiting middleware is added to the proxy middleware chain.
+ */
+export type V1Beta1RateLimitConfig = {
+  perUser?: TypesRateLimitBucket
+  shared?: TypesRateLimitBucket
+  /**
+   * Tools defines per-tool rate limit overrides.
+   * Each entry applies additional rate limits to calls targeting a specific tool name.
+   * A request must pass both the server-level limit and the per-tool limit.
+   * +listType=map
+   * +listMapKey=name
+   * +optional
+   */
+  tools?: Array<TypesToolRateLimitConfig>
 }
 
 export type GetApiOpenapiJsonData = {
