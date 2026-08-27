@@ -4,7 +4,11 @@ import z from 'zod/v4'
 import { zodV4Resolver } from '@/common/lib/zod-v4-resolver'
 import { useQuery } from '@tanstack/react-query'
 import { getApiV1BetaDiscoveryClientsOptions } from '@common/api/generated/@tanstack/react-query.gen'
-import { Alert, AlertDescription } from '@/common/components/ui/alert'
+import {
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@/common/components/ui/alert'
 import { Button } from '@/common/components/ui/button'
 import {
   DropdownMenu,
@@ -42,6 +46,7 @@ import { ChevronDown, FolderOpenIcon, TriangleAlertIcon } from 'lucide-react'
 import { useMutationInstallSkill } from '../hooks/use-mutation-install-skill'
 import { parseSkillReference } from '../lib/skill-reference'
 import { trackEvent } from '@/common/lib/analytics'
+import { THV_DISPLAY_NAME } from '@common/app-info'
 
 const formSchema = z
   .object({
@@ -64,6 +69,25 @@ const formSchema = z
 
 type FormSchema = z.infer<typeof formSchema>
 
+const UNMANAGED_SKILL_CONFLICT_MESSAGE = `A skill with this name already exists on your computer and is not managed by ${THV_DISPLAY_NAME}. Installing will replace the existing files. This cannot be undone.`
+
+function isUnmanagedSkillConflict(message: string): boolean {
+  return /exists but is not managed/i.test(message)
+}
+
+function getInstallErrorMessage(err: unknown): string {
+  if (err instanceof Error) {
+    return err.message
+  }
+  if (typeof err === 'object' && err !== null && 'error' in err) {
+    return String((err as { error: unknown }).error)
+  }
+  if (typeof err === 'string') {
+    return err
+  }
+  return 'Failed to install skill'
+}
+
 interface DialogInstallSkillProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -79,6 +103,7 @@ export function DialogInstallSkill({
 }: DialogInstallSkillProps) {
   const { mutateAsync: installSkill, isPending } = useMutationInstallSkill()
   const [submitError, setSubmitError] = useState<string | null>(null)
+  const [needsForceOverwrite, setNeedsForceOverwrite] = useState(false)
 
   const { data: clientsData, isLoading: isLoadingClients } = useQuery({
     ...getApiV1BetaDiscoveryClientsOptions(),
@@ -119,6 +144,7 @@ export function DialogInstallSkill({
     trackEvent('Skills: install dialog cancelled')
     form.reset()
     setSubmitError(null)
+    setNeedsForceOverwrite(false)
     onOpenChange(false)
   }
 
@@ -131,11 +157,13 @@ export function DialogInstallSkill({
   }
 
   async function onSubmit(values: FormSchema) {
+    const force = needsForceOverwrite
     setSubmitError(null)
     trackEvent('Skills: install dialog submitted', {
       scope: values.scope,
       has_version: values.version ? 'true' : 'false',
       clients_count: values.clients?.length ?? 0,
+      force: force ? 'true' : 'false',
     })
     try {
       await installSkill({
@@ -146,20 +174,21 @@ export function DialogInstallSkill({
             values.scope === 'project' ? values.project_root : undefined,
           clients: values.clients?.length ? values.clients : undefined,
           version: values.version || undefined,
+          ...(force ? { force: true } : {}),
         },
       })
       form.reset()
       setSubmitError(null)
+      setNeedsForceOverwrite(false)
       onOpenChange(false)
     } catch (err) {
-      const message =
-        err instanceof Error
-          ? err.message
-          : typeof err === 'object' && err !== null && 'error' in err
-            ? String((err as { error: unknown }).error)
-            : typeof err === 'string'
-              ? err
-              : 'Failed to install skill'
+      const message = getInstallErrorMessage(err)
+      if (isUnmanagedSkillConflict(message)) {
+        setNeedsForceOverwrite(true)
+        setSubmitError(UNMANAGED_SKILL_CONFLICT_MESSAGE)
+        return
+      }
+      setNeedsForceOverwrite(false)
       setSubmitError(message)
     }
   }
@@ -176,6 +205,9 @@ export function DialogInstallSkill({
         {submitError && (
           <Alert variant="destructive">
             <TriangleAlertIcon className="size-4" />
+            {needsForceOverwrite && (
+              <AlertTitle>Skill already exists</AlertTitle>
+            )}
             <AlertDescription>{submitError}</AlertDescription>
           </Alert>
         )}
@@ -394,8 +426,17 @@ export function DialogInstallSkill({
               >
                 Cancel
               </Button>
-              <Button type="submit" variant="action" disabled={isPending}>
-                {isPending ? 'Installing...' : 'Install'}
+              <Button
+                type="submit"
+                variant={needsForceOverwrite ? 'destructive' : 'action'}
+                className={needsForceOverwrite ? 'rounded-full' : undefined}
+                disabled={isPending}
+              >
+                {isPending
+                  ? 'Installing...'
+                  : needsForceOverwrite
+                    ? 'Overwrite and install'
+                    : 'Install'}
               </Button>
             </DialogFooter>
           </form>
