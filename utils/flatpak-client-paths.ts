@@ -29,6 +29,7 @@ export const CLIENT_FLATPAK_PATHS: Record<string, string[]> = {
   'lm-studio': ['~/.lmstudio'],
   'mistral-vibe': ['~/.vibe'],
   opencode: ['~/.config/opencode'],
+  qoder: ['~/.qoder'],
   'roo-code': ['~/.config/Code'],
   trae: ['~/.config/Trae'],
   vscode: ['~/.config/Code'],
