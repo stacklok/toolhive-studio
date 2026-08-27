@@ -35,10 +35,10 @@ export function useToastMutation<
 
   const mutateAsync = useCallback(
     async <TError extends { detail: string | undefined | unknown }>(
-      variables: Parameters<typeof originalMutateAsync>[0],
-      options: Parameters<typeof originalMutateAsync>[1] = {}
+      ...args: Parameters<typeof originalMutateAsync>
     ) => {
-      const promise = originalMutateAsync(variables, options)
+      const promise = originalMutateAsync(...args)
+      const variables = args[0] as TVariables
 
       const resolvedSuccessMsg =
         typeof successMsg === 'function' ? successMsg(variables) : successMsg
