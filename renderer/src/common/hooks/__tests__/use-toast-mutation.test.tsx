@@ -129,6 +129,23 @@ describe('useToastMutation', () => {
     expect(config.error(error)).toBe('server says no')
   })
 
+  it('passes mutation variables to function successMsg', async () => {
+    const { result } = renderHook(
+      () =>
+        useToastMutation({
+          mutationFn: async (name: string) => name,
+          successMsg: (name) => `Deleted ${name}`,
+        }),
+      { wrapper: createWrapper() }
+    )
+
+    await result.current.mutateAsync('alpha')
+
+    expect(mockToastPromise).toHaveBeenCalledTimes(1)
+    const [, config] = mockToastPromise.mock.calls[0]!
+    expect(config.success).toBe('Deleted alpha')
+  })
+
   it('passes through toastId when provided', async () => {
     const { result } = renderHook(
       () =>
