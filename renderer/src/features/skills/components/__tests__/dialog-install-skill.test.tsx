@@ -7,6 +7,7 @@ import { DialogInstallSkill } from '../dialog-install-skill'
 import { recordRequests } from '@/common/mocks/node'
 import { mockedGetApiV1BetaDiscoveryClients } from '@/common/mocks/fixtures/discovery_clients/get'
 import { mockedPostApiV1BetaSkills } from '@/common/mocks/fixtures/skills/post'
+import { HttpResponse } from 'msw'
 
 const renderWithProviders = (component: React.ReactElement) => {
   const queryClient = new QueryClient({
@@ -471,6 +472,173 @@ describe('DialogInstallSkill', () => {
       expect(nameInput).toHaveValue('ghcr.io/org/skill')
       // User actively typed v8.8.8, so the blur split must not clobber it.
       expect(versionInput).toHaveValue('v8.8.8')
+    })
+  })
+})
+
+const unmanagedConflictMessage =
+  'directory "/Users/me/.agents/skills/my-skill" exists but is not managed by ToolHive; use force to overwrite'
+
+function mockUnmanagedConflictUntilForced() {
+  mockedPostApiV1BetaSkills.overrideHandler(async (_data, { request }) => {
+    const body = (await request.clone().json()) as { force?: boolean }
+    if (body.force) {
+      return HttpResponse.json({
+        skill: {
+          reference: 'ghcr.io/org/skill-one:v1',
+          status: 'installed',
+          scope: 'user',
+          metadata: { name: 'my-skill' },
+        },
+      })
+    }
+    return HttpResponse.json(
+      { error: unmanagedConflictMessage },
+      { status: 409 }
+    )
+  })
+}
+
+describe('Bug #2599', () => {
+  it('offers a way to overwrite when the skill already exists unmanaged', async () => {
+    const user = userEvent.setup()
+    mockUnmanagedConflictUntilForced()
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /overwrite and install/i })
+      ).toBeInTheDocument()
+    })
+
+    expect(screen.getByRole('alert')).toHaveTextContent(
+      /replace the existing files/i
+    )
+    expect(
+      screen.queryByRole('button', { name: /^install$/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('retries the install with force after the user confirms overwrite', async () => {
+    const user = userEvent.setup()
+    const rec = recordRequests()
+    const onOpenChange = vi.fn()
+    mockUnmanagedConflictUntilForced()
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={onOpenChange} />)
+
+    await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /overwrite and install/i })
+      ).toBeInTheDocument()
+    })
+
+    await user.click(
+      screen.getByRole('button', { name: /overwrite and install/i })
+    )
+
+    await waitFor(() => {
+      expect(onOpenChange).toHaveBeenCalledWith(false)
+    })
+
+    const posts = rec.recordedRequests.filter(
+      (r) => r.method === 'POST' && r.pathname === '/api/v1beta/skills'
+    )
+    expect(posts).toHaveLength(2)
+    expect(posts[0]?.payload).not.toHaveProperty('force')
+    expect(posts[1]?.payload).toMatchObject({
+      name: 'my-skill',
+      scope: 'user',
+      force: true,
+    })
+  })
+
+  it('does not offer overwrite for unrelated install errors', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkills.activateScenario('server-error')
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+
+    expect(
+      screen.queryByRole('button', { name: /overwrite/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not offer overwrite when the conflict error lacks force guidance', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkills.overrideHandler(() =>
+      HttpResponse.json(
+        {
+          error:
+            'directory "/tmp/my-skill" exists but is not managed by another installer',
+        },
+        { status: 409 }
+      )
+    )
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+
+    expect(
+      screen.queryByRole('button', { name: /overwrite/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not send force after the user changes the skill name', async () => {
+    const user = userEvent.setup()
+    const rec = recordRequests()
+    mockUnmanagedConflictUntilForced()
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    await user.type(nameInput, 'my-skill')
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /overwrite and install/i })
+      ).toBeInTheDocument()
+    })
+
+    await user.clear(nameInput)
+    await user.type(nameInput, 'other-skill')
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: /overwrite and install/i })
+      ).not.toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      const posts = rec.recordedRequests.filter(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/skills'
+      )
+      expect(posts).toHaveLength(2)
+      expect(posts[1]?.payload).toMatchObject({ name: 'other-skill' })
+      expect(posts[1]?.payload).not.toHaveProperty('force')
     })
   })
 })
