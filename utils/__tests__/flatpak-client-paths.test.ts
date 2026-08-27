@@ -31,6 +31,7 @@ Valid clients:
   - lm-studio: LM Studio application
   - mistral-vibe: Mistral Vibe IDE
   - opencode: OpenCode editor
+  - qoder: Qoder IDE
   - roo-code: VS Code Roo Code extension
   - trae: Trae IDE
   - vscode: Visual Studio Code
@@ -126,5 +127,12 @@ describe('flatpakFilesystemEntries', () => {
   it('covers all clients in the sample output without throwing', () => {
     const clients = parseThvClients(SAMPLE_HELP)
     expect(() => flatpakFilesystemEntries(clients)).not.toThrow()
+  })
+
+  it('maps qoder to ~/.qoder', () => {
+    expect(CLIENT_FLATPAK_PATHS.qoder).toEqual(['~/.qoder'])
+    expect(flatpakFilesystemEntries(['qoder'])).toEqual([
+      '--filesystem=~/.qoder',
+    ])
   })
 })
