@@ -63,6 +63,8 @@ import {
   postApiV1BetaPlugins,
   postApiV1BetaPluginsBuild,
   postApiV1BetaPluginsPush,
+  postApiV1BetaPluginsSync,
+  postApiV1BetaPluginsUpgrade,
   postApiV1BetaPluginsValidate,
   postApiV1BetaRegistry,
   postApiV1BetaRegistryAuthLogin,
@@ -238,6 +240,12 @@ import type {
   PostApiV1BetaPluginsPushError,
   PostApiV1BetaPluginsPushResponse,
   PostApiV1BetaPluginsResponse,
+  PostApiV1BetaPluginsSyncData,
+  PostApiV1BetaPluginsSyncError,
+  PostApiV1BetaPluginsSyncResponse,
+  PostApiV1BetaPluginsUpgradeData,
+  PostApiV1BetaPluginsUpgradeError,
+  PostApiV1BetaPluginsUpgradeResponse,
   PostApiV1BetaPluginsValidateData,
   PostApiV1BetaPluginsValidateError,
   PostApiV1BetaPluginsValidateResponse,
@@ -899,6 +907,64 @@ export const postApiV1BetaPluginsPushMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await postApiV1BetaPluginsPush({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Sync project plugins from the lock file
+ *
+ * Restore a project's installed plugins to match toolhive.lock.yaml
+ */
+export const postApiV1BetaPluginsSyncMutation = (
+  options?: Partial<Options<PostApiV1BetaPluginsSyncData>>
+): UseMutationOptions<
+  PostApiV1BetaPluginsSyncResponse,
+  PostApiV1BetaPluginsSyncError,
+  Options<PostApiV1BetaPluginsSyncData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaPluginsSyncResponse,
+    PostApiV1BetaPluginsSyncError,
+    Options<PostApiV1BetaPluginsSyncData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaPluginsSync({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      })
+      return data
+    },
+  }
+  return mutationOptions
+}
+
+/**
+ * Upgrade project plugins
+ *
+ * Re-resolve a project's lock entries and install newer content where available
+ */
+export const postApiV1BetaPluginsUpgradeMutation = (
+  options?: Partial<Options<PostApiV1BetaPluginsUpgradeData>>
+): UseMutationOptions<
+  PostApiV1BetaPluginsUpgradeResponse,
+  PostApiV1BetaPluginsUpgradeError,
+  Options<PostApiV1BetaPluginsUpgradeData>
+> => {
+  const mutationOptions: UseMutationOptions<
+    PostApiV1BetaPluginsUpgradeResponse,
+    PostApiV1BetaPluginsUpgradeError,
+    Options<PostApiV1BetaPluginsUpgradeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await postApiV1BetaPluginsUpgrade({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -1884,6 +1950,9 @@ export const getApiV1BetaWorkloadsOptions = (
  * Create a new workload
  *
  * Create and start a new workload
+ * runtime_config is only accepted for protocol-scheme images
+ * (uvx://, npx://, go://); supplying it with an ordinary image
+ * reference or a remote url is rejected with 400.
  */
 export const postApiV1BetaWorkloadsMutation = (
   options?: Partial<Options<PostApiV1BetaWorkloadsData>>
@@ -2094,6 +2163,10 @@ export const getApiV1BetaWorkloadsByNameOptions = (
  * Update workload
  *
  * Update an existing workload configuration
+ * runtime_config on a non-protocol-scheme image is accepted only when it
+ * exactly matches the workload's persisted config and the image and url
+ * are unchanged (an inert echo, e.g. from a prior GET); otherwise it is
+ * rejected with 400.
  */
 export const postApiV1BetaWorkloadsByNameEditMutation = (
   options?: Partial<Options<PostApiV1BetaWorkloadsByNameEditData>>
