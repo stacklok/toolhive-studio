@@ -22,6 +22,7 @@ import { createBuiltinAgentTools } from '../agents/builtin-agent-tools'
 import { sanitizeMessagesForModel } from './sanitize-messages-for-model'
 import { generateThreadTitle } from '../generate-thread-title'
 import { broadcastThreadUpdated } from './stream-registry-broadcast'
+import { enrichGatewayChatRequest } from '../enrich-gateway-request'
 
 /** Gemini's function-declaration validator rejects schema constructs other
  * providers accept. True for Google directly or a `google/*` OpenRouter model. */
@@ -58,18 +59,22 @@ export async function handleChatStreamRealtime(
     },
     async (span, finish) => {
       const abortController = new AbortController()
+      let activeRequest = request
 
       try {
+        activeRequest = await enrichGatewayChatRequest(activeRequest)
+
         // Validate provider
         const provider = CHAT_PROVIDERS.find(
-          (p: (typeof CHAT_PROVIDERS)[number]) => p.id === request.provider
+          (p: (typeof CHAT_PROVIDERS)[number]) =>
+            p.id === activeRequest.provider
         )
         if (!provider) {
-          throw new Error(`Unknown provider: ${request.provider}`)
+          throw new Error(`Unknown provider: ${activeRequest.provider}`)
         }
 
         // Create AI model using type guards for discriminated union
-        const model = createModelFromRequest(provider, request)
+        const model = createModelFromRequest(provider, activeRequest)
 
         // Resolve the agent for this request. Prefer the id on the request
         // (selected in the UI), then the thread's stored agent, then default.

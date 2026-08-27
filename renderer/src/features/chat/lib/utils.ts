@@ -6,6 +6,11 @@ type ProviderSettings =
       endpointURL: string
       enabledTools: string[]
     }
+  | {
+      providerId: 'thv-llm'
+      endpointURL: string
+      enabledTools: string[]
+    }
   | { providerId: string; apiKey: string; enabledTools: string[] }
 
 type CredentialSettings = ChatSettings | ProviderSettings
@@ -56,3 +61,5 @@ export function isLocalServerProvider(
 ): provider is 'ollama' | 'lmstudio' {
   return provider === 'ollama' || provider === 'lmstudio'
 }
+
+export { isGatewayProvider } from './gateway-provider'

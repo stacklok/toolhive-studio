@@ -15,6 +15,7 @@ const mockReadThreadSelectedModel = vi.hoisted(() =>
   vi.fn<() => { provider: string; model: string } | null>(() => null)
 )
 const mockCreateModelFromRequest = vi.hoisted(() => vi.fn())
+const mockResolveGatewayBaseURL = vi.hoisted(() => vi.fn())
 
 // ---------------------------------------------------------------------------
 // Module mocks
@@ -58,6 +59,10 @@ vi.mock('../../db/readers/chat-settings-reader', () => ({
 
 vi.mock('../utils', () => ({
   createModelFromRequest: mockCreateModelFromRequest,
+}))
+
+vi.mock('../providers/thv-llm/proxy-manager', () => ({
+  resolveGatewayBaseURL: mockResolveGatewayBaseURL,
 }))
 
 vi.mock('../constants', async (importOriginal) => importOriginal())
@@ -112,6 +117,7 @@ describe('generateThreadTitle', () => {
     })
     mockReadChatProvider.mockReturnValue({ apiKey: 'sk-test' })
     mockCreateModelFromRequest.mockReturnValue(fakeModel)
+    mockResolveGatewayBaseURL.mockResolvedValue('http://127.0.0.1:14000/v1')
     mockConvertToModelMessages.mockResolvedValue(fakeConvertedMessages)
     mockGenerateText.mockResolvedValue({ text: 'Great Title' })
   })
@@ -554,6 +560,44 @@ describe('generateThreadTitle', () => {
       expect(mockCreateModelFromRequest).toHaveBeenCalledWith(
         expect.anything(),
         expect.objectContaining({ endpointURL: '' })
+      )
+    })
+  })
+
+  describe('gateway provider', () => {
+    it('fails before createModel when the loopback URL is missing', async () => {
+      mockReadSelectedModel.mockReturnValue({
+        provider: 'thv-llm',
+        model: 'gpt-4.1',
+      })
+      mockReadChatProvider.mockReturnValue({ endpointURL: 'enabled' })
+      mockResolveGatewayBaseURL.mockResolvedValue(null)
+
+      const result = await generateThreadTitle('thread-1')
+
+      expect(result).toMatchObject({
+        success: false,
+        error:
+          'Stacklok Gateway is not configured. Open Provider Settings and save your gateway connection.',
+      })
+      expect(mockCreateModelFromRequest).not.toHaveBeenCalled()
+      expect(mockGenerateText).not.toHaveBeenCalled()
+    })
+
+    it('passes the resolved loopback URL to createModel', async () => {
+      mockReadSelectedModel.mockReturnValue({
+        provider: 'thv-llm',
+        model: 'gpt-4.1',
+      })
+      mockReadChatProvider.mockReturnValue({ endpointURL: 'enabled' })
+
+      await generateThreadTitle('thread-1')
+
+      expect(mockCreateModelFromRequest).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'thv-llm' }),
+        expect.objectContaining({
+          endpointURL: 'http://127.0.0.1:14000/v1',
+        })
       )
     })
   })

@@ -9,6 +9,7 @@ import {
   sendToMainWindowRenderer,
 } from '../main-window'
 import { stopToolhive, binPath } from '../toolhive-manager'
+import { stopOwnedProxy } from '../chat/providers/thv-llm'
 import { stopAllServers } from '../graceful-exit'
 import { createMainProcessFetch } from '../unix-socket-fetch'
 import { safeTrayDestroy } from '../system-tray'
@@ -46,6 +47,7 @@ export async function blockQuit(source: string, event?: Electron.Event) {
     log.error('Teardown failed: ', err)
   } finally {
     await shutdownChatRuntime()
+    stopOwnedProxy()
     // Stop the embedded ToolHive server
     stopToolhive()
 

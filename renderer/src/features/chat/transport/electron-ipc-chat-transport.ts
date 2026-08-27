@@ -1,7 +1,8 @@
 import type { ChatTransport, UIMessageChunk, ChatRequestOptions } from 'ai'
 import type { QueryClient } from '@tanstack/react-query'
 import type { ChatUIMessage } from '../types'
-import { isLocalServerProvider } from '../lib/utils'
+import { isLocalServerProvider, isGatewayProvider } from '../lib/utils'
+import { THV_LLM_PROVIDER_ID } from '../lib/gateway-provider'
 
 interface ElectronIPCChatTransportConfig {
   queryClient: QueryClient
@@ -26,6 +27,12 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
   private async getSettingsFromQuery(chatId?: string): Promise<
     | {
         provider: 'ollama' | 'lmstudio'
+        model: string
+        endpointURL: string
+        enabledTools: string[]
+      }
+    | {
+        provider: 'thv-llm'
         model: string
         endpointURL: string
         enabledTools: string[]
@@ -84,7 +91,18 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
         endpointURL,
         enabledTools: providerSettings?.enabledTools || [],
       }
-    } else {
+    }
+
+    if (isGatewayProvider(selectedModel.provider)) {
+      return {
+        provider: THV_LLM_PROVIDER_ID,
+        model: selectedModel.model,
+        endpointURL: '',
+        enabledTools: providerSettings?.enabledTools || [],
+      }
+    }
+
+    {
       const apiKey =
         providerSettings && 'apiKey' in providerSettings
           ? providerSettings.apiKey || ''
@@ -297,6 +315,15 @@ export class ElectronIPCChatTransport implements ChatTransport<ChatUIMessage> {
         provider: settings.provider,
         model: settings.model,
         endpointURL: settings.endpointURL,
+        enabledTools: settings.enabledTools || [],
+      }
+    } else if (isGatewayProvider(settings.provider)) {
+      backendRequest = {
+        chatId: options.chatId,
+        messages: processedMessages,
+        provider: THV_LLM_PROVIDER_ID,
+        model: settings.model,
+        endpointURL: '',
         enabledTools: settings.enabledTools || [],
       }
     } else {

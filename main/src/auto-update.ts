@@ -3,6 +3,7 @@ import { updateElectronApp, UpdateSourceType } from 'update-electron-app'
 import * as Sentry from '@sentry/electron/main'
 import { stopAllServers } from './graceful-exit'
 import { stopToolhive, binPath, isToolhiveRunning } from './toolhive-manager'
+import { stopOwnedProxy } from './chat/providers/thv-llm'
 import { createMainProcessFetch } from './unix-socket-fetch'
 import { safeTrayDestroy } from './system-tray'
 import { getAppVersion, pollWindowReady } from './util'
@@ -449,6 +450,7 @@ async function performUpdateInstallation({
         }
 
         try {
+          stopOwnedProxy()
           stopToolhive()
           // eslint-disable-next-line no-restricted-syntax -- TODO: decide on branding in logs
           log.info('[update] ToolHive stopped')

@@ -19,15 +19,32 @@ const SKILLS_COPY: EmptyStateCopy = {
 }
 
 export function getEmptyStateCopy(
-  agent: AgentConfig | undefined
+  agent: AgentConfig | undefined,
+  options?: { usesGatewayProvider?: boolean }
 ): EmptyStateCopy {
   if (agent?.id === BUILTIN_AGENT_IDS.skills) {
-    return SKILLS_COPY
+    return options?.usesGatewayProvider
+      ? {
+          heading: SKILLS_COPY.heading,
+          subtext: 'Use Stacklok Gateway to design, build, and audit Skills',
+        }
+      : SKILLS_COPY
   }
   if (agent?.kind === 'custom') {
+    return options?.usesGatewayProvider
+      ? {
+          heading: `Chat with ${agent.name}`,
+          subtext: 'Use Stacklok Gateway to chat with your agent',
+        }
+      : {
+          heading: `Chat with ${agent.name}`,
+          subtext: 'Configure an AI service provider to chat with your agent',
+        }
+  }
+  if (options?.usesGatewayProvider) {
     return {
-      heading: `Chat with ${agent.name}`,
-      subtext: 'Configure an AI service provider to chat with your agent',
+      heading: TOOLHIVE_ASSISTANT_COPY.heading,
+      subtext: 'Use Stacklok Gateway to test responses from your MCP servers',
     }
   }
   return TOOLHIVE_ASSISTANT_COPY

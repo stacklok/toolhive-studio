@@ -38,7 +38,7 @@ export function useAvailableModels() {
 
       return providersWithCredentials
     },
-    staleTime: 2 * 60 * 1000, // 2 minutes
+    staleTime: 2 * 60 * 1000,
     refetchOnWindowFocus: true,
   })
 

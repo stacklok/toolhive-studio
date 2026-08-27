@@ -4,6 +4,7 @@ import {
   setQuittingState,
 } from '../app-state'
 import { stopToolhive, binPath } from '../toolhive-manager'
+import { stopOwnedProxy } from '../chat/providers/thv-llm'
 import { stopAllServers } from '../graceful-exit'
 import { createMainProcessFetch } from '../unix-socket-fetch'
 import { safeTrayDestroy } from '../system-tray'
@@ -20,6 +21,7 @@ export function register() {
       try {
         await stopAllServers(binPath, { createFetch: createMainProcessFetch })
       } finally {
+        stopOwnedProxy()
         stopToolhive()
         safeTrayDestroy()
         process.exit(0)

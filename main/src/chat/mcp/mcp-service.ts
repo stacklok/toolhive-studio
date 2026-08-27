@@ -103,12 +103,8 @@ export class McpService extends Effect.Service<McpService>()(
                 }),
             })
 
-            const hasEnabledServers = Object.values(result.enabledTools).some(
-              (tools) => tools.length > 0
-            )
-
             if (
-              hasEnabledServers &&
+              result.enabledServersWithWorkload > 0 &&
               Object.keys(result.tools as ToolSet).length === 0
             ) {
               return yield* Effect.fail(
