@@ -577,4 +577,68 @@ describe('Bug #2599', () => {
       screen.queryByRole('button', { name: /overwrite/i })
     ).not.toBeInTheDocument()
   })
+
+  it('does not offer overwrite when the conflict error lacks force guidance', async () => {
+    const user = userEvent.setup()
+    mockedPostApiV1BetaSkills.overrideHandler(() =>
+      HttpResponse.json(
+        {
+          error:
+            'directory "/tmp/my-skill" exists but is not managed by another installer',
+        },
+        { status: 409 }
+      )
+    )
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    await user.type(screen.getByLabelText(/name or reference/i), 'my-skill')
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toBeInTheDocument()
+    })
+
+    expect(
+      screen.queryByRole('button', { name: /overwrite/i })
+    ).not.toBeInTheDocument()
+  })
+
+  it('does not send force after the user changes the skill name', async () => {
+    const user = userEvent.setup()
+    const rec = recordRequests()
+    mockUnmanagedConflictUntilForced()
+
+    renderWithProviders(<DialogInstallSkill open onOpenChange={vi.fn()} />)
+
+    const nameInput = screen.getByLabelText(/name or reference/i)
+    await user.type(nameInput, 'my-skill')
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('button', { name: /overwrite and install/i })
+      ).toBeInTheDocument()
+    })
+
+    await user.clear(nameInput)
+    await user.type(nameInput, 'other-skill')
+
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: /overwrite and install/i })
+      ).not.toBeInTheDocument()
+    })
+
+    await user.click(screen.getByRole('button', { name: /^install$/i }))
+
+    await waitFor(() => {
+      const posts = rec.recordedRequests.filter(
+        (r) => r.method === 'POST' && r.pathname === '/api/v1beta/skills'
+      )
+      expect(posts).toHaveLength(2)
+      expect(posts[1]?.payload).toMatchObject({ name: 'other-skill' })
+      expect(posts[1]?.payload).not.toHaveProperty('force')
+    })
+  })
 })

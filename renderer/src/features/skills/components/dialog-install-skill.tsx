@@ -69,10 +69,28 @@ const formSchema = z
 
 type FormSchema = z.infer<typeof formSchema>
 
+type ForceOverwriteTarget = {
+  name: string
+  scope: FormSchema['scope']
+  project_root: string
+}
+
 const UNMANAGED_SKILL_CONFLICT_MESSAGE = `A skill with this name already exists on your computer and is not managed by ${THV_DISPLAY_NAME}. Installing will replace the existing files. This cannot be undone.`
 
 function isUnmanagedSkillConflict(message: string): boolean {
-  return /exists but is not managed/i.test(message)
+  return /exists but is not managed[\s\S]*use force/i.test(message)
+}
+
+function matchesForceOverwriteTarget(
+  target: ForceOverwriteTarget | null,
+  values: Pick<FormSchema, 'name' | 'scope' | 'project_root'>
+): boolean {
+  if (!target) return false
+  return (
+    target.name === values.name &&
+    target.scope === values.scope &&
+    target.project_root === (values.project_root ?? '')
+  )
 }
 
 function getInstallErrorMessage(err: unknown): string {
@@ -103,7 +121,8 @@ export function DialogInstallSkill({
 }: DialogInstallSkillProps) {
   const { mutateAsync: installSkill, isPending } = useMutationInstallSkill()
   const [submitError, setSubmitError] = useState<string | null>(null)
-  const [needsForceOverwrite, setNeedsForceOverwrite] = useState(false)
+  const [forceOverwriteTarget, setForceOverwriteTarget] =
+    useState<ForceOverwriteTarget | null>(null)
 
   const { data: clientsData, isLoading: isLoadingClients } = useQuery({
     ...getApiV1BetaDiscoveryClientsOptions(),
@@ -133,7 +152,17 @@ export function DialogInstallSkill({
     resetOptions: { keepDirtyValues: true },
   })
 
+  const name = useWatch({ control: form.control, name: 'name' })
   const scope = useWatch({ control: form.control, name: 'scope' })
+  const projectRoot = useWatch({ control: form.control, name: 'project_root' })
+  const needsForceOverwrite = matchesForceOverwriteTarget(
+    forceOverwriteTarget,
+    {
+      name,
+      scope,
+      project_root: projectRoot,
+    }
+  )
   // Subscribe to dirtyFields so the blur splitter below can reliably
   // tell prefilled defaults apart from values the user actually typed.
   // Reading `form.formState.dirtyFields.version` from inside a callback
@@ -144,7 +173,7 @@ export function DialogInstallSkill({
     trackEvent('Skills: install dialog cancelled')
     form.reset()
     setSubmitError(null)
-    setNeedsForceOverwrite(false)
+    setForceOverwriteTarget(null)
     onOpenChange(false)
   }
 
@@ -157,7 +186,7 @@ export function DialogInstallSkill({
   }
 
   async function onSubmit(values: FormSchema) {
-    const force = needsForceOverwrite
+    const force = matchesForceOverwriteTarget(forceOverwriteTarget, values)
     setSubmitError(null)
     trackEvent('Skills: install dialog submitted', {
       scope: values.scope,
@@ -179,16 +208,19 @@ export function DialogInstallSkill({
       })
       form.reset()
       setSubmitError(null)
-      setNeedsForceOverwrite(false)
+      setForceOverwriteTarget(null)
       onOpenChange(false)
     } catch (err) {
       const message = getInstallErrorMessage(err)
       if (isUnmanagedSkillConflict(message)) {
-        setNeedsForceOverwrite(true)
-        setSubmitError(UNMANAGED_SKILL_CONFLICT_MESSAGE)
+        setForceOverwriteTarget({
+          name: values.name,
+          scope: values.scope,
+          project_root: values.project_root ?? '',
+        })
         return
       }
-      setNeedsForceOverwrite(false)
+      setForceOverwriteTarget(null)
       setSubmitError(message)
     }
   }
@@ -202,14 +234,21 @@ export function DialogInstallSkill({
             Install a skill by providing its name or OCI reference.
           </DialogDescription>
         </DialogHeader>
-        {submitError && (
+        {needsForceOverwrite ? (
           <Alert variant="destructive">
             <TriangleAlertIcon className="size-4" />
-            {needsForceOverwrite && (
-              <AlertTitle>Skill already exists</AlertTitle>
-            )}
-            <AlertDescription>{submitError}</AlertDescription>
+            <AlertTitle>Skill already exists</AlertTitle>
+            <AlertDescription>
+              {UNMANAGED_SKILL_CONFLICT_MESSAGE}
+            </AlertDescription>
           </Alert>
+        ) : (
+          submitError && (
+            <Alert variant="destructive">
+              <TriangleAlertIcon className="size-4" />
+              <AlertDescription>{submitError}</AlertDescription>
+            </Alert>
+          )
         )}
         <Form {...form}>
           <form
