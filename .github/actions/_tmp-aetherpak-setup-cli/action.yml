@@ -1,0 +1,199 @@
+# ============================================================================
+# INTENTIONALLY VENDORED — decoupled from tagged releases for now
+#
+# Vendored so we can iterate on the aetherpak flatpak publish + Pages
+# pipeline (see PR #2301 / #2427) in follow-up PRs without cutting real
+# ToolHive Studio releases (which trigger real auto-updates and binary
+# signing) just to test changes here. Pinned to one exact source commit so
+# builds stay reproducible while we iterate.
+#
+# See discussion in #2427/#2429.
+#
+# Source: https://github.com/aetherpak/setup-cli (MIT License)
+# Vendored from tag: v1
+#
+# Changes from upstream:
+#   - Upstream downloads a pre-built release binary. This version instead
+#     builds the CLI from source, checked out at a pinned commit SHA
+#     (e9388a1d41021dcf0ac75feb0a2e50dba87ca81c, the exact commit the
+#     v0.14.0 tag resolves to as of this writing — confirmed via
+#     `gh api repos/aetherpak/cli/git/refs/tags/v0.14.0`).
+#
+#     Pinning to an exact commit keeps this test build fully reproducible
+#     while we iterate on the pipeline, the same way we'd pin any dependency
+#     during active development, regardless of anything changing upstream in
+#     the meantime.
+#
+#     Confirmed this is a straightforward build: aetherpak/cli has no cgo
+#     (scanned all 68 .go files at this commit for `import "C"`, zero
+#     matches) and depends only on mainstream Go modules
+#     (google/go-containerregistry, spf13/cobra, ProtonMail/go-crypto,
+#     charmbracelet/*), each already checksum-pinned via the upstream
+#     go.sum. Build command mirrors aetherpak/cli's own `make release/build`
+#     target.
+#   - Hardcoded cli-ref to the pinned commit SHA above instead of supporting
+#     a "latest"/tag-based version input.
+# ============================================================================
+name: '[TEMP] AetherPak Setup CLI (vendored, built from a pinned source commit)'
+description: 'Build the AetherPak CLI from a pinned source commit and install dependencies on Linux.'
+outputs:
+  version:
+    description: 'Resolved commit SHA of AetherPak CLI that was built'
+    value: ${{ steps.build.outputs.version }}
+  path:
+    description: 'Directory where the AetherPak CLI binary is installed'
+    value: ${{ steps.build.outputs.path }}
+inputs:
+  cli-ref:
+    description: 'Commit SHA of aetherpak/cli to build. Must be a full 40-char SHA, not a tag or branch.'
+    required: false
+    default: 'e9388a1d41021dcf0ac75feb0a2e50dba87ca81c'
+  repo:
+    description: 'GitHub repository for AetherPak CLI source'
+    required: false
+    default: 'aetherpak/cli'
+  install-dependencies:
+    description: 'Trigger installation of missing host dependencies (flatpak, ostree, flatpak-builder)'
+    required: false
+    default: 'true'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Verify OS compatibility
+      shell: bash
+      run: |
+        if [ "$RUNNER_OS" != "Linux" ]; then
+          echo "::error::AetherPak Setup CLI action only supports Linux runners."
+          exit 1
+        fi
+
+    - name: Verify cli-ref looks like a full commit SHA, not a tag/branch
+      shell: bash
+      env:
+        CLI_REF: ${{ inputs.cli-ref }}
+      run: |
+        set -euo pipefail
+        if ! [[ "$CLI_REF" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "::error::cli-ref must be a full 40-character commit SHA (got '$CLI_REF') so this test build stays pinned to one exact, reproducible source snapshot."
+          exit 1
+        fi
+
+    - name: Ensure tooling
+      if: ${{ inputs.install-dependencies == 'true' }}
+      shell: bash
+      run: |
+        set -euo pipefail
+        MISSING=""
+        command -v flatpak >/dev/null 2>&1 || MISSING="$MISSING flatpak"
+        command -v ostree  >/dev/null 2>&1 || MISSING="$MISSING ostree"
+        command -v flatpak-builder >/dev/null 2>&1 || MISSING="$MISSING flatpak-builder"
+        command -v patch >/dev/null 2>&1 || MISSING="$MISSING patch"
+        command -v unzip >/dev/null 2>&1 || MISSING="$MISSING unzip"
+        command -v bzip2 >/dev/null 2>&1 || MISSING="$MISSING bzip2"
+        command -v zstd  >/dev/null 2>&1 || MISSING="$MISSING zstd"
+
+        NEED_DBUS="false"
+        command -v dbus-run-session >/dev/null 2>&1 || NEED_DBUS="true"
+
+        if [ -n "$MISSING" ] || [ "$NEED_DBUS" = "true" ]; then
+          SUDO=""
+          command -v sudo >/dev/null 2>&1 && SUDO="sudo"
+          if command -v apt-get >/dev/null 2>&1; then
+            export DEBIAN_FRONTEND=noninteractive
+            PKGS="$MISSING"
+            if [ "$NEED_DBUS" = "true" ]; then
+              PKGS="$PKGS dbus"
+            fi
+            $SUDO apt-get update && $SUDO apt-get install -y $PKGS
+          elif command -v microdnf >/dev/null 2>&1; then
+            PKGS="$MISSING"
+            if [ "$NEED_DBUS" = "true" ]; then
+              PKGS="$PKGS dbus-daemon"
+            fi
+            $SUDO microdnf install -y --setopt=install_weak_deps=0 --nodocs $PKGS
+          elif command -v dnf >/dev/null 2>&1; then
+            PKGS="$MISSING"
+            if [ "$NEED_DBUS" = "true" ]; then
+              PKGS="$PKGS dbus-daemon"
+            fi
+            $SUDO dnf install -y --setopt=install_weak_deps=0 --nodocs $PKGS
+          else
+            PKGS="$MISSING"
+            if [ "$NEED_DBUS" = "true" ]; then
+              PKGS="$PKGS dbus-run-session (dbus/dbus-daemon)"
+            fi
+            echo "::warning::Missing dependencies ($PKGS) could not be installed because a supported package manager (apt-get, microdnf, dnf) is not available. Please install them manually."
+          fi
+        fi
+
+    - name: Checkout aetherpak/cli at pinned commit
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        repository: ${{ inputs.repo }}
+        ref: ${{ inputs.cli-ref }}
+        path: _aetherpak-cli-src
+        persist-credentials: false
+
+    - name: Verify checked-out commit matches the pinned SHA exactly
+      shell: bash
+      working-directory: _aetherpak-cli-src
+      env:
+        EXPECTED_SHA: ${{ inputs.cli-ref }}
+      run: |
+        set -euo pipefail
+        ACTUAL_SHA="$(git rev-parse HEAD)"
+        if [ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]; then
+          echo "::error::Checked-out commit ($ACTUAL_SHA) does not match pinned cli-ref ($EXPECTED_SHA)."
+          exit 1
+        fi
+        echo "Verified checkout is exactly $ACTUAL_SHA"
+
+    - name: Set up Go (version pinned by the checked-out go.mod itself)
+      uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5.6.0
+      with:
+        go-version-file: _aetherpak-cli-src/go.mod
+        cache-dependency-path: _aetherpak-cli-src/go.sum
+
+    - name: Build AetherPak CLI from source
+      id: build
+      shell: bash
+      working-directory: _aetherpak-cli-src
+      env:
+        CLI_REF: ${{ inputs.cli-ref }}
+      run: |
+        set -euo pipefail
+
+        case "$(echo "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')" in
+          x64|amd64) ARCH="amd64" ;;
+          arm64) ARCH="arm64" ;;
+          *)
+            echo "::error::Unsupported CPU architecture: $RUNNER_ARCH. Only x86_64/amd64 and arm64 are supported."
+            exit 1
+            ;;
+        esac
+
+        INSTALL_DIR="$RUNNER_TEMP/aetherpak-bin"
+        mkdir -p "$INSTALL_DIR"
+
+        echo "Building aetherpak from pinned commit $CLI_REF for linux/$ARCH..."
+        # Mirrors aetherpak/cli's own `make release/build` target (see Makefile).
+        GOOS=linux GOARCH="$ARCH" CGO_ENABLED=0 go build \
+          -ldflags="-s -w -X github.com/aetherpak/aetherpak/cmd.Version=$CLI_REF" \
+          -o "$INSTALL_DIR/aetherpak" \
+          main.go
+
+        chmod +x "$INSTALL_DIR/aetherpak"
+
+        echo "$INSTALL_DIR" >> "$GITHUB_PATH"
+        echo "Successfully built aetherpak from commit $CLI_REF to $INSTALL_DIR and added to GITHUB_PATH"
+
+        echo "version=$CLI_REF" >> "$GITHUB_OUTPUT"
+        echo "path=$INSTALL_DIR" >> "$GITHUB_OUTPUT"
+
+    - name: Smoke-test the built binary runs
+      shell: bash
+      run: |
+        set -euo pipefail
+        "$RUNNER_TEMP/aetherpak-bin/aetherpak" --help >/dev/null
+        echo "Built binary executes successfully."

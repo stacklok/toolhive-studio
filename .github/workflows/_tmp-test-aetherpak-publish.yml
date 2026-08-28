@@ -1,0 +1,102 @@
+# ============================================================================
+# INTENTIONALLY MERGED FOR NOW — decoupled from tagged releases
+#
+# Workflow to validate the aetherpak flatpak publish + Pages pipeline
+# introduced in #2301, without cutting a real release (which would trigger
+# the real on-release.yml, real auto-updates, and binary signing) and
+# without needing the production GPG signing secrets.
+#
+# - Manual trigger only (workflow_dispatch). Never runs on push/PR/release.
+# - Reuses a flatpak bundle artifact that a normal PR build already produced
+#   (pr-build-test.yml uploads flatpak-bundle-x86_64 on every PR) instead of
+#   rebuilding anything.
+# - dry_run=true (default): runs everything up to and including
+#   `aetherpak build-site` for real (all local/read-only per source review of
+#   pkg/site/site.go), but skips the actual `aetherpak push-oci` call and the
+#   gh-pages deploy entirely. Inspect the generated site as a workflow
+#   artifact.
+# - dry_run=false: does one real, isolated push — branch "test" (a distinct
+#   OCI tag suffix, cannot collide with the real "stable"/"beta" tags — see
+#   pkg/oci/oci.go tag format) and Pages subpath "flatpak-test" (isolated
+#   from the real "flatpak" subpath and "latest/" release manifest via
+#   destination_dir, verified against peaceiris/actions-gh-pages source).
+#
+# This keeps the pipeline decoupled from tagged releases while we iterate on
+# it in follow-up PRs. See discussion in #2427/#2429.
+# ============================================================================
+name: '[TEMP] Test AetherPak Flatpak Publish'
+
+on:
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Workflow run ID to pull the flatpak-bundle-x86_64 artifact from (e.g. a recent PR build's run)"
+        required: true
+        type: string
+      dry_run:
+        description: 'If true (default), skip the actual OCI push and gh-pages deploy'
+        required: false
+        type: boolean
+        default: true
+
+permissions:
+  contents: write # peaceiris/actions-gh-pages pushes a commit to gh-pages
+  packages: write
+  actions: read
+
+jobs:
+  test-publish-flatpak:
+    name: Test Publish Flatpak (dry_run=${{ inputs.dry_run }})
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Download existing flatpak bundle artifact
+        uses: actions/download-artifact@fa0a91b85d4f404e444e00e0baa8db40025c1464 # v8
+        with:
+          name: flatpak-bundle-x86_64
+          path: _bundles
+          run-id: ${{ inputs.run_id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: List downloaded bundle(s)
+        run: find _bundles -type f
+
+      - name: Push Flatpak OCI to GHCR (test channel, unsigned, dry-run capable)
+        uses: ./.github/actions/_tmp-aetherpak-publish-oci
+        with:
+          bundle-path: _bundles/**/*.flatpak
+          branch: test
+          registry-token: ${{ secrets.GITHUB_TOKEN }}
+          records-dir: _records
+          signing: 'off'
+          dry-run: ${{ inputs.dry_run }}
+
+      - name: Build site index (isolated subpath, unsigned)
+        uses: ./.github/actions/_tmp-aetherpak-publish-site
+        with:
+          records-dir: _records
+          pages-url: https://stacklok.github.io/toolhive-studio
+          site-subpath: flatpak-test
+          remote-name: toolhive-test
+          index-template: .github/workflows/templates/stacklok.html
+          upload-pages-artifact: 'false'
+          site-dir: _site
+          signing: 'off'
+
+      - name: Upload generated site as a build artifact (always, for inspection)
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: aetherpak-test-site
+          path: _site
+          retention-days: 7
+
+      - name: Deploy test site to gh-pages (isolated subfolder, real run only)
+        if: ${{ !inputs.dry_run }}
+        uses: peaceiris/actions-gh-pages@84c30a85c19949d7eee79c4ff27748b70285e453 # v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: _site/flatpak-test
+          destination_dir: flatpak-test
+          keep_files: true
