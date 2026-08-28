@@ -7,7 +7,7 @@ import type { AppVersionInfo } from '@/common/hooks/use-app-version'
 import userEvent from '@testing-library/user-event'
 import { PermissionsProvider } from '@/common/contexts/permissions/permissions-provider'
 import type { Permissions } from '@/common/contexts/permissions'
-import { GITHUB_RELEASES_URL } from '@common/app-info'
+import { getGitHubReleaseUrl } from '@common/app-info'
 
 const mockIsAutoUpdateEnabled = vi.fn()
 const mockSetAutoUpdate = vi.fn()
@@ -196,6 +196,9 @@ describe('VersionTab', () => {
 
     expect(screen.getByText(/A new version 2.0.0 is available/i)).toBeVisible()
     expect(screen.getByRole('button', { name: 'Download' })).toBeVisible()
+    expect(
+      screen.getByRole('link', { name: /View release notes/i })
+    ).toHaveAttribute('href', getGitHubReleaseUrl('2.0.0'))
     expect(screen.getByText('ToolHive binary version')).toBeVisible()
   })
 
@@ -217,7 +220,7 @@ describe('VersionTab', () => {
     const downloadButton = screen.getByRole('button', { name: 'Download' })
     await user.click(downloadButton)
 
-    expect(window.open).toHaveBeenCalledWith(GITHUB_RELEASES_URL)
+    expect(window.open).toHaveBeenCalledWith(getGitHubReleaseUrl('2.0.0'))
     expect(mockManualUpdate).not.toHaveBeenCalled()
   })
 
