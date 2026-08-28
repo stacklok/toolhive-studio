@@ -10,7 +10,7 @@
 [![License: Apache 2.0][license-img]][license]
 [![Discord][discord-img]][discord]
 
-# ToolHive Desktop UI
+# ToolHive desktop UI
 
 **Run any Model Context Protocol (MCP) server — securely, instantly, anywhere.**
 
