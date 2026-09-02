@@ -18,6 +18,8 @@ jobs:
     name: Triage Bug Issues
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      ANTHROPIC_BASE_URL: https://llm-gateway.stacklok.dev/anthropic
     steps:
       - name: Generate GitHub App token
         id: app-token
@@ -107,7 +109,7 @@ jobs:
         if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
         uses: anthropics/claude-code-action@e5ad3c7725bc2459721893f88879fef9dbcf97b0 # v1.0.202
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          anthropic_api_key: ${{ secrets.STACKLOK_GATEWAY_KEY_BUG_FIX }}
           prompt: |
             Read issues-for-triage.md. These are open bug reports for a React + Electron desktop app.
 
