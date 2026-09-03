@@ -45,10 +45,18 @@ overrides:
   'icon-gen>sharp': 0.35.3
   # Security patches for transitive deps (GHSA-7p8r-x3mc-p8w7,
   # GHSA-mwp4-54f8-5fhr / GHSA-4xrf-jv44-h6hh / GHSA-22jq-vg5j-6vgg,
-  # GHSA-8j4g-w8fx-2239). Cap fast-uri below v4 — ajv expects the v3 API.
-  fast-uri: '>=3.1.5 <4'
+  # GHSA-8j4g-w8fx-2239, GHSA-5jgf-p345-68v8 / GHSA-f65p-4m7j-42xc /
+  # GHSA-fph4-wmhf-6fwf / GHSA-jqff-g426-hqxp). 3.1.6 patches all four on the
+  # v3 line; cap below v4 — ajv expects the v3 API.
+  fast-uri: '>=3.1.6 <4'
   ip-address: '>=10.4.0'
   hono: '>=4.13.4'
+  # GHSA-4mjr-xmp4-gh2g / GHSA-x5fp-wj9c-mxmx — force re-resolution to the
+  # patched release; body-parser (^6.15.2) and express (^6.14.0) both admit it.
+  qs: '>=6.16.0'
+  # GHSA-6gmq-8vp8-gcm6 — force re-resolution to the patched release; plist
+  # (^0.9.10) admits it.
+  '@xmldom/xmldom': '>=0.9.12'
   # GHSA-55q2-fjhq-7xh7 — mermaid pins dompurify ^3.3.3; cap below v4.
   dompurify: '>=3.4.13 <4'
   # GHSA-2v37-7h3g-55p8 — postcss pulls nanoid 3.x; keep direct nanoid 5.x untouched.
