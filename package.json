@@ -95,7 +95,7 @@
     "tar": "^7.5.22",
     "tsx": "^4.23.13",
     "typescript": "npm:@typescript/typescript6@6.0.2",
-    "typescript-eslint": "^8.67.0",
+    "typescript-eslint": "^8.69.0",
     "unzipper": "^0.12.5",
     "vite": "^8.2.2",
     "vitest": "^4.1.11",
