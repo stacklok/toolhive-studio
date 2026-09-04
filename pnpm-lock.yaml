@@ -6,7 +6,7 @@ settings:
 
 overrides:
   '@electron/rebuild': ^4.2.0
-  browserslist: '>=4.28.7'
+  browserslist: '>=4.28.8'
   '@aws-sdk/xml-builder>fast-xml-parser': 5.10.1
   js-yaml: '>=5.2.3'
   tmp: '>=0.2.7'
@@ -7657,7 +7657,7 @@ packages:
     resolution: {integrity: sha512-UQ+MSxlhRm1bzjhU+DcuXfjFO1FzNtqhK5+9Yvlp90ItDLk5vT932A0rFu619nf7RVS+Y/VeaUW1jaRDqZ8VJw==}
     hasBin: true
     peerDependencies:
-      browserslist: '>=4.28.7'
+      browserslist: '>=4.28.8'
 
   update-electron-app@3.3.0:
     resolution: {integrity: sha512-5s73OcyNhAvogjxzAy8pbephY+bP6aXpXFv68OT1dNiEbcUpIUCv/ZZPalqGclnXUgx3oyn+yVdAIIVUpn/C1g==}
