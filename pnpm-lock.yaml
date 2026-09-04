@@ -13,7 +13,7 @@ overrides:
   icon-gen>sharp: 0.35.4
   fast-uri: '>=3.1.6 <4'
   ip-address: '>=10.7.0'
-  hono: '>=4.13.4'
+  hono: '>=4.13.5'
   qs: '>=6.16.0'
   '@xmldom/xmldom': '>=0.9.12'
   dompurify: '>=3.4.13 <4'
@@ -1222,7 +1222,7 @@ packages:
     resolution: {integrity: sha512-bjD221KPLoJTWUwso1J6fGKiTXEUFedG/s0visavY4zakFPkeGURMRNly+FhBHs7T8Dz4qHaZIMX9ZoJHSJtKA==}
     engines: {node: '>=20'}
     peerDependencies:
-      hono: '>=4.13.4'
+      hono: '>=4.13.5'
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
