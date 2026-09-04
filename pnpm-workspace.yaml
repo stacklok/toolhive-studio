@@ -50,7 +50,7 @@ overrides:
   # v3 line; cap below v4 — ajv expects the v3 API.
   fast-uri: '>=3.1.6 <4'
   ip-address: '>=10.7.0'
-  hono: '>=4.13.4'
+  hono: '>=4.13.5'
   # GHSA-4mjr-xmp4-gh2g / GHSA-x5fp-wj9c-mxmx — force re-resolution to the
   # patched release; body-parser (^6.15.2) and express (^6.14.0) both admit it.
   qs: '>=6.16.0'
