@@ -331,7 +331,7 @@ importers:
         specifier: ^5.4.4
         version: 5.4.4(supports-color@8.1.1)
       eslint:
-        specifier: ^10.9.0
+        specifier: ^10.9.1
         version: 10.9.1(jiti@2.7.0)(supports-color@8.1.1)
       eslint-plugin-react-hooks:
         specifier: ~7.1.1
