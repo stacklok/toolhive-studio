@@ -38,7 +38,7 @@ overrides:
   '@electron/rebuild': ^4.2.0
   # GHSA-73wf-gq98-2v4g / GHSA-c83g-rgw3-j3cx — force re-resolution to the
   # patched release; every consumer's declared range already admits it.
-  browserslist: '>=4.28.7'
+  browserslist: '>=4.28.8'
   '@aws-sdk/xml-builder>fast-xml-parser': 5.10.1
   js-yaml: '>=5.2.3'
   tmp: '>=0.2.7'
