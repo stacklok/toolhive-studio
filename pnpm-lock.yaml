@@ -12,7 +12,7 @@ overrides:
   tmp: '>=0.2.7'
   icon-gen>sharp: 0.35.4
   fast-uri: '>=3.1.6 <4'
-  ip-address: '>=10.4.0'
+  ip-address: '>=10.7.0'
   hono: '>=4.13.4'
   qs: '>=6.16.0'
   '@xmldom/xmldom': '>=0.9.12'
@@ -5423,8 +5423,8 @@ packages:
     resolution: {integrity: sha512-6xwYfHbajpoF0xLW+iwLkhwgvLoZDfjYfoFNu8ftMoXINzwuymNLd9u/KmwtdT2GbR+/Cz66otEGEVVUHX9QLQ==}
     engines: {node: '>=10.13.0'}
 
-  ip-address@10.4.0:
-    resolution: {integrity: sha512-oSK96Grm3aP6OrS263xVxbNDGVL7rzBtYdpGqlDG8iQdoenDoTs/nkki+DflYbAEE8Xl6o5YxhxlrKvI3nqKXQ==}
+  ip-address@10.7.0:
+    resolution: {integrity: sha512-BGFsyJd5mpXp3rK6jIdADLNgpJUK1jnjzvYF8lK+VyDab9JAmqN0YOKDdP17HlgKb2+ehPgDc8EtnRLbGCAMhA==}
     engines: {node: '>= 12'}
 
   ipaddr.js@1.9.1:
@@ -13174,7 +13174,7 @@ snapshots:
   express-rate-limit@8.5.1(express@5.2.1(supports-color@8.1.1)):
     dependencies:
       express: 5.2.1(supports-color@8.1.1)
-      ip-address: 10.4.0
+      ip-address: 10.7.0
 
   express@5.2.1(supports-color@8.1.1):
     dependencies:
@@ -13831,7 +13831,7 @@ snapshots:
 
   interpret@3.1.1: {}
 
-  ip-address@10.4.0: {}
+  ip-address@10.7.0: {}
 
   ipaddr.js@1.9.1: {}
 
