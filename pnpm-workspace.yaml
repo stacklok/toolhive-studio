@@ -48,7 +48,7 @@ overrides:
   # GHSA-8j4g-w8fx-2239, GHSA-5jgf-p345-68v8 / GHSA-f65p-4m7j-42xc /
   # GHSA-fph4-wmhf-6fwf / GHSA-jqff-g426-hqxp). 3.1.6 patches all four on the
   # v3 line; cap below v4 — ajv expects the v3 API.
-  fast-uri: '>=3.1.6 <4'
+  fast-uri: '>=3.1.6 <5'
   ip-address: '>=10.7.0'
   hono: '>=4.13.5'
   # GHSA-4mjr-xmp4-gh2g / GHSA-x5fp-wj9c-mxmx — force re-resolution to the
