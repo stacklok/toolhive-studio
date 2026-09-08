@@ -6,7 +6,6 @@ settings:
 
 overrides:
   '@electron/rebuild': ^4.2.0
-  '@electron/rebuild>node-abi': '>=4.35.0'
   browserslist: '>=4.28.8'
   '@aws-sdk/xml-builder>fast-xml-parser': 5.10.1
   js-yaml: '>=5.2.3'

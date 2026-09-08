@@ -34,10 +34,8 @@ auditConfig:
     - GHSA-rmmr-r34h-pfm5
 
 overrides:
-  # Keep Forge on the maintained rebuild line.
+  # Only overrides where parent ranges cannot reach a patched version.
   '@electron/rebuild': ^4.2.0
-  # Electron 44 requires ABI metadata added in node-abi 4.35.0.
-  '@electron/rebuild>node-abi': '>=4.35.0'
   # GHSA-73wf-gq98-2v4g / GHSA-c83g-rgw3-j3cx — force re-resolution to the
   # patched release; every consumer's declared range already admits it.
   browserslist: '>=4.28.8'
