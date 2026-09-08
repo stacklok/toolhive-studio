@@ -277,6 +277,35 @@ export type AuthserverIdentityFromTokenRunConfig = {
 }
 
 /**
+ * InboundGrants declares canonical inbound grant configuration, including
+ * SPIFFE client authentication, delegate clients, and issuer policy. A
+ * non-nil value explicitly controls grant-family enablement.
+ */
+export type AuthserverInboundGrantsRunConfig = {
+  jwt_bearer?: AuthserverJwtBearerInboundGrantRunConfig
+  /**
+   * SPIFFEClientAuth associates SPIFFE principal patterns with explicit OAuth
+   * client identities and permissions. See SPIFFEClientAuthRunConfig.
+   */
+  spiffe_client_auth?: Array<AuthserverSpiffeClientAuthRunConfig>
+  token_exchange?: AuthserverTokenExchangeInboundGrantRunConfig
+}
+
+/**
+ * JWTBearer configures RFC 7523 issuer policies.
+ */
+export type AuthserverJwtBearerInboundGrantRunConfig = {
+  issuer_policies?: Array<AuthserverJwtBearerIssuerPolicyRunConfig>
+}
+
+export type AuthserverJwtBearerIssuerPolicyRunConfig = {
+  accepted_audiences?: Array<string>
+  issuer_ref?: string
+  max_assertion_age?: string
+  subject_bindings?: Array<GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerSubjectBinding>
+}
+
+/**
  * OAuth2Config contains OAuth 2.0-specific configuration.
  * Required when Type is "oauth2", must be nil when Type is "oidc".
  */
@@ -478,7 +507,8 @@ export type AuthserverRunConfig = {
    * BaselineClientScopes is a baseline set of OAuth 2.0 scopes unioned into every
    * DCR registration. All values must appear in ScopesSupported; the auth server
    * rejects this RunConfig at startup otherwise. Empty means current behavior is
-   * preserved (registered scope = client-requested, or DefaultScopes if empty).
+   * preserved (registered scope = client-requested, or the intersection of
+   * DefaultScopes with ScopesSupported if the client requested none).
    * When ScopesSupported is empty, the subset check uses registration.DefaultScopes
    * (the same set applyDefaults would substitute at startup) — so
    * BaselineClientScopes containing standard OIDC scopes works without enumerating
@@ -490,6 +520,8 @@ export type AuthserverRunConfig = {
    * DelegateClients declares confidential OAuth clients to register at
    * authorization-server startup, including clients intended for RFC 8693
    * token exchange.
+   *
+   * This legacy field is deprecated; use InboundGrants.TokenExchange.DelegateClients.
    *
    * Independent of AllowConfidentialClientRegistration: declaring a client
    * here does not require or enable self-service confidential DCR, and
@@ -554,6 +586,7 @@ export type AuthserverRunConfig = {
    * If empty, an ephemeral secret will be auto-generated (development only).
    */
   hmac_secret_files?: Array<string>
+  inbound_grants?: AuthserverInboundGrantsRunConfig
   /**
    * InsecureAllowConfidentialOverLoopbackHTTP opts in to confidential clients
    * when Issuer is a plain-HTTP loopback URL. Without this flag, that
@@ -595,14 +628,19 @@ export type AuthserverRunConfig = {
    */
   scopes_supported?: Array<string>
   signing_key_config?: AuthserverSigningKeyRunConfig
+  /**
+   * SPIFFETrustDomains declares SPIFFE trust roots. Each declaration must be
+   * referenced by an InboundGrants.SPIFFEClientAuth entry.
+   */
+  spiffe_trust_domains?: Array<AuthserverSpiffeTrustDomainRunConfig>
   storage?: StorageRunConfig
   token_lifespans?: AuthserverTokenLifespanRunConfig
   /**
-   * TrustedIssuers lists external OIDC issuers whose tokens are accepted as
-   * RFC 8693 subject tokens or RFC 7523 JWT-bearer assertions. Issuers with
-   * jwtBearerGrant enabled may be used for the JWT-bearer grant without an
-   * RFC 8693 delegation policy. Empty (the default) means only self-issued
-   * subject tokens are accepted.
+   * TrustedIssuers lists external OIDC trust declarations.
+   *
+   * This legacy field is deprecated; RFC 8693 and JWT-bearer policies embedded in these entries
+   * remain supported for compatibility. New configurations should put policy
+   * under InboundGrants and reference a named trusted issuer.
    *
    * See tokenexchange.TrustedIssuer for the per-issuer field reference, and
    * docs/arch/17-token-exchange-delegation.md for the trust model, consent
@@ -612,11 +650,102 @@ export type AuthserverRunConfig = {
    */
   trusted_issuers?: Array<TokenexchangeTrustedIssuer>
   /**
-   * Upstreams configures connections to upstream Identity Providers.
-   * At least one upstream is required - the server delegates authentication to these providers.
+   * Upstreams configures connections to upstream Identity Providers for
+   * interactive authorization. It may be empty only when DelegateClients or a
+   * TrustedIssuer with JWTBearerGrant enables token-only operation.
    * Multiple upstreams are supported for sequential authorization chains.
    */
   upstreams?: Array<AuthserverUpstreamRunConfig>
+}
+
+export type AuthserverSpiffeBundleEndpointSourceRunConfig = {
+  /**
+   * Profile selects how the endpoint's TLS connection is authenticated:
+   * SPIFFEBundleEndpointProfileHTTPSWeb (Web PKI) or
+   * SPIFFEBundleEndpointProfileHTTPSSPIFFE (a separately distributed
+   * X.509-SVID root). Required, since the future bundle loader cannot
+   * otherwise know which trust anchor to use for the initial connection.
+   */
+  profile?: string
+  url?: string
+}
+
+/**
+ * BundleSource declares exactly one future trust-bundle source. It is
+ * validated for shape only; fetching or loading a bundle from it is a
+ * later step.
+ */
+export type AuthserverSpiffeBundleSourceRunConfig = {
+  endpoint?: AuthserverSpiffeBundleEndpointSourceRunConfig
+  type?: string
+  workload_api?: AuthserverSpiffeWorkloadApiBundleSourceRunConfig
+}
+
+export type AuthserverSpiffeClientAuthRunConfig = {
+  /**
+   * Audiences are RFC 8693 token audiences this association may request.
+   * This is an independent request dimension from Resources: it is not
+   * bounded by allowed_audiences (which is an RFC 8707 resource-URI list)
+   * and may contain non-URI logical audience identifiers.
+   */
+  audiences?: Array<string>
+  /**
+   * ClientID is the explicit OAuth client_id. It is never derived from a
+   * SPIFFE ID.
+   */
+  client_id?: string
+  /**
+   * GrantTypes are the OAuth grant types this association may use. Client
+   * authentication does not by itself confer any grant.
+   */
+  grant_types?: Array<string>
+  methods?: Array<string>
+  /**
+   * PrincipalPattern is a concrete SPIFFE ID or a terminal * pattern within
+   * the declared trust domain.
+   */
+  principal_pattern?: string
+  /**
+   * Resources are RFC 8707 resource indicators this association may
+   * request. Must be a subset of the server's allowed_audiences allowlist
+   * (RunConfig.AllowedAudiences) — the same RFC 8707 resource-URI list
+   * DelegateClientRunConfig.Audiences is validated against. Distinct from
+   * Audiences: a resource permission does not imply the same value is also
+   * a permitted token audience, or vice versa.
+   */
+  resources?: Array<string>
+  /**
+   * Scopes are OAuth scopes granted to this association. They must be a
+   * subset of the server's effective supported scopes.
+   */
+  scopes?: Array<string>
+  /**
+   * TrustDomainRef identifies the SPIFFE trust-domain declaration governing
+   * this association policy.
+   */
+  trust_domain_ref?: string
+}
+
+export type AuthserverSpiffeTrustDomainRunConfig = {
+  bundle_source?: AuthserverSpiffeBundleSourceRunConfig
+  /**
+   * Methods explicitly enables the supported credential types for this trust
+   * domain. No authentication method is enabled when the list is empty.
+   */
+  methods?: Array<string>
+  /**
+   * Name uniquely identifies this declaration and is referenced by
+   * InboundGrants.SPIFFEClientAuth entries.
+   */
+  name?: string
+  /**
+   * TrustDomain is the SPIFFE trust domain accepted by this declaration.
+   */
+  trust_domain?: string
+}
+
+export type AuthserverSpiffeWorkloadApiBundleSourceRunConfig = {
+  [key: string]: unknown
 }
 
 /**
@@ -641,6 +770,24 @@ export type AuthserverSigningKeyRunConfig = {
    * This key is used for signing new tokens.
    */
   signing_key_file?: string
+}
+
+/**
+ * TokenExchange configures RFC 8693 inbound clients and issuer policies.
+ */
+export type AuthserverTokenExchangeInboundGrantRunConfig = {
+  delegate_clients?: Array<AuthserverDelegateClientRunConfig>
+  issuer_policies?: Array<AuthserverTokenExchangeIssuerPolicyRunConfig>
+}
+
+export type AuthserverTokenExchangeIssuerPolicyRunConfig = {
+  actor_claim?: string
+  actor_matcher?: string
+  allow_may_act?: boolean
+  allowed_actors?: Array<string>
+  allowed_delegate_clients?: Array<string>
+  expected_audience?: string
+  issuer_ref?: string
 }
 
 /**
@@ -923,6 +1070,12 @@ export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
   provider_name?: string
 }
 
+export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerSubjectBinding =
+  {
+    allowed_resources?: Array<string>
+    subject?: string
+  }
+
 /**
  * DEPRECATED: Middleware configuration.
  * AuthzConfig contains the authorization configuration
@@ -1162,6 +1315,17 @@ export type GithubComStacklokToolhivePkgPluginsPluginInfo = {
    * is deterministic from scope + client type).
    */
   project_scope_degraded_clients?: Array<string>
+  provenance?: GithubComStacklokToolhivePkgPluginsProvenanceInfo
+  /**
+   * TrustUnrecorded reports that the project's lock file has an entry for
+   * this plugin which records neither a signer identity nor an unsigned
+   * exception — an entry written before verification existed, or
+   * hand-edited. It exists to keep that state distinguishable from having no
+   * lock entry at all, which leaves Provenance and Unsigned equally empty:
+   * sync reports this one as drift and can repair it, so Info must not
+   * render it as if nothing were pinning the plugin.
+   */
+  trust_unrecorded?: boolean
   /**
    * UnmaterializedComponents lists, per client type, the component types the
    * plugin declares that the installed client adapter does NOT load. Populated
@@ -1171,6 +1335,11 @@ export type GithubComStacklokToolhivePkgPluginsPluginInfo = {
   unmaterialized_components?: {
     [key: string]: Array<GithubComStacklokToolhivePkgPluginsComponentType>
   }
+  /**
+   * Unsigned reports that the lock file records an explicit unsigned
+   * exception for this plugin.
+   */
+  unsigned?: boolean
 }
 
 /**
@@ -1201,6 +1370,54 @@ export type GithubComStacklokToolhivePkgPluginsPluginMetadata = {
    * Version is the semantic version of the plugin.
    */
   version?: string
+}
+
+/**
+ * Provenance is the signer identity the project's lock file records
+ * for this skill, when project-scoped and lock-managed.
+ */
+export type GithubComStacklokToolhivePkgPluginsProvenanceInfo = {
+  /**
+   * CertIssuer is the OIDC issuer that authenticated the signer.
+   */
+  cert_issuer?: string
+  /**
+   * Provisional marks provenance with a documented verification gap
+   * (git signatures until transparency-log validation lands).
+   */
+  provisional?: boolean
+  /**
+   * PublicKey is the base64-encoded DER SPKI cosign public key a
+   * key-pair-signed entry is pinned to. Set only when SignerIdentity and
+   * CertIssuer are empty: the two anchors are mutually exclusive.
+   */
+  public_key?: string
+  /**
+   * RepositoryRef is the git ref the signing workflow ran on, from Fulcio
+   * certificate extension 1.3.6.1.4.1.57264.1.14. Empty means
+   * unconstrained, matching lock files written before the field existed.
+   */
+  repository_ref?: string
+  /**
+   * RepositoryURI is the source repository from the certificate
+   * extensions, when present.
+   */
+  repository_uri?: string
+  /**
+   * RunnerEnvironment is the runner class the signing workflow executed in
+   * (e.g. "github-hosted"), from Fulcio certificate extension
+   * 1.3.6.1.4.1.57264.1.11. Empty means unconstrained.
+   */
+  runner_environment?: string
+  /**
+   * SignerIdentity is the certificate subject identity (workflow path for
+   * GitHub Actions certificates, SAN verbatim otherwise).
+   */
+  signer_identity?: string
+  /**
+   * SigstoreURL is the Sigstore instance the signature chains to.
+   */
+  sigstore_url?: string
 }
 
 /**
@@ -1421,6 +1638,12 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * Only applicable when using Kubernetes runtime
    */
   k8s_pod_template_patch?: string
+  /**
+   * MaxRequestBodySize is the maximum inbound MCP proxy request body size in bytes.
+   * Zero uses the default limit of 8 MiB. Negative values are rejected
+   * when the RunConfig is built or used at runtime.
+   */
+  max_request_body_size?: number
   /**
    * MCPServerGeneration is the K8s .metadata.generation of the MCPServer CR that rendered
    * this RunConfig. The Kubernetes runtime uses it as a monotonic version to prevent stale
@@ -1648,6 +1871,7 @@ export type GithubComStacklokToolhivePkgSkillsFailureReason =
   | 'signature-invalid'
   | 'signer-mismatch'
   | 'provenance-field-mismatch'
+  | 'key-signed-unverifiable'
   | 'unsigned-rejected'
   | 'unknown'
 
@@ -1738,6 +1962,12 @@ export type GithubComStacklokToolhivePkgSkillsProvenanceInfo = {
    * (git signatures until transparency-log validation lands).
    */
   provisional?: boolean
+  /**
+   * PublicKey is the base64-encoded DER SPKI cosign public key a
+   * key-pair-signed entry is pinned to. Set only when SignerIdentity and
+   * CertIssuer are empty: the two anchors are mutually exclusive.
+   */
+  public_key?: string
   /**
    * RepositoryRef is the git ref the signing workflow ran on, from Fulcio
    * certificate extension 1.3.6.1.4.1.57264.1.14. Empty means
@@ -2511,6 +2741,10 @@ export type PkgApiV1CreateRequest = {
    */
   image?: string
   /**
+   * Maximum inbound MCP proxy request body size in bytes. Zero uses the default limit of 8 MiB.
+   */
+  max_request_body_size?: number
+  /**
    * Name of the workload
    */
   name?: string
@@ -2751,6 +2985,13 @@ export type PkgApiV1InstallPluginRequest = {
    * ProjectRoot is the project root path for project-scoped installs
    */
   project_root?: string
+  /**
+   * PublicKey is the base64-encoded DER SPKI cosign public key the artifact
+   * must verify against, for artifacts signed with a cosign key pair rather
+   * than keylessly. Required the first time such an artifact is installed
+   * project-scoped, and pinned in the lock file from then on.
+   */
+  public_key?: string
   scope?: GithubComStacklokToolhivePkgPluginsScope
   /**
    * Version to install (empty means latest)
@@ -2763,6 +3004,11 @@ export type PkgApiV1InstallPluginRequest = {
  */
 export type PkgApiV1InstallPluginResponse = {
   plugin?: GithubComStacklokToolhivePkgPluginsInstalledPlugin
+  provenance?: GithubComStacklokToolhivePkgPluginsProvenanceInfo
+  /**
+   * Whether the install was recorded as an explicit unsigned exception.
+   */
+  unsigned?: boolean
 }
 
 /**
@@ -2797,6 +3043,13 @@ export type PkgApiV1InstallSkillRequest = {
    * ProjectRoot is the project root path for project-scoped installs
    */
   project_root?: string
+  /**
+   * PublicKey is the base64-encoded DER SPKI cosign public key the artifact
+   * must verify against, for artifacts signed with a cosign key pair rather
+   * than keylessly. Required the first time such an artifact is installed
+   * project-scoped, and pinned in the lock file from then on.
+   */
+  public_key?: string
   scope?: GithubComStacklokToolhivePkgSkillsScope
   /**
    * Version to install (empty means latest)
@@ -2950,13 +3203,24 @@ export type PkgApiV1ProviderCapabilitiesResponse = {
 }
 
 /**
- * Request to push a built plugin artifact
+ * Request to push a built plugin artifact. Exactly one of identity_token or no_sign is required.
  */
 export type PkgApiV1PushPluginRequest = {
   /**
+   * IdentityToken is a short-lived OIDC identity token used for keyless
+   * signing. Plugin signing is keyless-only: there is deliberately no key
+   * field, because ToolHive cannot verify key-signed artifacts at install
+   * time and would publish an uninstallable plugin (#6442)
+   */
+  identity_token?: string
+  /**
+   * NoSign pushes without signing
+   */
+  no_sign?: boolean
+  /**
    * OCI reference to push
    */
-  reference?: string
+  reference: string
 }
 
 /**
@@ -3181,8 +3445,11 @@ export type PkgApiV1SyncPluginsRequest = {
    */
   adopt?: boolean
   /**
-   * AllowUnsigned permits adopting plugins whose signature state cannot be
-   * established, recording them as unsigned
+   * AllowUnsigned permits recording a plugin as unsigned in the lock file,
+   * in two cases: adopting an install whose signature state cannot be
+   * established (see Adopt), and repairing an entry that records no trust
+   * decision at all, whose reinstall otherwise fails closed on unsigned
+   * content.
    */
   allow_unsigned?: boolean
   /**
@@ -3289,6 +3556,10 @@ export type PkgApiV1UpdateRequest = {
    * Docker image to use
    */
   image?: string
+  /**
+   * Maximum inbound MCP proxy request body size in bytes. Zero uses the default limit of 8 MiB.
+   */
+  max_request_body_size?: number
   /**
    * Whether network isolation is turned on. This applies the rules in the permission profile.
    * Pointer so that omitting the field defaults to network isolation ENABLED (matching the
@@ -4564,6 +4835,9 @@ export type TokenexchangeConfig = {
  * It accepts assertions from this issuer without client authentication and
  * limits their maximum age, subjects, and RFC 8707 resources. It is
  * independent from RFC 8693 delegation policy.
+ *
+ * This legacy field is deprecated; configure RFC 7523 policy under
+ * inbound_grants.jwt_bearer.issuer_policies.
  */
 export type TokenexchangeJwtBearerGrantPolicy = {
   /**
@@ -4645,11 +4919,21 @@ export type TokenexchangeTrustedIssuer = {
    */
   allowed_delegate_clients?: Array<string>
   /**
+   * CAFilePath is the path to a PEM CA bundle added to the system roots when
+   * fetching this issuer's OIDC discovery document and JWKS. Trust is additive
+   * and scoped to this issuer: the public roots still apply, and no other
+   * issuer's client is affected.
+   */
+  ca_file_path?: string
+  /**
    * ExpectedAudience is the expected "aud" claim value that must appear
    * in an RFC 8693 subject token's audience list (a resource/API identifier,
    * not a client ID — required for delegation unless JWTBearerGrant is
    * configured; see looksLikeResourceIdentifier). RFC 7523 assertions use
    * the token endpoint as their audience instead.
+   *
+   * This legacy field is deprecated; configure RFC 8693 policy under
+   * inbound_grants.token_exchange.issuer_policies.
    * See docs/arch/17-token-exchange-delegation.md ("ID/access-token
    * discrimination") for why and its limits.
    */
@@ -4675,6 +4959,10 @@ export type TokenexchangeTrustedIssuer = {
    */
   jwks_url?: string
   jwt_bearer_grant?: TokenexchangeJwtBearerGrantPolicy
+  /**
+   * Name optionally identifies this trust declaration for canonical issuer_ref references.
+   */
+  name?: string
 }
 
 export type TypesMiddlewareConfig = {
@@ -5206,6 +5494,10 @@ export type PostApiV1BetaPluginsErrors = {
    * Unauthorized (registry refused credentials)
    */
   401: string
+  /**
+   * Forbidden (signature verification or trust check failed)
+   */
+  403: string
   /**
    * Not Found (artifact not present in registry)
    */
