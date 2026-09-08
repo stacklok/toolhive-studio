@@ -11,7 +11,13 @@ vi.mock('electron', () => ({
   },
 }))
 
+const originalPlatform = process.platform
+
 afterEach(() => {
+  Object.defineProperty(process, 'platform', {
+    value: originalPlatform,
+    configurable: true,
+  })
   vi.restoreAllMocks()
   setLoginItemSettings.mockClear()
 })
@@ -31,7 +37,10 @@ describe('Linux desktop-entry generation', () => {
 
 describe('login item settings', () => {
   it('enables auto-launch on macOS without removed hidden settings', () => {
-    vi.spyOn(process, 'platform', 'get').mockReturnValue('darwin')
+    Object.defineProperty(process, 'platform', {
+      value: 'darwin',
+      configurable: true,
+    })
 
     setAutoLaunch(true)
 
@@ -41,7 +50,10 @@ describe('login item settings', () => {
   })
 
   it('uses the hidden launch argument on Windows', () => {
-    vi.spyOn(process, 'platform', 'get').mockReturnValue('win32')
+    Object.defineProperty(process, 'platform', {
+      value: 'win32',
+      configurable: true,
+    })
 
     setAutoLaunch(true)
 
