@@ -36,14 +36,12 @@ export function setAutoLaunch(enabled: boolean) {
   if (process.platform === 'darwin') {
     app.setLoginItemSettings({
       openAtLogin: enabled,
-      openAsHidden: true,
     })
   }
 
   if (process.platform === 'win32') {
     app.setLoginItemSettings({
       openAtLogin: enabled,
-      openAsHidden: true,
       path: process.execPath,
       args: ['--hidden'],
     })
