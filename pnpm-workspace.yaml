@@ -38,7 +38,7 @@ overrides:
   # Electron Forge still declares @electron/rebuild ^3.7.0.
   '@electron/rebuild': ^4.2.0
   # @hey-api/json-schema-ref-parser pins js-yaml 4.2.0 exactly.
-  js-yaml: '>=5.2.3'
+  js-yaml: '>=5.4.1'
   # external-editor declares tmp ^0.0.33, which cannot reach 0.2.7.
   tmp: '>=0.2.7'
   # icon-gen declares sharp ^0.33.4 (0.33.x only).
