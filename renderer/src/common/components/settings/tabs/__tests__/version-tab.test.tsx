@@ -354,6 +354,19 @@ describe('VersionTab', () => {
       expect(screen.queryByText('Updates')).not.toBeInTheDocument()
     })
 
+    it('hides the auto-update controls on Linux', () => {
+      window.electronAPI.isLinux = true
+
+      renderWithProviders(
+        <VersionTab appInfo={mockAppInfo} isLoading={false} error={null} />
+      )
+
+      expect(screen.queryByText('Updates')).not.toBeInTheDocument()
+      expect(
+        screen.queryByRole('switch', { name: /downloads/i })
+      ).not.toBeInTheDocument()
+    })
+
     it('hides the update-available banner when auto-update permission is false', () => {
       import.meta.env.MODE = 'production'
 
