@@ -376,6 +376,14 @@ export type AuthserverOAuth2UpstreamRunConfig = {
    * TokenEndpoint is the URL for the OAuth token endpoint.
    */
   token_endpoint?: string
+  /**
+   * TokenEndpointAuthMethod selects how the client authenticates at the OAuth token
+   * endpoint. When empty and a client secret is configured, client_secret_basic is
+   * used, matching the RFC 7591 default for confidential clients. Set this to
+   * client_secret_post only for providers that require credentials in the request body.
+   * Public clients without a secret use the "none" method.
+   */
+  token_endpoint_auth_method?: string
   token_response_mapping?: AuthserverTokenResponseMappingRunConfig
   userinfo?: AuthserverUserInfoRunConfig
 }
@@ -419,6 +427,7 @@ export type AuthserverOidcUpstreamRunConfig = {
    * Mutually exclusive with ClientSecretEnvVar. Optional for public clients using PKCE.
    */
   client_secret_file?: string
+  dcr_config?: AuthserverDcrUpstreamConfig
   /**
    * InsecureAllowHTTP permits a plain-HTTP issuer URL and HTTP discovery
    * endpoints for this upstream. Only for in-cluster development environments
@@ -1682,6 +1691,14 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    */
   proxy_mode?: 'sse' | 'streamable-http'
   /**
+   * ProxyReadTimeout bounds reading the entire request (headers + body) on the
+   * proxy HTTP server, expressed as a Go duration string (e.g. "30s", "1m").
+   * Empty uses the proxy default (30s). Negative durations and values that fail
+   * time.ParseDuration are rejected at runtime. Applies to all HTTP transports.
+   * String (not time.Duration) keeps the wire format unit-explicit.
+   */
+  proxy_read_timeout?: string
+  /**
    * Publish lists ports to publish to the host in format "hostPort:containerPort"
    */
   publish?: Array<string>
@@ -2769,6 +2786,11 @@ export type PkgApiV1CreateRequest = {
    */
   proxy_port?: number
   /**
+   * Maximum time to read a complete MCP proxy request, expressed as a Go duration string.
+   * Empty or zero uses the default timeout of 30 seconds.
+   */
+  proxy_read_timeout?: string
+  /**
    * Registry is the optional registry name to resolve the server from (e.g. "default").
    */
   registry?: string
@@ -3233,8 +3255,12 @@ export type PkgApiV1PushSkillRequest = {
    */
   identity_token?: string
   /**
-   * Key is the path to a cosign private key used to sign the pushed
-   * artifact
+   * Key is the path to a cosign private key, resolved on the server's
+   * filesystem. Accepted only when the request carries the secret capability
+   * from the owner-protected local server discovery file; other requests are
+   * refused with 403, since honoring one would let an untrusted caller have
+   * the server sign with any key it can read. Use IdentityToken when calling
+   * a remote or manually configured server.
    */
   key?: string
   /**
@@ -3580,6 +3606,11 @@ export type PkgApiV1UpdateRequest = {
    * Port for the HTTP proxy to listen on
    */
   proxy_port?: number
+  /**
+   * Maximum time to read a complete MCP proxy request, expressed as a Go duration string.
+   * Empty or zero uses the default timeout of 30 seconds.
+   */
+  proxy_read_timeout?: string
   runtime_config?: TemplatesRuntimeConfig
   /**
    * Secret parameters to inject
@@ -6820,6 +6851,12 @@ export type PostApiV1BetaSkillsPushData = {
         [key: string]: unknown
       }
     | PkgApiV1PushSkillRequest
+  headers?: {
+    /**
+     * Local discovery capability (required with request.key)
+     */
+    'X-Toolhive-Key-Signing-Capability'?: string
+  }
   path?: never
   query?: never
   url: '/api/v1beta/skills/push'
@@ -6830,6 +6867,10 @@ export type PostApiV1BetaSkillsPushErrors = {
    * Bad Request
    */
   400: string
+  /**
+   * Forbidden (key signing requires the local discovery capability)
+   */
+  403: string
   /**
    * Not Found
    */
