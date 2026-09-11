@@ -786,9 +786,10 @@ export const getApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
   >({ url: '/api/v1beta/registry', ...options })
 
 /**
- * Add a registry
+ * Add a registry (unavailable)
  *
- * Add a new registry
+ * This endpoint is retained for API compatibility, accepts no request body, and always returns 501 Not Implemented.
+ * Custom registries are not currently supported.
  */
 export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
   options?: Options<PostApiV1BetaRegistryData, ThrowOnError>
@@ -797,14 +798,7 @@ export const postApiV1BetaRegistry = <ThrowOnError extends boolean = false>(
     unknown,
     PostApiV1BetaRegistryErrors,
     ThrowOnError
-  >({
-    url: '/api/v1beta/registry',
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...options?.headers,
-    },
-  })
+  >({ url: '/api/v1beta/registry', ...options })
 
 /**
  * Registry login

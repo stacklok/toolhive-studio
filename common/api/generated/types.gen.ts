@@ -378,10 +378,10 @@ export type AuthserverOAuth2UpstreamRunConfig = {
   token_endpoint?: string
   /**
    * TokenEndpointAuthMethod selects how the client authenticates at the OAuth token
-   * endpoint. When empty and a client secret is configured, client_secret_basic is
-   * used, matching the RFC 7591 default for confidential clients. Set this to
-   * client_secret_post only for providers that require credentials in the request body.
-   * Public clients without a secret use the "none" method.
+   * endpoint. When empty, credentials are sent in the request body (the historical
+   * client_secret_post-shaped default). Set this to client_secret_basic explicitly
+   * for providers that require HTTP Basic auth. Public clients without a secret use
+   * the "none" method.
    */
   token_endpoint_auth_method?: string
   token_response_mapping?: AuthserverTokenResponseMappingRunConfig
@@ -3225,16 +3225,25 @@ export type PkgApiV1ProviderCapabilitiesResponse = {
 }
 
 /**
- * Request to push a built plugin artifact. Exactly one of identity_token or no_sign is required.
+ * Request to push a built plugin artifact. Exactly one of key, identity_token, or no_sign is required.
  */
 export type PkgApiV1PushPluginRequest = {
   /**
    * IdentityToken is a short-lived OIDC identity token used for keyless
-   * signing. Plugin signing is keyless-only: there is deliberately no key
-   * field, because ToolHive cannot verify key-signed artifacts at install
-   * time and would publish an uninstallable plugin (#6442)
+   * signing, mutually exclusive with Key
    */
   identity_token?: string
+  /**
+   * Key is the path to a cosign private key, resolved on the server's
+   * filesystem. Accepted only when the request carries the secret capability
+   * from the owner-protected local server discovery file; other requests are
+   * refused with 403, since honoring one would let an untrusted caller have
+   * the server sign with any key it can read. Use IdentityToken when calling
+   * a remote or manually configured server. Consumers installing the result
+   * project-scoped must supply the matching public key on first use
+   * (install's public_key).
+   */
+  key?: string
   /**
    * NoSign pushes without signing
    */
@@ -4149,6 +4158,7 @@ export type RegistryPlugin = {
    * Packages is the list of packages for the plugin.
    */
   packages?: Array<RegistrySkillPackage>
+  provenance?: RegistryProvenance
   repository?: RegistrySkillRepository
   /**
    * Status is the status of the plugin.
@@ -4552,6 +4562,10 @@ export type SecretsSecretParameter = {
 
 /**
  * ACLUserConfig contains ACL user authentication configuration.
+ * A nil value is a valid no-auth configuration: the store connects without
+ * credentials. A populated block whose password resolves to empty is a
+ * misconfiguration (mis-keyed or unsynced secret) and is rejected rather
+ * than silently downgraded to an unauthenticated connection.
  */
 export type StorageAclUserRunConfig = {
   /**
@@ -4575,7 +4589,13 @@ export type StorageRedisRunConfig = {
    */
   addr?: string
   /**
-   * AuthType must be "aclUser" - only ACL user authentication is supported.
+   * AuthType selects the Redis authentication mode. "aclUser" is the only
+   * authenticated mode. Leave it empty, with a nil ACLUserConfig, for a
+   * no-auth connection to a Redis/Valkey instance that has no authentication
+   * configured. Setting AuthType to "aclUser" declares authenticated intent:
+   * the conversion rejects that pairing with a nil ACLUserConfig rather than
+   * downgrading to no-auth. Otherwise presence of ACLUserConfig is what
+   * enables authentication.
    */
   auth_type?: string
   /**
@@ -4802,7 +4822,7 @@ export type TemplatesRuntimeConfig = {
   /**
    * BuilderImage is the full image reference for the builder stage.
    * An empty string signals "use the default for this transport type" during config merging.
-   * Examples: "golang:1.26-alpine", "node:24-alpine", "python:3.14-slim"
+   * Examples: "golang:1.27-alpine", "node:24-alpine", "python:3.14-slim"
    */
   builder_image?: string
   /**
@@ -5734,6 +5754,12 @@ export type PostApiV1BetaPluginsPushData = {
         [key: string]: unknown
       }
     | PkgApiV1PushPluginRequest
+  headers?: {
+    /**
+     * Local discovery capability (required with request.key)
+     */
+    'X-Toolhive-Key-Signing-Capability'?: string
+  }
   path?: never
   query?: never
   url: '/api/v1beta/plugins/push'
@@ -5744,6 +5770,10 @@ export type PostApiV1BetaPluginsPushErrors = {
    * Bad Request
    */
   400: string
+  /**
+   * Forbidden (key signing requires the local discovery capability)
+   */
+  403: string
   /**
    * Not Found
    */
@@ -6017,9 +6047,7 @@ export type GetApiV1BetaRegistryResponse =
   GetApiV1BetaRegistryResponses[keyof GetApiV1BetaRegistryResponses]
 
 export type PostApiV1BetaRegistryData = {
-  body?: {
-    [key: string]: unknown
-  }
+  body?: never
   path?: never
   query?: never
   url: '/api/v1beta/registry'
