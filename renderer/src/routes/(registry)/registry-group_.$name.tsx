@@ -44,6 +44,28 @@ function RegistryGroupDetail() {
     Object.keys(group?.servers ?? {}).length > 0 ||
     Object.keys(group?.remote_servers ?? {}).length > 0
 
+  // Merge local and remote servers into a single list sorted alphabetically by
+  // name (case-insensitive) so servers from all sources are interleaved rather
+  // than clustered per source. See issue #1956.
+  const sortedGroupServers = [
+    ...Object.entries(group?.servers ?? {}).map(
+      ([key, server]: [string, RegistryImageMetadata]) => ({
+        key: `local-${key}`,
+        server,
+      })
+    ),
+    ...Object.entries(group?.remote_servers ?? {}).map(
+      ([key, server]: [string, RegistryRemoteServerMetadata]) => ({
+        key: `remote-${key}`,
+        server,
+      })
+    ),
+  ].sort((a, b) =>
+    (a.server.name ?? '').localeCompare(b.server.name ?? '', undefined, {
+      sensitivity: 'base',
+    })
+  )
+
   return (
     <div className="flex max-h-full w-full flex-1 flex-col">
       <RegistryDetailHeader
@@ -73,26 +95,14 @@ function RegistryGroupDetail() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {Object.entries(group?.servers ?? {}).map(
-                  ([key, srv]: [string, RegistryImageMetadata]) => (
-                    <TableRow key={`local-${key}`}>
-                      <TableCell className="text-foreground">
-                        {srv.name}
-                      </TableCell>
-                      <TableCell>{srv.description}</TableCell>
-                    </TableRow>
-                  )
-                )}
-                {Object.entries(group?.remote_servers ?? {}).map(
-                  ([key, srv]: [string, RegistryRemoteServerMetadata]) => (
-                    <TableRow key={`remote-${key}`}>
-                      <TableCell className="text-foreground">
-                        {srv.name}
-                      </TableCell>
-                      <TableCell>{srv.description}</TableCell>
-                    </TableRow>
-                  )
-                )}
+                {sortedGroupServers.map(({ key, server }) => (
+                  <TableRow key={key}>
+                    <TableCell className="text-foreground">
+                      {server.name}
+                    </TableCell>
+                    <TableCell>{server.description}</TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </div>
