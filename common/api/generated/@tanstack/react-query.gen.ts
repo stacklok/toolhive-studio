@@ -1094,9 +1094,10 @@ export const getApiV1BetaRegistryOptions = (
   })
 
 /**
- * Add a registry
+ * Add a registry (unavailable)
  *
- * Add a new registry
+ * This endpoint is retained for API compatibility, accepts no request body, and always returns 501 Not Implemented.
+ * Custom registries are not currently supported.
  */
 export const postApiV1BetaRegistryMutation = (
   options?: Partial<Options<PostApiV1BetaRegistryData>>
