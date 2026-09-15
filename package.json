@@ -83,7 +83,7 @@
     "icon-gen": "^5.0.0",
     "jsdom": "^30.0.1",
     "json-schema-faker": "^0.6.3",
-    "knip": "^6.34.0",
+    "knip": "^6.35.1",
     "lint-staged": "^17.5.1",
     "memfs": "^4.75.0",
     "msw": "^2.15.0",
