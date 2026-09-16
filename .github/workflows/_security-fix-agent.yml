@@ -18,7 +18,7 @@ jobs:
       issues: write
       id-token: write
     env:
-      ANTHROPIC_BASE_URL: https://llm-gateway.stacklok.dev/anthropic
+      ANTHROPIC_BASE_URL: ${{ vars.ANTHROPIC_BASE_URL }}
     steps:
       - name: Generate GitHub App token
         id: app-token
