@@ -19,22 +19,22 @@ importers:
     dependencies:
       '@ai-sdk/anthropic':
         specifier: ^4.0.53
-        version: 4.0.53(zod@4.5.4)
+        version: 4.0.53(zod@4.6.5)
       '@ai-sdk/google':
         specifier: ^4.0.69
-        version: 4.0.69(zod@4.5.4)
+        version: 4.0.69(zod@4.6.5)
       '@ai-sdk/openai':
         specifier: ^4.0.66
-        version: 4.0.66(zod@4.5.4)
+        version: 4.0.66(zod@4.6.5)
       '@ai-sdk/openai-compatible':
         specifier: ^3.0.48
-        version: 3.0.48(zod@4.5.4)
+        version: 3.0.48(zod@4.6.5)
       '@ai-sdk/react':
         specifier: ^4.0.102
-        version: 4.0.102(react@19.3.0)(zod@4.5.4)
+        version: 4.0.102(react@19.3.0)(zod@4.6.5)
       '@ai-sdk/xai':
         specifier: ^4.0.58
-        version: 4.0.58(zod@4.5.4)
+        version: 4.0.58(zod@4.6.5)
       '@fontsource-variable/inter':
         specifier: ^5.3.0
         version: 5.3.0
@@ -52,10 +52,10 @@ importers:
         version: 2.0.0
       '@modelcontextprotocol/ext-apps':
         specifier: ^1.7.5
-        version: 1.7.5(@modelcontextprotocol/sdk@1.30.0(supports-color@8.1.1)(zod@4.5.4))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(zod@4.5.4)
+        version: 1.7.5(@modelcontextprotocol/sdk@1.30.0(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(zod@4.6.5)
       '@openrouter/ai-sdk-provider':
         specifier: ^3.0.0
-        version: 3.0.0(ai@7.0.99(zod@4.5.4))(zod@4.5.4)
+        version: 3.0.0(ai@7.0.99(zod@4.6.5))(zod@4.6.5)
       '@radix-ui/react-checkbox':
         specifier: ^1.3.11
         version: 1.3.11(@types/react-dom@19.3.0(@types/react@19.3.0))(@types/react@19.3.0)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
@@ -136,10 +136,10 @@ importers:
         version: 3.14.10(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       ai:
         specifier: ^7.0.99
-        version: 7.0.99(zod@4.5.4)
+        version: 7.0.99(zod@4.6.5)
       ai-sdk-ollama:
         specifier: ^4.3.0
-        version: 4.3.0(ai@7.0.99(zod@4.5.4))(zod@4.5.4)
+        version: 4.3.0(ai@7.0.99(zod@4.6.5))(zod@4.6.5)
       better-sqlite3:
         specifier: ^13.0.3
         version: 13.0.3
@@ -207,8 +207,8 @@ importers:
         specifier: ^3.3.0
         version: 3.3.0
       zod:
-        specifier: 4.5.4
-        version: 4.5.4
+        specifier: 4.6.5
+        version: 4.6.5
     devDependencies:
       '@electron-forge/cli':
         specifier: ^7.11.2
@@ -7988,8 +7988,8 @@ packages:
   zod@3.22.4:
     resolution: {integrity: sha512-iC+8Io04lddc+mVqQ9AZ7OQ2MrUKGN+oIQyq1vemgt46jwCwLfhq7/pwnBnNXXXZb8VTVLKwp9EDkx+ryxIWmg==}
 
-  zod@4.5.4:
-    resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
+  zod@4.6.5:
+    resolution: {integrity: sha512-v5l/aFXZQeai4awLbOpSoHecE9UiMrnfx75tEXLjNonXVARxQ5mOeipTjROUchszUNCqnE+hqAMujRsRHsut2Q==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
@@ -7998,62 +7998,62 @@ snapshots:
 
   '@adobe/css-tools@4.4.4': {}
 
-  '@ai-sdk/anthropic@4.0.53(zod@4.5.4)':
+  '@ai-sdk/anthropic@4.0.53(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.5.4)
-      zod: 4.5.4
+      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      zod: 4.6.5
 
-  '@ai-sdk/gateway@4.0.80(zod@4.5.4)':
+  '@ai-sdk/gateway@4.0.80(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.5.4)
+      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
       '@vercel/oidc': 3.2.0
-      zod: 4.5.4
+      zod: 4.6.5
 
-  '@ai-sdk/google@4.0.69(zod@4.5.4)':
+  '@ai-sdk/google@4.0.69(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.5.4)
-      zod: 4.5.4
+      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      zod: 4.6.5
 
-  '@ai-sdk/mcp@2.0.49(zod@4.5.4)':
+  '@ai-sdk/mcp@2.0.49(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.5.4)
+      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
       cross-spawn: 7.0.6
       pkce-challenge: 5.0.1
-      zod: 4.5.4
+      zod: 4.6.5
 
-  '@ai-sdk/openai-compatible@3.0.48(zod@4.5.4)':
+  '@ai-sdk/openai-compatible@3.0.48(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.5.4)
-      zod: 4.5.4
+      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      zod: 4.6.5
 
-  '@ai-sdk/openai@4.0.66(zod@4.5.4)':
+  '@ai-sdk/openai@4.0.66(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.5.4)
-      zod: 4.5.4
+      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      zod: 4.6.5
 
-  '@ai-sdk/provider-utils@5.0.36(zod@4.5.4)':
+  '@ai-sdk/provider-utils@5.0.36(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.10
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.0.8
       undici: 7.29.0
-      zod: 4.5.4
+      zod: 4.6.5
 
-  '@ai-sdk/provider-utils@5.0.40(zod@4.5.4)':
+  '@ai-sdk/provider-utils@5.0.40(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.14
       '@standard-schema/spec': 1.1.0
       '@workflow/serde': 4.1.0
       eventsource-parser: 3.0.8
       undici: 7.29.0
-      zod: 4.5.4
+      zod: 4.6.5
 
   '@ai-sdk/provider@4.0.10':
     dependencies:
@@ -8063,23 +8063,23 @@ snapshots:
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/react@4.0.102(react@19.3.0)(zod@4.5.4)':
+  '@ai-sdk/react@4.0.102(react@19.3.0)(zod@4.6.5)':
     dependencies:
-      '@ai-sdk/mcp': 2.0.49(zod@4.5.4)
+      '@ai-sdk/mcp': 2.0.49(zod@4.6.5)
       '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.5.4)
-      ai: 7.0.99(zod@4.5.4)
+      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      ai: 7.0.99(zod@4.6.5)
       react: 19.3.0
       swr: 2.4.1(react@19.3.0)
       throttleit: 2.1.0
     transitivePeerDependencies:
       - zod
 
-  '@ai-sdk/xai@4.0.58(zod@4.5.4)':
+  '@ai-sdk/xai@4.0.58(zod@4.6.5)':
     dependencies:
       '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.5.4)
-      zod: 4.5.4
+      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      zod: 4.6.5
 
   '@antfu/install-pkg@1.1.0':
     dependencies:
@@ -9794,22 +9794,22 @@ snapshots:
       eventsource-parser: 3.0.8
       jose: 6.2.3
       pkce-challenge: 5.0.1
-      zod: 4.5.4
+      zod: 4.6.5
 
   '@modelcontextprotocol/core@2.0.0':
     dependencies:
-      zod: 4.5.4
+      zod: 4.6.5
 
-  '@modelcontextprotocol/ext-apps@1.7.5(@modelcontextprotocol/sdk@1.30.0(supports-color@8.1.1)(zod@4.5.4))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(zod@4.5.4)':
+  '@modelcontextprotocol/ext-apps@1.7.5(@modelcontextprotocol/sdk@1.30.0(supports-color@8.1.1)(zod@4.6.5))(react-dom@19.3.0(react@19.3.0))(react@19.3.0)(zod@4.6.5)':
     dependencies:
-      '@modelcontextprotocol/sdk': 1.30.0(supports-color@8.1.1)(zod@4.5.4)
+      '@modelcontextprotocol/sdk': 1.30.0(supports-color@8.1.1)(zod@4.6.5)
       '@standard-schema/spec': 1.1.0
-      zod: 4.5.4
+      zod: 4.6.5
     optionalDependencies:
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
 
-  '@modelcontextprotocol/sdk@1.30.0(supports-color@8.1.1)(zod@4.5.4)':
+  '@modelcontextprotocol/sdk@1.30.0(supports-color@8.1.1)(zod@4.6.5)':
     dependencies:
       '@hono/node-server': 2.0.11(hono@4.13.5)
       ajv: 8.20.0
@@ -9826,15 +9826,15 @@ snapshots:
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
-      zod: 4.5.4
-      zod-to-json-schema: 3.25.2(zod@4.5.4)
+      zod: 4.6.5
+      zod-to-json-schema: 3.25.2(zod@4.6.5)
     transitivePeerDependencies:
       - supports-color
 
   '@modelcontextprotocol/server@2.0.0':
     dependencies:
       '@modelcontextprotocol/core': 2.0.0
-      zod: 4.5.4
+      zod: 4.6.5
 
   '@mswjs/interceptors@0.41.8':
     dependencies:
@@ -9951,10 +9951,10 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
-  '@openrouter/ai-sdk-provider@3.0.0(ai@7.0.99(zod@4.5.4))(zod@4.5.4)':
+  '@openrouter/ai-sdk-provider@3.0.0(ai@7.0.99(zod@4.6.5))(zod@4.6.5)':
     dependencies:
-      ai: 7.0.99(zod@4.5.4)
-      zod: 4.5.4
+      ai: 7.0.99(zod@4.6.5)
+      zod: 4.6.5
 
   '@opentelemetry/api-logs@0.220.0':
     dependencies:
@@ -11290,7 +11290,7 @@ snapshots:
       jiti: 2.7.0
       magic-string: 0.30.21
       prettier: 3.9.6
-      zod: 4.5.4
+      zod: 4.6.5
     transitivePeerDependencies:
       - supports-color
 
@@ -11304,7 +11304,7 @@ snapshots:
       '@tanstack/router-utils': 1.162.2(supports-color@8.1.1)
       chokidar: 5.0.0
       unplugin: 3.0.0
-      zod: 4.5.4
+      zod: 4.6.5
     optionalDependencies:
       '@tanstack/react-router': 1.170.32(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       vite: 8.3.0(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(terser@5.47.1)(tsx@4.23.13)(yaml@2.9.0)
@@ -11954,22 +11954,22 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  ai-sdk-ollama@4.3.0(ai@7.0.99(zod@4.5.4))(zod@4.5.4):
+  ai-sdk-ollama@4.3.0(ai@7.0.99(zod@4.6.5))(zod@4.6.5):
     dependencies:
       '@ai-sdk/provider': 4.0.10
-      '@ai-sdk/provider-utils': 5.0.36(zod@4.5.4)
-      ai: 7.0.99(zod@4.5.4)
+      '@ai-sdk/provider-utils': 5.0.36(zod@4.6.5)
+      ai: 7.0.99(zod@4.6.5)
       jsonrepair: 3.15.0
       ollama: 0.6.3
     transitivePeerDependencies:
       - zod
 
-  ai@7.0.99(zod@4.5.4):
+  ai@7.0.99(zod@4.6.5):
     dependencies:
-      '@ai-sdk/gateway': 4.0.80(zod@4.5.4)
+      '@ai-sdk/gateway': 4.0.80(zod@4.6.5)
       '@ai-sdk/provider': 4.0.14
-      '@ai-sdk/provider-utils': 5.0.40(zod@4.5.4)
-      zod: 4.5.4
+      '@ai-sdk/provider-utils': 5.0.40(zod@4.6.5)
+      zod: 4.6.5
 
   ajv-formats@2.1.1(ajv@8.20.0):
     optionalDependencies:
@@ -13023,8 +13023,8 @@ snapshots:
       '@babel/parser': 7.29.3
       eslint: 10.10.0(jiti@2.7.0)(supports-color@8.1.1)
       hermes-parser: 0.25.1
-      zod: 4.5.4
-      zod-validation-error: 4.0.2(zod@4.5.4)
+      zod: 4.6.5
+      zod-validation-error: 4.0.2(zod@4.6.5)
     transitivePeerDependencies:
       - supports-color
 
@@ -14092,7 +14092,7 @@ snapshots:
       tinyglobby: 0.2.17
       unbash: 4.0.10
       yaml: 2.9.0
-      zod: 4.5.4
+      zod: 4.6.5
 
   layout-base@1.0.2: {}
 
@@ -16614,16 +16614,16 @@ snapshots:
 
   yoctocolors-cjs@2.1.3: {}
 
-  zod-to-json-schema@3.25.2(zod@4.5.4):
+  zod-to-json-schema@3.25.2(zod@4.6.5):
     dependencies:
-      zod: 4.5.4
+      zod: 4.6.5
 
-  zod-validation-error@4.0.2(zod@4.5.4):
+  zod-validation-error@4.0.2(zod@4.6.5):
     dependencies:
-      zod: 4.5.4
+      zod: 4.6.5
 
   zod@3.22.4: {}
 
-  zod@4.5.4: {}
+  zod@4.6.5: {}
 
   zwitch@2.0.4: {}
