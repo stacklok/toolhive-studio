@@ -132,8 +132,8 @@ importers:
         specifier: ^1.167.1
         version: 1.167.1(@tanstack/react-router@1.170.32(react-dom@19.3.0(react@19.3.0))(react@19.3.0))(@tanstack/router-core@1.171.27)(csstype@3.2.3)(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       '@tanstack/react-virtual':
-        specifier: ^3.14.10
-        version: 3.14.10(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
+        specifier: ^3.14.13
+        version: 3.14.13(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       ai:
         specifier: ^7.0.99
         version: 7.0.99(zod@4.6.5)
@@ -3219,8 +3219,8 @@ packages:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@tanstack/react-virtual@3.14.10':
-    resolution: {integrity: sha512-SRyoUbdFMRHuYXMijV5H4ZarQWpXkj3iANq8OFre+pybeVap8ZJjZ3Nz9bVjx4d8PfobVUQUdKyyyHYk3E+djw==}
+  '@tanstack/react-virtual@3.14.13':
+    resolution: {integrity: sha512-JbDTAwtzZ99aOeCrAfW5EsE5KSq5RWh6Af2dtFwyLIIk48Ja7vm6n4axu/43T3vfjFnEGJalxJ1wyYjSQD6bSg==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -3271,8 +3271,8 @@ packages:
   '@tanstack/store@0.9.3':
     resolution: {integrity: sha512-8reSzl/qGWGGVKhBoxXPMWzATSbZLZFWhwBAFO9NAyp0TxzfBP0mIrGb8CP8KrQTmvzXlR/vFPPUrHTLBGyFyw==}
 
-  '@tanstack/virtual-core@3.17.8':
-    resolution: {integrity: sha512-BfEvehNpOT75r5Ksc5xW6NZuXujTfb7nlSEyVu4XHG3gdxNg1KqXruWbDewXOUaUYIo4oRbSfkjIajz4MAT8tA==}
+  '@tanstack/virtual-core@3.17.11':
+    resolution: {integrity: sha512-+ILjvtHup6Y2hzQ6YzwMgX1Q+oQpxEGOXCEsCNaPoIP0VxMbizIBTmYTDtkerkIQS8/CbP1BRuyt8V/8BCsy1g==}
 
   '@tanstack/virtual-file-routes@1.162.0':
     resolution: {integrity: sha512-uhOeFyxLcU41HzvrxsGpiWdcMbScY1EDgbZ5K7DVRMYInbLYWAC0EA/kx9wXAoSM8q82bUG2hRl8+EAjE6XAbA==}
@@ -3477,9 +3477,6 @@ packages:
 
   '@types/node@22.19.18':
     resolution: {integrity: sha512-9v00a+dn2yWVsYDEunWC4g/TcRKVq3r8N5FuZp7u0SGrPvdN9c2yXI9bBuf5Fl0hNCb+QTIePTn5pJs2pwBOQQ==}
-
-  '@types/node@24.13.3':
-    resolution: {integrity: sha512-Dh8vAsV36ig5wa9OX4pXvMc9D3Veibfw2wix0CUwYODLD8nkj9UsLjASr49nPg+2eKzxhBV+v7L8pXvT4e639Q==}
 
   '@types/node@24.13.4':
     resolution: {integrity: sha512-YJ7EqCstVTzIr0fMr7qul/977en+pQHrfmuKIo6Zr9i75Be21dr3MovcfvGtyvi2HAUrRerWps5sMO9I7WaxDw==}
@@ -11260,9 +11257,9 @@ snapshots:
       react-dom: 19.3.0(react@19.3.0)
       use-sync-external-store: 1.6.0(react@19.3.0)
 
-  '@tanstack/react-virtual@3.14.10(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
+  '@tanstack/react-virtual@3.14.13(react-dom@19.3.0(react@19.3.0))(react@19.3.0)':
     dependencies:
-      '@tanstack/virtual-core': 3.17.8
+      '@tanstack/virtual-core': 3.17.11
       react: 19.3.0
       react-dom: 19.3.0(react@19.3.0)
 
@@ -11327,7 +11324,7 @@ snapshots:
 
   '@tanstack/store@0.9.3': {}
 
-  '@tanstack/virtual-core@3.17.8': {}
+  '@tanstack/virtual-core@3.17.11': {}
 
   '@tanstack/virtual-file-routes@1.162.0': {}
 
@@ -11571,10 +11568,6 @@ snapshots:
   '@types/node@22.19.18':
     dependencies:
       undici-types: 6.21.0
-
-  '@types/node@24.13.3':
-    dependencies:
-      undici-types: 7.18.2
 
   '@types/node@24.13.4':
     dependencies:
@@ -13988,7 +13981,7 @@ snapshots:
 
   jest-worker@27.5.1:
     dependencies:
-      '@types/node': 24.13.3
+      '@types/node': 24.13.4
       merge-stream: 2.0.0
       supports-color: 8.1.1
 
