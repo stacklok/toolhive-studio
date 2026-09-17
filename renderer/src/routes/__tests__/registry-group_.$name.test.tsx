@@ -266,6 +266,70 @@ describe('Registry Group Detail Route', () => {
     expect(screen.getByText('HuggingFace model inference')).toBeVisible()
   })
 
+  it('sorts servers alphabetically across local and remote sources (#1956)', async () => {
+    mockUseParams.mockReturnValue({ name: 'multi-source' })
+
+    // Two sources (local `servers` and remote `remote_servers`) with names
+    // deliberately interleaved and out of order. The rendered table must be a
+    // single alphabetical list across both sources, not clustered per source.
+    mockedGetApiV1BetaRegistryByName.override(
+      () =>
+        ({
+          registry: {
+            servers: {},
+            groups: [
+              {
+                name: 'multi-source',
+                description: 'Servers aggregated from multiple sources',
+                servers: {
+                  zebra: {
+                    name: 'zebra',
+                    description: 'Local server zebra',
+                    image: 'ghcr.io/example/zebra:latest',
+                  },
+                  delta: {
+                    name: 'delta',
+                    description: 'Local server delta',
+                    image: 'ghcr.io/example/delta:latest',
+                  },
+                },
+                remote_servers: {
+                  alpha: {
+                    name: 'alpha',
+                    description: 'Remote server alpha',
+                    url: 'https://example.com/alpha',
+                  },
+                  mango: {
+                    name: 'mango',
+                    description: 'Remote server mango',
+                    url: 'https://example.com/mango',
+                  },
+                },
+              },
+            ],
+          },
+        }) as unknown as V1GetRegistryResponse
+    )
+
+    const router = createTestRouter(WrapperComponent)
+    renderRoute(router)
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole('heading', { name: 'multi-source' })
+      ).toBeVisible()
+    })
+
+    const table = screen.getByRole('table')
+    const bodyRows = within(table).getAllByRole('row').slice(1) // skip header
+    const renderedNames = bodyRows.map((row) =>
+      within(row).getAllByRole('cell')[0]?.textContent?.trim()
+    )
+
+    // Fully alphabetical across both sources, NOT local-then-remote clusters.
+    expect(renderedNames).toEqual(['alpha', 'delta', 'mango', 'zebra'])
+  })
+
   it('opens install wizard when clicking Install group button', async () => {
     const rec = recordRequests()
 
