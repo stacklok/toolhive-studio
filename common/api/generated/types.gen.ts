@@ -319,6 +319,14 @@ export type AuthserverOAuth2UpstreamRunConfig = {
     [key: string]: string
   }
   /**
+   * AdditionalTokenParams are extra form-body parameters to include in
+   * token requests (authorization code exchange and refresh). Useful for
+   * providers that enforce RFC 8707 resource indicators on token requests.
+   */
+  additional_token_params?: {
+    [key: string]: string
+  }
+  /**
    * AllowPrivateIPs permits the upstream provider's HTTP client to connect to
    * private IP ranges (RFC-1918, link-local). When DCRConfig is set, this
    * also gates the DCR discovery and registration calls made on this
@@ -399,6 +407,14 @@ export type AuthserverOidcUpstreamRunConfig = {
    * Google's access_type=offline.
    */
   additional_authorization_params?: {
+    [key: string]: string
+  }
+  /**
+   * AdditionalTokenParams are extra form-body parameters to include in
+   * token requests (authorization code exchange and refresh). Useful for
+   * providers that enforce RFC 8707 resource indicators on token requests.
+   */
+  additional_token_params?: {
     [key: string]: string
   }
   /**
@@ -548,6 +564,17 @@ export type AuthserverRunConfig = {
    * If empty, defaults to 15 minutes.
    */
   delegation_token_lifespan?: string
+  /**
+   * DeviceFlowEnabled enables the RFC 8628 OAuth 2.0 Device Authorization
+   * Grant: POST /oauth/device_authorization is mounted and
+   * urn:ietf:params:oauth:grant-type:device_code is registered at the
+   * token endpoint and advertised in discovery. The minimum polling
+   * interval (RFC 8628 Section 3.5) is fixed at
+   * oauthserver.DefaultDeviceCodeInterval; this is a deliberate
+   * simplification to keep this config surface minimal — a future
+   * increment may add an override.
+   */
+  device_flow_enabled?: boolean
   /**
    * DisableUpstreamTokenInjection prevents the upstream swap middleware from being added.
    * When true, the embedded auth server handles OAuth flows for clients, but instead of
@@ -2156,8 +2183,8 @@ export type GithubComStacklokToolhivePkgSkillsUpgradeOutcome = {
    */
   name?: string
   /**
-   * NewDigest is the digest the source currently resolves to. Equal to
-   * OldDigest when Status is UpgradeStatusUpToDate.
+   * NewDigest is the digest the source currently resolves to. It may equal
+   * OldDigest when only the resolved reference or trust material changed.
    */
   new_digest?: string
   /**
@@ -2175,6 +2202,11 @@ export type GithubComStacklokToolhivePkgSkillsUpgradeOutcome = {
   old_digest?: string
   reason?: GithubComStacklokToolhivePkgSkillsFailureReason
   status?: GithubComStacklokToolhivePkgSkillsUpgradeStatus
+  /**
+   * TrustAnchorChanged reports that the operation selected a different
+   * verified provenance or unsigned trust state than the lock recorded.
+   */
+  trust_anchor_changed?: boolean
 }
 
 export type GithubComStacklokToolhivePkgSkillsUpgradeResult = {
@@ -2190,6 +2222,7 @@ export type GithubComStacklokToolhivePkgSkillsUpgradeResult = {
 export type GithubComStacklokToolhivePkgSkillsUpgradeStatus =
   | 'upgraded'
   | 'up-to-date'
+  | 'trust-updated'
   | 'not-upgradable'
   | 'ref-change-blocked'
   | 'signer-change-blocked'
@@ -3504,6 +3537,10 @@ export type PkgApiV1SyncPluginsRequest = {
    * Prune removes project-scoped plugins installed but not present in the lock file
    */
   prune?: boolean
+  /**
+   * PublicKey supplies the cosign public key for key-signed adoption.
+   */
+  public_key?: string
 }
 
 /**
@@ -3536,6 +3573,10 @@ export type PkgApiV1SyncSkillsRequest = {
    * Prune removes project-scoped skills installed but not present in the lock file
    */
   prune?: boolean
+  /**
+   * PublicKey supplies the cosign public key for key-signed adoption.
+   */
+  public_key?: string
 }
 
 /**
@@ -3734,6 +3775,10 @@ export type PkgApiV1UpgradePluginsRequest = {
    * ProjectRoot is the project root path whose lock file should be upgraded
    */
   project_root?: string
+  /**
+   * PublicKey proposes a cosign public key as the replacement trust anchor.
+   */
+  public_key?: string
 }
 
 /**
@@ -3774,7 +3819,7 @@ export type PkgApiV1UpgradeSkillsRequest = {
    */
   clients?: Array<string>
   /**
-   * FailOnChanges exits with an error when any mutable source would upgrade
+   * FailOnChanges reports content and trust changes without applying them
    */
   fail_on_changes?: boolean
   /**
@@ -3789,6 +3834,10 @@ export type PkgApiV1UpgradeSkillsRequest = {
    * ProjectRoot is the project root path whose lock file should be upgraded
    */
   project_root?: string
+  /**
+   * PublicKey proposes a cosign public key as the replacement trust anchor.
+   */
+  public_key?: string
 }
 
 /**
