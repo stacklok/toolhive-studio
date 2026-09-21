@@ -69,7 +69,7 @@ jobs:
         id: phase1
         if: steps.existing.outputs.skip != 'true'
         continue-on-error: true
-        uses: anthropics/claude-code-action@56cf60fde42f7b19c3abfd5c9c48b69a1288461f # v1.0.222
+        uses: anthropics/claude-code-action@a4f54ef2c58884867281bd8e2f8d63352ad019a9 # v1.0.229
         with:
           anthropic_api_key: ${{ secrets.STACKLOK_GATEWAY_KEY_SECURITY_FIX }}
           prompt: |
@@ -88,7 +88,7 @@ jobs:
         id: phase2
         if: steps.existing.outputs.skip != 'true' && steps.phase1.outcome == 'success'
         continue-on-error: true
-        uses: anthropics/claude-code-action@56cf60fde42f7b19c3abfd5c9c48b69a1288461f # v1.0.222
+        uses: anthropics/claude-code-action@a4f54ef2c58884867281bd8e2f8d63352ad019a9 # v1.0.229
         with:
           anthropic_api_key: ${{ secrets.STACKLOK_GATEWAY_KEY_SECURITY_FIX }}
           prompt: |
