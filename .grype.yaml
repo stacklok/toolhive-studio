@@ -34,6 +34,23 @@ ignore:
       export shape is incompatible with this consumer. The vulnerable expansion
       input is limited to developer-controlled packaging globs and is not
       reachable in the packaged application.
+  - vulnerability: GHSA-w3rx-r6r6-pgpr
+    package:
+      name: image-size
+      version: 0.7.5
+      type: npm
+    reason: >-
+      image-size 0.7.5 is a build-only dependency of @electron-forge/maker-dmg
+      through electron-installer-dmg and appdmg, used solely to measure the DMG
+      window artwork during macOS packaging. appdmg is an optional darwin-only
+      package that is never installed on Linux/Windows and is never shipped in
+      the packaged application. GHSA-w3rx-r6r6-pgpr is an infinite-loop denial
+      of service in the ICNS parser, which here only ever parses
+      icons/icon.icns and assets/dmg-installer-background.png, two static
+      assets committed to this repository. The fix requires image-size 2.0.3,
+      whose rewritten API (named export, Buffer-only synchronous entry point)
+      is incompatible with appdmg 0.6.6, an unmaintained package with no
+      further releases.
 
 exclude:
   - '**/node_modules/**'
