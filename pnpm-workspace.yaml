@@ -42,7 +42,7 @@ overrides:
   # external-editor declares tmp ^0.0.33, which cannot reach 0.2.7.
   tmp: '>=0.2.7'
   # icon-gen declares sharp ^0.33.4 (0.33.x only).
-  'icon-gen>sharp': 0.35.4
+  'icon-gen>sharp': 0.35.5
 
 patchedDependencies:
   electron-installer-redhat@3.4.0: patches/electron-installer-redhat@3.4.0.patch
