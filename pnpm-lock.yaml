@@ -6,7 +6,7 @@ settings:
 
 overrides:
   '@electron/rebuild': ^4.2.0
-  js-yaml: '>=5.4.1'
+  js-yaml: '>=5.4.3'
   tmp: '>=0.2.7'
   icon-gen>sharp: 0.35.5
 
