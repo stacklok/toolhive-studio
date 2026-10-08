@@ -373,7 +373,12 @@ export type AuthserverOAuth2UpstreamRunConfig = {
   insecure_allow_http?: boolean
   /**
    * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
-   * When not specified, defaults to `{issuer}/oauth/callback`.
+   * For a DCR upstream (dcr_config set) an empty value is resolved to
+   * `{issuer}/oauth/callback`; a pre-provisioned client (client_id set) must
+   * specify it. Its hostname must match the browser-facing authorize URL
+   * (issuer, or authorization_endpoint_base_url when set): /oauth/callback is
+   * bound to the browser that started the login by a host-only cookie, so a
+   * different host rejects every browser login (Config.Validate warns).
    */
   redirect_uri?: string
   /**
@@ -458,7 +463,12 @@ export type AuthserverOidcUpstreamRunConfig = {
   issuer_url?: string
   /**
    * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
-   * When not specified, defaults to `{issuer}/oauth/callback`.
+   * For a DCR upstream (dcr_config set) an empty value is resolved to
+   * `{issuer}/oauth/callback`; a pre-provisioned client (client_id set) must
+   * specify it. Its hostname must match the browser-facing authorize URL
+   * (issuer, or authorization_endpoint_base_url when set): /oauth/callback is
+   * bound to the browser that started the login by a host-only cookie, so a
+   * different host rejects every browser login (Config.Validate warns).
    */
   redirect_uri?: string
   /**
