@@ -55,7 +55,9 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
     useAutoUpdateStatus()
   const { mutateAsync: setAutoUpdate, isPending: isSetAutoUpdatePending } =
     useSetAutoUpdate()
+  const isLinux = window.electronAPI?.isLinux
   const canShowAutoUpdate = canShow(PERMISSION_KEYS.AUTO_UPDATE)
+  const canShowAutoUpdateControls = canShowAutoUpdate && !isLinux
   const canShowUpdateAlert =
     canShowAutoUpdate && appInfo?.isNewVersionAvailable && isProduction
 
@@ -82,7 +84,6 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
   }
 
   const handleManualUpdate = () => {
-    const isLinux = window.electronAPI?.isLinux
     if (isLinux) {
       window.open(GITHUB_RELEASES_URL)
 
@@ -144,7 +145,7 @@ export function VersionTab({ appInfo, isLoading, error }: VersionTabProps) {
         <Separator />
       </div>
 
-      {canShowAutoUpdate && (
+      {canShowAutoUpdateControls && (
         <>
           <SettingsSectionTitle>Updates</SettingsSectionTitle>
           <div className="flex flex-col gap-3 py-1">
