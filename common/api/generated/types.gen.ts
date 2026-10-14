@@ -695,6 +695,7 @@ export type AuthserverRunConfig = {
    * visible from the config shape alone.
    */
   trusted_issuers?: Array<TokenexchangeTrustedIssuer>
+  upstream_filter?: UpstreamfilterGroupBasedFilterConfig
   /**
    * Upstreams configures connections to upstream Identity Providers for
    * interactive authorization. It may be empty only when DelegateClients or a
@@ -1588,9 +1589,10 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
   additional_middleware_configs?: Array<TypesMiddlewareConfig>
   /**
    * AllowDockerGateway permits outbound connections to Docker gateway addresses
-   * (host.docker.internal, gateway.docker.internal, 172.17.0.1). These are
+   * (all daemon bridge gateways, host.docker.internal, and gateway.docker.internal). These are
    * blocked by default in the egress proxy even when InsecureAllowAll is set.
    * Only applicable to Docker deployments with network isolation enabled.
+   * Gateways are snapshotted at deployment; redeploy to include bridges created later.
    * Gateway access is port-independent: it ignores the permission profile's
    * allowed ports, so once enabled the gateway is reachable on any port.
    */
@@ -1879,6 +1881,7 @@ export type GithubComStacklokToolhivePkgRunnerSessionRedisConfig = {
    * KeyPrefix is an optional prefix applied to all Redis keys used by ToolHive.
    */
   key_prefix?: string
+  tls?: RedisconfigTlsConfig
 }
 
 export type GithubComStacklokToolhivePkgRunnerToolOverride = {
@@ -2767,9 +2770,10 @@ export type PkgApiV1CreateGroupResponse = {
 export type PkgApiV1CreateRequest = {
   /**
    * Whether to permit outbound connections to Docker gateway addresses
-   * (host.docker.internal, gateway.docker.internal, 172.17.0.1). These are
+   * (all daemon bridge gateways, host.docker.internal, and gateway.docker.internal). These are
    * blocked by default in the egress proxy even when network isolation is on.
    * Only applicable to Docker deployments with network isolation enabled.
+   * Gateways are snapshotted at deployment; redeploy to include bridges created later.
    */
   allow_docker_gateway?: boolean
   /**
@@ -3609,9 +3613,10 @@ export type PkgApiV1ToolOverride = {
 export type PkgApiV1UpdateRequest = {
   /**
    * Whether to permit outbound connections to Docker gateway addresses
-   * (host.docker.internal, gateway.docker.internal, 172.17.0.1). These are
+   * (all daemon bridge gateways, host.docker.internal, and gateway.docker.internal). These are
    * blocked by default in the egress proxy even when network isolation is on.
    * Only applicable to Docker deployments with network isolation enabled.
+   * Gateways are snapshotted at deployment; redeploy to include bridges created later.
    */
   allow_docker_gateway?: boolean
   /**
@@ -3903,6 +3908,24 @@ export type PkgApiV1WorkloadStatusResponse = {
     | 'unauthenticated'
     | 'auth_retrying'
     | 'policy_stopped'
+}
+
+/**
+ * TLS enables TLS for session storage and rate limiting. An empty
+ * configuration verifies the Redis server using system roots.
+ */
+export type RedisconfigTlsConfig = {
+  /**
+   * CACertFile is the path to a PEM-encoded CA bundle. When configured, this
+   * bundle replaces the system roots used to verify the Redis server.
+   * +optional
+   */
+  caCertFile?: string
+  /**
+   * InsecureSkipVerify skips server certificate and hostname verification.
+   * +optional
+   */
+  insecureSkipVerify?: boolean
 }
 
 export type RegistryEnvVar = {
@@ -5114,6 +5137,70 @@ export type TypesToolRateLimitConfig = {
   name?: string
   perUser?: TypesRateLimitBucket
   shared?: TypesRateLimitBucket
+}
+
+/**
+ * UpstreamFilter configures an optional group-based filter that narrows the
+ * multi-upstream authorization chain per-request based on the first
+ * upstream's resolved identity. When nil, every request walks the full
+ * upstream chain in configured order (preserving behavior from before the
+ * filter hook existed).
+ *
+ * The filter is applied exactly once per authorization, on the first leg's
+ * callback. The mandatory first upstream (Upstreams[0]) is never filtered
+ * out. See pkg/authserver/upstreamfilter for the configuration schema and
+ * pkg/authserver/server/handlers for the runtime contract.
+ */
+export type UpstreamfilterGroupBasedFilterConfig = {
+  /**
+   * Claim is the exact, top-level JWT/OIDC claim name to read group
+   * membership from. Defaults to "groups" when empty. The claim value MUST be
+   * a JSON array of strings; other shapes (missing, non-array, mixed types)
+   * fail the authorization. Nested claims (e.g. Keycloak's realm_access.roles)
+   * must be flattened by the identity provider — nested paths are not
+   * supported in this implementation.
+   *
+   * The value is read from upstream.Identity.Claims as the first upstream
+   * resolves it: an OIDC upstream fills that map from the validated ID
+   * token, a pure OAuth2 upstream from the userinfo response. The
+   * identityFromToken and synthesized-identity paths leave it empty, and
+   * groups carried only in an access token never reach it. A missing claim
+   * fails the authorization — DefaultUpstreams covers a valid-but-empty
+   * claim and unmatched groups, not an absent one.
+   */
+  claim?: string
+  /**
+   * DefaultUpstreams is used when the claim is a valid empty array or when no
+   * rule matches. When empty or omitted, no optional upstreams are added —
+   * the mandatory first upstream remains but the authorization walks no
+   * further.
+   */
+  defaultUpstreams?: Array<string>
+  /**
+   * Rules assigns groups to upstream provider subsets. A principal matches a
+   * rule if any of the principal's group values appears in the rule's Groups
+   * list (any-of / OR semantics). Multiple matching rules are combined by
+   * union: the effective upstream chain contains every UpstreamProviders
+   * value from every matching rule, deduplicated.
+   */
+  rules?: Array<UpstreamfilterGroupRule>
+}
+
+export type UpstreamfilterGroupRule = {
+  /**
+   * Groups is the set of principal group names this rule matches. Matching
+   * is case-sensitive and exact. Empty and duplicate values are rejected at
+   * configuration validation time.
+   */
+  groups?: Array<string>
+  /**
+   * UpstreamProviders lists the non-first upstream provider names to include
+   * in the chain when this rule matches. All names must reference a
+   * configured non-first upstream. Empty and duplicate values, references to
+   * the mandatory first upstream, and references to undeclared upstreams are
+   * rejected at configuration validation time.
+   */
+  upstreamProviders?: Array<string>
 }
 
 export type V0ServerJson = {
