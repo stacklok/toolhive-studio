@@ -49,8 +49,19 @@ export const GITHUB_REPO = 'toolhive-studio'
 export const GITHUB_REPO_URL = 'https://github.com/stacklok/toolhive-studio'
 export const GITHUB_ISSUES_URL =
   'https://github.com/stacklok/toolhive-studio/issues'
-export const GITHUB_RELEASES_URL =
-  'https://github.com/stacklok/toolhive-studio/releases/latest'
+export const GITHUB_RELEASES_BASE_URL =
+  'https://github.com/stacklok/toolhive-studio/releases'
+export const GITHUB_RELEASES_URL = `${GITHUB_RELEASES_BASE_URL}/latest`
+export function getGitHubReleaseUrl(version?: string | null) {
+  const trimmedVersion = version?.trim()
+  if (!trimmedVersion) {
+    return GITHUB_RELEASES_URL
+  }
+  const tagName = trimmedVersion.startsWith('v')
+    ? trimmedVersion
+    : `v${trimmedVersion}`
+  return `${GITHUB_RELEASES_BASE_URL}/tag/${encodeURIComponent(tagName)}`
+}
 export const TOOLHIVE_CLI_OWNER = 'stacklok'
 export const TOOLHIVE_CLI_REPO = 'toolhive'
 
