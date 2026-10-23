@@ -1,7 +1,7 @@
 ---
 name: devcontainer-dev
 description: Spin up and interact with ToolHive Studio's containerized dev environment (Xvfb + noVNC + DinD). Use when running, testing, or debugging the app in isolation — locally, in a git worktree, or in GitHub Codespaces; when touching `.devcontainer/*`, `scripts/devcontainer-*.sh`, or the `devContainer:dev` npm script; or when debugging "blank white window", "Docker daemon failed to start", or "Missing X server" errors in the devcontainer. The container is fully isolated: no host pnpm install, no host Docker socket, no host X11/GPU — experiment freely without contaminating the host.
-allowed-tools: Read, Grep, Glob, Bash
+allowed-tools: Read, Grep, Glob, Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*), Bash(pnpm devContainer:dev)
 ---
 
 # Containerized Dev Environment
@@ -142,20 +142,40 @@ docker exec "$CONTAINER" bash -c '
 
 The container has enough tools for an AI agent to both **see** and **interact with** the running Electron window without going through the browser / noVNC. Useful for headless testing, reproducing user-reported UI bugs, or validating a feature end-to-end.
 
-All commands run via `docker exec` against the container with `DISPLAY=:99` set (matches Xvfb's display).
+The recipes below are wrapped in `.claude/skills/devcontainer-dev/scripts/agent.sh`, which finds the devcontainer for *this* worktree by label, validates inputs, and execs only the documented commands. Pre-approving `Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)` gives an agent the full driving surface without granting broad `Bash(docker exec *)` (which would let it run arbitrary commands in any container on the host). The raw `docker exec` recipes still work and are listed below as the explicit-approval fallback for ad-hoc cases the wrapper doesn't cover.
 
 ### See the screen (screenshots)
 
 ```bash
-# Take a PNG of the whole virtual framebuffer
+# Wrapped (recommended): screenshot to /tmp/shot.png on the host
+bash .claude/skills/devcontainer-dev/scripts/agent.sh shot
+
+# With an output path
+bash .claude/skills/devcontainer-dev/scripts/agent.sh shot ./shot.png
+
+# Cropped — vision models perform much better on a focused region than on
+# the full 1920×1200 framebuffer. Format is ImageMagick's WxH+X+Y.
+bash .claude/skills/devcontainer-dev/scripts/agent.sh shot --crop 800x600+560+300 ./dialog.png
+```
+
+Fallback (raw docker exec):
+
+```bash
 docker exec "$CONTAINER" bash -c 'DISPLAY=:99 import -window root /tmp/shot.png'
-# Copy it to the host for viewing / feeding to a vision model
 docker cp "$CONTAINER:/tmp/shot.png" /tmp/shot.png
 ```
 
 `import` is from ImageMagick. For a specific window only, use `xwininfo` to get the WID then `import -window <WID>`.
 
 ### See the window tree (what's there, where, which is focused)
+
+```bash
+# Wrapped: xdotool passthrough
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo search --class ToolHive
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo getactivewindow getwindowname
+```
+
+Fallback (raw docker exec):
 
 ```bash
 docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xwininfo -root -tree'
@@ -167,23 +187,61 @@ The main app window has `WM_CLASS=ToolHive` (see gotcha below). Its geometry is 
 
 ### Interact with the UI (mouse, keyboard)
 
+`xdo` is a passthrough to `xdotool` inside the container — its argument surface is intentionally narrow (X events only, no shell, no file access) so a single wrapper covers click / key / type / mousemove without per-verb validation cost.
+
 ```bash
-# Move the mouse and click
-docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool mousemove 400 300 click 1'
+# Click at coordinates
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo mousemove --sync 400 300 click 1
 
 # Type into whatever has focus
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo type --delay 20 'hello world'
+
+# Send a keystroke (DevTools)
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo key ctrl+shift+i
+
+# Focus the main window by class
+bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo search --class ToolHive windowactivate
+```
+
+Fallback (raw docker exec):
+
+```bash
+docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool mousemove 400 300 click 1'
 docker exec "$CONTAINER" bash -c "DISPLAY=:99 xdotool type --delay 20 'hello world'"
+docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool key ctrl+shift+i'
+```
 
-# Send a keystroke
-docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool key ctrl+shift+i'   # DevTools
+### Tail a log
 
-# Focus the main window by name
-docker exec "$CONTAINER" bash -c 'DISPLAY=:99 xdotool search --name ToolHive windowactivate'
+The dev-stack writes canonical logs under `/tmp/*.log` (see [Log files](#log-files-written-by-the-entrypoint)).
+
+```bash
+# Last 50 lines (default)
+bash .claude/skills/devcontainer-dev/scripts/agent.sh tail entrypoint
+
+# Last N lines
+bash .claude/skills/devcontainer-dev/scripts/agent.sh tail xvfb 200
+```
+
+Allowed log names: `xvfb`, `fluxbox`, `x11vnc`, `websockify`, `keyring`, `entrypoint`.
+
+### Health check
+
+One-call readiness check — Electron running, `thv serve` running, the ToolHive X window mapped, and noVNC reachable. Exits non-zero if anything is down.
+
+```bash
+bash .claude/skills/devcontainer-dev/scripts/agent.sh health
 ```
 
 ### Typical agent loop
 
-Screenshot → feed to vision model → decide next action → `xdotool` → screenshot again. The usual caveats apply: pixel-coordinate automation is fragile, and CSS changes or modal dialogs can throw it off. For robust long-term automation, prefer a DOM-level approach (e.g. Chrome DevTools Protocol against Electron's remote debugging port — not currently wired in, see [Future: CDP access](#future-cdp-access)).
+Screenshot → Read it with the Read tool → reason about what you see → act via `xdo` → screenshot again. Pixel-coordinate driving is brittle (modal/CSS changes invalidate prior coordinates), so verify state-by-state instead of chaining many actions. Use cropped screenshots when zooming on a region — vision models perform meaningfully better on a focused crop than on the full 1920×1200 framebuffer.
+
+For robust DOM-level automation (querying / clicking by selector, scraping state), prefer a CDP-based approach once it's wired in — see [Future: CDP access](#future-cdp-access). Pixel ops via `xdo` and `shot` remain the right tool for OS-level interactions, multi-window coordination, and visual-regression checks.
+
+### After editing renderer code
+
+Vite HMR applies the change in-place — `sleep 2` before re-screenshotting so the UI has time to repaint. If your edit touches `main/`, a manual Electron restart is needed (~15s); rely on unit tests for main-process changes when driving the live app.
 
 ### Future: CDP access
 
