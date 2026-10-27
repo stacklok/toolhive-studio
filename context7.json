@@ -1,4 +1,29 @@
 {
+  "$schema": "https://context7.com/schema/context7.json",
   "url": "https://context7.com/stacklok/toolhive-studio",
-  "public_key": "pk_7LkGEIl6ynYjkLDvPvfeM"
+  "public_key": "pk_7LkGEIl6ynYjkLDvPvfeM",
+  "projectTitle": "ToolHive Studio",
+  "description": "Desktop app for ToolHive, built with Electron, React, TypeScript, and Vite. Covers developing, testing, and packaging the app, its connection to the embedded thv binary, deep links, and branding.",
+  "excludeFolders": [
+    "__tests__",
+    "__mocks__",
+    "e2e-tests",
+    ".claude",
+    ".codex",
+    ".cursor",
+    "*archive*",
+    "*deprecated*",
+    "*legacy*"
+  ],
+  "excludeFiles": [
+    "CLAUDE.md",
+    "CHANGELOG.md",
+    "LICENSE.md",
+    "CODE_OF_CONDUCT.md"
+  ],
+  "rules": [
+    "Don't hand-edit the generated API client in `common/api/generated`. Run `pnpm run generate-client` to regenerate it from the ToolHive OpenAPI spec.",
+    "To test a custom `thv` build in development, run `thv serve --openapi --socket=<path>`, then `THV_SOCKET=<path> pnpm run start`. Packaged builds ignore `THV_SOCKET`.",
+    "For ToolHive CLI, Kubernetes operator, and vMCP usage, see the ToolHive documentation at docs.stacklok.com/toolhive."
+  ]
 }
