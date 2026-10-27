@@ -25,7 +25,7 @@
     "ToolHive Studio is managed with pnpm. Use the Node.js version pinned in `.nvmrc`, and keep the Docker daemon running during development.",
     "Expose runtime configuration through `VITE_`-prefixed variables read from `import.meta.env`, not `process.env`. Never put secrets in them, because packaged Electron apps can be decompiled.",
     "Don't hand-edit the generated API client in `common/api/generated`. Run `pnpm run generate-client` to regenerate it from the ToolHive OpenAPI spec.",
-    "The app talks to its embedded `thv` over a UNIX socket (a named pipe on Windows). To test a custom `thv` build, run `thv serve --openapi --socket=<path>` and start the app with `THV_SOCKET=<path>`.",
+    "The app talks to its embedded `thv` over a UNIX socket (a named pipe on Windows). To test a custom `thv` build in development, run `thv serve --openapi --socket=<path>`, then start the app with `THV_SOCKET=<path> pnpm run start`. `THV_SOCKET` is ignored in packaged builds.",
     "For ToolHive CLI, Kubernetes operator, and vMCP usage, see the ToolHive documentation at docs.stacklok.com/toolhive."
   ]
 }
