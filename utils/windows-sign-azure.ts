@@ -19,10 +19,16 @@
  * https://github.com/electron/windows-sign/issues/45
  */
 
-// `HASHES` is a const enum inside `@electron/windows-sign`; importing it as
-// a type and casting the literal matches the official Electron Forge guide
-// and keeps string values structurally compatible with `WindowsSignOptions`.
-import type { HASHES } from '@electron/windows-sign/dist/esm/types'
+import type { ForgePackagerOptions } from '@electron-forge/shared-types'
+
+// Derive the options type from Forge's packager config instead of importing
+// from `@electron/windows-sign` internals: its `HASHES` const enum lives in a
+// private module path that changes between major versions.
+type WindowsSignOptions = Exclude<
+  NonNullable<ForgePackagerOptions['windowsSign']>,
+  true
+>
+type HASHES = NonNullable<WindowsSignOptions['hashes']>[number]
 
 type AzureSignConfig = {
   signToolPath?: string
