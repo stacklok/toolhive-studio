@@ -35,19 +35,15 @@ auditConfig:
 
 overrides:
   # Only overrides where parent ranges cannot reach a patched version.
-  # Electron Forge still declares @electron/rebuild ^3.7.0.
-  '@electron/rebuild': ^4.2.0
   # @hey-api/json-schema-ref-parser pins js-yaml 4.2.0 exactly.
   js-yaml: '>=5.4.1'
-  # external-editor declares tmp ^0.0.33, which cannot reach 0.2.7.
-  tmp: '>=0.2.7'
   # icon-gen declares sharp ^0.33.4 (0.33.x only).
   'icon-gen>sharp': 0.35.5
   # @sentry/bundler-plugins 10.x declares glob ^13, which cannot reach 14.0.2.
   '@sentry/bundler-plugins>glob': '>=14.0.2'
 
 patchedDependencies:
-  electron-installer-redhat@3.4.0: patches/electron-installer-redhat@3.4.0.patch
+  electron-installer-redhat@4.0.0: patches/electron-installer-redhat@4.0.0.patch
 
 minimumReleaseAgeExclude:
   # Temporary until @openrouter/ai-sdk-provider@3.0.0 clears release-age threshold
