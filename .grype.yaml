@@ -51,6 +51,33 @@ ignore:
       whose rewritten API (named export, Buffer-only synchronous entry point)
       is incompatible with appdmg 0.6.6, an unmaintained package with no
       further releases.
+  - vulnerability: GHSA-g3hv-75wg-m249
+    package:
+      name: minimatch
+      version: 10.2.5
+      type: npm
+    reason: >-
+      minimatch 10.2.5 is a lint-only dependency of eslint, @eslint/config-array
+      and @typescript-eslint/typescript-estree, never shipped in the packaged
+      application. GHSA-g3hv-75wg-m249 is a denial of service via globparts
+      amplification that requires attacker-controlled glob patterns; here the
+      patterns come only from the repository's own ESLint config and CLI
+      arguments. The only patched line is minimatch 11, a matcher rewrite that
+      drops makeRe/AST; even the latest eslint and typescript-eslint releases
+      still declare minimatch ^10.
+  - vulnerability: GHSA-g3hv-75wg-m249
+    package:
+      name: minimatch
+      version: 9.0.9
+      type: npm
+    reason: >-
+      minimatch 9.0.9 is a build-only dependency of @electron/universal (via
+      @electron/packager / Electron Forge), used to match the asar allow-list
+      while packaging macOS universal builds, and is never shipped in the
+      packaged application. GHSA-g3hv-75wg-m249 requires attacker-controlled
+      glob patterns; here the only pattern is the developer-controlled
+      packaging config. The fix requires minimatch 11, a major rewrite that
+      @electron/universal 2.x does not support.
 
 exclude:
   - '**/node_modules/**'
