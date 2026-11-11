@@ -8,7 +8,7 @@ overrides:
   js-yaml: '>=5.4.1'
   icon-gen>sharp: 0.35.5
   '@sentry/bundler-plugins>glob': '>=14.0.2'
-  '@electron/asar>glob': '>=14.0.2'
+  '@electron/asar>glob': '>=14.0.4'
 
 patchedDependencies:
   electron-installer-redhat@4.0.0: 8fe238a56db4de235c10dd7f02c6a523c6ac3010edcc1d547dbc5c6416b89a37
