@@ -40,7 +40,7 @@ overrides:
   # icon-gen declares sharp ^0.33.4 (0.33.x only).
   'icon-gen>sharp': 0.35.5
   # @sentry/bundler-plugins 10.x declares glob ^13, which cannot reach 14.0.2.
-  '@sentry/bundler-plugins>glob': '>=14.0.2'
+  '@sentry/bundler-plugins>glob': '>=14.0.4'
   # @electron/asar 4.x (via @electron/packager 20) declares glob ^13, which cannot reach 14.0.2.
   '@electron/asar>glob': '>=14.0.4'
 
