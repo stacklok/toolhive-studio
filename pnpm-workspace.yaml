@@ -36,7 +36,7 @@ auditConfig:
 overrides:
   # Only overrides where parent ranges cannot reach a patched version.
   # @hey-api/json-schema-ref-parser pins js-yaml 4.2.0 exactly.
-  js-yaml: '>=5.4.1'
+  js-yaml: '>=5.5.0'
   # icon-gen declares sharp ^0.33.4 (0.33.x only).
   'icon-gen>sharp': 0.35.5
   # @sentry/bundler-plugins 10.x declares glob ^13, which cannot reach 14.0.2.
