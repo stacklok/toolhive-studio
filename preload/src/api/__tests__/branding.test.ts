@@ -50,4 +50,25 @@ describe('preload branding API', () => {
     ])
     expect(mod.brandingApi.branding.css).toBe(css)
   })
+
+  it('decodes without Buffer in scope (sandboxed preload, Electron 45+)', async () => {
+    const css = '/* théme */ .dark { --primary: #c2185b; }'
+    const encoded = Buffer.from(css, 'utf-8').toString('base64')
+    vi.stubGlobal('Buffer', undefined)
+    try {
+      const mod = await loadFresh([
+        'electron',
+        'app.js',
+        `${ARG_PREFIX}${encoded}`,
+      ])
+      expect(mod.brandingApi.branding.css).toBe(css)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
+  it('exposes an empty string when the payload is not valid base64', async () => {
+    const mod = await loadFresh(['electron', 'app.js', `${ARG_PREFIX}%%%`])
+    expect(mod.brandingApi.branding.css).toBe('')
+  })
 })
