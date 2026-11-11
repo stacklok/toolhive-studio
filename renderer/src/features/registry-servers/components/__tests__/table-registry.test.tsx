@@ -47,7 +47,9 @@ const group: RegistryItem = {
 function makeRouter(element: React.ReactElement) {
   const rootRoute = createRootRoute({
     component: Outlet,
-    errorComponent: ({ error }) => <div>{error.message}</div>,
+    errorComponent: ({ error }) => (
+      <div>{error instanceof Error ? error.message : String(error)}</div>
+    ),
   })
   const tableRoute = createRoute({
     getParentRoute: () => rootRoute,

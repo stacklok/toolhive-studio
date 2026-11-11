@@ -23,7 +23,9 @@ const mockUseMutationCreateGroup = vi.mocked(useMutationCreateGroup)
 function createGroupsTestRouter() {
   const rootRoute = createRootRoute({
     component: Outlet,
-    errorComponent: ({ error }) => <div>{error.message}</div>,
+    errorComponent: ({ error }) => (
+      <div>{error instanceof Error ? error.message : String(error)}</div>
+    ),
   })
 
   const groupRoute = createRoute({

@@ -27,7 +27,9 @@ const baseServer: CoreWorkload = {
 function makeRouter(servers: CoreWorkload[]) {
   const rootRoute = createRootRoute({
     component: Outlet,
-    errorComponent: ({ error }) => <div>{error.message}</div>,
+    errorComponent: ({ error }) => (
+      <div>{error instanceof Error ? error.message : String(error)}</div>
+    ),
   })
 
   const groupRoute = createRoute({

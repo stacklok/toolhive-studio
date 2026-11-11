@@ -117,7 +117,9 @@ function renderChatRoute(
 
   const rootRoute = createRootRoute({
     component: Outlet,
-    errorComponent: ({ error }: { error: Error }) => <div>{error.message}</div>,
+    errorComponent: ({ error }) => (
+      <div>{error instanceof Error ? error.message : String(error)}</div>
+    ),
   })
 
   const testRoute = createRoute({

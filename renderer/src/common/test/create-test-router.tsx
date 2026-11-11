@@ -10,7 +10,9 @@ import type { JSX } from 'react'
 export function createTestRouter(component: () => JSX.Element, path = '/') {
   const rootRoute = createRootRoute({
     component: Outlet,
-    errorComponent: ({ error }) => <div>{error.message}</div>,
+    errorComponent: ({ error }) => (
+      <div>{error instanceof Error ? error.message : String(error)}</div>
+    ),
   })
 
   const testRoute = createRoute({

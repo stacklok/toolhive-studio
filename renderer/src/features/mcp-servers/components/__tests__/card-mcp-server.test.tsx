@@ -21,7 +21,9 @@ import { EditServerDialogProvider } from '../../contexts/edit-server-dialog-prov
 function createCardMcpServerTestRouter() {
   const rootRoute = createRootRoute({
     component: Outlet,
-    errorComponent: ({ error }) => <div>{error.message}</div>,
+    errorComponent: ({ error }) => (
+      <div>{error instanceof Error ? error.message : String(error)}</div>
+    ),
   })
 
   const groupRoute = createRoute({
@@ -262,7 +264,9 @@ it('stays on the same group page after deleting a server', async () => {
   // https://github.com/stacklok/toolhive-studio/issues/904
   const rootRoute = createRootRoute({
     component: Outlet,
-    errorComponent: ({ error }) => <div>{error.message}</div>,
+    errorComponent: ({ error }) => (
+      <div>{error instanceof Error ? error.message : String(error)}</div>
+    ),
   })
 
   const groupRoute = createRoute({
@@ -311,7 +315,9 @@ describe('version drift', () => {
   function createDriftRouter() {
     const rootRoute = createRootRoute({
       component: Outlet,
-      errorComponent: ({ error }) => <div>{error.message}</div>,
+      errorComponent: ({ error }) => (
+        <div>{error instanceof Error ? error.message : String(error)}</div>
+      ),
     })
 
     const groupRoute = createRoute({
