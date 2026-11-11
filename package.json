@@ -84,7 +84,7 @@
     "jsdom": "^30.0.1",
     "json-schema-faker": "^0.6.3",
     "knip": "^6.35.1",
-    "lint-staged": "^17.5.1",
+    "lint-staged": "^17.6.0",
     "memfs": "^4.75.0",
     "msw": "^2.15.0",
     "prettier": "3.9.10",
