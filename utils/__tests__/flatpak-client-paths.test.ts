@@ -31,6 +31,7 @@ Valid clients:
   - lm-studio: LM Studio application
   - mistral-vibe: Mistral Vibe IDE
   - opencode: OpenCode editor
+  - pi: Pi coding agent
   - qoder: Qoder IDE
   - roo-code: VS Code Roo Code extension
   - trae: Trae IDE
@@ -134,5 +135,10 @@ describe('flatpakFilesystemEntries', () => {
     expect(flatpakFilesystemEntries(['qoder'])).toEqual([
       '--filesystem=~/.qoder',
     ])
+  })
+
+  it('maps pi to ~/.pi', () => {
+    expect(CLIENT_FLATPAK_PATHS.pi).toEqual(['~/.pi'])
+    expect(flatpakFilesystemEntries(['pi'])).toEqual(['--filesystem=~/.pi'])
   })
 })
