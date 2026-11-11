@@ -18,19 +18,19 @@ importers:
   .:
     dependencies:
       '@ai-sdk/anthropic':
-        specifier: ^4.0.98
+        specifier: ^4.0.99
         version: 4.0.99(zod@4.6.7)
       '@ai-sdk/google':
-        specifier: ^4.0.113
+        specifier: ^4.0.114
         version: 4.0.114(zod@4.6.7)
       '@ai-sdk/openai':
-        specifier: ^4.0.110
+        specifier: ^4.0.111
         version: 4.0.111(zod@4.6.7)
       '@ai-sdk/openai-compatible':
-        specifier: ^3.0.86
+        specifier: ^3.0.87
         version: 3.0.87(zod@4.6.7)
       '@ai-sdk/react':
-        specifier: ^4.0.168
+        specifier: ^4.0.169
         version: 4.0.170(react@19.3.0)(zod@4.6.7)
       '@ai-sdk/xai':
         specifier: ^4.0.59
@@ -135,7 +135,7 @@ importers:
         specifier: ^3.14.13
         version: 3.14.13(react-dom@19.3.0(react@19.3.0))(react@19.3.0)
       ai:
-        specifier: ^7.0.164
+        specifier: ^7.0.165
         version: 7.0.166(zod@4.6.7)
       ai-sdk-ollama:
         specifier: ^4.6.3
