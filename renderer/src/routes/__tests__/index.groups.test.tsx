@@ -23,7 +23,9 @@ import { PermissionsProvider } from '@/common/contexts/permissions/permissions-p
 function createGroupsTestRouter() {
   const rootRoute = createRootRoute({
     component: Outlet,
-    errorComponent: ({ error }) => <div>{error.message}</div>,
+    errorComponent: ({ error }) => (
+      <div>{error instanceof Error ? error.message : String(error)}</div>
+    ),
   })
 
   const groupRoute = createRoute({

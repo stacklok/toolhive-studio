@@ -67,7 +67,9 @@ const skillUnparseableRepo: RegistrySkill = {
 function makeRouter(skills: RegistrySkill[]) {
   const rootRoute = createRootRoute({
     component: Outlet,
-    errorComponent: ({ error }) => <div>{error.message}</div>,
+    errorComponent: ({ error }) => (
+      <div>{error instanceof Error ? error.message : String(error)}</div>
+    ),
   })
   const listRoute = createRoute({
     getParentRoute: () => rootRoute,
