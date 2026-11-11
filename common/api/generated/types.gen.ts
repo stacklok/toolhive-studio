@@ -209,6 +209,53 @@ export type AuthserverDcrUpstreamConfig = {
    */
   registration_endpoint?: string
   /**
+   * RegistrationProbe selects how the resolver checks a cached registration
+   * against the upstream at start. "tokenEndpoint" (the default) redeems a
+   * random authorization code with the cached client and reads
+   * invalid_client as "registration gone"; it decides only for upstreams
+   * that authenticate the client before validating the grant.
+   * "authorizationEndpoint" sends an authorization request for the cached
+   * client without following redirects and reads a direct 400, 401 or 403
+   * that carries an RFC 6749 JSON error object (error invalid_client,
+   * unauthorized_client or invalid_request) as "gone" (RFC 6749 §4.1.2.1),
+   * for upstreams whose token endpoint answers invalid_grant for any
+   * client_id; an HTML page or a bare gateway status is not a verdict. A
+   * false rejection re-registers at every start and, when registration also
+   * fails, fails startup. "none" skips the check: the upstream is not
+   * contacted, but a registration made with another method than a configured
+   * TokenEndpointAuthMethod is still replaced. Otherwise the registration is
+   * retired only through RotationKey.
+   */
+  registration_probe?: string
+  /**
+   * RegistrationProbeInterval, when set, repeats the start-time resolution
+   * while the server runs, as a Go duration of at least 1m (e.g. "5m"): the
+   * cached registration is re-read and checked with RegistrationProbe, a
+   * rejected one is replaced, a missing one is registered, and when the
+   * result differs from the client the server holds (also when another
+   * replica replaced the row) the server switches to it without a restart.
+   * Each check sends at most one RegistrationProbe request to the upstream
+   * (none with RegistrationProbe none), plus a registration request when
+   * the probe rejects the client; 5m to 15m suits most upstreams. Empty
+   * keeps the check at start only.
+   */
+  registration_probe_interval?: string
+  /**
+   * RotationKey is an optional operator-chosen label (1-64 characters from
+   * [A-Za-z0-9._-]) that becomes part of the cached registration's identity
+   * without being sent to the upstream. Changing it makes the next start
+   * register a fresh client instead of reusing the cached one. At start the
+   * resolver checks the cached client at the upstream (see RegistrationProbe)
+   * and replaces it by itself when the upstream rejects it. Use RotationKey
+   * when the upstream has dropped the registration and the configured probe
+   * cannot tell, so the rejection may not be visible to the resolver, or when
+   * a registration must be rotated on request. The row written under the
+   * previous value is left in place. Upstream refresh tokens bound to the
+   * previous client_id stop refreshing once the client changes; affected
+   * users sign in again.
+   */
+  rotation_key?: string
+  /**
    * SoftwareID is the RFC 7591 "software_id" registration metadata value,
    * identifying the client software independent of any particular
    * registration instance.
@@ -222,12 +269,36 @@ export type AuthserverDcrUpstreamConfig = {
   software_statement?: string
 }
 
+/**
+ * ExchangeRefreshTokens enables refresh-token issuance through token
+ * exchange for this client. Presence of the block enables it; a nil block
+ * refuses both grant kinds. Valid only with restricted, and requires
+ * SubjectTokenAudiences and offline_access or offline in scopes_supported.
+ */
+export type AuthserverDelegateClientExchangeRefreshTokens = {
+  /**
+   * IDJAGMaxLifetime caps the lifetime of grants that can be exchanged for
+   * ID-JAGs. Empty refuses those grants.
+   */
+  id_jag_max_lifetime?: string
+  /**
+   * RefreshTokenMaxLifetime caps the lifetime of grants that can be exchanged
+   * for child refresh tokens. Empty refuses those grants. Setting it also needs
+   * id_jag_max_lifetime, because a child allows ID-JAGs and is capped by that
+   * value; validation rejects refresh_token_max_lifetime without it.
+   */
+  refresh_token_max_lifetime?: string
+}
+
 export type AuthserverDelegateClientRunConfig = {
   /**
-   * Audiences are the RFC 8707 resource values this client may request a
-   * token for. Required, and must be a subset of RunConfig.AllowedAudiences:
-   * a declared client must not receive every allowed audience just because
-   * this was left empty.
+   * Audiences are output only: the upper bound on the audiences of the
+   * access tokens this client can obtain through any grant. They must be a
+   * subset of RunConfig.AllowedAudiences: a declared client must not receive
+   * every allowed audience just because this was left empty. Required, unless
+   * token_exchange.exchange_refresh_tokens is set and token exchange is the
+   * client's only grant (grant_types omitted, or just the token-exchange
+   * grant), in which case it may be empty.
    */
   audiences?: Array<string>
   /**
@@ -236,21 +307,105 @@ export type AuthserverDelegateClientRunConfig = {
   client_id?: string
   /**
    * ClientSecretEnvVar is the name of an environment variable containing
-   * the client secret. One of ClientSecretFile or ClientSecretEnvVar is
-   * required.
+   * the client secret. Unless the client uses private_key_jwt, one of
+   * ClientSecretFile or ClientSecretEnvVar is required.
    */
   client_secret_env_var?: string
   /**
    * ClientSecretFile is the path to a file containing the client secret.
    * If both this and ClientSecretEnvVar are set, the file takes precedence.
+   * Forbidden with private_key_jwt.
    */
   client_secret_file?: string
+  /**
+   * GrantTypes are the grants this client may use. If omitted or empty, the
+   * client is stored with [urn:ietf:params:oauth:grant-type:token-exchange]
+   * and its ID-JAG redemption (a JWT-bearer assertion of typ
+   * oauth-id-jag+jwt) is not gated, for backward compatibility. When set, the
+   * list is complete: it must include token exchange, and it must include the
+   * jwt-bearer grant to keep ID-JAG redemption. Allowed values are
+   * authorization_code, refresh_token, the token-exchange grant and the
+   * jwt-bearer grant.
+   */
+  grant_types?: Array<string>
+  /**
+   * JWKSFile is the path to a file containing the client's public JWKS.
+   * Required for private_key_jwt and forbidden otherwise. The keys must be
+   * public signing keys.
+   */
+  jwks_file?: string
+  /**
+   * RedirectURIs are the registered redirect URIs. Required with the
+   * authorization_code grant and forbidden without it.
+   */
+  redirect_uris?: Array<string>
   /**
    * Scopes are the OAuth scopes this client may request. Required, and
    * must be a subset of RunConfig.ScopesSupported: a declared client must
    * not receive every supported scope just because this was left empty.
    */
   scopes?: Array<string>
+  /**
+   * TokenEndpointAuthMethod pins how the client authenticates at the token
+   * endpoint: client_secret_basic, client_secret_post or private_key_jwt.
+   * If omitted, the client authenticates with its secret by either HTTP
+   * Basic or form body.
+   */
+  token_endpoint_auth_method?: string
+  /**
+   * TokenEndpointAuthSigningAlg is the private_key_jwt signing algorithm.
+   * If omitted, it is derived from the keys: each key's alg, or ES256, ES384
+   * or ES512 from an EC key's curve. RSA keys without alg use RS256. Keys
+   * that disagree must set it.
+   */
+  token_endpoint_auth_signing_alg?: string
+  token_exchange?: AuthserverDelegateClientTokenExchange
+}
+
+/**
+ * TokenExchange is the client's token-exchange policy. Its
+ * SelfIssuedSubjectTokens field selects which self-issued subject tokens
+ * the client may exchange and is required whenever the block is present.
+ * The block may be omitted only by a secret-authenticated client whose
+ * GrantTypes is omitted or empty; such a client keeps the legacy rule (any)
+ * and may exchange any self-issued token. A client that sets GrantTypes or
+ * uses private_key_jwt must declare the block.
+ */
+export type AuthserverDelegateClientTokenExchange = {
+  /**
+   * AllowedSourceClients are client_id values, as they appear in the subject
+   * token's client_id claim, whose self-issued tokens this client may
+   * exchange in addition to its own. They must be user-facing clients that
+   * register at runtime (DCR or CIMD), so startup cannot check that they
+   * exist. A configured delegate client cannot be listed: its tokens carry
+   * its own client_id, so listing it would trust everything it accepts.
+   * Valid only with restricted. On plain token exchange, empty means the
+   * client's own tokens only. The exchange-grant path (exchange_refresh_tokens)
+   * accepts only the listed source clients, never the client's own tokens, so
+   * the list must be non-empty there.
+   */
+  allowed_source_clients?: Array<string>
+  exchange_refresh_tokens?: AuthserverDelegateClientExchangeRefreshTokens
+  /**
+   * SelfIssuedSubjectTokens is any or restricted, and is required. With
+   * restricted, a self-issued subject token must carry the client's own
+   * client_id or one of AllowedSourceClients, and a may_act claim naming
+   * this client does not lift that restriction. With any, the client may
+   * exchange any self-issued token.
+   */
+  self_issued_subject_tokens: string
+  /**
+   * SubjectTokenAudiences are the audiences a self-issued subject token must
+   * carry, matched exactly: the token must contain at least one of them. The
+   * check applies on every exchange path, including the client's own tokens.
+   * Listing a value grants nothing: the client can receive that audience only
+   * if its audiences also cover it, and startup refuses that while
+   * exchange_refresh_tokens is set. Each entry must be one of the server's
+   * allowed_audiences. Valid only with restricted, and required with
+   * exchange_refresh_tokens. An empty list is the same as an omitted one:
+   * no requirement.
+   */
+  subject_token_audiences?: Array<string>
 }
 
 /**
@@ -372,6 +527,13 @@ export type AuthserverOAuth2UpstreamRunConfig = {
    */
   insecure_allow_http?: boolean
   /**
+   * OmitScopeOnRefresh stops the `scope` parameter from being sent on
+   * refresh_token grant requests. Scopes are still sent on the authorization
+   * request. Useful for providers that reject `scope` on refresh, such as
+   * Salesforce. See upstream.CommonOAuthConfig.
+   */
+  omit_scope_on_refresh?: boolean
+  /**
    * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
    * For a DCR upstream (dcr_config set) an empty value is resolved to
    * `{issuer}/oauth/callback`; a pre-provisioned client (client_id set) must
@@ -395,6 +557,11 @@ export type AuthserverOAuth2UpstreamRunConfig = {
    * client_secret_post-shaped default). Set this to client_secret_basic explicitly
    * for providers that require HTTP Basic auth. Public clients without a secret use
    * the "none" method.
+   * With DCRConfig, it is the method the client registers with, in place of the one
+   * ToolHive picks from the upstream's advertised methods (client_secret_basic, then
+   * client_secret_post, then none). Set it for an upstream whose token endpoint does
+   * not accept the method ToolHive picks. A cached registration made with another
+   * method is replaced with a new one at the next start.
    */
   token_endpoint_auth_method?: string
   token_response_mapping?: AuthserverTokenResponseMappingRunConfig
@@ -462,6 +629,13 @@ export type AuthserverOidcUpstreamRunConfig = {
    */
   issuer_url?: string
   /**
+   * OmitScopeOnRefresh stops the `scope` parameter from being sent on
+   * refresh_token grant requests. Scopes are still sent on the authorization
+   * request. Useful for providers that reject `scope` on refresh, such as
+   * Salesforce. See upstream.CommonOAuthConfig.
+   */
+  omit_scope_on_refresh?: boolean
+  /**
    * RedirectURI is the callback URL where the upstream IDP will redirect after authentication.
    * For a DCR upstream (dcr_config set) an empty value is resolved to
    * `{issuer}/oauth/callback`; a pre-provisioned client (client_id set) must
@@ -489,6 +663,29 @@ export type AuthserverOidcUpstreamRunConfig = {
 }
 
 /**
+ * RegistrationRateLimit bounds the unauthenticated /oauth/register
+ * endpoint. If omitted, defaults to 1 registration per second with a
+ * burst of 5. The limiter is per process, so the effective rate is the
+ * configured rate multiplied by the replica count. The cap on how many
+ * registered clients may exist at once is Storage.MaxDCRClients; unused
+ * clients live 24 hours, so a caller at the full rate keeps up to
+ * rate x replicas x 86400 of them alive, which at the defaults exceeds the
+ * default cap within about 2.8 hours. The operator sets it from the
+ * embedded auth server's registrationRateLimit.
+ */
+export type AuthserverRegistrationRateLimitRunConfig = {
+  /**
+   * Burst is the number of registrations admitted at once before the rate
+   * applies. Must be positive.
+   */
+  burst?: number
+  /**
+   * RequestsPerSecond is the sustained registration rate. Must be positive.
+   */
+  requests_per_second?: number
+}
+
+/**
  * EmbeddedAuthServerConfig contains configuration for the embedded OAuth2/OIDC authorization server.
  * When set, the proxy runner will start an embedded auth server that delegates to upstream IDPs.
  * This is the serializable RunConfig; secrets are referenced by file paths or env var names.
@@ -501,8 +698,9 @@ export type AuthserverRunConfig = {
    * client_secret_post in addition to "none" (still the default on
    * omission) and mints a client_secret returned exactly once. Confidential
    * clients are restricted to https non-loopback redirect URIs, and
-   * registrations idle for more than DefaultDCRClientTTL (30 days) are
-   * evicted and must re-register. This gates registration only: disabling
+   * registrations expire and must re-register when never used within
+   * DefaultUnusedDCRClientTTL (24 hours) or idle for more than
+   * DefaultDCRClientTTL (30 days). This gates registration only: disabling
    * it does not revoke or reject already-minted secrets at the token
    * endpoint.
    *
@@ -641,12 +839,13 @@ export type AuthserverRunConfig = {
    * secrets would otherwise travel over cleartext. Defaults to false. Has no
    * effect when there are no confidential clients or Issuer is https.
    *
-   * Applies identically to delegate clients and DCR-registered clients. The
-   * Kubernetes CRD requires the explicit opt-in for a delegate client with an
-   * HTTP issuer; the shared transport validator enforces that its host is
-   * loopback — see EmbeddedAuthServerConfig's doc comment.
+   * Applies identically to every delegate client (including private_key_jwt
+   * delegates) and DCR-registered confidential clients. The Kubernetes CRD
+   * requires the explicit opt-in for a delegate client with an HTTP issuer;
+   * the shared transport validator enforces that its host is loopback — see
+   * EmbeddedAuthServerConfig's doc comment.
    *
-   * private_key_jwt registration has no equivalent flag or transport
+   * DCR private_key_jwt registration has no equivalent flag or transport
    * restriction: unlike confidential registration, it never returns a
    * client_secret (or any other secret) in the DCR response, so there is
    * nothing here for cleartext HTTP to expose.
@@ -664,6 +863,7 @@ export type AuthserverRunConfig = {
    * Must be a valid HTTPS URL (or HTTP for localhost) without query, fragment, or trailing slash.
    */
   issuer?: string
+  registration_rate_limit?: AuthserverRegistrationRateLimitRunConfig
   /**
    * SchemaVersion is the version of the RunConfig schema.
    */
@@ -680,6 +880,7 @@ export type AuthserverRunConfig = {
    */
   spiffe_trust_domains?: Array<AuthserverSpiffeTrustDomainRunConfig>
   storage?: StorageRunConfig
+  tls_listener?: AuthserverTlsListenerRunConfig
   token_lifespans?: AuthserverTokenLifespanRunConfig
   /**
    * TrustedIssuers lists external OIDC trust declarations.
@@ -710,20 +911,21 @@ export type AuthserverSpiffeBundleEndpointSourceRunConfig = {
    * Profile selects how the endpoint's TLS connection is authenticated:
    * SPIFFEBundleEndpointProfileHTTPSWeb (Web PKI) or
    * SPIFFEBundleEndpointProfileHTTPSSPIFFE (a separately distributed
-   * X.509-SVID root). Required, since the future bundle loader cannot
-   * otherwise know which trust anchor to use for the initial connection.
+   * X.509-SVID root). Required, since an endpoint loader needs this profile
+   * to choose the trust anchor for its initial connection.
    */
   profile?: string
   url?: string
 }
 
 /**
- * BundleSource declares exactly one future trust-bundle source. It is
- * validated for shape only; fetching or loading a bundle from it is a
- * later step.
+ * BundleSource declares exactly one trust-bundle source and is validated for
+ * shape here. The standalone file loader exists, but source initialization
+ * is not wired into SPIFFE authentication.
  */
 export type AuthserverSpiffeBundleSourceRunConfig = {
   endpoint?: AuthserverSpiffeBundleEndpointSourceRunConfig
+  file?: AuthserverSpiffeFileBundleSourceRunConfig
   type?: string
   workload_api?: AuthserverSpiffeWorkloadApiBundleSourceRunConfig
 }
@@ -773,6 +975,10 @@ export type AuthserverSpiffeClientAuthRunConfig = {
   trust_domain_ref?: string
 }
 
+export type AuthserverSpiffeFileBundleSourceRunConfig = {
+  path?: string
+}
+
 export type AuthserverSpiffeTrustDomainRunConfig = {
   bundle_source?: AuthserverSpiffeBundleSourceRunConfig
   /**
@@ -817,6 +1023,15 @@ export type AuthserverSigningKeyRunConfig = {
    * This key is used for signing new tokens.
    */
   signing_key_file?: string
+}
+
+/**
+ * TLSListener serves the auth server routes over TLS on port 8443, in
+ * addition to the MCP port. Required for spiffe_x509 client authentication.
+ */
+export type AuthserverTlsListenerRunConfig = {
+  cert_file?: string
+  key_file?: string
 }
 
 /**
@@ -884,6 +1099,14 @@ export type AuthserverTokenResponseMappingRunConfig = {
 }
 
 export type AuthserverUpstreamRunConfig = {
+  /**
+   * DisplayName is an optional human-readable label for this upstream, shown to
+   * end users on the consent page in place of Name. It is display-only: never
+   * compared, stored, or used to route. It is sanitized at render time and never
+   * rejected by validation. It is shown as trusted text, so it must come from
+   * operator-controlled configuration only.
+   */
+  display_name?: string
   /**
    * Name uniquely identifies this upstream.
    * Used for routing decisions and session binding in multi-upstream scenarios.
@@ -1167,6 +1390,7 @@ export type GithubComStacklokToolhivePkgClientClientApp =
   | 'factory'
   | 'copilot-cli'
   | 'qoder'
+  | 'pi'
 
 export type GithubComStacklokToolhivePkgClientClientAppStatus = {
   client_type?: GithubComStacklokToolhivePkgClientClientApp
@@ -4724,6 +4948,22 @@ export type StorageRedisTlsRunConfig = {
  * If nil, defaults to in-memory storage.
  */
 export type StorageRunConfig = {
+  /**
+   * MaxDCRClients caps the number of live clients created by
+   * /oauth/register. At the cap, registration fails with HTTP 503 until a
+   * client expires; no existing client is evicted. If omitted, defaults to
+   * 10000; 0 means unlimited, and a negative value is rejected. On Redis the
+   * count is shared by every replica.
+   *
+   * Sizing: a client never used for a token exchange lives 24 hours, so a
+   * caller registering at the full rate keeps up to rate x replicas x 86400
+   * unused clients alive. At the default rate of 1/s that is about 86400 per
+   * replica: one replica fills the default cap in about 2.8 hours, and new
+   * registrations then get 503 for up to 24 hours after the traffic stops.
+   * A client promoted by a token exchange holds its slot for 30 days. The
+   * operator sets it from the embedded auth server's storage.maxDCRClients.
+   */
+  max_dcr_clients?: number
   redis_config?: StorageRedisRunConfig
   /**
    * Type specifies the storage backend type. Defaults to "memory".
