@@ -1,0 +1,217 @@
+name: Feature Agent
+
+on:
+  workflow_call:
+    inputs:
+      issue-number:
+        required: true
+        type: number
+
+concurrency:
+  group: feat-${{ inputs.issue-number }}
+  cancel-in-progress: true
+
+jobs:
+  implement:
+    name: Feature Implementation
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3
+        with:
+          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
+          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Check for existing PR or previous attempt
+        id: guard
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH="feat/auto-${{ inputs.issue-number }}"
+          BASE="${{ github.event.repository.default_branch }}"
+          EXISTING_PR=$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::notice::Open PR #${EXISTING_PR} already exists for issue #${{ inputs.issue-number }} — skipping"
+            exit 0
+          fi
+
+          GAVE_UP=$(gh api "repos/${{ github.repository }}/issues/${{ inputs.issue-number }}/comments" \
+            --paginate --jq '[.[] | select(.body | contains("Feature Agent"))] | length' 2>/dev/null || echo "0")
+          if [ "$GAVE_UP" -gt "0" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::notice::Agent already attempted issue #${{ inputs.issue-number }} — skipping"
+            exit 0
+          fi
+
+          echo "skip=false" >> $GITHUB_OUTPUT
+
+      - name: Fetch issue body
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh issue view ${{ inputs.issue-number }} --json title,body,labels \
+            --template '# {{.title}}{{"\n\n"}}{{.body}}' > issue-body.md
+
+      - name: Setup
+        if: steps.guard.outputs.skip != 'true'
+        uses: ./.github/actions/setup
+
+      - name: 'Phase 1 — Analyze & Plan (Opus)'
+        id: phase1
+        if: steps.guard.outputs.skip != 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@5d5c10a4f389689f992ea10bb14dcb6fcc83146d # v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read issue-body.md for the feature request.
+
+            Your task (Phase 1 — Analysis & Plan):
+            1. Understand what the issue is asking for.
+            2. Search the codebase to find relevant files, components, hooks, and patterns.
+            3. Identify similar existing features to follow the same patterns.
+            4. Write implementation-plan.md with:
+               ## Summary
+               What needs to be implemented (1-2 sentences).
+
+               ## Relevant Files
+               - List of files to modify or create, with what changes are needed.
+
+               ## Patterns to Follow
+               - Existing patterns in the codebase to replicate.
+
+               ## Test Strategy
+               - What tests to write and where.
+
+            Do NOT modify any source files. Only create implementation-plan.md.
+          claude_args: >-
+            --model opus
+            --max-turns 30
+            --allowedTools "Read,Grep,Glob,Write,Bash(cat *),Bash(ls *)"
+
+      - name: 'Phase 2 — Implement (Sonnet)'
+        id: phase2
+        if: >-
+          steps.guard.outputs.skip != 'true'
+          && steps.phase1.outcome == 'success'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@5d5c10a4f389689f992ea10bb14dcb6fcc83146d # v1
+        env:
+          FEAT_ISSUE_NUMBER: ${{ inputs.issue-number }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read implementation-plan.md for the plan.
+            Read issue-body.md for the original feature request.
+
+            Your task (Phase 2 — Implement):
+            1. Follow the implementation plan exactly.
+            2. Write clean code that follows existing patterns in the codebase.
+            3. Write unit tests for the new functionality.
+            4. Run the tests: pnpm run test:nonInteractive
+            5. Run pnpm run lint and pnpm run type-check.
+            6. If any check fails, fix it (max 5 attempts).
+            7. Write pr-body.md (include 'Closes #${{ inputs.issue-number }}') and feat-title.txt.
+
+            Do NOT run git, gh, or modify .env files.
+            Keep changes minimal and focused on what the issue asks for.
+          claude_args: >-
+            --model sonnet
+            --max-turns 150
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *)"
+
+      - name: 'Hard gate — Verify all checks pass'
+        id: verify
+        if: >-
+          steps.guard.outputs.skip != 'true'
+          && steps.phase2.outcome == 'success'
+        run: |
+          if pnpm run test:nonInteractive && pnpm run lint && pnpm run type-check; then
+            echo "::notice::All checks pass"
+            echo "result=success" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::Verification failed"
+            echo "result=failure" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create branch and commit
+        if: steps.guard.outputs.skip != 'true' && steps.verify.outputs.result == 'success'
+        id: push
+        run: |
+          ISSUE_NUM="${{ inputs.issue-number }}"
+          BRANCH="feat/auto-${ISSUE_NUM}"
+          TITLE=$(cat feat-title.txt 2>/dev/null || echo "feat: implement #${ISSUE_NUM}")
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+
+          git add -A -- '*.ts' '*.tsx' '**/*.ts' '**/*.tsx'
+
+          if git diff --cached --quiet; then
+            echo "::warning::No source changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            git commit -m "$TITLE"
+            git push -u origin "$BRANCH"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.guard.outputs.skip != 'true' && steps.verify.outputs.result == 'success' && steps.push.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH="${{ steps.push.outputs.branch }}"
+          BASE="${{ github.event.repository.default_branch }}"
+          TITLE=$(cat feat-title.txt 2>/dev/null || echo "feat: implement #${{ inputs.issue-number }}")
+
+          if [ ! -f pr-body.md ]; then
+            echo "Automated implementation for #${{ inputs.issue-number }}." > pr-body.md
+          fi
+
+          gh label create agent-feat --description "Automated feature by Feature Agent" --color 1D76DB 2>/dev/null || true
+          gh pr create \
+            --title "$TITLE" \
+            --body-file pr-body.md \
+            --base "$BASE" \
+            --head "$BRANCH" \
+            --label "agent-feat"
+
+      - name: Comment on issue (failed)
+        if: >-
+          always()
+          && steps.guard.outputs.skip != 'true'
+          && steps.verify.outputs.result != 'success'
+          && steps.phase1.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f implementation-plan.md ]; then
+            ANALYSIS=$(cat implementation-plan.md)
+          else
+            ANALYSIS="The agent could not analyze this feature request. The issue may be too vague or require architectural decisions that need human input."
+          fi
+
+          printf '## Feature Agent — Automated Analysis\n\n%s\n\n---\n*Automated analysis by Claude Code Feature Agent. A developer will implement this feature manually.*\n' \
+            "$ANALYSIS" > /tmp/comment-body.md
+
+          gh issue comment "${{ inputs.issue-number }}" --body-file /tmp/comment-body.md
+          gh issue edit "${{ inputs.issue-number }}" --remove-label "agent-feat" 2>/dev/null || true
