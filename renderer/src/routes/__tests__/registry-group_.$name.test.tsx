@@ -255,6 +255,9 @@ describe('Registry Group Detail Route', () => {
     const bodyRows = allRows.slice(1) // skip header row
 
     expect(bodyRows).toHaveLength(3)
+    expect(
+      bodyRows.map((row) => within(row).getAllByRole('cell')[0]?.textContent)
+    ).toEqual(['anthropic-server', 'huggingface-remote', 'openai-server'])
 
     expect(screen.getByText('openai-server')).toBeVisible()
     expect(screen.getByText('OpenAI API integration for Claude')).toBeVisible()
