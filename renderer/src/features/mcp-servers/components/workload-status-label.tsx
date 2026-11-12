@@ -31,15 +31,20 @@ export function WorkloadStatusLabel({
     )
   }
 
-  const warningLabel = (
-    <span className={cn('text-warning text-sm', className)}>{label}</span>
-  )
+  const warningClassName = cn('text-warning text-sm', className)
 
-  if (!statusContext) return warningLabel
+  if (!statusContext) {
+    return <span className={warningClassName}>{label}</span>
+  }
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{warningLabel}</TooltipTrigger>
+      <TooltipTrigger asChild>
+        {/* Focusable so keyboard users can open the tooltip and read the reason */}
+        <span tabIndex={0} className={warningClassName}>
+          {label}
+        </span>
+      </TooltipTrigger>
       <TooltipContent className="max-w-xs">{statusContext}</TooltipContent>
     </Tooltip>
   )

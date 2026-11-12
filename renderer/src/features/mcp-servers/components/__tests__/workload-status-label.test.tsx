@@ -48,6 +48,25 @@ describe('WorkloadStatusLabel', () => {
     })
   })
 
+  it('opens the status context tooltip on keyboard focus', async () => {
+    const user = userEvent.setup()
+    render(
+      <WorkloadStatusLabel
+        status="policy_stopped"
+        statusContext="Blocked by policy: image not allowed"
+      />
+    )
+
+    await user.tab()
+
+    expect(screen.getByText('Stopped by policy')).toHaveFocus()
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toHaveTextContent(
+        'Blocked by policy: image not allowed'
+      )
+    })
+  })
+
   it('does not show a tooltip for non-warning statuses', async () => {
     const user = userEvent.setup()
     render(
