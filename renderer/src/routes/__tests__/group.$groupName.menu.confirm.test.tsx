@@ -108,6 +108,9 @@ describe('Group route delete group confirmation', () => {
       name: /options/i,
     })
 
+    // let the page's initial queries settle so they aren't recorded below
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0))
+
     const recFlow = recordRequests()
 
     await userEvent.click(optionsButton)
@@ -155,6 +158,9 @@ describe('Group route delete group confirmation', () => {
     const optionsButton = within(actionsContainer).getByRole('button', {
       name: /options/i,
     })
+
+    // let the page's initial queries settle so they aren't recorded below
+    await waitFor(() => expect(queryClient.isFetching()).toBe(0))
 
     const recFlow = recordRequests()
 

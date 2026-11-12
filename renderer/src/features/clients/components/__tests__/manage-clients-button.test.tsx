@@ -287,16 +287,17 @@ describe('ManageClientsButton – BDD flows', () => {
         path: pathname,
         body: payload,
       }))
+    // clients are reconciled in alphabetical order
     expect(snapshot).toEqual([
-      {
-        method: 'DELETE',
-        path: '/api/v1beta/clients/vscode/groups/default',
-        body: undefined,
-      },
       {
         method: 'POST',
         path: '/api/v1beta/clients',
         body: { name: 'claude-code', groups: ['default'] },
+      },
+      {
+        method: 'DELETE',
+        path: '/api/v1beta/clients/vscode/groups/default',
+        body: undefined,
       },
     ])
     // no-op

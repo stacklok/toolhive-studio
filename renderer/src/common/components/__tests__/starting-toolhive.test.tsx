@@ -51,7 +51,12 @@ describe('StartingToolHive', () => {
   })
 
   it('should throw error when health check fails', async () => {
-    mockedGetHealth.overrideHandler(() => HttpResponse.error())
+    // An HTTP error rather than HttpResponse.error(): in Node, MSW v3 routes
+    // network errors through undici's internal timers, which fake timers can
+    // stall indefinitely.
+    mockedGetHealth.overrideHandler(
+      () => new HttpResponse(null, { status: 500 })
+    )
 
     render(
       <QueryClientProvider client={queryClient}>

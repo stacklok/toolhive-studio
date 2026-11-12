@@ -112,10 +112,15 @@ describe('DialogFormRemoteMcp', () => {
 
   it('shows loading state when submitting', async () => {
     const user = userEvent.setup({ delay: null })
+    const closeDialog = vi.fn()
 
     renderWithProviders(
       <Wrapper>
-        <DialogFormRemoteMcp isOpen closeDialog={vi.fn()} groupName="default" />
+        <DialogFormRemoteMcp
+          isOpen
+          closeDialog={closeDialog}
+          groupName="default"
+        />
       </Wrapper>
     )
 
@@ -147,6 +152,11 @@ describe('DialogFormRemoteMcp', () => {
       expect(
         screen.getByText(/installing server|creating secrets/i)
       ).toBeInTheDocument()
+    })
+
+    // let the submission settle so its request doesn't leak into the next test
+    await waitFor(() => {
+      expect(closeDialog).toHaveBeenCalled()
     })
   })
 
