@@ -131,7 +131,7 @@
     "@radix-ui/react-switch": "^1.4.1",
     "@radix-ui/react-tabs": "^1.2.1",
     "@radix-ui/react-tooltip": "^1.4.1",
-    "@sentry/electron": "^7.20.2",
+    "@sentry/electron": "^8.3.0",
     "@sentry/vite-plugin": "^11.11.0",
     "@streamdown/cjk": "^1.0.4",
     "@streamdown/code": "^2.0.0",
