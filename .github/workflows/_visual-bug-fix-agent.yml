@@ -1,0 +1,487 @@
+name: Visual Bug Fix Agent
+
+# Mirror of `_bug-fix-agent.yml` with one key difference: a live ToolHive
+# Studio is booted inside the project's devcontainer (Xvfb + Electron + thv)
+# alongside the agent, and the agent drives it through `.claude/skills/devcontainer-dev/scripts/agent.sh`
+# (xdotool, screenshots, log tails, readiness check). Aimed at bugs that
+# resist a pure unit-test reproduction — UI/routing side-effects, async
+# backend lifecycle, real IPC.
+#
+# The agent's allowlist scopes `Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)` rather than
+# raw `docker exec`, so the driving surface stays narrow. See
+# .claude/skills/devcontainer-dev/SKILL.md for the full wrapper recipe.
+#
+# Same `claude-code-action` workflow-validation constraint applies as
+# production: a triggering run will only succeed once this file is on
+# `main` (or its content matches `main` byte-for-byte at the head ref).
+
+on:
+  workflow_call:
+    inputs:
+      issue-number:
+        required: true
+        type: number
+
+concurrency:
+  group: visual-bug-fix-${{ inputs.issue-number }}
+  cancel-in-progress: true
+
+jobs:
+  fix:
+    name: Visual Bug Fix
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+    env:
+      # Required by .devcontainer/devcontainer.json runArgs port mapping.
+      # In CI we don't expose noVNC off-runner; just pick a valid port.
+      NOVNC_HOST_PORT: 6080
+    steps:
+      - name: Generate GitHub App token
+        id: app-token
+        uses: actions/create-github-app-token@1b10c78c7865c340bc4f6099eb2f838309f1e8c3 # v3
+        with:
+          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
+          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
+
+      - name: Checkout Repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Check for existing PR or previous failure
+        id: guard
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH="fix/auto-${{ inputs.issue-number }}-visual"
+          BASE="${{ github.event.repository.default_branch }}"
+          EXISTING_PR=$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json number --jq '.[0].number // empty')
+
+          if [ -n "$EXISTING_PR" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::notice::Open PR #${EXISTING_PR} already exists for issue #${{ inputs.issue-number }} — skipping"
+            exit 0
+          fi
+
+          # Check if the agent already gave up on this issue (final comment exists)
+          GAVE_UP=$(gh api "repos/${{ github.repository }}/issues/${{ inputs.issue-number }}/comments" \
+            --paginate --jq '[.[] | select(.body | contains("Visual Bug Fix Agent"))] | length' 2>/dev/null || echo "0")
+          if [ "$GAVE_UP" -gt "0" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "::notice::Visual agent already exhausted all attempts for issue #${{ inputs.issue-number }} — skipping"
+            exit 0
+          fi
+
+          echo "skip=false" >> $GITHUB_OUTPUT
+
+      - name: Fetch issue body
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          gh issue view ${{ inputs.issue-number }} --json title,body,labels \
+            --template '# {{.title}}{{"\n\n"}}{{.body}}' > issue-body.md
+
+      - name: Setup
+        if: steps.guard.outputs.skip != 'true'
+        uses: ./.github/actions/setup
+
+      # ---------- Devcontainer substrate (additions over `_bug-fix-agent.yml`) ----------
+
+      - name: Set up Docker Buildx
+        # Required so BuildKit's `gha` cache backend is available.
+        # See PR #2120 for context — without this, `cacheFrom: type=gha` fails
+        # silently with "unknown cache importer: gha".
+        if: steps.guard.outputs.skip != 'true'
+        uses: docker/setup-buildx-action@v3
+
+      - name: Cache devcontainer node_modules
+        # Image-layer caching alone is not enough — the named `node_modules`
+        # volume is fresh on every CI run, so postCreateCommand's pnpm install
+        # would dominate. Caching the volume's contents keyed on pnpm-lock.yaml
+        # drops that step from ~100s to ~9s.
+        if: steps.guard.outputs.skip != 'true'
+        id: nm-cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5
+        with:
+          path: nm-cache
+          key: dc-nm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Pre-populate devcontainer node_modules volume
+        if: steps.guard.outputs.skip != 'true' && steps.nm-cache.outputs.cache-hit == 'true'
+        run: |
+          VOLUME=toolhive-node-modules-toolhive-studio
+          docker volume create "$VOLUME" >/dev/null
+          docker run --rm \
+            -v "$PWD/nm-cache:/src:ro" \
+            -v "$VOLUME:/dst" \
+            alpine:3 sh -c 'cp -a /src/. /dst/'
+
+      - name: Build & start devcontainer
+        if: steps.guard.outputs.skip != 'true'
+        uses: devcontainers/ci@v0.3
+        with:
+          imageName: toolhive-studio-devcontainer
+          cacheFrom: type=gha
+          push: never
+          runCmd: |
+            echo "Devcontainer up. Workspace: $(pwd)"
+
+      - name: Find container ID
+        if: steps.guard.outputs.skip != 'true'
+        id: container
+        run: |
+          C=$(docker ps \
+            --filter "label=devcontainer.local_folder=$GITHUB_WORKSPACE" \
+            --format '{{.ID}}' | head -1)
+          if [ -z "$C" ]; then
+            echo "::error::No devcontainer found for $GITHUB_WORKSPACE"
+            docker ps
+            exit 1
+          fi
+          echo "id=$C" >> $GITHUB_OUTPUT
+          echo "::notice::Devcontainer ID: $C"
+
+      - name: Launch app inside devcontainer (background)
+        if: steps.guard.outputs.skip != 'true'
+        run: |
+          docker exec -d -u node ${{ steps.container.outputs.id }} \
+            bash -c 'cd /workspaces/toolhive-studio && \
+              nohup bash scripts/devcontainer-entrypoint.sh \
+                > /tmp/entrypoint.log 2>&1 &'
+
+      - name: Wait for app readiness
+        if: steps.guard.outputs.skip != 'true'
+        timeout-minutes: 10
+        run: |
+          C=${{ steps.container.outputs.id }}
+          for i in $(seq 1 120); do
+            # Process gates AND a window-mapped check via xdotool. Process
+            # presence is not the same as "UI rendered" — see PR #2120.
+            if docker exec -u node "$C" bash -c '
+                curl -fsS http://localhost:6080/ >/dev/null 2>&1 \
+                && pgrep -f "[e]lectron/dist/electron" >/dev/null \
+                && pgrep -f "[t]hv serve" >/dev/null \
+                && DISPLAY=:99 xdotool search --class ToolHive >/dev/null 2>&1
+              '; then
+              sleep 2
+              echo "::notice::App ready in ${i} attempts"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::App did not become ready within 10 minutes"
+          docker exec "$C" tail -200 /tmp/entrypoint.log || true
+          exit 1
+
+      # ---------- /Devcontainer substrate ----------
+
+      - name: 'Phase 1 — Analyze & Write Failing Test (Opus)'
+        id: phase1
+        if: steps.guard.outputs.skip != 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@11a9dadd198803a0cea6bd53da3e0e8a762fc6ea # v1
+        env:
+          DEVCONTAINER_ID: ${{ steps.container.outputs.id }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read .claude/skills/bug-fix-tdd/SKILL.md and follow it.
+            Read .claude/skills/devcontainer-dev/SKILL.md for live-app context.
+            Read issue-body.md for the bug report.
+
+            LIVE APP AVAILABLE:
+            A running ToolHive Studio is available inside the project's devcontainer.
+            All driving goes through `bash .claude/skills/devcontainer-dev/scripts/agent.sh` — a tightly-scoped
+            wrapper that finds the worktree's container by label and execs only
+            the documented commands. See .claude/skills/devcontainer-dev/SKILL.md
+            for the full surface. The workspace is bind-mounted at
+            /workspaces/toolhive-studio inside the container, so renderer source
+            edits on the runner propagate via Vite HMR.
+
+            Two important constraints:
+              - After editing renderer code, `sleep 2` before re-screenshotting so
+                HMR has time to apply. Otherwise you will see stale UI.
+              - If your fix touches anything under `main/`, visual verification
+                will NOT work in this run — Electron would need a manual restart
+                that costs ~15s and breaks the loop. Rely on unit tests for
+                main-process changes.
+
+            The agent loop is: capture screen → Read it with the Read tool →
+            reason about what you see → act → capture again.
+
+            Useful commands:
+              # Capture screen to a runner-side path, then Read it:
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh shot ./shot.png
+              # Cropped screenshot for vision-model focus (WxH+X+Y):
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh shot --crop 800x600+560+300 ./dialog.png
+              # Tail one of the in-container logs (xvfb, fluxbox, x11vnc,
+              # websockify, keyring, entrypoint):
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh tail entrypoint
+              # Find the main window — its WM_CLASS is ToolHive:
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo search --class ToolHive
+              # Drive input — keyboard is more reliable than mouse-coordinate clicks:
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo key Tab
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo key Return
+              # Mouse coordinates are fragile (modals shift the layout); use sparingly:
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh xdo mousemove X Y click 1
+              # One-call readiness check (electron, thv serve, window, noVNC):
+              bash .claude/skills/devcontainer-dev/scripts/agent.sh health
+
+            WHEN TO USE THE LIVE APP:
+            Default to a unit-test reproduction. Reach for the live app only when
+            the bug genuinely requires it: cross-route side effects, async backend
+            lifecycle (`thv` workload events), real IPC. Pixel-driving is fragile
+            and slow — even when you use the live app for repro, your eventual
+            FAILING TEST should be a unit test that captures the underlying
+            invariant (e.g. mock the IPC event and assert the router behavior).
+            The unit test is what gates Phase 2.
+
+            Your task (Phase 1 — Analysis & Test):
+            1. Analyze the bug report: understand description, steps to reproduce, expected vs actual behavior.
+            2. Search the codebase to find the relevant source code.
+            3. Reproduce the bug. Use the live app if a unit test alone is not enough.
+            4. Write a unit test that captures the bug — it MUST FAIL when you run it.
+            5. Run the test with: pnpm run test:nonInteractive -- <test-file-path>
+            6. Verify the test fails FOR THE RIGHT REASON (not import errors or unrelated failures).
+            7. If the test passes (bug not reproduced), try a different approach (max 3 attempts).
+
+            Output:
+            - The test file in the correct __tests__/ directory.
+            - bug-analysis.md with your findings (follow the format in the skill).
+              Include a "Visual repro:" section if you used the live app.
+
+            Do NOT modify any source files. Only create/edit test files and bug-analysis.md.
+          claude_args: >-
+            --model opus
+            --max-turns 75
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)"
+
+      - name: 'Hard gate — Verify test fails'
+        id: gate
+        if: steps.guard.outputs.skip != 'true' && steps.phase1.outcome == 'success'
+        run: |
+          if [ ! -f bug-analysis.md ]; then
+            echo "::warning::bug-analysis.md not found"
+            echo "test_fails=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          TEST_FILE=$(grep "^Test file:" bug-analysis.md | sed 's/^Test file: //' || true)
+          if [ -z "$TEST_FILE" ]; then
+            echo "::warning::No 'Test file:' line found in bug-analysis.md"
+            echo "test_fails=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "test_file=$TEST_FILE" >> $GITHUB_OUTPUT
+
+          if pnpm run test:nonInteractive -- "$TEST_FILE" 2>&1; then
+            echo "::warning::Test passed (bug not reproduced)"
+            echo "test_fails=false" >> $GITHUB_OUTPUT
+          else
+            echo "::notice::Test fails as expected"
+            echo "test_fails=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: 'Phase 2 — TDD Fix (Sonnet)'
+        id: phase2
+        if: >-
+          steps.guard.outputs.skip != 'true'
+          && steps.gate.outputs.test_fails == 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@11a9dadd198803a0cea6bd53da3e0e8a762fc6ea # v1
+        env:
+          BUG_TEST_FILE: ${{ steps.gate.outputs.test_file }}
+          BUG_ISSUE_NUMBER: ${{ inputs.issue-number }}
+          DEVCONTAINER_ID: ${{ steps.container.outputs.id }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read .claude/skills/bug-fix-tdd/SKILL.md and bug-analysis.md.
+
+            The live app from Phase 1 is still running in the devcontainer
+            (ID: $DEVCONTAINER_ID). You may use it to sanity-check your fix
+            visually, but the gate is still: pnpm run test:nonInteractive passes.
+
+            Your task (Phase 2 — Fix):
+            1. Read the failing test and understand what it expects.
+            2. Apply the MINIMUM fix to make the test pass.
+            3. Run the test to verify it passes: pnpm run test:nonInteractive -- ${{ steps.gate.outputs.test_file }}
+            4. Run the full test suite: pnpm run test:nonInteractive
+            5. Run pnpm run lint and pnpm run type-check.
+            6. If any check fails, adjust the fix (max 5 attempts).
+            7. Write pr-body.md (include 'Fixes #${{ inputs.issue-number }}') and fix-title.txt.
+
+            Do NOT run git, gh, or modify .env files.
+            Do NOT over-engineer — apply the smallest change that fixes the bug.
+          claude_args: >-
+            --model sonnet
+            --max-turns 150
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)"
+
+      - name: 'Phase 2b — Direct Fix without TDD (Sonnet)'
+        id: phase2b
+        if: >-
+          steps.guard.outputs.skip != 'true'
+          && steps.phase1.outcome == 'success'
+          && steps.gate.outputs.test_fails != 'true'
+        continue-on-error: true
+        uses: anthropics/claude-code-action@11a9dadd198803a0cea6bd53da3e0e8a762fc6ea # v1
+        env:
+          BUG_ISSUE_NUMBER: ${{ inputs.issue-number }}
+          DEVCONTAINER_ID: ${{ steps.container.outputs.id }}
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Read .claude/skills/bug-fix-tdd/SKILL.md and bug-analysis.md.
+            Read issue-body.md for the original bug report.
+
+            The bug could NOT be reproduced in a unit test, even with live-app access.
+            bug-analysis.md contains the analysis of the bug from Phase 1.
+
+            The live app from Phase 1 is still running in the devcontainer
+            (ID: $DEVCONTAINER_ID). You may use it to sanity-check your fix.
+
+            Your task (Phase 2b — Direct Fix):
+            1. Read the analysis and understand the root cause.
+            2. Apply the MINIMUM fix to resolve the bug.
+            3. If you CAN write a regression test, do so — but it is not required.
+            4. Run the full test suite: pnpm run test:nonInteractive
+            5. Run pnpm run lint and pnpm run type-check.
+            6. If any check fails, adjust the fix (max 5 attempts).
+            7. Write pr-body.md (include 'Fixes #${{ inputs.issue-number }}').
+               Note in the PR body that no regression test was possible.
+            8. Write fix-title.txt.
+
+            Do NOT run git, gh, or modify .env files.
+            Do NOT over-engineer — apply the smallest change that fixes the bug.
+          claude_args: >-
+            --model sonnet
+            --max-turns 150
+            --allowedTools "Read,Grep,Glob,Edit,Write,Bash(pnpm run test:nonInteractive *),Bash(pnpm run lint),Bash(pnpm run type-check),Bash(cat *),Bash(ls *),Bash(sleep *),Bash(bash .claude/skills/devcontainer-dev/scripts/agent.sh:*)"
+
+      - name: 'Hard gate — Verify all checks pass'
+        id: verify
+        if: >-
+          steps.guard.outputs.skip != 'true'
+          && (steps.phase2.outcome == 'success' || steps.phase2b.outcome == 'success')
+        run: |
+          if pnpm run test:nonInteractive && pnpm run lint && pnpm run type-check; then
+            echo "::notice::All checks pass"
+            echo "result=success" >> $GITHUB_OUTPUT
+          else
+            echo "::warning::Verification failed"
+            echo "result=failure" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create branch and commit
+        if: steps.guard.outputs.skip != 'true' && steps.verify.outputs.result == 'success'
+        id: push
+        run: |
+          ISSUE_NUM="${{ inputs.issue-number }}"
+          BRANCH="fix/auto-${ISSUE_NUM}-visual"
+          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${ISSUE_NUM}")
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -B "$BRANCH"
+
+          git add -A -- '*.ts' '*.tsx' '**/*.ts' '**/*.tsx'
+
+          if git diff --cached --quiet; then
+            echo "::warning::No source changes to commit"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            git commit -m "$TITLE"
+            git push -u origin "$BRANCH"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Pull Request
+        if: steps.guard.outputs.skip != 'true' && steps.verify.outputs.result == 'success' && steps.push.outputs.has_changes == 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          BRANCH="${{ steps.push.outputs.branch }}"
+          BASE="${{ github.event.repository.default_branch }}"
+          TITLE=$(cat fix-title.txt 2>/dev/null || echo "fix: auto-fix for #${{ inputs.issue-number }}")
+
+          if [ ! -f pr-body.md ]; then
+            echo "Automated fix for #${{ inputs.issue-number }} (visual flow)." > pr-body.md
+          fi
+
+          printf '\n\n---\n_Generated by the Visual Bug Fix Agent (with live-app access)._\n' \
+            >> pr-body.md
+
+          gh label create auto-fix-visual --description "Automated bug fix by Visual Bug Fix Agent" --color FBCA04 2>/dev/null || true
+          gh pr create \
+            --title "$TITLE" \
+            --body-file pr-body.md \
+            --base "$BASE" \
+            --head "$BRANCH" \
+            --label "auto-fix-visual"
+
+      - name: Comment on issue (all attempts failed)
+        if: >-
+          always()
+          && steps.guard.outputs.skip != 'true'
+          && steps.verify.outputs.result != 'success'
+          && steps.phase1.outcome != 'skipped'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f bug-analysis.md ]; then
+            ANALYSIS=$(cat bug-analysis.md)
+          else
+            ANALYSIS="The Visual Bug Fix Agent could not analyze this bug. The issue may involve behavior that cannot be captured in a unit test even with live-app access."
+          fi
+
+          printf '## Visual Bug Fix Agent — Automated Analysis\n\n%s\n\n---\n*Automated analysis by the Visual Bug Fix Agent (live-app access). A developer will review this issue manually.*\n' \
+            "$ANALYSIS" > /tmp/comment-body.md
+
+          gh issue comment "${{ inputs.issue-number }}" --body-file /tmp/comment-body.md
+          gh issue edit "${{ inputs.issue-number }}" --remove-label "auto-fix-visual" 2>/dev/null || true
+
+      - name: Diagnostics on failure
+        if: >-
+          always()
+          && steps.guard.outputs.skip != 'true'
+          && steps.verify.outputs.result != 'success'
+        run: |
+          C=${{ steps.container.outputs.id }}
+          if [ -n "$C" ]; then
+            echo '=== Container processes ==='
+            docker exec "$C" ps auxf || true
+            echo '=== entrypoint.log ==='
+            docker exec "$C" tail -300 /tmp/entrypoint.log || true
+            echo '=== xvfb.log ==='
+            docker exec "$C" tail -100 /tmp/xvfb.log || true
+            echo '=== fluxbox.log ==='
+            docker exec "$C" tail -100 /tmp/fluxbox.log || true
+            echo '=== keyring.log ==='
+            docker exec "$C" tail -50 /tmp/keyring.log || true
+          fi
+
+      - name: Dump devcontainer node_modules for cache
+        # Cache miss only — populates nm-cache/ for actions/cache's post-step
+        # to save. Multiple containers can mount the same volume, so this
+        # doesn't disturb the running app.
+        if: >-
+          always()
+          && steps.guard.outputs.skip != 'true'
+          && steps.nm-cache.outputs.cache-hit != 'true'
+        run: |
+          VOLUME=toolhive-node-modules-toolhive-studio
+          rm -rf nm-cache && mkdir -p nm-cache
+          docker run --rm \
+            -v "$VOLUME:/src:ro" \
+            -v "$PWD/nm-cache:/dst" \
+            alpine:3 sh -c 'cp -a /src/. /dst/' || true
