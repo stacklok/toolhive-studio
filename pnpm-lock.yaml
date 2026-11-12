@@ -343,8 +343,8 @@ importers:
         specifier: ^31.0.0
         version: 31.0.0
       json-schema-faker:
-        specifier: ^0.6.3
-        version: 0.6.3
+        specifier: ^0.6.4
+        version: 0.6.4
       knip:
         specifier: ^6.44.2
         version: 6.45.1
@@ -5532,8 +5532,8 @@ packages:
     engines: {node: '>=6'}
     hasBin: true
 
-  json-schema-faker@0.6.3:
-    resolution: {integrity: sha512-rsH48E/b5KFpgvKlcFjplB+zwOZk2FhYCQwcM6y09ApZkVl3D7PhcRIrDhpfR+w1AhNOrv0bumJElBz4X++KBA==}
+  json-schema-faker@0.6.4:
+    resolution: {integrity: sha512-wffgXi/0Fv9wfNRFMsS5pe6vnABDFPDe4w2Y2uoS0ldvPS8+uTWpIlJ1Unzm3uh3VpH17O5Jj7hvO0gXkhcV+Q==}
     hasBin: true
 
   json-schema-traverse@0.4.1:
@@ -13421,7 +13421,7 @@ snapshots:
 
   jsesc@3.1.0: {}
 
-  json-schema-faker@0.6.3: {}
+  json-schema-faker@0.6.4: {}
 
   json-schema-traverse@0.4.1: {}
 
