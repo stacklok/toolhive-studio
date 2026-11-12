@@ -30,7 +30,7 @@ importers:
         specifier: ^3.0.87
         version: 3.0.87(zod@4.6.7)
       '@ai-sdk/react':
-        specifier: ^4.0.169
+        specifier: ^4.0.170
         version: 4.0.170(react@19.3.1)(zod@4.6.7)
       '@ai-sdk/xai':
         specifier: ^5.0.40
@@ -135,7 +135,7 @@ importers:
         specifier: ^3.14.26
         version: 3.14.26(react-dom@19.3.1(react@19.3.1))(react@19.3.1)
       ai:
-        specifier: ^7.0.165
+        specifier: ^7.0.166
         version: 7.0.166(zod@4.6.7)
       ai-sdk-ollama:
         specifier: ^4.6.3
