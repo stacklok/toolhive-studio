@@ -3,9 +3,20 @@ import * as Sentry from '@sentry/electron/renderer'
 export function initSentry() {
   Sentry.init({
     enabled: !!import.meta.env.VITE_SENTRY_DSN,
-    // Adds request headers and IP for users, for more info visit:
-    // https://docs.sentry.io/platforms/javascript/guides/electron/configuration/options/#sendDefaultPii
-    sendDefaultPii: true,
+    // SDK v11 replaced `sendDefaultPii` with `dataCollection`. Its defaults
+    // match our previous `sendDefaultPii: true` (request headers and user IP),
+    // but also collect request/response bodies and AI/MCP inputs and outputs,
+    // which can contain secrets and chat content, so turn those off.
+    // https://docs.sentry.io/platforms/javascript/configuration/options/#dataCollection
+    dataCollection: {
+      httpBodies: [],
+      genAI: { inputs: false, outputs: false },
+      mcp: { inputs: false, outputs: false },
+    },
+    // SDK v11 streams spans by default, which turns `beforeSendTransaction`
+    // into a no-op. We rely on it to honour the telemetry opt-out and to add
+    // custom trace data, so keep the transaction-based lifecycle.
+    traceLifecycle: 'static',
     integrations: [
       Sentry.browserTracingIntegration(),
       Sentry.replayIntegration(),
