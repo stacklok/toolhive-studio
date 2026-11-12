@@ -1,7 +1,6 @@
 import { createMcpHandler, McpServer } from '@modelcontextprotocol/server'
-import express from 'express'
 import { z } from 'zod'
-import type { Server } from 'http'
+import { createServer, type IncomingMessage } from 'node:http'
 
 // Simple word+number format (e.g. "apple42") - hard to guess randomly but simple enough
 // to avoid hallucination when testing with small models for performance.
@@ -31,8 +30,8 @@ export interface TestMcpServer {
 }
 
 async function readRequestBody(
-  req: express.Request
-): Promise<Uint8Array | undefined> {
+  req: IncomingMessage
+): Promise<Buffer | undefined> {
   if (
     req.method === 'GET' ||
     req.method === 'HEAD' ||
@@ -41,17 +40,23 @@ async function readRequestBody(
     return undefined
   }
 
-  if (Buffer.isBuffer(req.body)) {
-    return req.body.length > 0 ? req.body : undefined
+  const chunks: Buffer[] = []
+  for await (const chunk of req) {
+    chunks.push(chunk as Buffer)
   }
+  const body = Buffer.concat(chunks)
+  return body.length > 0 ? body : undefined
+}
 
-  // express.raw() leaves `{}` for empty bodies — do not forward that as "{}".
-  if (req.body && typeof req.body === 'object') {
-    if (Object.keys(req.body).length === 0) return undefined
-    return Buffer.from(JSON.stringify(req.body))
+function toFetchHeaders(req: IncomingMessage): Headers {
+  const headers = new Headers()
+  for (const [key, value] of Object.entries(req.headers)) {
+    if (value === undefined) continue
+    for (const v of Array.isArray(value) ? value : [value]) {
+      headers.append(key, v)
+    }
   }
-
-  return undefined
+  return headers
 }
 
 function createTestMcpHandler(secretCode: string, serverName: string) {
@@ -91,38 +96,38 @@ async function startStreamableHttpMcpServer(options: {
   const bearerToken = `token-${generateSimpleCode()}`
   const handler = createTestMcpHandler(secretCode, options.serverName)
 
-  const app = express()
-  app.use(express.raw({ type: '*/*' }))
+  const httpServer = createServer(async (req, res) => {
+    const host = req.headers.host ?? '127.0.0.1'
+    const url = new URL(req.url ?? '/', `http://${host}`)
 
-  app.get('/.well-known/oauth-protected-resource', (_req, res) => {
-    res.status(404).send('Not found')
-  })
-  app.get('/.well-known/oauth-protected-resource/mcp', (_req, res) => {
-    res.status(404).send('Not found')
-  })
+    if (req.method === 'GET' && url.pathname === '/') {
+      res.statusCode = 200
+      res.setHeader('content-type', 'application/json')
+      res.end(JSON.stringify(options.healthPayload))
+      return
+    }
 
-  app.get('/', (_req, res) => {
-    res.json(options.healthPayload)
-  })
+    if (url.pathname !== '/mcp') {
+      res.statusCode = 404
+      res.end('Not found')
+      return
+    }
 
-  app.all('/mcp', async (req, res) => {
     if (req.method !== 'OPTIONS') {
-      const authHeader = req.headers.authorization
-      if (authHeader !== `Bearer ${bearerToken}`) {
-        res.status(401).send('Unauthorized')
+      if (req.headers.authorization !== `Bearer ${bearerToken}`) {
+        res.statusCode = 401
+        res.end('Unauthorized')
         return
       }
     }
 
     try {
-      const host = req.headers.host ?? '127.0.0.1'
-      const url = new URL(req.url ?? '/mcp', `http://${host}`)
       const body = await readRequestBody(req)
       const response = await handler.fetch(
         new Request(url, {
           method: req.method,
-          headers: req.headers as HeadersInit,
-          body: body && body.length > 0 ? Buffer.from(body) : undefined,
+          headers: toFetchHeaders(req),
+          body: body ? new Uint8Array(body) : undefined,
         })
       )
 
@@ -130,8 +135,7 @@ async function startStreamableHttpMcpServer(options: {
       response.headers.forEach((value, key) => {
         res.setHeader(key, value)
       })
-      const responseBody = Buffer.from(await response.arrayBuffer())
-      res.end(responseBody)
+      res.end(Buffer.from(await response.arrayBuffer()))
     } catch (error) {
       res.statusCode = 500
       res.end(String(error))
@@ -139,7 +143,7 @@ async function startStreamableHttpMcpServer(options: {
   })
 
   return new Promise((resolve) => {
-    const httpServer: Server = app.listen(0, () => {
+    httpServer.listen(0, () => {
       const address = httpServer.address()
       const port = typeof address === 'object' && address ? address.port : 0
 

@@ -62,8 +62,7 @@ export const CHAT_PROVIDERS: ChatProvider[] = [
     models: CHAT_PROVIDER_INFO.find((p) => p.id === 'xai')?.models || [],
     createModel: (modelId: string, apiKey: string) => {
       const xai = createXai({ apiKey })
-      // AI SDK v7 defaults xai() to the Responses API; keep Chat Completions.
-      return xai.chat(modelId)
+      return xai(modelId)
     },
   },
   {
