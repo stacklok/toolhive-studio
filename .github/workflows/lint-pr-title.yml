@@ -20,4 +20,6 @@ jobs:
           pnpm i -D -w commitlint @commitlint/config-conventional
 
       - name: Validate PR title
-        run: echo "${{ github.event.pull_request.title }}" | pnpm dlx commitlint -x '@commitlint/config-conventional'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$PR_TITLE" | pnpm dlx commitlint -x '@commitlint/config-conventional'
