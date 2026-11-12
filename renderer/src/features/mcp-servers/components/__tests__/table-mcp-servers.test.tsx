@@ -91,6 +91,31 @@ describe('TableMcpServers', () => {
     expect(screen.getByRole('switch', { name: /mutate server/i })).toBeChecked()
   })
 
+  it('shows an unauthenticated server as needing authentication, with the reason on hover', async () => {
+    const router = makeRouter([
+      {
+        ...baseServer,
+        remote: true,
+        status: 'unauthenticated',
+        status_context: 'Token refresh failed: invalid_grant',
+      },
+    ])
+    renderRoute(router)
+
+    const label = await screen.findByText('Authentication required')
+    expect(
+      screen.getByRole('switch', { name: /mutate server/i })
+    ).not.toBeChecked()
+
+    await userEvent.setup().hover(label)
+
+    await waitFor(() => {
+      expect(screen.getByRole('tooltip')).toHaveTextContent(
+        'Token refresh failed: invalid_grant'
+      )
+    })
+  })
+
   it('exposes the full server actions dropdown on each row', async () => {
     const router = makeRouter([baseServer])
     renderRoute(router)

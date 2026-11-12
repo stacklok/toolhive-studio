@@ -73,6 +73,7 @@ function UpdateVersionButton({
 
 type CardContentMcpServerProps = {
   status: CoreWorkload['status']
+  statusContext?: CoreWorkload['status_context']
   name: string
   transport: CoreWorkload['transport_type']
   group?: CoreWorkload['group']
@@ -84,6 +85,7 @@ type CardContentMcpServerProps = {
 function CardContentMcpServer({
   name,
   status,
+  statusContext,
   transport,
   group,
   drift,
@@ -113,6 +115,7 @@ function CardContentMcpServer({
         >
           <ActionsMcpServer
             status={status}
+            statusContext={statusContext}
             isPending={isRestartPending || isStopPending}
             mutate={() => {
               if (isRunning) {
@@ -156,6 +159,7 @@ function CardContentMcpServer({
 export function CardMcpServer({
   name,
   status,
+  statusContext,
   url,
   remote,
   transport,
@@ -289,6 +293,7 @@ export function CardMcpServer({
       </CardHeader>
       <CardContentMcpServer
         status={status}
+        statusContext={statusContext}
         name={name}
         transport={transport}
         group={group}

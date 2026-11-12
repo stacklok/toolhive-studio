@@ -23,12 +23,7 @@ import { useMutationRestartServer } from '../hooks/use-mutation-restart-server'
 import { useMutationStopServerList } from '../hooks/use-mutation-stop-server'
 import { useUpdateVersion } from '../hooks/use-update-version'
 import { ServerActionsDropdown } from './card-mcp-server/server-actions'
-
-function getStatusText(status: CoreWorkload['status'] | 'restarting') {
-  if (status === 'removing') return 'Deleting'
-  if (status === 'restarting') return 'Restarting'
-  return status
-}
+import { WorkloadStatusLabel } from './workload-status-label'
 
 function UpdateVersionButton({
   serverName,
@@ -183,12 +178,11 @@ function McpServerRow({ mcpServer }: { mcpServer: CoreWorkload }) {
             onClick={(e) => e.stopPropagation()}
             onCheckedChange={toggleServer}
           />
-          <span
-            className="text-muted-foreground min-w-0 flex-1 truncate text-sm
-              capitalize"
-          >
-            {getStatusText(status)}
-          </span>
+          <WorkloadStatusLabel
+            status={status}
+            statusContext={mcpServer.status_context}
+            className="min-w-0 flex-1 truncate"
+          />
         </div>
       </TableCell>
 
