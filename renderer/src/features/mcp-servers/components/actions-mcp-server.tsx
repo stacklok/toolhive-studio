@@ -1,20 +1,15 @@
 import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { Switch } from '@/common/components/ui/switch'
-
-function getStatusText(status: CoreWorkload['status'] | 'restarting') {
-  // 'removing' maps to 'Deleting' for UI purposes
-  if (status === 'removing') return 'Deleting'
-  // 'restarting' is a UI-only status, not part of the backend union type
-  if (status === 'restarting') return 'Restarting'
-  return status
-}
+import { WorkloadStatusLabel } from './workload-status-label'
 
 export function ActionsMcpServer({
   status,
+  statusContext,
   isPending,
   mutate,
 }: {
   status: CoreWorkload['status']
+  statusContext?: CoreWorkload['status_context']
   isPending: boolean
   mutate: () => void
 }) {
@@ -31,9 +26,7 @@ export function ActionsMcpServer({
           onCheckedChange={() => mutate()}
         />
       </div>
-      <span className="text-muted-foreground text-sm capitalize">
-        {getStatusText(status)}
-      </span>
+      <WorkloadStatusLabel status={status} statusContext={statusContext} />
     </div>
   )
 }
