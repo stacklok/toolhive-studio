@@ -85,7 +85,7 @@
     "json-schema-faker": "^0.6.3",
     "knip": "^6.35.1",
     "lint-staged": "^17.6.0",
-    "memfs": "^4.75.0",
+    "memfs": "^4.80.0",
     "msw": "^3.0.4",
     "prettier": "3.9.10",
     "prettier-plugin-classnames": "^0.10.5",
