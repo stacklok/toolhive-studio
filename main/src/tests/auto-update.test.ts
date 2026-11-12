@@ -1,7 +1,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { EventEmitter } from 'node:events'
 import type { BrowserWindow, Tray } from 'electron'
-import { app, autoUpdater, dialog, ipcMain } from 'electron'
+import { app, autoUpdater, dialog, ipcMain, shell } from 'electron'
+import { getGitHubReleaseUrl } from '@common/app-info'
 import {
   initAutoUpdate,
   resetUpdateState,
@@ -48,6 +49,9 @@ vi.mock('electron', () => {
     autoUpdater: mockAutoUpdater,
     dialog: {
       showMessageBox: vi.fn(),
+    },
+    shell: {
+      openExternal: vi.fn(),
     },
     ipcMain: {
       handle: vi.fn(),
@@ -209,7 +213,7 @@ describe('auto-update', () => {
       vi.mocked(pollWindowReady).mockResolvedValue(undefined)
       vi.mocked(delay).mockResolvedValue(undefined)
       vi.mocked(dialog.showMessageBox).mockResolvedValue({
-        response: 1,
+        response: 2,
         checkboxChecked: false,
       }) // "Later" by default
 
@@ -322,7 +326,7 @@ describe('auto-update', () => {
 
       it('handles update-downloaded event with user clicking later', async () => {
         vi.mocked(dialog.showMessageBox).mockResolvedValue({
-          response: 1,
+          response: 2,
           checkboxChecked: false,
         }) // "Later"
 
@@ -336,6 +340,32 @@ describe('auto-update', () => {
           'update-downloaded'
         )
         expect(vi.mocked(stopAllServers)).not.toHaveBeenCalled()
+      })
+
+      it('opens release notes from the update confirmation dialog', async () => {
+        vi.mocked(dialog.showMessageBox).mockResolvedValue({
+          response: 1,
+          checkboxChecked: false,
+        }) // "View Release Notes"
+
+        vi.mocked(autoUpdater).emit('update-downloaded', null, null, 'v1.2.3')
+
+        await vi.runAllTimersAsync()
+
+        expect(vi.mocked(dialog.showMessageBox)).toHaveBeenCalledWith(
+          mockMainWindow,
+          expect.objectContaining({
+            buttons: ['Restart', 'View Release Notes', 'Later'],
+            cancelId: 2,
+          })
+        )
+        expect(vi.mocked(shell.openExternal)).toHaveBeenCalledWith(
+          getGitHubReleaseUrl('v1.2.3')
+        )
+        expect(vi.mocked(stopAllServers)).not.toHaveBeenCalled()
+        expect(mockMainWindow.webContents.send).toHaveBeenCalledWith(
+          'update-downloaded'
+        )
       })
 
       it('prevents concurrent update operations', async () => {
@@ -371,7 +401,7 @@ describe('auto-update', () => {
         const createWindowSpy = vi.fn().mockResolvedValue(newWindow)
 
         vi.mocked(dialog.showMessageBox).mockResolvedValue({
-          response: 1,
+          response: 2,
           checkboxChecked: false,
         }) // "Later"
 
@@ -934,7 +964,7 @@ describe('auto-update', () => {
 
         const createWindow = vi.fn(async () => newWindow)
         vi.mocked(dialog.showMessageBox).mockResolvedValue({
-          response: 1,
+          response: 2,
           checkboxChecked: false,
         }) // Later
 
