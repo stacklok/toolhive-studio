@@ -107,7 +107,7 @@ jobs:
 
       - name: Evaluate issues with Claude (Sonnet)
         if: steps.candidates.outputs.skip != 'true' && steps.filter.outputs.skip != 'true'
-        uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe # v1.0.269
+        uses: anthropics/claude-code-action@4fa93a88de49bbef68b10eb15aabedf28ca0e1ed # v1.0.271
         with:
           anthropic_api_key: ${{ secrets.STACKLOK_GATEWAY_KEY_BUG_FIX }}
           prompt: |
