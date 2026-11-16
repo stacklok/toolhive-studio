@@ -97,7 +97,7 @@
     "typescript": "npm:@typescript/typescript6@6.0.2",
     "typescript-eslint": "^8.72.2",
     "unzipper": "^0.12.5",
-    "vite": "^8.3.7",
+    "vite": "^8.3.8",
     "vitest": "^5.1.0",
     "vitest-fail-on-console": "^0.10.1"
   },
