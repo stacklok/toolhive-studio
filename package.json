@@ -87,7 +87,7 @@
     "lint-staged": "^17.6.0",
     "memfs": "^4.80.1",
     "msw": "^3.0.5",
-    "prettier": "3.9.10",
+    "prettier": "3.10.1",
     "prettier-plugin-classnames": "^0.10.5",
     "prettier-plugin-merge": "^0.10.2",
     "prettier-plugin-tailwindcss": "^0.8.1",
