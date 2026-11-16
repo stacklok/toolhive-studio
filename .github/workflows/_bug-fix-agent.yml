@@ -79,7 +79,7 @@ jobs:
         id: phase1
         if: steps.guard.outputs.skip != 'true'
         continue-on-error: true
-        uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe # v1.0.269
+        uses: anthropics/claude-code-action@4d75e5f390ee76b2e09c1980ecc99ff3a2e088c8 # v1.0.275
         with:
           anthropic_api_key: ${{ secrets.STACKLOK_GATEWAY_KEY_BUG_FIX }}
           prompt: |
@@ -137,7 +137,7 @@ jobs:
           steps.guard.outputs.skip != 'true'
           && steps.gate.outputs.test_fails == 'true'
         continue-on-error: true
-        uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe # v1.0.269
+        uses: anthropics/claude-code-action@4d75e5f390ee76b2e09c1980ecc99ff3a2e088c8 # v1.0.275
         env:
           BUG_TEST_FILE: ${{ steps.gate.outputs.test_file }}
           BUG_ISSUE_NUMBER: ${{ inputs.issue-number }}
@@ -169,7 +169,7 @@ jobs:
           && steps.phase1.outcome == 'success'
           && steps.gate.outputs.test_fails != 'true'
         continue-on-error: true
-        uses: anthropics/claude-code-action@61a9c274fa7110a66dfafc1bbbced03833eb25fe # v1.0.269
+        uses: anthropics/claude-code-action@4d75e5f390ee76b2e09c1980ecc99ff3a2e088c8 # v1.0.275
         env:
           BUG_ISSUE_NUMBER: ${{ inputs.issue-number }}
         with:
