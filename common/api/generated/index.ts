@@ -85,6 +85,8 @@ export type {
   AuthserverCimdRunConfig,
   AuthserverDcrUpstreamConfig,
   AuthserverDelegateClientExchangeRefreshTokens,
+  AuthserverDelegateClientIdjag,
+  AuthserverDelegateClientIdjagTarget,
   AuthserverDelegateClientRunConfig,
   AuthserverDelegateClientTokenExchange,
   AuthserverIdentityFromTokenRunConfig,

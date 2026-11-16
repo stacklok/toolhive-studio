@@ -290,6 +290,54 @@ export type AuthserverDelegateClientExchangeRefreshTokens = {
   refresh_token_max_lifetime?: string
 }
 
+/**
+ * IDJAG lists the authorization servers this client may ask for an
+ * Identity Assertion JWT Authorization Grant (ID-JAG) for. Valid only with
+ * restricted, with exchange_refresh_tokens.id_jag_max_lifetime set, and with
+ * token exchange enabled.
+ */
+export type AuthserverDelegateClientIdjag = {
+  /**
+   * Targets are the authorization servers the client may ask for an ID-JAG
+   * for. At least one is required.
+   */
+  targets?: Array<AuthserverDelegateClientIdjagTarget>
+}
+
+export type AuthserverDelegateClientIdjagTarget = {
+  /**
+   * ClientID is this client's client_id at the other authorization server.
+   */
+  client_id?: string
+  /**
+   * Issuer is the issuer of the other authorization server. The client sends
+   * it as the request's audience, and it becomes the ID-JAG's aud exactly as
+   * written here. It must be an absolute https URL, or http on a loopback
+   * host, with no query, fragment or userinfo. It must be well-formed: lower-case
+   * scheme and host, no default port (":443" for https, ":80" for http), no dot
+   * segments, empty path segments, unneeded percent-encoding or leading zeros
+   * in the port. One trailing slash is allowed and is kept as written. It must
+   * be unique within the client, and the (issuer, client_id) pair must be
+   * unique across delegate clients; both comparisons ignore one trailing
+   * slash. It must not be this server's issuer, token endpoint or one of its
+   * allowed_audiences; that comparison ignores case in the scheme and host, a
+   * default port and one trailing slash.
+   */
+  issuer?: string
+  /**
+   * Lifetime is how long each ID-JAG lives, as a Go duration string in whole
+   * seconds (e.g. "60s"). Defaults to 60s; at most 300s.
+   */
+  lifetime?: string
+  /**
+   * Resources are the resources behind the other authorization server, such
+   * as an MCP endpoint, that the client may name as the request's resource.
+   * At least one is required. Each must be a valid RFC 8707 resource URI,
+   * listed once.
+   */
+  resources?: Array<string>
+}
+
 export type AuthserverDelegateClientRunConfig = {
   /**
    * Audiences are output only: the upper bound on the audiences of the
@@ -386,6 +434,7 @@ export type AuthserverDelegateClientTokenExchange = {
    */
   allowed_source_clients?: Array<string>
   exchange_refresh_tokens?: AuthserverDelegateClientExchangeRefreshTokens
+  id_jag?: AuthserverDelegateClientIdjag
   /**
    * SelfIssuedSubjectTokens is any or restricted, and is required. With
    * restricted, a self-issued subject token must carry the client's own
@@ -899,8 +948,10 @@ export type AuthserverRunConfig = {
   upstream_filter?: UpstreamfilterGroupBasedFilterConfig
   /**
    * Upstreams configures connections to upstream Identity Providers for
-   * interactive authorization. It may be empty only when DelegateClients or a
-   * TrustedIssuer with JWTBearerGrant enables token-only operation.
+   * interactive authorization. It may be empty only when token-only operation
+   * is enabled by DelegateClients (also under InboundGrants.TokenExchange),
+   * InboundGrants.SPIFFEClientAuth, or a TrustedIssuer with JWTBearerGrant
+   * (also under InboundGrants.JWTBearer).
    * Multiple upstreams are supported for sequential authorization chains.
    */
   upstreams?: Array<AuthserverUpstreamRunConfig>
@@ -920,8 +971,8 @@ export type AuthserverSpiffeBundleEndpointSourceRunConfig = {
 
 /**
  * BundleSource declares exactly one trust-bundle source and is validated for
- * shape here. The standalone file loader exists, but source initialization
- * is not wired into SPIFFE authentication.
+ * shape here. Only the file source is loaded in this build; bundle_endpoint
+ * and workload_api are rejected by Validate.
  */
 export type AuthserverSpiffeBundleSourceRunConfig = {
   endpoint?: AuthserverSpiffeBundleEndpointSourceRunConfig
@@ -5221,8 +5272,11 @@ export type TokenexchangeJwtBearerGrantPolicy = {
    * authorization server for this grant; it is NOT a resource/API
    * identifier — a bare resource audience is deliberately not accepted
    * here, that would let any RFC 8707 resource-scoped token satisfy the
-   * grant instead of only tokens minted for this AS. Defaults to
-   * [tokenEndpoint] when empty, preserving prior exact-match behavior.
+   * grant instead of only tokens minted for this AS. When empty, the plain
+   * JWT-bearer grant accepts the token endpoint, and the ID-JAG grant accepts
+   * the token endpoint and this server's issuer identifier, unless the issuer
+   * is also an allowed resource audience. A configured list replaces both
+   * defaults.
    */
   accepted_audiences?: Array<string>
   max_assertion_age?: string
