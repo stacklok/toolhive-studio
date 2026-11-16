@@ -2022,6 +2022,13 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    */
   rate_limit_namespace?: string
   /**
+   * ReadOnlyRootfs mounts the MCP server container's root filesystem as read-only.
+   * /tmp, /var/tmp and /run get a small noexec tmpfs unless a volume targets them.
+   * Opt-in: servers that write anywhere else outside their mounted volumes will fail.
+   * Only applicable to Docker/Podman deployments.
+   */
+  read_only_rootfs?: boolean
+  /**
    * RegistryAPIURL is the registry API URL that served this server's metadata.
    * Empty when the server was not discovered via registry lookup.
    */
@@ -3113,6 +3120,11 @@ export type PkgApiV1CreateRequest = {
    */
   proxy_read_timeout?: string
   /**
+   * Whether to mount the container's root filesystem as read-only.
+   * Only applicable to Docker/Podman deployments.
+   */
+  read_only_rootfs?: boolean
+  /**
    * Registry is the optional registry name to resolve the server from (e.g. "default").
    */
   registry?: string
@@ -3951,6 +3963,11 @@ export type PkgApiV1UpdateRequest = {
    * Empty or zero uses the default timeout of 30 seconds.
    */
   proxy_read_timeout?: string
+  /**
+   * Whether to mount the container's root filesystem as read-only.
+   * Only applicable to Docker/Podman deployments.
+   */
+  read_only_rootfs?: boolean
   runtime_config?: TemplatesRuntimeConfig
   /**
    * Secret parameters to inject
