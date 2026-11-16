@@ -108,7 +108,7 @@ importers:
         specifier: ^8.4.0
         version: 8.4.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))
       '@sentry/vite-plugin':
-        specifier: ^11.11.0
+        specifier: ^11.12.0
         version: 11.12.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))
       '@streamdown/cjk':
         specifier: ^1.0.4
