@@ -346,7 +346,7 @@ importers:
         specifier: ^0.6.4
         version: 0.6.4
       knip:
-        specifier: ^6.44.2
+        specifier: ^6.45.1
         version: 6.45.1
       lint-staged:
         specifier: ^17.6.0
