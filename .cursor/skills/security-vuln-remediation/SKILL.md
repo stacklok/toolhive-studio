@@ -9,10 +9,10 @@ Playbook for analyzing and remediating security vulnerabilities in this Electron
 
 ## Project Context
 
-- **Package manager**: pnpm 11 (lockfile: `pnpm-lock.yaml`)
+- **Package manager**: pnpm 12 (lockfile: `pnpm-lock.yaml`)
 - **Scanner**: Grype with config at `.grype.yaml` (only reports vulnerabilities with a fix available)
 - **Audit**: `pnpm audit --prod --audit-level=moderate`
-- **Existing overrides**: `overrides` block in `pnpm-workspace.yaml` — used to pin transitive dependencies to patched versions (pnpm 11 no longer reads the `pnpm` field from `package.json`)
+- **Existing overrides**: `overrides` block in `pnpm-workspace.yaml` — used to pin transitive dependencies to patched versions (pnpm 11+ no longer reads the `pnpm` field from `package.json`)
 - **Production deps**: listed under `dependencies` in `package.json`
 - **Dev-only deps**: listed under `devDependencies` in `package.json` — not shipped to users
 
