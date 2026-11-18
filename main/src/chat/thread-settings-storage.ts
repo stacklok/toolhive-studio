@@ -6,7 +6,7 @@ export function getThreadSelectedModel(
   threadId: string
 ): { provider: string; model: string } | null {
   return runChatSyncOr(
-    ThreadSettingsService.getThreadSelectedModel(threadId),
+    ThreadSettingsService.use((s) => s.getThreadSelectedModel(threadId)),
     null
   )
 }
@@ -17,10 +17,8 @@ export function setThreadSelectedModel(
   model: string
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    ThreadSettingsService.setThreadSelectedModel(
-      threadId,
-      provider,
-      model
+    ThreadSettingsService.use((s) =>
+      s.setThreadSelectedModel(threadId, provider, model)
     ).pipe(Effect.as({}))
   )
 }
@@ -29,7 +27,7 @@ export function getThreadEnabledMcpTools(
   threadId: string
 ): Record<string, string[]> {
   return runChatSyncOr(
-    ThreadSettingsService.getThreadEnabledMcpTools(threadId),
+    ThreadSettingsService.use((s) => s.getThreadEnabledMcpTools(threadId)),
     {}
   )
 }
@@ -40,17 +38,15 @@ export function setThreadEnabledMcpTools(
   toolNames: string[]
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    ThreadSettingsService.setThreadEnabledMcpTools(
-      threadId,
-      serverName,
-      toolNames
+    ThreadSettingsService.use((s) =>
+      s.setThreadEnabledMcpTools(threadId, serverName, toolNames)
     ).pipe(Effect.as({}))
   )
 }
 
 export function getThreadEnabledSkills(threadId: string): string[] {
   return runChatSyncOr(
-    ThreadSettingsService.getThreadEnabledSkills(threadId),
+    ThreadSettingsService.use((s) => s.getThreadEnabledSkills(threadId)),
     []
   )
 }
@@ -61,8 +57,8 @@ export function setThreadEnabledSkill(
   enabled: boolean
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    ThreadSettingsService.setThreadEnabledSkill(threadId, name, enabled).pipe(
-      Effect.as({})
-    )
+    ThreadSettingsService.use((s) =>
+      s.setThreadEnabledSkill(threadId, name, enabled)
+    ).pipe(Effect.as({}))
   )
 }

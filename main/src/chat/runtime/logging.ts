@@ -1,44 +1,42 @@
-import { Effect, Logger, LogLevel } from 'effect'
+import { Cause, Effect, Layer, Logger, References } from 'effect'
 import log from '../../logger'
 
-const electronLogger = Logger.make(
-  ({ logLevel, message, cause, annotations }) => {
-    const prefix = `[CHAT/${logLevel.label}]`
-    const annotationSuffix =
-      Object.keys(annotations).length > 0
-        ? ` ${JSON.stringify(annotations)}`
-        : ''
-    const text = `${prefix} ${message}${annotationSuffix}`
+const electronLogger = Logger.make(({ logLevel, message, cause, fiber }) => {
+  const parts = Array.isArray(message) ? message : [message]
+  const textParts = parts.filter((part) => typeof part === 'string')
+  const extraArgs = parts.filter((part) => typeof part !== 'string')
+  const annotations = fiber.getRef(References.CurrentLogAnnotations)
+  const annotationSuffix =
+    Object.keys(annotations).length > 0 ? ` ${JSON.stringify(annotations)}` : ''
+  const text = `[CHAT/${logLevel.toUpperCase()}] ${textParts.join(' ')}${annotationSuffix}`
 
-    if (logLevel._tag === 'Error' || logLevel._tag === 'Fatal') {
-      if (cause._tag === 'Fail') {
-        log.error(text, cause.error)
-      } else {
-        log.error(text)
-      }
-      return
+  if (logLevel === 'Error' || logLevel === 'Fatal') {
+    const failure = Cause.findErrorOption(cause)
+    if (failure._tag === 'Some') {
+      extraArgs.push(failure.value)
     }
-
-    if (logLevel._tag === 'Warning') {
-      log.warn(text)
-      return
-    }
-
-    if (logLevel._tag === 'Debug' || logLevel._tag === 'Trace') {
-      log.debug(text)
-      return
-    }
-
-    log.info(text)
+    log.error(text, ...extraArgs)
+    return
   }
-)
 
-export const ChatLoggerLayer = Logger.replace(
-  Logger.defaultLogger,
-  electronLogger
-)
+  if (logLevel === 'Warn') {
+    log.warn(text, ...extraArgs)
+    return
+  }
 
-export const ChatLogLevelLayer = Logger.minimumLogLevel(LogLevel.Info)
+  if (logLevel === 'Debug' || logLevel === 'Trace') {
+    log.debug(text, ...extraArgs)
+    return
+  }
+
+  log.info(text, ...extraArgs)
+})
+
+export const ChatLoggerLayer = Logger.layer([electronLogger])
+
+export const ChatLogLevelLayer = Layer.succeed(References.MinimumLogLevel)(
+  'Info'
+)
 
 export function chatLogInfo(message: string): Effect.Effect<void> {
   return Effect.logInfo(message)

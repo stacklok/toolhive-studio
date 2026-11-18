@@ -10,7 +10,7 @@ export async function generateThreadTitle(threadId: string): Promise<{
   error?: string
 }> {
   return runChatToResult(
-    TitleService.generateThreadTitle(threadId).pipe(
+    TitleService.use((s) => s.generateThreadTitle(threadId)).pipe(
       Effect.map(({ title, updated }) => ({ title, updated }))
     )
   )

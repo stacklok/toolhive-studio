@@ -30,7 +30,7 @@ export function makeMcpUiMetadataCache(): Effect.Effect<McpUiMetadataCache> {
       }).pipe(
         Effect.tap((fromDb) => Ref.set(metadata, fromDb)),
         Effect.tap(() => Ref.set(loaded, true)),
-        Effect.catchAll((error) =>
+        Effect.catch((error) =>
           Effect.gen(function* () {
             log.error('[MCP Apps] Failed to load UI metadata from DB:', error)
             // Mark loaded so a bad DB read doesn't retry (and re-log) on every

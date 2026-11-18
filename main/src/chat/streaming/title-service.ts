@@ -1,5 +1,5 @@
 import { generateText, convertToModelMessages } from 'ai'
-import { Effect } from 'effect'
+import { Context, Effect, Layer } from 'effect'
 import {
   extractThreadTitleText,
   fallbackTitleFromParts,
@@ -77,213 +77,209 @@ export function shouldAutoTitleThread(
   return true
 }
 
-export class TitleService extends Effect.Service<TitleService>()(
-  'chat/TitleService',
-  {
-    accessors: true,
-    effect: Effect.gen(function* () {
-      const threads = yield* ThreadsService
-      const settingsRepo = yield* SettingsRepository
-      const threadSettings = yield* ThreadSettingsService
+const makeTitleService = Effect.gen(function* () {
+  const threads = yield* ThreadsService
+  const settingsRepo = yield* SettingsRepository
+  const threadSettings = yield* ThreadSettingsService
 
-      return {
-        generateThreadTitle: (threadId: string) =>
-          Effect.gen(function* () {
-            const thread = yield* threads.getThread(threadId)
-            if (!thread) {
-              return yield* Effect.fail(
-                new ThreadNotFoundError({
-                  threadId,
-                  userMessage: 'Thread not found',
-                })
-              )
-            }
-
-            const userMsg = thread.messages.find((m) => m.role === 'user')
-            if (!userMsg) {
-              return yield* Effect.fail(
-                new ProviderError({
-                  providerId: 'title',
-                  userMessage: 'No user message in thread',
-                })
-              )
-            }
-
-            const userFallback = fallbackTitleFromUser(userMsg)
-
-            if (!shouldAutoTitleThread(thread, userMsg)) {
-              return { title: thread.title ?? userFallback, updated: false }
-            }
-
-            // Skip empty/hollow assistants — some providers reject them, and
-            // they add no signal for a short title summary.
-            const nonHollowAssistant = thread.messages.find(
-              (m) => m.role === 'assistant' && !isHollowAssistantMessage(m)
-            )
-            const assistantText = nonHollowAssistant
-              ? extractMessageText(nonHollowAssistant)
-              : ''
-            const contextMessages = sanitizeMessagesForModel([
-              userMsg,
-              ...(nonHollowAssistant && assistantText
-                ? [nonHollowAssistant]
-                : []),
-            ])
-
-            const threadModel =
-              yield* threadSettings.getThreadSelectedModel(threadId)
-            const globalModel = yield* settingsRepo.readSelectedModel()
-            const selected =
-              threadModel?.provider && threadModel?.model
-                ? threadModel
-                : globalModel
-
-            if (!selected.provider || !selected.model) {
-              return yield* Effect.fail(
-                new ProviderError({
-                  providerId: 'title',
-                  userMessage: 'No model selected',
-                })
-              )
-            }
-
-            const provider = CHAT_PROVIDERS.find(
-              (p) => p.id === selected.provider
-            )
-            if (!provider) {
-              return yield* Effect.fail(
-                new ProviderError({
-                  providerId: selected.provider,
-                  userMessage: `Unknown provider: ${selected.provider}`,
-                })
-              )
-            }
-
-            const providerSettings = yield* settingsRepo.readProvider(
-              selected.provider as Parameters<
-                typeof settingsRepo.readProvider
-              >[0]
-            )
-            if (
-              !providerSettings &&
-              selected.provider !== THV_LLM_PROVIDER_ID
-            ) {
-              return yield* Effect.fail(
-                new ProviderError({
-                  providerId: selected.provider,
-                  userMessage: 'Provider settings not found',
-                })
-              )
-            }
-
-            const endpointURL =
-              selected.provider === THV_LLM_PROVIDER_ID
-                ? ((yield* Effect.tryPromise({
-                    try: () => resolveGatewayBaseURL(),
-                    catch: (cause) => cause,
-                  }).pipe(Effect.catchAll(() => Effect.succeed(null)))) ?? '')
-                : (providerSettings?.endpointURL ?? '')
-
-            if (selected.provider === THV_LLM_PROVIDER_ID && !endpointURL) {
-              return yield* Effect.fail(
-                new ProviderError({
-                  providerId: THV_LLM_PROVIDER_ID,
-                  userMessage:
-                    'Stacklok Gateway is not configured. Open Provider Settings and save your gateway connection.',
-                })
-              )
-            }
-
-            const request = (
-              isEndpointProvider(selected.provider)
-                ? {
-                    chatId: threadId,
-                    messages: contextMessages,
-                    provider: selected.provider,
-                    model: selected.model,
-                    endpointURL,
-                  }
-                : {
-                    chatId: threadId,
-                    messages: contextMessages,
-                    provider: selected.provider,
-                    model: selected.model,
-                    apiKey: providerSettings?.apiKey ?? '',
-                  }
-            ) as ChatRequest
-
-            const model = createModelFromRequest(provider, request)
-
-            // Soft-fail the LLM call: reasoning models / flaky providers often
-            // return empty text. We always prefer a user-message fallback over
-            // leaving the UI stuck on "New chat".
-            const llmText = yield* Effect.tryPromise({
-              try: async () => {
-                const { text } = await generateText({
-                  model,
-                  instructions: TITLE_SYSTEM_PROMPT,
-                  messages: await convertToModelMessages(contextMessages),
-                  // Small but enough for a 6-word title once reasoning is off.
-                  maxOutputTokens: 64,
-                  ...(selected.provider === 'openrouter'
-                    ? { providerOptions: OPENROUTER_TITLE_PROVIDER_OPTIONS }
-                    : {}),
-                })
-                return text
-              },
-              catch: (cause) =>
-                new ProviderError({
-                  providerId: selected.provider,
-                  cause,
-                  userMessage: 'Failed to generate thread title.',
-                }),
-            }).pipe(
-              Effect.tapError((error) =>
-                Effect.sync(() => {
-                  log.warn(
-                    `[TITLE] LLM title generation failed for ${threadId}:`,
-                    error.userMessage,
-                    error.cause ?? ''
-                  )
-                })
-              ),
-              Effect.catchTag('ProviderError', () => Effect.succeed(''))
-            )
-
-            const title = normalizeTitle(llmText) || userFallback
-            if (!title) {
-              return yield* Effect.fail(
-                new ProviderError({
-                  providerId: selected.provider,
-                  userMessage: 'Empty title generated',
-                })
-              )
-            }
-
-            const latestThread = yield* threads.getThread(threadId)
-            if (latestThread && !shouldAutoTitleThread(latestThread, userMsg)) {
-              return {
-                title: latestThread.title ?? userFallback,
-                updated: false,
-              }
-            }
-
-            if (latestThread?.title?.trim() === title) {
-              return { title, updated: false }
-            }
-
-            yield* threads.updateThread(threadId, {
-              title,
-              titleEditedByUser: false,
+  return {
+    generateThreadTitle: (threadId: string) =>
+      Effect.gen(function* () {
+        const thread = yield* threads.getThread(threadId)
+        if (!thread) {
+          return yield* Effect.fail(
+            new ThreadNotFoundError({
+              threadId,
+              userMessage: 'Thread not found',
             })
-            return { title, updated: true }
-          }),
-      }
-    }),
-    dependencies: [
-      ThreadsService.Default,
-      SettingsRepository.Default,
-      ThreadSettingsService.Default,
-    ],
+          )
+        }
+
+        const userMsg = thread.messages.find((m) => m.role === 'user')
+        if (!userMsg) {
+          return yield* Effect.fail(
+            new ProviderError({
+              providerId: 'title',
+              userMessage: 'No user message in thread',
+            })
+          )
+        }
+
+        const userFallback = fallbackTitleFromUser(userMsg)
+
+        if (!shouldAutoTitleThread(thread, userMsg)) {
+          return { title: thread.title ?? userFallback, updated: false }
+        }
+
+        // Skip empty/hollow assistants — some providers reject them, and
+        // they add no signal for a short title summary.
+        const nonHollowAssistant = thread.messages.find(
+          (m) => m.role === 'assistant' && !isHollowAssistantMessage(m)
+        )
+        const assistantText = nonHollowAssistant
+          ? extractMessageText(nonHollowAssistant)
+          : ''
+        const contextMessages = sanitizeMessagesForModel([
+          userMsg,
+          ...(nonHollowAssistant && assistantText ? [nonHollowAssistant] : []),
+        ])
+
+        const threadModel =
+          yield* threadSettings.getThreadSelectedModel(threadId)
+        const globalModel = yield* settingsRepo.readSelectedModel()
+        const selected =
+          threadModel?.provider && threadModel?.model
+            ? threadModel
+            : globalModel
+
+        if (!selected.provider || !selected.model) {
+          return yield* Effect.fail(
+            new ProviderError({
+              providerId: 'title',
+              userMessage: 'No model selected',
+            })
+          )
+        }
+
+        const provider = CHAT_PROVIDERS.find((p) => p.id === selected.provider)
+        if (!provider) {
+          return yield* Effect.fail(
+            new ProviderError({
+              providerId: selected.provider,
+              userMessage: `Unknown provider: ${selected.provider}`,
+            })
+          )
+        }
+
+        const providerSettings = yield* settingsRepo.readProvider(
+          selected.provider as Parameters<typeof settingsRepo.readProvider>[0]
+        )
+        if (!providerSettings && selected.provider !== THV_LLM_PROVIDER_ID) {
+          return yield* Effect.fail(
+            new ProviderError({
+              providerId: selected.provider,
+              userMessage: 'Provider settings not found',
+            })
+          )
+        }
+
+        const endpointURL =
+          selected.provider === THV_LLM_PROVIDER_ID
+            ? ((yield* Effect.tryPromise({
+                try: () => resolveGatewayBaseURL(),
+                catch: (cause) => cause,
+              }).pipe(Effect.catch(() => Effect.succeed(null)))) ?? '')
+            : (providerSettings?.endpointURL ?? '')
+
+        if (selected.provider === THV_LLM_PROVIDER_ID && !endpointURL) {
+          return yield* Effect.fail(
+            new ProviderError({
+              providerId: THV_LLM_PROVIDER_ID,
+              userMessage:
+                'Stacklok Gateway is not configured. Open Provider Settings and save your gateway connection.',
+            })
+          )
+        }
+
+        const request = (
+          isEndpointProvider(selected.provider)
+            ? {
+                chatId: threadId,
+                messages: contextMessages,
+                provider: selected.provider,
+                model: selected.model,
+                endpointURL,
+              }
+            : {
+                chatId: threadId,
+                messages: contextMessages,
+                provider: selected.provider,
+                model: selected.model,
+                apiKey: providerSettings?.apiKey ?? '',
+              }
+        ) as ChatRequest
+
+        const model = createModelFromRequest(provider, request)
+
+        // Soft-fail the LLM call: reasoning models / flaky providers often
+        // return empty text. We always prefer a user-message fallback over
+        // leaving the UI stuck on "New chat".
+        const llmText = yield* Effect.tryPromise({
+          try: async () => {
+            const { text } = await generateText({
+              model,
+              instructions: TITLE_SYSTEM_PROMPT,
+              messages: await convertToModelMessages(contextMessages),
+              // Small but enough for a 6-word title once reasoning is off.
+              maxOutputTokens: 64,
+              ...(selected.provider === 'openrouter'
+                ? { providerOptions: OPENROUTER_TITLE_PROVIDER_OPTIONS }
+                : {}),
+            })
+            return text
+          },
+          catch: (cause) =>
+            new ProviderError({
+              providerId: selected.provider,
+              cause,
+              userMessage: 'Failed to generate thread title.',
+            }),
+        }).pipe(
+          Effect.tapError((error) =>
+            Effect.sync(() => {
+              log.warn(
+                `[TITLE] LLM title generation failed for ${threadId}:`,
+                error.userMessage,
+                error.cause ?? ''
+              )
+            })
+          ),
+          Effect.catchTag('ProviderError', () => Effect.succeed(''))
+        )
+
+        const title = normalizeTitle(llmText) || userFallback
+        if (!title) {
+          return yield* Effect.fail(
+            new ProviderError({
+              providerId: selected.provider,
+              userMessage: 'Empty title generated',
+            })
+          )
+        }
+
+        const latestThread = yield* threads.getThread(threadId)
+        if (latestThread && !shouldAutoTitleThread(latestThread, userMsg)) {
+          return {
+            title: latestThread.title ?? userFallback,
+            updated: false,
+          }
+        }
+
+        if (latestThread?.title?.trim() === title) {
+          return { title, updated: false }
+        }
+
+        yield* threads.updateThread(threadId, {
+          title,
+          titleEditedByUser: false,
+        })
+        return { title, updated: true }
+      }),
   }
-) {}
+})
+
+export class TitleService extends Context.Service<
+  TitleService,
+  Effect.Success<typeof makeTitleService>
+>()('chat/TitleService') {
+  static readonly layer = Layer.effect(TitleService, makeTitleService)
+  static readonly Default = TitleService.layer.pipe(
+    Layer.provide(
+      Layer.mergeAll(
+        ThreadsService.Default,
+        SettingsRepository.Default,
+        ThreadSettingsService.Default
+      )
+    )
+  )
+}

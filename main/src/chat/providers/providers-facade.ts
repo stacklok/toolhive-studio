@@ -23,7 +23,9 @@ export async function fetchProviderModelsHandler(
   tempCredential?: string
 ): Promise<{ id: string; name: string; models: string[] } | null> {
   return runChatPromiseOr(
-    ProvidersService.fetchProviderModels(providerId, tempCredential),
+    ProvidersService.use((s) =>
+      s.fetchProviderModels(providerId, tempCredential)
+    ),
     null
   )
 }
@@ -33,5 +35,8 @@ export async function getAllProvidersHandler(): Promise<
 > {
   // Empty fallback when unavailable — do not return the static catalog, which
   // would look like live providers during an outage.
-  return runChatPromiseOr(ProvidersService.getAllProviders(), [])
+  return runChatPromiseOr(
+    ProvidersService.use((s) => s.getAllProviders()),
+    []
+  )
 }

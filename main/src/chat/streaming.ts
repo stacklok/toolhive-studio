@@ -11,6 +11,8 @@ export async function handleChatStreamRealtime(
   sender: WebContents
 ): Promise<void> {
   await runChatPromise(
-    ChatStreamService.handleChatStreamRealtime(request, streamId, sender)
+    ChatStreamService.use((s) =>
+      s.handleChatStreamRealtime(request, streamId, sender)
+    )
   )
 }

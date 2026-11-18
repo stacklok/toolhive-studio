@@ -56,6 +56,14 @@ export default defineConfig([
     },
   },
   {
+    // The main process has no React. Effect's `Service.use(...)` accessor
+    // trips the hooks rule purely because of its name.
+    files: ['main/**/*.ts'],
+    rules: {
+      'react-hooks/rules-of-hooks': 'off',
+    },
+  },
+  {
     extends: [eslint.configs.recommended, ...tseslint.configs.recommended],
     files: ['e2e-tests/**/*.{ts,tsx}'],
     languageOptions: {

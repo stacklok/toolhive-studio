@@ -1,4 +1,4 @@
-import { Duration, Effect, Schedule } from 'effect'
+import { Context, Duration, Effect, Layer, Schedule } from 'effect'
 import log from '../../logger'
 import {
   CHAT_PROVIDER_INFO,
@@ -104,210 +104,203 @@ async function fetchOpenRouterModels(): Promise<string[]> {
     .map((model) => model.id)
 }
 
-export class ProvidersService extends Effect.Service<ProvidersService>()(
-  'chat/ProvidersService',
-  {
-    accessors: true,
-    effect: Effect.gen(function* () {
-      const settings = yield* SettingsService
+const makeProvidersService = Effect.gen(function* () {
+  const settings = yield* SettingsService
 
-      return {
-        fetchProviderModels: (providerId: string, tempCredential?: string) =>
-          Effect.tryPromise({
-            try: async () => {
-              if (providerId === 'ollama') {
-                const baseURL =
-                  tempCredential && tempCredential.trim()
-                    ? tempCredential.trim()
-                    : DEFAULT_OLLAMA_URL
-                const models = await fetchOllamaModels(baseURL)
-                return { id: 'ollama', name: 'Ollama', models }
-              }
-              if (providerId === 'lmstudio') {
-                const baseURL =
-                  tempCredential && tempCredential.trim()
-                    ? tempCredential.trim()
-                    : DEFAULT_LMSTUDIO_URL
-                const models = await fetchLMStudioModels(baseURL)
-                return { id: 'lmstudio', name: 'LM Studio', models }
-              }
-              if (providerId === THV_LLM_PROVIDER_ID) {
-                invalidateLlmConfigCache()
-                const baseURL =
-                  tempCredential?.trim() ||
-                  (await resolveGatewayBaseURL()) ||
-                  ''
-                const models = await fetchThvLlmModels(baseURL)
-                return {
-                  id: THV_LLM_PROVIDER_ID,
-                  name: THV_LLM_PROVIDER_NAME,
-                  models,
-                }
-              }
-              return null
-            },
-            catch: (cause) =>
-              new ProviderError({
-                providerId,
-                cause,
-                userMessage: 'Failed to discover provider models.',
-              }),
-          }).pipe(
-            Effect.retry(
-              Schedule.exponential(Duration.millis(200)).pipe(
-                Schedule.compose(Schedule.recurs(2))
-              )
-            ),
-            Effect.catchAll(() => Effect.succeed(null))
-          ),
-
-        getAllProviders: () =>
-          Effect.gen(function* () {
-            const providers = [...CHAT_PROVIDER_INFO] as Array<{
-              id: string
-              name: string
-              models: string[]
-            }>
-
-            const ollamaIndex = providers.findIndex((p) => p.id === 'ollama')
-            if (ollamaIndex !== -1) {
-              const ollamaSettings = yield* settings.getChatSettings('ollama')
-              const baseURL =
-                'endpointURL' in ollamaSettings
-                  ? ollamaSettings.endpointURL
-                  : DEFAULT_OLLAMA_URL
-              try {
-                const ollamaModels = yield* Effect.tryPromise({
-                  try: () => fetchOllamaModels(baseURL),
-                  catch: (cause) => cause,
-                })
-                const original = providers[ollamaIndex]
-                if (original) {
-                  providers[ollamaIndex] = {
-                    id: original.id,
-                    name: original.name,
-                    models: ollamaModels,
-                  }
-                }
-              } catch (error) {
-                log.error('Failed to fetch Ollama models:', error)
-              }
+  return {
+    fetchProviderModels: (providerId: string, tempCredential?: string) =>
+      Effect.tryPromise({
+        try: async () => {
+          if (providerId === 'ollama') {
+            const baseURL =
+              tempCredential && tempCredential.trim()
+                ? tempCredential.trim()
+                : DEFAULT_OLLAMA_URL
+            const models = await fetchOllamaModels(baseURL)
+            return { id: 'ollama', name: 'Ollama', models }
+          }
+          if (providerId === 'lmstudio') {
+            const baseURL =
+              tempCredential && tempCredential.trim()
+                ? tempCredential.trim()
+                : DEFAULT_LMSTUDIO_URL
+            const models = await fetchLMStudioModels(baseURL)
+            return { id: 'lmstudio', name: 'LM Studio', models }
+          }
+          if (providerId === THV_LLM_PROVIDER_ID) {
+            invalidateLlmConfigCache()
+            const baseURL =
+              tempCredential?.trim() || (await resolveGatewayBaseURL()) || ''
+            const models = await fetchThvLlmModels(baseURL)
+            return {
+              id: THV_LLM_PROVIDER_ID,
+              name: THV_LLM_PROVIDER_NAME,
+              models,
             }
+          }
+          return null
+        },
+        catch: (cause) =>
+          new ProviderError({
+            providerId,
+            cause,
+            userMessage: 'Failed to discover provider models.',
+          }),
+      }).pipe(
+        Effect.retry(
+          Schedule.max([
+            Schedule.exponential(Duration.millis(200)),
+            Schedule.recurs(2),
+          ])
+        ),
+        Effect.catch(() => Effect.succeed(null))
+      ),
 
-            const lmstudioIndex = providers.findIndex(
-              (p) => p.id === 'lmstudio'
-            )
-            if (lmstudioIndex !== -1) {
-              const lmstudioSettings =
-                yield* settings.getChatSettings('lmstudio')
-              const baseURL =
-                'endpointURL' in lmstudioSettings
-                  ? lmstudioSettings.endpointURL
-                  : DEFAULT_LMSTUDIO_URL
-              try {
-                const lmstudioModels = yield* Effect.tryPromise({
-                  try: () => fetchLMStudioModels(baseURL),
-                  catch: (cause) => cause,
-                })
-                const original = providers[lmstudioIndex]
-                if (original) {
-                  providers[lmstudioIndex] = {
-                    id: original.id,
-                    name: original.name,
-                    models: lmstudioModels,
-                  }
-                }
-              } catch (error) {
-                log.error('Failed to fetch LM Studio models:', error)
-              }
-            }
+    getAllProviders: () =>
+      Effect.gen(function* () {
+        const providers = [...CHAT_PROVIDER_INFO] as Array<{
+          id: string
+          name: string
+          models: string[]
+        }>
 
-            const openRouterIndex = providers.findIndex(
-              (p) => p.id === 'openrouter'
-            )
-            if (openRouterIndex !== -1) {
-              const openRouterSettings =
-                yield* settings.getChatSettings('openrouter')
-              if (
-                'apiKey' in openRouterSettings &&
-                typeof openRouterSettings.apiKey === 'string' &&
-                openRouterSettings.apiKey.trim() !== ''
-              ) {
-                try {
-                  const openRouterModels = yield* Effect.tryPromise({
-                    try: () => fetchOpenRouterModels(),
-                    catch: (cause) => cause,
-                  })
-                  const original = providers[openRouterIndex]
-                  if (original) {
-                    providers[openRouterIndex] = {
-                      id: original.id,
-                      name: original.name,
-                      models: openRouterModels,
-                    }
-                  }
-                } catch (error) {
-                  log.error(
-                    'Failed to fetch OpenRouter models, using fallback:',
-                    error
-                  )
-                }
-              }
-            }
-
-            const llmConfig = yield* Effect.tryPromise({
-              try: () => readLlmConfig(),
+        const ollamaIndex = providers.findIndex((p) => p.id === 'ollama')
+        if (ollamaIndex !== -1) {
+          const ollamaSettings = yield* settings.getChatSettings('ollama')
+          const baseURL =
+            'endpointURL' in ollamaSettings
+              ? ollamaSettings.endpointURL
+              : DEFAULT_OLLAMA_URL
+          try {
+            const ollamaModels = yield* Effect.tryPromise({
+              try: () => fetchOllamaModels(baseURL),
               catch: (cause) => cause,
-            }).pipe(Effect.catchAll(() => Effect.succeed(null)))
+            })
+            const original = providers[ollamaIndex]
+            if (original) {
+              providers[ollamaIndex] = {
+                id: original.id,
+                name: original.name,
+                models: ollamaModels,
+              }
+            }
+          } catch (error) {
+            log.error('Failed to fetch Ollama models:', error)
+          }
+        }
 
-            const gatewaySettings =
-              yield* settings.getChatSettings(THV_LLM_PROVIDER_ID)
-            const playgroundEnabled = Boolean(
-              'endpointURL' in gatewaySettings &&
-              gatewaySettings.endpointURL.trim()
-            )
+        const lmstudioIndex = providers.findIndex((p) => p.id === 'lmstudio')
+        if (lmstudioIndex !== -1) {
+          const lmstudioSettings = yield* settings.getChatSettings('lmstudio')
+          const baseURL =
+            'endpointURL' in lmstudioSettings
+              ? lmstudioSettings.endpointURL
+              : DEFAULT_LMSTUDIO_URL
+          try {
+            const lmstudioModels = yield* Effect.tryPromise({
+              try: () => fetchLMStudioModels(baseURL),
+              catch: (cause) => cause,
+            })
+            const original = providers[lmstudioIndex]
+            if (original) {
+              providers[lmstudioIndex] = {
+                id: original.id,
+                name: original.name,
+                models: lmstudioModels,
+              }
+            }
+          } catch (error) {
+            log.error('Failed to fetch LM Studio models:', error)
+          }
+        }
 
-            const thvLlmIndex = providers.findIndex(
-              (p) => p.id === THV_LLM_PROVIDER_ID
-            )
-            if (
-              thvLlmIndex !== -1 &&
-              playgroundEnabled &&
-              isLlmConfigured(llmConfig)
-            ) {
-              const baseURL = buildLoopbackBaseURL(
-                effectiveListenPort(llmConfig)
-              )
-
-              const gatewayModels = baseURL
-                ? yield* Effect.tryPromise({
-                    try: () => fetchThvLlmModels(baseURL),
-                    catch: (cause) => cause,
-                  }).pipe(
-                    Effect.catchAll((error) => {
-                      log.error(
-                        'Failed to fetch Stacklok Gateway models:',
-                        error
-                      )
-                      return Effect.succeed([...getLastKnownGatewayModels()])
-                    })
-                  )
-                : [...getLastKnownGatewayModels()]
-
-              const original = providers[thvLlmIndex]
+        const openRouterIndex = providers.findIndex(
+          (p) => p.id === 'openrouter'
+        )
+        if (openRouterIndex !== -1) {
+          const openRouterSettings =
+            yield* settings.getChatSettings('openrouter')
+          if (
+            'apiKey' in openRouterSettings &&
+            typeof openRouterSettings.apiKey === 'string' &&
+            openRouterSettings.apiKey.trim() !== ''
+          ) {
+            try {
+              const openRouterModels = yield* Effect.tryPromise({
+                try: () => fetchOpenRouterModels(),
+                catch: (cause) => cause,
+              })
+              const original = providers[openRouterIndex]
               if (original) {
-                providers[thvLlmIndex] = {
+                providers[openRouterIndex] = {
                   id: original.id,
                   name: original.name,
-                  models: gatewayModels,
+                  models: openRouterModels,
                 }
               }
+            } catch (error) {
+              log.error(
+                'Failed to fetch OpenRouter models, using fallback:',
+                error
+              )
             }
+          }
+        }
 
-            return providers
-          }),
-      }
-    }),
-    dependencies: [SettingsService.Default],
+        const llmConfig = yield* Effect.tryPromise({
+          try: () => readLlmConfig(),
+          catch: (cause) => cause,
+        }).pipe(Effect.catch(() => Effect.succeed(null)))
+
+        const gatewaySettings =
+          yield* settings.getChatSettings(THV_LLM_PROVIDER_ID)
+        const playgroundEnabled = Boolean(
+          'endpointURL' in gatewaySettings && gatewaySettings.endpointURL.trim()
+        )
+
+        const thvLlmIndex = providers.findIndex(
+          (p) => p.id === THV_LLM_PROVIDER_ID
+        )
+        if (
+          thvLlmIndex !== -1 &&
+          playgroundEnabled &&
+          isLlmConfigured(llmConfig)
+        ) {
+          const baseURL = buildLoopbackBaseURL(effectiveListenPort(llmConfig))
+
+          const gatewayModels = baseURL
+            ? yield* Effect.tryPromise({
+                try: () => fetchThvLlmModels(baseURL),
+                catch: (cause) => cause,
+              }).pipe(
+                Effect.catch((error) => {
+                  log.error('Failed to fetch Stacklok Gateway models:', error)
+                  return Effect.succeed([...getLastKnownGatewayModels()])
+                })
+              )
+            : [...getLastKnownGatewayModels()]
+
+          const original = providers[thvLlmIndex]
+          if (original) {
+            providers[thvLlmIndex] = {
+              id: original.id,
+              name: original.name,
+              models: gatewayModels,
+            }
+          }
+        }
+
+        return providers
+      }),
   }
-) {}
+})
+
+export class ProvidersService extends Context.Service<
+  ProvidersService,
+  Effect.Success<typeof makeProvidersService>
+>()('chat/ProvidersService') {
+  static readonly layer = Layer.effect(ProvidersService, makeProvidersService)
+  static readonly Default = ProvidersService.layer.pipe(
+    Layer.provide(SettingsService.Default)
+  )
+}

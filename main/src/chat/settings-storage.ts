@@ -55,7 +55,7 @@ const EMPTY_SELECTED_MODEL: ChatSettingsSelectedModel = {
 
 export function getChatSettings(providerId: ProviderId): ChatSettingsProvider {
   return runChatSyncOr(
-    SettingsService.getChatSettings(providerId),
+    SettingsService.use((s) => s.getChatSettings(providerId)),
     defaultChatSettings(providerId)
   )
 }
@@ -65,12 +65,17 @@ export function clearChatSettings(providerId?: ProviderId): {
   error?: string
 } {
   return runChatToResultSync(
-    SettingsService.clearChatSettings(providerId).pipe(Effect.as({}))
+    SettingsService.use((s) => s.clearChatSettings(providerId)).pipe(
+      Effect.as({})
+    )
   )
 }
 
 export function getSelectedModel(): ChatSettingsSelectedModel {
-  return runChatSyncOr(SettingsService.getSelectedModel(), EMPTY_SELECTED_MODEL)
+  return runChatSyncOr(
+    SettingsService.use((s) => s.getSelectedModel()),
+    EMPTY_SELECTED_MODEL
+  )
 }
 
 export function saveSelectedModel(
@@ -78,7 +83,9 @@ export function saveSelectedModel(
   model: string
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    SettingsService.saveSelectedModel(provider, model).pipe(Effect.as({}))
+    SettingsService.use((s) => s.saveSelectedModel(provider, model)).pipe(
+      Effect.as({})
+    )
   )
 }
 
@@ -87,22 +94,31 @@ export function saveEnabledMcpTools(
   toolNames: string[]
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    SettingsService.saveEnabledMcpTools(serverName, toolNames).pipe(
-      Effect.as({})
-    )
+    SettingsService.use((s) =>
+      s.saveEnabledMcpTools(serverName, toolNames)
+    ).pipe(Effect.as({}))
   )
 }
 
 export async function getEnabledMcpTools(): Promise<Record<string, string[]>> {
-  return runChatPromiseOr(SettingsService.getEnabledMcpTools(), {})
+  return runChatPromiseOr(
+    SettingsService.use((s) => s.getEnabledMcpTools()),
+    {}
+  )
 }
 
 export async function getEnabledMcpServersFromTools(): Promise<string[]> {
-  return runChatPromiseOr(SettingsService.getEnabledMcpServersFromTools(), [])
+  return runChatPromiseOr(
+    SettingsService.use((s) => s.getEnabledMcpServersFromTools()),
+    []
+  )
 }
 
 export function getEnabledSkills(): string[] {
-  return runChatSyncOr(SettingsService.getEnabledSkills(), [])
+  return runChatSyncOr(
+    SettingsService.use((s) => s.getEnabledSkills()),
+    []
+  )
 }
 
 export function setSkillEnabled(
@@ -110,14 +126,19 @@ export function setSkillEnabled(
   enabled: boolean
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    SettingsService.setSkillEnabled(name, enabled).pipe(Effect.as({}))
+    SettingsService.use((s) => s.setSkillEnabled(name, enabled)).pipe(
+      Effect.as({})
+    )
   )
 }
 
 export function pruneEnabledSkillsTo(
   installedNames: readonly string[]
 ): number {
-  return runChatSyncOr(SettingsService.pruneEnabledSkillsTo(installedNames), 0)
+  return runChatSyncOr(
+    SettingsService.use((s) => s.pruneEnabledSkillsTo(installedNames)),
+    0
+  )
 }
 
 export function handleSaveSettings(
@@ -127,6 +148,8 @@ export function handleSaveSettings(
     | { endpointURL: string; enabledTools: string[] }
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    SettingsService.handleSaveSettings(providerId, settings).pipe(Effect.as({}))
+    SettingsService.use((s) => s.handleSaveSettings(providerId, settings)).pipe(
+      Effect.as({})
+    )
   )
 }

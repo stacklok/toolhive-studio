@@ -62,7 +62,7 @@ import {
   _resetActiveStreamsForTests,
   cancelStream,
   getActiveStreamId,
-  runManagedStream,
+  runManagedStream as runManagedStreamImpl,
   setToolUiMetadata,
   subscribeToStream,
   unsubscribeFromStream,
@@ -88,6 +88,20 @@ function makeSender(): FakeSender {
 
 function asWebContents(sender: FakeSender): WebContents {
   return sender as unknown as WebContents
+}
+
+/**
+ * Starts a managed stream. Disposing the chat runtime in `afterEach`
+ * interrupts streams a test leaves running, which rejects their promise;
+ * mark it handled so fire-and-forget tests don't raise unhandled
+ * rejections. Tests that `await` the returned promise still see failures.
+ */
+function runManagedStream(
+  ...args: Parameters<typeof runManagedStreamImpl>
+): ReturnType<typeof runManagedStreamImpl> {
+  const run = runManagedStreamImpl(...args)
+  run.catch(() => {})
+  return run
 }
 
 /** Drain microtasks so `runManagedStream`'s for-await loop picks up

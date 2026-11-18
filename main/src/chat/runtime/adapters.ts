@@ -97,7 +97,7 @@ export async function runChatToResult<A extends Record<string, unknown>, E>(
     return { success: true, ...exit.value }
   }
 
-  const failure = Cause.failureOption(exit.cause)
+  const failure = Cause.findErrorOption(exit.cause)
   if (failure._tag === 'Some' && isDomainError(failure.value)) {
     return { success: false, error: getDomainUserMessage(failure.value) }
   }
@@ -116,7 +116,7 @@ export function operationResultFromExit<A extends Record<string, unknown>>(
     return { success: true, ...exit.value }
   }
 
-  const failure = Cause.failureOption(exit.cause)
+  const failure = Cause.findErrorOption(exit.cause)
   if (failure._tag === 'Some' && isDomainError(failure.value)) {
     return { success: false, error: getDomainUserMessage(failure.value) }
   }
@@ -164,7 +164,7 @@ function throwFromExit<A, E>(exit: Exit.Exit<A, E>): A {
     return exit.value
   }
 
-  const failure = Cause.failureOption(exit.cause)
+  const failure = Cause.findErrorOption(exit.cause)
   if (failure._tag === 'Some') {
     if (isDomainError(failure.value)) {
       throw toThrownError(failure.value)

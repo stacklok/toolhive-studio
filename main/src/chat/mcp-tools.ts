@@ -6,7 +6,10 @@ import {
 } from './mcp/mcp-service-impl'
 
 export function getCachedUiMetadata() {
-  return runChatSyncOr(McpService.getCachedUiMetadata(), {})
+  return runChatSyncOr(
+    McpService.use((s) => s.getCachedUiMetadata()),
+    {}
+  )
 }
 
 export async function fetchUiResource(serverName: string, resourceUri: string) {
@@ -23,7 +26,7 @@ export async function proxyMcpToolCall(
 
 export async function getMcpServerTools(serverName: string, threadId?: string) {
   return runChatPromiseOr(
-    McpService.getMcpServerTools(serverName, threadId),
+    McpService.use((s) => s.getMcpServerTools(serverName, threadId)),
     null
   )
 }
@@ -32,10 +35,13 @@ export async function createMcpTools(
   threadId?: string,
   options?: { sanitizeSchemas?: boolean }
 ) {
-  return runChatPromiseOr(McpService.createMcpTools(threadId, options), {
-    tools: {},
-    enabledTools: {},
-    enabledServersWithWorkload: 0,
-    close: async () => undefined,
-  })
+  return runChatPromiseOr(
+    McpService.use((s) => s.createMcpTools(threadId, options)),
+    {
+      tools: {},
+      enabledTools: {},
+      enabledServersWithWorkload: 0,
+      close: async () => undefined,
+    }
+  )
 }
