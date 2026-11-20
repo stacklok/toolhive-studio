@@ -12,12 +12,14 @@ export type { RunStreamOptions }
 export async function runManagedStream(
   options: RunStreamOptions
 ): Promise<void> {
-  return runChatPromise(StreamRegistryService.runManagedStream(options))
+  return runChatPromise(
+    StreamRegistryService.use((s) => s.runManagedStream(options))
+  )
 }
 
 export function subscribeToStream(chatId: string, sender: WebContents) {
   return runChatSyncOr(
-    StreamRegistryService.subscribeToStream(chatId, sender),
+    StreamRegistryService.use((s) => s.subscribeToStream(chatId, sender)),
     null
   )
 }
@@ -27,21 +29,30 @@ export function unsubscribeFromStream(
   sender: WebContents
 ): void {
   runChatSyncOr(
-    StreamRegistryService.unsubscribeFromStream(chatId, sender),
+    StreamRegistryService.use((s) => s.unsubscribeFromStream(chatId, sender)),
     undefined
   )
 }
 
 export function cancelStream(chatId: string): boolean {
-  return runChatSyncOr(StreamRegistryService.cancelStream(chatId), false)
+  return runChatSyncOr(
+    StreamRegistryService.use((s) => s.cancelStream(chatId)),
+    false
+  )
 }
 
 export function getActiveStreamId(chatId: string): string | null {
-  return runChatSyncOr(StreamRegistryService.getActiveStreamId(chatId), null)
+  return runChatSyncOr(
+    StreamRegistryService.use((s) => s.getActiveStreamId(chatId)),
+    null
+  )
 }
 
 export function getStreamingChatIds(): string[] {
-  return runChatSyncOr(StreamRegistryService.getStreamingChatIds(), [])
+  return runChatSyncOr(
+    StreamRegistryService.use((s) => s.getStreamingChatIds()),
+    []
+  )
 }
 
 export function setToolUiMetadata(
@@ -49,7 +60,7 @@ export function setToolUiMetadata(
   metadata: Record<string, unknown>
 ): void {
   runChatSyncOr(
-    StreamRegistryService.setToolUiMetadata(chatId, metadata),
+    StreamRegistryService.use((s) => s.setToolUiMetadata(chatId, metadata)),
     undefined
   )
 }

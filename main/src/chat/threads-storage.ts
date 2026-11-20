@@ -13,18 +13,24 @@ export function createThread(
   explicitId?: string
 ): { success: boolean; threadId?: string; error?: string } {
   return runChatToResultSync(
-    ThreadsService.createThread(title, initialMessages, explicitId).pipe(
-      Effect.map(({ threadId }) => ({ threadId }))
-    )
+    ThreadsService.use((s) =>
+      s.createThread(title, initialMessages, explicitId)
+    ).pipe(Effect.map(({ threadId }) => ({ threadId })))
   )
 }
 
 export function getThread(threadId: string): ChatSettingsThread | null {
-  return runChatSyncOr(ThreadsService.getThread(threadId), null)
+  return runChatSyncOr(
+    ThreadsService.use((s) => s.getThread(threadId)),
+    null
+  )
 }
 
 export function getAllThreads(): ChatSettingsThread[] {
-  return runChatSyncOr(ThreadsService.getAllThreads(), [])
+  return runChatSyncOr(
+    ThreadsService.use((s) => s.getAllThreads()),
+    []
+  )
 }
 
 export function updateThread(
@@ -32,7 +38,9 @@ export function updateThread(
   updates: Partial<Omit<ChatSettingsThread, 'id' | 'createdAt'>>
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    ThreadsService.updateThread(threadId, updates).pipe(Effect.as({}))
+    ThreadsService.use((s) => s.updateThread(threadId, updates)).pipe(
+      Effect.as({})
+    )
   )
 }
 
@@ -48,7 +56,9 @@ export function addMessageToThread(
   }>
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    ThreadsService.addMessageToThread(threadId, message).pipe(Effect.as({}))
+    ThreadsService.use((s) => s.addMessageToThread(threadId, message)).pipe(
+      Effect.as({})
+    )
   )
 }
 
@@ -57,7 +67,9 @@ export function updateThreadMessages(
   messages: ChatSettingsThread['messages']
 ): { success: boolean; error?: string } {
   return runChatToResultSync(
-    ThreadsService.updateThreadMessages(threadId, messages).pipe(Effect.as({}))
+    ThreadsService.use((s) => s.updateThreadMessages(threadId, messages)).pipe(
+      Effect.as({})
+    )
   )
 }
 
@@ -66,12 +78,15 @@ export function deleteThread(threadId: string): {
   error?: string
 } {
   return runChatToResultSync(
-    ThreadsService.deleteThread(threadId).pipe(Effect.as({}))
+    ThreadsService.use((s) => s.deleteThread(threadId)).pipe(Effect.as({}))
   )
 }
 
 export function getActiveThreadId(): string | undefined {
-  return runChatSyncOr(ThreadsService.getActiveThreadId(), undefined)
+  return runChatSyncOr(
+    ThreadsService.use((s) => s.getActiveThreadId()),
+    undefined
+  )
 }
 
 export function setActiveThreadId(threadId: string | undefined): {
@@ -79,16 +94,19 @@ export function setActiveThreadId(threadId: string | undefined): {
   error?: string
 } {
   return runChatToResultSync(
-    ThreadsService.setActiveThreadId(threadId).pipe(Effect.as({}))
+    ThreadsService.use((s) => s.setActiveThreadId(threadId)).pipe(Effect.as({}))
   )
 }
 
 export function clearAllThreads(): { success: boolean; error?: string } {
   return runChatToResultSync(
-    ThreadsService.clearAllThreads().pipe(Effect.as({}))
+    ThreadsService.use((s) => s.clearAllThreads()).pipe(Effect.as({}))
   )
 }
 
 export function getThreadCount(): number {
-  return runChatSyncOr(ThreadsService.getThreadCount(), 0)
+  return runChatSyncOr(
+    ThreadsService.use((s) => s.getThreadCount()),
+    0
+  )
 }

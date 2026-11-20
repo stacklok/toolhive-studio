@@ -18,8 +18,10 @@ export async function bootstrapChatRuntime(): Promise<void> {
   try {
     await initializeChatRuntime()
     const runtime = getManagedRuntimeOrThrow()
-    await runtime.runPromise(AgentsService.seedBuiltinAgents())
-    await runtime.runPromise(SettingsService.reconcileEnabledMcpTools())
+    await runtime.runPromise(AgentsService.use((s) => s.seedBuiltinAgents()))
+    await runtime.runPromise(
+      SettingsService.use((s) => s.reconcileEnabledMcpTools())
+    )
     markChatRuntimeReady()
     log.info('[CHAT] Effect runtime initialized')
   } catch (error) {

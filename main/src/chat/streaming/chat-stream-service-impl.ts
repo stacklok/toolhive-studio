@@ -35,9 +35,9 @@ function requiresGeminiSchemaCompat(provider: string, model: string): boolean {
  */
 export async function handleChatStreamRealtime(
   deps: {
-    agents: Effect.Effect.Success<typeof AgentsService>
-    mcp: Effect.Effect.Success<typeof McpService>
-    registry: Effect.Effect.Success<typeof StreamRegistryService>
+    agents: Effect.Success<typeof AgentsService>
+    mcp: Effect.Success<typeof McpService>
+    registry: Effect.Success<typeof StreamRegistryService>
   },
   request: ChatRequest,
   streamId: string,

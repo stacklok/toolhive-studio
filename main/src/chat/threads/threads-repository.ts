@@ -1,4 +1,4 @@
-import { Effect } from 'effect'
+import { Context, Effect, Layer } from 'effect'
 import {
   writeThread,
   deleteThreadFromDb,
@@ -40,126 +40,123 @@ function wrapSync<A>(
   })
 }
 
-export class ThreadsRepository extends Effect.Service<ThreadsRepository>()(
-  'chat/ThreadsRepository',
-  {
-    accessors: true,
-    sync: () => ({
-      readThread: (threadId: string) =>
-        wrapSync('readThread', () => readThread(threadId)),
+const makeThreadsRepository = Effect.sync(() => ({
+  readThread: (threadId: string) =>
+    wrapSync('readThread', () => readThread(threadId)),
 
-      readAllThreads: () => wrapSync('readAllThreads', () => readAllThreads()),
+  readAllThreads: () => wrapSync('readAllThreads', () => readAllThreads()),
 
-      readActiveThreadId: () =>
-        wrapSync('readActiveThreadId', () => readActiveThreadId() ?? undefined),
+  readActiveThreadId: () =>
+    wrapSync('readActiveThreadId', () => readActiveThreadId() ?? undefined),
 
-      readThreadCount: () =>
-        wrapSync('readThreadCount', () => readThreadCount()),
+  readThreadCount: () => wrapSync('readThreadCount', () => readThreadCount()),
 
-      writeThread: (thread: ChatSettingsThread) =>
-        wrapSync('writeThread', () => {
-          writeThread(thread)
-        }),
-
-      deleteThread: (threadId: string) =>
-        wrapSync('deleteThread', () => {
-          deleteThreadFromDb(threadId)
-        }),
-
-      clearAllThreads: () =>
-        wrapSync('clearAllThreads', () => {
-          clearAllThreadsFromDb()
-        }),
-
-      writeActiveThread: (threadId: string | undefined) =>
-        wrapSync('writeActiveThread', () => {
-          writeActiveThread(threadId)
-        }),
-
-      readThreadSelectedModel: (threadId: string) =>
-        wrapSync('readThreadSelectedModel', () =>
-          readThreadSelectedModel(threadId)
-        ),
-
-      writeThreadSelectedModel: (
-        threadId: string,
-        provider: string | null,
-        model: string | null
-      ) =>
-        wrapSync('writeThreadSelectedModel', () => {
-          writeThreadSelectedModel(threadId, provider, model)
-        }),
-
-      readThreadEnabledMcpTools: (threadId: string) =>
-        wrapSync('readThreadEnabledMcpTools', () =>
-          readThreadEnabledMcpTools(threadId)
-        ),
-
-      writeThreadEnabledMcpTools: (
-        threadId: string,
-        tools: Record<string, string[]>
-      ) =>
-        wrapSync('writeThreadEnabledMcpTools', () => {
-          writeThreadEnabledMcpTools(threadId, tools)
-        }),
-
-      readThreadEnabledSkills: (threadId: string) =>
-        wrapSync('readThreadEnabledSkills', () =>
-          readThreadEnabledSkills(threadId)
-        ),
-
-      writeThreadEnabledSkills: (threadId: string, skills: string[]) =>
-        wrapSync('writeThreadEnabledSkills', () => {
-          writeThreadEnabledSkills(threadId, skills)
-        }),
-
-      readThreadAgentId: (threadId: string) =>
-        wrapSync('readThreadAgentId', () => readThreadAgentId(threadId)),
-
-      writeThreadAgentId: (threadId: string, agentId: string | null) =>
-        wrapSync('writeThreadAgentId', () => {
-          writeThreadAgentId(threadId, agentId)
-        }),
-
-      ensureRow: (threadId: string) =>
-        Effect.gen(function* () {
-          const existing = yield* wrapSync('readThread', () =>
-            readThread(threadId)
-          )
-          if (existing) return
-          const now = Date.now()
-          yield* wrapSync('writeThread', () => {
-            writeThread({
-              id: threadId,
-              messages: [],
-              lastEditTimestamp: now,
-              createdAt: now,
-            })
-          })
-        }),
-
-      updateMessages: (threadId: string, messages: ThreadMessage[]) =>
-        Effect.gen(function* () {
-          const existing = yield* wrapSync('readThread', () =>
-            readThread(threadId)
-          )
-          if (!existing) {
-            return yield* Effect.fail(
-              new ThreadNotFoundError({
-                threadId,
-                userMessage: 'Thread not found',
-              })
-            )
-          }
-          const updated: ChatSettingsThread = {
-            ...existing,
-            messages,
-            lastEditTimestamp: Date.now(),
-          }
-          yield* wrapSync('writeThread', () => {
-            writeThread(updated)
-          })
-        }),
+  writeThread: (thread: ChatSettingsThread) =>
+    wrapSync('writeThread', () => {
+      writeThread(thread)
     }),
-  }
-) {}
+
+  deleteThread: (threadId: string) =>
+    wrapSync('deleteThread', () => {
+      deleteThreadFromDb(threadId)
+    }),
+
+  clearAllThreads: () =>
+    wrapSync('clearAllThreads', () => {
+      clearAllThreadsFromDb()
+    }),
+
+  writeActiveThread: (threadId: string | undefined) =>
+    wrapSync('writeActiveThread', () => {
+      writeActiveThread(threadId)
+    }),
+
+  readThreadSelectedModel: (threadId: string) =>
+    wrapSync('readThreadSelectedModel', () =>
+      readThreadSelectedModel(threadId)
+    ),
+
+  writeThreadSelectedModel: (
+    threadId: string,
+    provider: string | null,
+    model: string | null
+  ) =>
+    wrapSync('writeThreadSelectedModel', () => {
+      writeThreadSelectedModel(threadId, provider, model)
+    }),
+
+  readThreadEnabledMcpTools: (threadId: string) =>
+    wrapSync('readThreadEnabledMcpTools', () =>
+      readThreadEnabledMcpTools(threadId)
+    ),
+
+  writeThreadEnabledMcpTools: (
+    threadId: string,
+    tools: Record<string, string[]>
+  ) =>
+    wrapSync('writeThreadEnabledMcpTools', () => {
+      writeThreadEnabledMcpTools(threadId, tools)
+    }),
+
+  readThreadEnabledSkills: (threadId: string) =>
+    wrapSync('readThreadEnabledSkills', () =>
+      readThreadEnabledSkills(threadId)
+    ),
+
+  writeThreadEnabledSkills: (threadId: string, skills: string[]) =>
+    wrapSync('writeThreadEnabledSkills', () => {
+      writeThreadEnabledSkills(threadId, skills)
+    }),
+
+  readThreadAgentId: (threadId: string) =>
+    wrapSync('readThreadAgentId', () => readThreadAgentId(threadId)),
+
+  writeThreadAgentId: (threadId: string, agentId: string | null) =>
+    wrapSync('writeThreadAgentId', () => {
+      writeThreadAgentId(threadId, agentId)
+    }),
+
+  ensureRow: (threadId: string) =>
+    Effect.gen(function* () {
+      const existing = yield* wrapSync('readThread', () => readThread(threadId))
+      if (existing) return
+      const now = Date.now()
+      yield* wrapSync('writeThread', () => {
+        writeThread({
+          id: threadId,
+          messages: [],
+          lastEditTimestamp: now,
+          createdAt: now,
+        })
+      })
+    }),
+
+  updateMessages: (threadId: string, messages: ThreadMessage[]) =>
+    Effect.gen(function* () {
+      const existing = yield* wrapSync('readThread', () => readThread(threadId))
+      if (!existing) {
+        return yield* Effect.fail(
+          new ThreadNotFoundError({
+            threadId,
+            userMessage: 'Thread not found',
+          })
+        )
+      }
+      const updated: ChatSettingsThread = {
+        ...existing,
+        messages,
+        lastEditTimestamp: Date.now(),
+      }
+      yield* wrapSync('writeThread', () => {
+        writeThread(updated)
+      })
+    }),
+}))
+
+export class ThreadsRepository extends Context.Service<
+  ThreadsRepository,
+  Effect.Success<typeof makeThreadsRepository>
+>()('chat/ThreadsRepository') {
+  static readonly layer = Layer.effect(ThreadsRepository, makeThreadsRepository)
+  static readonly Default = ThreadsRepository.layer
+}

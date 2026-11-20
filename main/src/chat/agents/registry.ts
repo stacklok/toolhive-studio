@@ -13,45 +13,54 @@ import { AgentsService } from './agents-service'
 import { createDefaultAgentConfig } from './default-agent'
 
 export function seedBuiltinAgents(): void {
-  runChatSync(AgentsService.seedBuiltinAgents())
+  runChatSync(AgentsService.use((s) => s.seedBuiltinAgents()))
 }
 
 export function listAgents(): AgentConfig[] {
-  return runChatSyncOr(AgentsService.listAgents(), [])
+  return runChatSyncOr(
+    AgentsService.use((s) => s.listAgents()),
+    []
+  )
 }
 
 export function getAgent(id: string): AgentConfig | null {
-  return runChatSyncOr(AgentsService.getAgent(id), null)
+  return runChatSyncOr(
+    AgentsService.use((s) => s.getAgent(id)),
+    null
+  )
 }
 
 export function resolveAgentForThread(
   threadId: string | undefined
 ): AgentConfig {
   return runChatSyncOr(
-    AgentsService.resolveAgentForThread(threadId),
+    AgentsService.use((s) => s.resolveAgentForThread(threadId)),
     createDefaultAgentConfig()
   )
 }
 
 export function createCustomAgent(input: CreateAgentInput): AgentConfig {
-  return runChatSync(AgentsService.createCustomAgent(input))
+  return runChatSync(AgentsService.use((s) => s.createCustomAgent(input)))
 }
 
 export function updateAgent(
   id: string,
   input: UpdateAgentInput
 ): AgentConfig | null {
-  return runChatSync(AgentsService.updateAgent(id, input))
+  return runChatSync(AgentsService.use((s) => s.updateAgent(id, input)))
 }
 
 export function deleteAgent(id: string): {
   success: boolean
   error?: string
 } {
-  return runChatSyncOr(AgentsService.deleteAgent(id), {
-    success: false,
-    error: CHAT_UNAVAILABLE_USER_MESSAGE,
-  })
+  return runChatSyncOr(
+    AgentsService.use((s) => s.deleteAgent(id)),
+    {
+      success: false,
+      error: CHAT_UNAVAILABLE_USER_MESSAGE,
+    }
+  )
 }
 
 export function duplicateAgent(id: string): {
@@ -60,7 +69,7 @@ export function duplicateAgent(id: string): {
   error?: string
 } {
   return runChatSyncOr(
-    AgentsService.duplicateAgent(id).pipe(
+    AgentsService.use((s) => s.duplicateAgent(id)).pipe(
       Effect.map(
         (agent): { success: boolean; agent?: AgentConfig; error?: string } =>
           agent
@@ -76,9 +85,12 @@ export function duplicateAgent(id: string): {
 }
 
 export function setThreadAgent(threadId: string, agentId: string | null): void {
-  runChatSync(AgentsService.setThreadAgent(threadId, agentId))
+  runChatSync(AgentsService.use((s) => s.setThreadAgent(threadId, agentId)))
 }
 
 export function getThreadAgentId(threadId: string): string | null {
-  return runChatSyncOr(AgentsService.getThreadAgentId(threadId), null)
+  return runChatSyncOr(
+    AgentsService.use((s) => s.getThreadAgentId(threadId)),
+    null
+  )
 }

@@ -16,7 +16,7 @@ export function createChatThread(title?: string): {
   error?: string
 } {
   return runChatToResultSync(
-    ThreadsService.createThread(title).pipe(
+    ThreadsService.use((s) => s.createThread(title)).pipe(
       Effect.map(({ threadId }) => ({ threadId }))
     )
   )
@@ -28,12 +28,14 @@ export function createChatThread(title?: string): {
  * next send overwrites real SQLite history with a full replace.
  */
 export async function getThreadMessagesForTransport(threadId: string) {
-  return runChatPromise(ThreadsService.getThreadMessagesForTransport(threadId))
+  return runChatPromise(
+    ThreadsService.use((s) => s.getThreadMessagesForTransport(threadId))
+  )
 }
 
 export function getThreadInfo(threadId: string) {
   return runChatSyncOr(
-    ThreadsService.getThreadInfo(threadId),
+    ThreadsService.use((s) => s.getThreadInfo(threadId)),
     EMPTY_THREAD_INFO
   )
 }
@@ -42,5 +44,7 @@ export function ensureThreadExists(
   threadId?: string,
   title?: string
 ): { success: boolean; threadId?: string; error?: string; isNew?: boolean } {
-  return runChatToResultSync(ThreadsService.ensureThreadExists(threadId, title))
+  return runChatToResultSync(
+    ThreadsService.use((s) => s.ensureThreadExists(threadId, title))
+  )
 }

@@ -1,4 +1,4 @@
-import { Effect } from 'effect'
+import { Context, Effect, Layer } from 'effect'
 import { getApiV1BetaWorkloads } from '@common/api/generated/sdk.gen'
 import type { CoreWorkload } from '@common/api/generated/types.gen'
 import { getTearingDownState } from '../../app-state'
@@ -83,305 +83,303 @@ function wrapSync<A>(
   })
 }
 
-export class SettingsRepository extends Effect.Service<SettingsRepository>()(
-  'chat/SettingsRepository',
-  {
-    accessors: true,
-    sync: () => ({
-      readProvider: (providerId: ProviderId) =>
-        wrapSync('readProvider', () => readChatProvider(providerId)),
+const makeSettingsRepository = Effect.sync(() => ({
+  readProvider: (providerId: ProviderId) =>
+    wrapSync('readProvider', () => readChatProvider(providerId)),
 
-      writeProvider: (
-        providerId: string,
-        settings: { apiKey?: string; endpointURL?: string }
-      ) =>
-        wrapSync('writeProvider', () => {
-          writeProvider(providerId, settings)
-        }),
+  writeProvider: (
+    providerId: string,
+    settings: { apiKey?: string; endpointURL?: string }
+  ) =>
+    wrapSync('writeProvider', () => {
+      writeProvider(providerId, settings)
+    }),
 
-      deleteProvider: (providerId: string) =>
-        wrapSync('deleteProvider', () => {
-          deleteProvider(providerId)
-        }),
+  deleteProvider: (providerId: string) =>
+    wrapSync('deleteProvider', () => {
+      deleteProvider(providerId)
+    }),
 
-      clearAllProviders: () =>
-        wrapSync('clearAllProviders', () => {
-          clearAllProviders()
-        }),
+  clearAllProviders: () =>
+    wrapSync('clearAllProviders', () => {
+      clearAllProviders()
+    }),
 
-      readSelectedModel: () =>
-        wrapSync('readSelectedModel', () => readSelectedModel()),
+  readSelectedModel: () =>
+    wrapSync('readSelectedModel', () => readSelectedModel()),
 
-      writeSelectedModel: (provider: string, model: string) =>
-        wrapSync('writeSelectedModel', () => {
-          writeSelectedModel(provider, model)
-        }),
+  writeSelectedModel: (provider: string, model: string) =>
+    wrapSync('writeSelectedModel', () => {
+      writeSelectedModel(provider, model)
+    }),
 
-      readEnabledMcpTools: () =>
-        wrapSync('readEnabledMcpTools', () => readEnabledMcpTools()),
+  readEnabledMcpTools: () =>
+    wrapSync('readEnabledMcpTools', () => readEnabledMcpTools()),
 
-      writeEnabledMcpTools: (serverName: string, toolNames: string[]) =>
-        wrapSync('writeEnabledMcpTools', () => {
-          writeEnabledMcpTools(serverName, toolNames)
-        }),
+  writeEnabledMcpTools: (serverName: string, toolNames: string[]) =>
+    wrapSync('writeEnabledMcpTools', () => {
+      writeEnabledMcpTools(serverName, toolNames)
+    }),
 
-      deleteEnabledMcpTools: (serverName: string) =>
-        wrapSync('deleteEnabledMcpTools', () => {
-          deleteEnabledMcpTools(serverName)
-        }),
+  deleteEnabledMcpTools: (serverName: string) =>
+    wrapSync('deleteEnabledMcpTools', () => {
+      deleteEnabledMcpTools(serverName)
+    }),
 
-      readEnabledSkills: () =>
-        wrapSync('readEnabledSkills', () => readEnabledSkills()),
+  readEnabledSkills: () =>
+    wrapSync('readEnabledSkills', () => readEnabledSkills()),
 
-      writeEnabledSkill: (name: string) =>
-        wrapSync('writeEnabledSkill', () => {
-          writeEnabledSkill(name)
-        }),
+  writeEnabledSkill: (name: string) =>
+    wrapSync('writeEnabledSkill', () => {
+      writeEnabledSkill(name)
+    }),
 
-      deleteEnabledSkill: (name: string) =>
-        wrapSync('deleteEnabledSkill', () => {
-          deleteEnabledSkill(name)
-        }),
+  deleteEnabledSkill: (name: string) =>
+    wrapSync('deleteEnabledSkill', () => {
+      deleteEnabledSkill(name)
+    }),
 
-      pruneEnabledSkillsTo: (installedNames: readonly string[]) =>
-        wrapSync('pruneEnabledSkillsTo', () =>
-          deleteEnabledSkillsNotIn(installedNames)
-        ),
+  pruneEnabledSkillsTo: (installedNames: readonly string[]) =>
+    wrapSync('pruneEnabledSkillsTo', () =>
+      deleteEnabledSkillsNotIn(installedNames)
+    ),
 
-      fetchRunningServerNames: () =>
-        Effect.tryPromise({
-          try: async () => {
-            const client = createMainProcessApiClient()
-            const { data } = await getApiV1BetaWorkloads({
-              client,
-              query: { all: true },
-            })
-            return (data?.workloads ?? [])
-              .filter((w: CoreWorkload) => w.status === 'running')
-              .map((w: CoreWorkload) => w.name)
-          },
-          catch: (cause) =>
-            new StorageError({
-              operation: 'fetchRunningServerNames',
-              cause,
-              userMessage: 'Failed to fetch running MCP servers.',
-            }),
+  fetchRunningServerNames: () =>
+    Effect.tryPromise({
+      try: async () => {
+        const client = createMainProcessApiClient()
+        const { data } = await getApiV1BetaWorkloads({
+          client,
+          query: { all: true },
+        })
+        return (data?.workloads ?? [])
+          .filter((w: CoreWorkload) => w.status === 'running')
+          .map((w: CoreWorkload) => w.name)
+      },
+      catch: (cause) =>
+        new StorageError({
+          operation: 'fetchRunningServerNames',
+          cause,
+          userMessage: 'Failed to fetch running MCP servers.',
         }),
     }),
+}))
+
+export class SettingsRepository extends Context.Service<
+  SettingsRepository,
+  Effect.Success<typeof makeSettingsRepository>
+>()('chat/SettingsRepository') {
+  static readonly layer = Layer.effect(
+    SettingsRepository,
+    makeSettingsRepository
+  )
+  static readonly Default = SettingsRepository.layer
+}
+
+const makeSettingsService = Effect.gen(function* () {
+  const repo = yield* SettingsRepository
+
+  const defaultProviderSettings = (
+    providerId: ProviderId
+  ): ChatSettingsProvider => {
+    if (isLocalProvider(providerId)) {
+      return { providerId, endpointURL: '', enabledTools: [] }
+    }
+    if (isGatewayProvider(providerId)) {
+      return { providerId, endpointURL: '', enabledTools: [] }
+    }
+    return {
+      providerId: providerId as Exclude<
+        ProviderId,
+        LocalProviderId | GatewayProviderId
+      >,
+      apiKey: '',
+      enabledTools: [],
+    }
   }
-) {}
 
-export class SettingsService extends Effect.Service<SettingsService>()(
-  'chat/SettingsService',
-  {
-    accessors: true,
-    effect: Effect.gen(function* () {
-      const repo = yield* SettingsRepository
-
-      const defaultProviderSettings = (
-        providerId: ProviderId
-      ): ChatSettingsProvider => {
+  return {
+    getChatSettings: (providerId: ProviderId) =>
+      Effect.gen(function* () {
+        const dbProvider = yield* repo.readProvider(providerId)
+        if (!dbProvider) return defaultProviderSettings(providerId)
         if (isLocalProvider(providerId)) {
-          return { providerId, endpointURL: '', enabledTools: [] }
+          return {
+            providerId,
+            endpointURL: dbProvider.endpointURL ?? '',
+            enabledTools: [],
+          }
         }
         if (isGatewayProvider(providerId)) {
-          return { providerId, endpointURL: '', enabledTools: [] }
+          return {
+            providerId,
+            endpointURL: dbProvider.endpointURL ?? '',
+            enabledTools: [],
+          }
         }
         return {
           providerId: providerId as Exclude<
             ProviderId,
             LocalProviderId | GatewayProviderId
           >,
-          apiKey: '',
+          apiKey: dbProvider.apiKey ?? '',
           enabledTools: [],
         }
-      }
+      }).pipe(
+        Effect.catchTag('StorageError', () =>
+          Effect.succeed(defaultProviderSettings(providerId))
+        )
+      ),
 
-      return {
-        getChatSettings: (providerId: ProviderId) =>
-          Effect.gen(function* () {
-            const dbProvider = yield* repo.readProvider(providerId)
-            if (!dbProvider) return defaultProviderSettings(providerId)
-            if (isLocalProvider(providerId)) {
-              return {
-                providerId,
-                endpointURL: dbProvider.endpointURL ?? '',
-                enabledTools: [],
-              }
-            }
-            if (isGatewayProvider(providerId)) {
-              return {
-                providerId,
-                endpointURL: dbProvider.endpointURL ?? '',
-                enabledTools: [],
-              }
-            }
-            return {
-              providerId: providerId as Exclude<
-                ProviderId,
-                LocalProviderId | GatewayProviderId
-              >,
-              apiKey: dbProvider.apiKey ?? '',
-              enabledTools: [],
-            }
-          }).pipe(
-            Effect.catchTag('StorageError', () =>
-              Effect.succeed(defaultProviderSettings(providerId))
-            )
-          ),
+    clearChatSettings: (providerId?: ProviderId) =>
+      providerId ? repo.deleteProvider(providerId) : repo.clearAllProviders(),
 
-        clearChatSettings: (providerId?: ProviderId) =>
-          providerId
-            ? repo.deleteProvider(providerId)
-            : repo.clearAllProviders(),
+    getSelectedModel: () =>
+      repo.readSelectedModel().pipe(
+        Effect.map((model) =>
+          model.provider && model.model ? model : { provider: '', model: '' }
+        ),
+        Effect.catchTag('StorageError', () =>
+          Effect.succeed({ provider: '', model: '' })
+        )
+      ),
 
-        getSelectedModel: () =>
-          repo.readSelectedModel().pipe(
-            Effect.map((model) =>
-              model.provider && model.model
-                ? model
-                : { provider: '', model: '' }
-            ),
-            Effect.catchTag('StorageError', () =>
-              Effect.succeed({ provider: '', model: '' })
-            )
-          ),
+    saveSelectedModel: (provider: string, model: string) =>
+      repo.writeSelectedModel(provider, model),
 
-        saveSelectedModel: (provider: string, model: string) =>
-          repo.writeSelectedModel(provider, model),
+    saveEnabledMcpTools: (serverName: string, toolNames: string[]) =>
+      repo.writeEnabledMcpTools(serverName, toolNames),
 
-        saveEnabledMcpTools: (serverName: string, toolNames: string[]) =>
-          repo.writeEnabledMcpTools(serverName, toolNames),
+    // Returns raw DB rows. Stale server entries are pruned once at
+    // bootstrap (`reconcileEnabledMcpTools`); chat turns also skip missing
+    // workloads. Settings UI may show enabled tools for stopped servers
+    // until the next restart — intentional vs filtering on every read.
+    getEnabledMcpTools: () => repo.readEnabledMcpTools(),
 
-        // Returns raw DB rows. Stale server entries are pruned once at
-        // bootstrap (`reconcileEnabledMcpTools`); chat turns also skip missing
-        // workloads. Settings UI may show enabled tools for stopped servers
-        // until the next restart — intentional vs filtering on every read.
-        getEnabledMcpTools: () => repo.readEnabledMcpTools(),
+    getEnabledMcpServersFromTools: () =>
+      Effect.gen(function* () {
+        const allEnabledTools = yield* repo.readEnabledMcpTools()
+        return Object.keys(allEnabledTools).filter(
+          (serverName) => (allEnabledTools[serverName]?.length ?? 0) > 0
+        )
+      }).pipe(Effect.catchTag('StorageError', () => Effect.succeed([]))),
 
-        getEnabledMcpServersFromTools: () =>
-          Effect.gen(function* () {
-            const allEnabledTools = yield* repo.readEnabledMcpTools()
-            return Object.keys(allEnabledTools).filter(
-              (serverName) => (allEnabledTools[serverName]?.length ?? 0) > 0
-            )
-          }).pipe(Effect.catchTag('StorageError', () => Effect.succeed([]))),
+    getEnabledSkills: () =>
+      repo
+        .readEnabledSkills()
+        .pipe(Effect.catchTag('StorageError', () => Effect.succeed([]))),
 
-        getEnabledSkills: () =>
-          repo
-            .readEnabledSkills()
-            .pipe(Effect.catchTag('StorageError', () => Effect.succeed([]))),
+    setSkillEnabled: (name: string, enabled: boolean) =>
+      Effect.gen(function* () {
+        const trimmed = name.trim()
+        if (!trimmed) {
+          return yield* Effect.fail(
+            new StorageError({
+              operation: 'setSkillEnabled',
+              userMessage: 'Skill name cannot be empty.',
+            })
+          )
+        }
+        if (enabled) {
+          yield* repo.writeEnabledSkill(trimmed)
+        } else {
+          yield* repo.deleteEnabledSkill(trimmed)
+        }
+      }),
 
-        setSkillEnabled: (name: string, enabled: boolean) =>
-          Effect.gen(function* () {
-            const trimmed = name.trim()
-            if (!trimmed) {
-              return yield* Effect.fail(
-                new StorageError({
-                  operation: 'setSkillEnabled',
-                  userMessage: 'Skill name cannot be empty.',
-                })
+    pruneEnabledSkillsTo: (installedNames: readonly string[]) =>
+      repo
+        .pruneEnabledSkillsTo(installedNames)
+        .pipe(Effect.catchTag('StorageError', () => Effect.succeed(0))),
+
+    reconcileEnabledMcpTools: () =>
+      Effect.gen(function* () {
+        if (getTearingDownState() || !isToolhiveRunning()) {
+          return
+        }
+
+        const enabledMcpTools = yield* repo.readEnabledMcpTools()
+        const runningServerNames = yield* repo.fetchRunningServerNames().pipe(
+          Effect.catch((error) =>
+            Effect.gen(function* () {
+              yield* chatLogWarning(
+                'Failed to check running servers for MCP reconciliation'
               )
-            }
-            if (enabled) {
-              yield* repo.writeEnabledSkill(trimmed)
-            } else {
-              yield* repo.deleteEnabledSkill(trimmed)
-            }
-          }),
+              return yield* Effect.fail(error)
+            })
+          )
+        )
 
-        pruneEnabledSkillsTo: (installedNames: readonly string[]) =>
-          repo
-            .pruneEnabledSkillsTo(installedNames)
-            .pipe(Effect.catchTag('StorageError', () => Effect.succeed(0))),
+        const serversToRemove: string[] = []
+        for (const [serverName, tools] of Object.entries(enabledMcpTools)) {
+          if (!runningServerNames.includes(serverName) && tools.length > 0) {
+            yield* chatLogInfo(
+              `Cleaning up tools for stopped server: ${serverName}`
+            )
+            serversToRemove.push(serverName)
+          }
+        }
 
-        reconcileEnabledMcpTools: () =>
-          Effect.gen(function* () {
-            if (getTearingDownState() || !isToolhiveRunning()) {
-              return
-            }
+        for (const serverName of serversToRemove) {
+          yield* repo.deleteEnabledMcpTools(serverName)
+        }
+      }).pipe(Effect.catch(() => Effect.void)),
 
-            const enabledMcpTools = yield* repo.readEnabledMcpTools()
-            const runningServerNames = yield* repo
-              .fetchRunningServerNames()
-              .pipe(
-                Effect.catchAll((error) =>
-                  Effect.gen(function* () {
-                    yield* chatLogWarning(
-                      'Failed to check running servers for MCP reconciliation'
-                    )
-                    return yield* Effect.fail(error)
-                  })
-                )
-              )
+    // Persists provider credentials only. `enabledTools` on the IPC payload
+    // is retained for compatibility and is not written here.
+    handleSaveSettings: (
+      providerId: string,
+      settings:
+        | { apiKey: string; enabledTools: string[] }
+        | { endpointURL: string; enabledTools: string[] }
+    ) =>
+      Effect.gen(function* () {
+        if (!providerId.trim()) {
+          return yield* Effect.fail(
+            new ValidationError({
+              field: 'providerId',
+              userMessage: 'Provider id is required.',
+            })
+          )
+        }
 
-            const serversToRemove: string[] = []
-            for (const [serverName, tools] of Object.entries(enabledMcpTools)) {
-              if (
-                !runningServerNames.includes(serverName) &&
-                tools.length > 0
-              ) {
-                yield* chatLogInfo(
-                  `Cleaning up tools for stopped server: ${serverName}`
-                )
-                serversToRemove.push(serverName)
-              }
-            }
+        const providerIdTyped = providerId as ProviderId
+        const credentialValue =
+          isLocalProvider(providerIdTyped) || isGatewayProvider(providerIdTyped)
+            ? 'endpointURL' in settings
+              ? settings.endpointURL
+              : ''
+            : 'apiKey' in settings
+              ? settings.apiKey
+              : ''
 
-            for (const serverName of serversToRemove) {
-              yield* repo.deleteEnabledMcpTools(serverName)
-            }
-          }).pipe(Effect.catchAll(() => Effect.void)),
+        if (!credentialValue.trim()) {
+          yield* repo.deleteProvider(providerIdTyped)
+          return
+        }
 
-        // Persists provider credentials only. `enabledTools` on the IPC payload
-        // is retained for compatibility and is not written here.
-        handleSaveSettings: (
-          providerId: string,
-          settings:
-            | { apiKey: string; enabledTools: string[] }
-            | { endpointURL: string; enabledTools: string[] }
-        ) =>
-          Effect.gen(function* () {
-            if (!providerId.trim()) {
-              return yield* Effect.fail(
-                new ValidationError({
-                  field: 'providerId',
-                  userMessage: 'Provider id is required.',
-                })
-              )
-            }
-
-            const providerIdTyped = providerId as ProviderId
-            const credentialValue =
-              isLocalProvider(providerIdTyped) ||
-              isGatewayProvider(providerIdTyped)
-                ? 'endpointURL' in settings
-                  ? settings.endpointURL
-                  : ''
-                : 'apiKey' in settings
-                  ? settings.apiKey
-                  : ''
-
-            if (!credentialValue.trim()) {
-              yield* repo.deleteProvider(providerIdTyped)
-              return
-            }
-
-            if (
-              isLocalProvider(providerIdTyped) ||
-              isGatewayProvider(providerIdTyped)
-            ) {
-              yield* repo.writeProvider(providerIdTyped, {
-                endpointURL: credentialValue,
-              })
-            } else {
-              yield* repo.writeProvider(providerIdTyped, {
-                apiKey: credentialValue,
-              })
-            }
-          }),
-      }
-    }),
-    dependencies: [SettingsRepository.Default],
+        if (
+          isLocalProvider(providerIdTyped) ||
+          isGatewayProvider(providerIdTyped)
+        ) {
+          yield* repo.writeProvider(providerIdTyped, {
+            endpointURL: credentialValue,
+          })
+        } else {
+          yield* repo.writeProvider(providerIdTyped, {
+            apiKey: credentialValue,
+          })
+        }
+      }),
   }
-) {}
+})
+
+export class SettingsService extends Context.Service<
+  SettingsService,
+  Effect.Success<typeof makeSettingsService>
+>()('chat/SettingsService') {
+  static readonly layer = Layer.effect(SettingsService, makeSettingsService)
+  static readonly Default = SettingsService.layer.pipe(
+    Layer.provide(SettingsRepository.Default)
+  )
+}

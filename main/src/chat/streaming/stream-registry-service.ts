@@ -1,5 +1,5 @@
 import type { WebContents } from 'electron'
-import { Effect, Fiber } from 'effect'
+import { Context, Effect, Fiber, Layer } from 'effect'
 import { ThreadsService } from '../threads/threads-service'
 import { StreamConflictError } from '../runtime/errors'
 import {
@@ -27,63 +27,67 @@ export {
   _resetActiveStreamsForTests,
 } from './stream-registry-state'
 
-export class StreamRegistryService extends Effect.Service<StreamRegistryService>()(
-  'chat/StreamRegistryService',
-  {
-    accessors: true,
-    effect: Effect.gen(function* () {
-      const threads = yield* ThreadsService
-      configureStreamRegistry(
-        makePersistMessages(threads.updateThreadMessages.bind(threads))
-      )
+const makeStreamRegistryService = Effect.gen(function* () {
+  const threads = yield* ThreadsService
+  configureStreamRegistry(
+    makePersistMessages(threads.updateThreadMessages.bind(threads))
+  )
 
-      return {
-        runManagedStream: (options: RunStreamOptions) =>
-          Effect.scoped(
-            Effect.gen(function* () {
-              const stream = yield* Effect.try({
-                try: () => buildActiveStream(options),
-                catch: (cause) =>
-                  cause instanceof StreamConflictError
-                    ? cause
-                    : cause instanceof Error
-                      ? cause
-                      : new Error(String(cause)),
-              })
+  return {
+    runManagedStream: (options: RunStreamOptions) =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const stream = yield* Effect.try({
+            try: () => buildActiveStream(options),
+            catch: (cause) =>
+              cause instanceof StreamConflictError
+                ? cause
+                : cause instanceof Error
+                  ? cause
+                  : new Error(String(cause)),
+          })
 
-              yield* Effect.addFinalizer(() =>
-                Effect.sync(() => flushPersist(stream))
-              )
+          yield* Effect.addFinalizer(() =>
+            Effect.sync(() => flushPersist(stream))
+          )
 
-              const fiber = yield* Effect.forkScoped(
-                Effect.tryPromise({
-                  try: () => runManagedStreamPump(options, stream),
-                  catch: (cause) =>
-                    cause instanceof Error ? cause : new Error(String(cause)),
-                })
-              )
+          const fiber = yield* Effect.forkScoped(
+            Effect.tryPromise({
+              try: () => runManagedStreamPump(options, stream),
+              catch: (cause) =>
+                cause instanceof Error ? cause : new Error(String(cause)),
+            }),
+            { startImmediately: true }
+          )
 
-              yield* Fiber.join(fiber)
-            })
-          ),
-        subscribeToStream: (chatId: string, sender: WebContents) =>
-          Effect.sync(() => subscribeToStream(chatId, sender)),
-        unsubscribeFromStream: (chatId: string, sender: WebContents) =>
-          Effect.sync(() => unsubscribeFromStream(chatId, sender)),
-        cancelStream: (chatId: string) =>
-          Effect.sync(() => cancelStream(chatId)),
-        getActiveStreamId: (chatId: string) =>
-          Effect.sync(() => getActiveStreamId(chatId)),
-        getStreamingChatIds: () => Effect.sync(() => getStreamingChatIds()),
-        setToolUiMetadata: (
-          chatId: string,
-          metadata: Record<string, unknown>
-        ) => Effect.sync(() => setToolUiMetadata(chatId, metadata)),
-        purgeSender: (sender: WebContents) =>
-          Effect.sync(() => purgeSender(sender)),
-        resetForTests: () => Effect.sync(() => _resetActiveStreamsForTests()),
-      }
-    }),
-    dependencies: [ThreadsService.Default],
+          yield* Fiber.join(fiber)
+        })
+      ),
+    subscribeToStream: (chatId: string, sender: WebContents) =>
+      Effect.sync(() => subscribeToStream(chatId, sender)),
+    unsubscribeFromStream: (chatId: string, sender: WebContents) =>
+      Effect.sync(() => unsubscribeFromStream(chatId, sender)),
+    cancelStream: (chatId: string) => Effect.sync(() => cancelStream(chatId)),
+    getActiveStreamId: (chatId: string) =>
+      Effect.sync(() => getActiveStreamId(chatId)),
+    getStreamingChatIds: () => Effect.sync(() => getStreamingChatIds()),
+    setToolUiMetadata: (chatId: string, metadata: Record<string, unknown>) =>
+      Effect.sync(() => setToolUiMetadata(chatId, metadata)),
+    purgeSender: (sender: WebContents) =>
+      Effect.sync(() => purgeSender(sender)),
+    resetForTests: () => Effect.sync(() => _resetActiveStreamsForTests()),
   }
-) {}
+})
+
+export class StreamRegistryService extends Context.Service<
+  StreamRegistryService,
+  Effect.Success<typeof makeStreamRegistryService>
+>()('chat/StreamRegistryService') {
+  static readonly layer = Layer.effect(
+    StreamRegistryService,
+    makeStreamRegistryService
+  )
+  static readonly Default = StreamRegistryService.layer.pipe(
+    Layer.provide(ThreadsService.Default)
+  )
+}

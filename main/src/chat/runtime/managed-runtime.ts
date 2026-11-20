@@ -39,7 +39,7 @@ const ChatLiveLayer = Layer.mergeAll(
   ChatStreamService.Default
 )
 
-export type ChatServices = Layer.Layer.Success<typeof ChatLiveLayer>
+export type ChatServices = Layer.Success<typeof ChatLiveLayer>
 
 export type ChatRuntime = ManagedRuntime.ManagedRuntime<ChatServices, never>
 

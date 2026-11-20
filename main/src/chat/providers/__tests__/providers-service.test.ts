@@ -92,7 +92,6 @@ const configuredLlm = {
 
 function settingsLayer(playgroundEnabled: boolean) {
   return Layer.mock(SettingsService, {
-    _tag: 'chat/SettingsService',
     getChatSettings: (providerId) => {
       if (providerId === 'thv-llm') {
         return Effect.succeed({
@@ -121,7 +120,7 @@ function runWithSettings<A, E>(
   effect: Effect.Effect<A, E, ProvidersService>,
   playgroundEnabled = true
 ) {
-  const layer = ProvidersService.DefaultWithoutDependencies.pipe(
+  const layer = ProvidersService.layer.pipe(
     Layer.provide(settingsLayer(playgroundEnabled))
   )
   return Effect.runPromise(effect.pipe(Effect.provide(layer)))
@@ -141,7 +140,7 @@ describe('ProvidersService gateway models', () => {
 
   it('lists Stacklok Gateway models from the loopback URL', async () => {
     const result = await runWithSettings(
-      ProvidersService.fetchProviderModels('thv-llm')
+      ProvidersService.use((s) => s.fetchProviderModels('thv-llm'))
     )
 
     expect(invalidateLlmConfigCacheMock).toHaveBeenCalled()
@@ -158,9 +157,8 @@ describe('ProvidersService gateway models', () => {
 
   it('prefers an explicit credential URL over resolved loopback', async () => {
     const result = await runWithSettings(
-      ProvidersService.fetchProviderModels(
-        'thv-llm',
-        'http://127.0.0.1:15000/v1'
+      ProvidersService.use((s) =>
+        s.fetchProviderModels('thv-llm', 'http://127.0.0.1:15000/v1')
       )
     )
 
@@ -179,7 +177,7 @@ describe('ProvidersService gateway models', () => {
     })
 
     const result = await runWithSettings(
-      ProvidersService.fetchProviderModels('thv-llm')
+      ProvidersService.use((s) => s.fetchProviderModels('thv-llm'))
     )
 
     expect(result?.models).toEqual(['cached-model'])
@@ -194,7 +192,7 @@ describe('ProvidersService gateway models', () => {
     })
 
     const result = await runWithSettings(
-      ProvidersService.fetchProviderModels('thv-llm')
+      ProvidersService.use((s) => s.fetchProviderModels('thv-llm'))
     )
 
     expect(result?.models).toEqual(['cached-model'])
@@ -205,7 +203,7 @@ describe('ProvidersService gateway models', () => {
     resolveGatewayBaseURLMock.mockResolvedValue(null)
 
     const result = await runWithSettings(
-      ProvidersService.fetchProviderModels('thv-llm')
+      ProvidersService.use((s) => s.fetchProviderModels('thv-llm'))
     )
 
     expect(fetchGatewayModelsMock).not.toHaveBeenCalled()
@@ -213,7 +211,9 @@ describe('ProvidersService gateway models', () => {
   })
 
   it('includes live gateway models in getAllProviders when Playground is enabled', async () => {
-    const providers = await runWithSettings(ProvidersService.getAllProviders())
+    const providers = await runWithSettings(
+      ProvidersService.use((s) => s.getAllProviders())
+    )
     const gateway = providers.find((provider) => provider.id === 'thv-llm')
 
     expect(fetchGatewayModelsMock).toHaveBeenCalledWith(
@@ -224,7 +224,7 @@ describe('ProvidersService gateway models', () => {
 
   it('does not fetch gateway models when Playground has not opted in', async () => {
     const providers = await runWithSettings(
-      ProvidersService.getAllProviders(),
+      ProvidersService.use((s) => s.getAllProviders()),
       false
     )
     const gateway = providers.find((provider) => provider.id === 'thv-llm')
