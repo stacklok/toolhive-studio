@@ -38,7 +38,7 @@ overrides:
   'icon-gen>sharp': 0.35.5
   # @sentry/electron 8.4.0 pins @sentry/node 11.10.0, which pulls
   # @sentry/bundler-plugins 11.10.0 declaring glob ^13 (cannot reach 14.0.2).
-  '@sentry/bundler-plugins>glob': '>=14.0.4'
+  '@sentry/bundler-plugins>glob': '>=14.0.6'
 
 patchedDependencies:
   electron-installer-redhat@4.0.0: patches/electron-installer-redhat@4.0.0.patch
