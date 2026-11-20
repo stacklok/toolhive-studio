@@ -166,6 +166,23 @@ export type AuthserverCimdRunConfig = {
  */
 export type AuthserverDcrUpstreamConfig = {
   /**
+   * ClientName is the optional RFC 7591 "client_name" registration metadata
+   * sent when ToolHive registers with the upstream. When empty, ToolHive
+   * registers as "ToolHive MCP Client". It is display-only metadata: the
+   * upstream shows it on its authorization screen, and it is never used as
+   * a key. It is capped at 256 characters, matching the client_name bound
+   * the authserver enforces on inbound registrations. Names with leading
+   * or trailing whitespace, or containing control or format characters,
+   * are rejected.
+   *
+   * Changing it does not rename an already-registered client: the cached
+   * registration is keyed without the client name, so the new value applies
+   * only the next time ToolHive registers a fresh client — for example
+   * after rotating via RotationKey, or when the upstream rejects the cached
+   * registration.
+   */
+  client_name?: string
+  /**
    * DiscoveryURL is the exact RFC 8414 / OIDC Discovery document URL to
    * fetch at runtime. The resolver issues a single GET against this URL
    * (no well-known-path fallback) and reads registration_endpoint,
@@ -983,10 +1000,9 @@ export type AuthserverSpiffeBundleSourceRunConfig = {
 
 export type AuthserverSpiffeClientAuthRunConfig = {
   /**
-   * Audiences are RFC 8693 token audiences this association may request.
-   * This is an independent request dimension from Resources: it is not
-   * bounded by allowed_audiences (which is an RFC 8707 resource-URI list)
-   * and may contain non-URI logical audience identifiers.
+   * Audiences is deprecated and ignored; use Resources. It stays in the
+   * schema because v0.65.0 required it, and a warning is logged at startup
+   * when it is set.
    */
   audiences?: Array<string>
   /**
@@ -1007,11 +1023,12 @@ export type AuthserverSpiffeClientAuthRunConfig = {
   principal_pattern?: string
   /**
    * Resources are RFC 8707 resource indicators this association may
-   * request. Must be a subset of the server's allowed_audiences allowlist
-   * (RunConfig.AllowedAudiences) — the same RFC 8707 resource-URI list
-   * DelegateClientRunConfig.Audiences is validated against. Distinct from
-   * Audiences: a resource permission does not imply the same value is also
-   * a permitted token audience, or vice versa.
+   * request. At least one is required for every association: both
+   * client_credentials and token exchange take exactly one resource per
+   * request and grant it as the token audience. Must be a subset of the
+   * server's allowed_audiences allowlist (RunConfig.AllowedAudiences) — the
+   * same RFC 8707 resource-URI list DelegateClientRunConfig.Audiences is
+   * validated against.
    */
   resources?: Array<string>
   /**
@@ -1801,6 +1818,11 @@ export type GithubComStacklokToolhivePkgPluginsValidationResult = {
    */
   errors?: Array<string>
   /**
+   * Findings lists every error and warning with its rule ID and location.
+   * Each Errors or Warnings entry corresponds to exactly one finding.
+   */
+  findings?: Array<GithubComStacklokToolhivePkgSkillsFinding>
+  /**
    * Valid indicates whether the skill definition is valid.
    */
   valid?: boolean
@@ -2214,6 +2236,27 @@ export type GithubComStacklokToolhivePkgSkillsFailureReason =
   | 'unsigned-rejected'
   | 'unknown'
 
+export type GithubComStacklokToolhivePkgSkillsFinding = {
+  /**
+   * File is the slash-separated path of the affected file, relative to the
+   * validated directory.
+   */
+  file?: string
+  /**
+   * Line is the 1-based line in File, or 0 when unknown.
+   */
+  line?: number
+  /**
+   * Message describes the problem.
+   */
+  message?: string
+  /**
+   * Rule is the stable ID of the check that produced the finding.
+   */
+  rule?: string
+  severity?: GithubComStacklokToolhivePkgSkillsSeverity
+}
+
 /**
  * Status is the current installation status.
  */
@@ -2339,6 +2382,11 @@ export type GithubComStacklokToolhivePkgSkillsProvenanceInfo = {
  * Scope for the installation
  */
 export type GithubComStacklokToolhivePkgSkillsScope = 'user' | 'project'
+
+/**
+ * Severity is "error" or "warning".
+ */
+export type GithubComStacklokToolhivePkgSkillsSeverity = 'error' | 'warning'
 
 export type GithubComStacklokToolhivePkgSkillsSkillContent = {
   /**
@@ -2528,6 +2576,11 @@ export type GithubComStacklokToolhivePkgSkillsValidationResult = {
    * Errors is a list of validation errors, if any.
    */
   errors?: Array<string>
+  /**
+   * Findings lists every error and warning with its rule ID and location.
+   * Each Errors or Warnings entry corresponds to exactly one finding.
+   */
+  findings?: Array<GithubComStacklokToolhivePkgSkillsFinding>
   /**
    * Valid indicates whether the skill definition is valid.
    */
