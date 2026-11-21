@@ -37,6 +37,8 @@ export default defineConfig({
       exclude: [
         'node_modules/**',
         'common/api/generated/**',
+        'renderer/src/route-tree.gen.ts',
+        'renderer/src/common/components/ui/**',
         'renderer/src/common/mocks/**',
         '**/*.d.ts',
         '**/*.test.{ts,tsx}',
