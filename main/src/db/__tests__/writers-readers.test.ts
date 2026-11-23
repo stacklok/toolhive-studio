@@ -65,6 +65,8 @@ import {
   readThread,
   readThreadSummaries,
   readThreadSummary,
+  searchThreads,
+  toFtsQuery,
   readActiveThreadId,
   readThreadCount,
 } from '../readers/threads-reader'
@@ -370,6 +372,86 @@ describe('threads writer/reader', () => {
     const summary = readThreadSummary('thread-1')
     expect(summary!.archivedAt).toBeNull()
     expect(summary!.lastEditTimestamp).toBe(6000)
+  })
+
+  describe('search', () => {
+    const withText = (id: string, title: string, text: string, ts = 1000) => ({
+      ...sampleThread,
+      id,
+      title,
+      lastEditTimestamp: ts,
+      messages: [
+        {
+          id: `${id}-m1`,
+          role: 'user' as const,
+          parts: [{ type: 'text' as const, text }],
+        },
+        {
+          id: `${id}-m2`,
+          role: 'assistant' as const,
+          parts: [
+            {
+              type: 'dynamic-tool' as const,
+              toolName: 'search',
+              toolCallId: 'c1',
+              state: 'output-available' as const,
+              input: {},
+              output: { note: 'kubernetes appears only in tool output' },
+            },
+          ],
+        },
+      ],
+    })
+
+    it('builds quoted prefix queries and ignores punctuation-only input', () => {
+      expect(toFtsQuery('oauth flow')).toBe('"oauth"* "flow"*')
+      expect(toFtsQuery('say "hi"')).toBe('"say"* """hi"""*')
+      expect(toFtsQuery('NEAR(a b) -x')).toBe('"NEAR(a"* "b)"* "-x"*')
+      expect(toFtsQuery('  ---  ')).toBeNull()
+    })
+
+    it('matches message text by prefix and returns a highlighted snippet', () => {
+      writeThread(withText('t1', 'Auth', 'we debugged the callback url'))
+      const [hit] = searchThreads('callb')
+      expect(hit!.id).toBe('t1')
+      expect(hit!.snippet).toContain('\u0002callback\u0003')
+    })
+
+    it('ranks title matches above body matches and nulls title-only snippets', () => {
+      writeThread(withText('body', 'Something else', 'notes about postgres'))
+      writeThread(withText('title', 'Postgres migration', 'unrelated words'))
+      const results = searchThreads('postgres')
+      expect(results.map((r) => r.id)).toEqual(['title', 'body'])
+      expect(results[0]!.snippet).toBeNull()
+    })
+
+    it('does not index tool output', () => {
+      writeThread(withText('t1', 'Infra', 'hello'))
+      expect(searchThreads('kubernetes')).toEqual([])
+    })
+
+    it('includes archived threads, flagged with archivedAt', () => {
+      writeThread(withText('t1', 'Old chat', 'archived content'))
+      writeThreadArchived('t1', 42)
+      expect(searchThreads('archived')[0]).toMatchObject({
+        id: 't1',
+        archivedAt: 42,
+      })
+    })
+
+    it('reindexes on rewrite and drops deleted threads', () => {
+      writeThread(withText('t1', 'First', 'alpha'))
+      writeThread(withText('t1', 'First', 'bravo'))
+      expect(searchThreads('alpha')).toEqual([])
+      expect(searchThreads('bravo')).toHaveLength(1)
+      deleteThreadFromDb('t1')
+      expect(searchThreads('bravo')).toEqual([])
+    })
+
+    it('treats FTS syntax in user input as plain text', () => {
+      writeThread(withText('t1', 'Chat', 'plain text'))
+      expect(() => searchThreads('title: OR AND "')).not.toThrow()
+    })
   })
 
   it('deletes a thread and its messages', () => {

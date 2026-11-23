@@ -14,6 +14,7 @@ import {
   readThread,
   readThreadSummaries,
   readThreadSummary,
+  searchThreads,
   readActiveThreadId,
   readThreadCount,
   readThreadSelectedModel,
@@ -52,6 +53,9 @@ const makeThreadsRepository = Effect.sync(() => ({
 
   readThreadSummaries: (options?: ListThreadsOptions) =>
     wrapSync('readThreadSummaries', () => readThreadSummaries(options)),
+
+  searchThreads: (query: string) =>
+    wrapSync('searchThreads', () => searchThreads(query)),
 
   readThreadSummary: (threadId: string) =>
     wrapSync('readThreadSummary', () => readThreadSummary(threadId)),

@@ -17,6 +17,7 @@ import * as m005 from './migrations/005-agents'
 import * as m006 from './migrations/006-enabled-skills'
 import * as m007 from './migrations/007-per-thread-settings'
 import * as m008 from './migrations/008-thread-archived'
+import * as m009 from './migrations/009-thread-search'
 
 const migrations: Migration[] = [
   { id: 1, name: '001-initial-schema', up: m001.up },
@@ -27,6 +28,7 @@ const migrations: Migration[] = [
   { id: 6, name: '006-enabled-skills', up: m006.up },
   { id: 7, name: '007-per-thread-settings', up: m007.up },
   { id: 8, name: '008-thread-archived', up: m008.up },
+  { id: 9, name: '009-thread-search', up: m009.up },
 ]
 
 export function runMigrations(): void {

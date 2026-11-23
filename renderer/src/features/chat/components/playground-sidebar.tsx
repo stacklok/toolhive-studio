@@ -11,6 +11,7 @@ import {
   Loader2,
   MoreHorizontal,
   Pencil,
+  Search,
   SquarePen,
   Star,
   StarOff,
@@ -29,6 +30,7 @@ import { cn } from '@/common/lib/utils'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import type { PlaygroundThread } from '../hooks/use-playground-threads'
 import { formatRelativeTime } from '../lib/format-relative-time'
+import { useChatSearch } from '../hooks/use-chat-search'
 
 interface PlaygroundSidebarProps {
   threads: PlaygroundThread[]
@@ -293,6 +295,8 @@ export function PlaygroundSidebar({
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const isAgentsActive = pathname.startsWith('/playground/agents')
   const isArchivedActive = pathname.startsWith('/playground/archived')
+  const { openSearch } = useChatSearch()
+  const isMac = window.electronAPI?.isMac ?? false
 
   const renderItem = (thread: PlaygroundThread) => (
     <ThreadItem
@@ -355,6 +359,22 @@ export function PlaygroundSidebar({
         >
           <SquarePen className="h-4 w-4 shrink-0" />
           New chat
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => openSearch('button')}
+          aria-label="Search chats"
+          className="text-muted-foreground w-full justify-start gap-2 px-2"
+        >
+          <Search className="h-4 w-4 shrink-0" />
+          Search chats
+          <kbd
+            className="bg-muted ml-auto rounded px-1.5 font-sans text-[10px]
+              font-medium"
+          >
+            {isMac ? '⌘K' : 'Ctrl K'}
+          </kbd>
         </Button>
       </div>
 

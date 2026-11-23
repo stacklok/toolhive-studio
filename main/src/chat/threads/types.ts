@@ -63,6 +63,16 @@ export interface ListThreadsOptions {
   cursor?: ThreadCursor | null
 }
 
+export interface ThreadSearchResult extends ThreadSummary {
+  /**
+   * Excerpt of the matching message text with hits wrapped in
+   * SEARCH_HIGHLIGHT_START / SEARCH_HIGHLIGHT_END (@common/chat/thread-search).
+   * Null when only the title
+   * matched.
+   */
+  snippet: string | null
+}
+
 export interface ThreadPage {
   threads: ThreadSummary[]
   /** Pass back as `cursor` to load the next page; null = no more rows. */

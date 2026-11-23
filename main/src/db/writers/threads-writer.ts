@@ -6,6 +6,7 @@ import {
   readEnabledSkills,
 } from '../readers/chat-settings-reader'
 import type { ChatSettingsThread } from '../../chat/threads-storage'
+import { extractSearchText } from '../thread-search-text'
 
 interface ExistingThreadColumns {
   agent_id: string | null
@@ -140,6 +141,18 @@ export function writeThread(thread: ChatSettingsThread): void {
             i
           )
         }
+
+        // Keep the search index in the same transaction as the messages.
+        db.prepare('DELETE FROM thread_search WHERE thread_id = ?').run(
+          thread.id
+        )
+        db.prepare(
+          'INSERT INTO thread_search (thread_id, title, body) VALUES (?, ?, ?)'
+        ).run(
+          thread.id,
+          thread.title ?? '',
+          extractSearchText(thread.messages.map((m) => m.parts))
+        )
       })()
     }
   )
@@ -153,7 +166,12 @@ export function deleteThreadFromDb(threadId: string): void {
     { 'db.thread_id': threadId },
     () => {
       const db = getDb()
-      db.prepare('DELETE FROM threads WHERE id = ?').run(threadId)
+      db.transaction(() => {
+        db.prepare('DELETE FROM thread_search WHERE thread_id = ?').run(
+          threadId
+        )
+        db.prepare('DELETE FROM threads WHERE id = ?').run(threadId)
+      })()
     }
   )
 }
@@ -188,6 +206,7 @@ export function clearAllThreadsFromDb(): void {
     const db = getDb()
     db.transaction(() => {
       db.prepare('DELETE FROM thread_messages').run()
+      db.prepare('DELETE FROM thread_search').run()
       db.prepare('DELETE FROM threads').run()
       db.prepare('DELETE FROM active_thread').run()
     })()

@@ -2,6 +2,8 @@ import { createFileRoute, Outlet } from '@tanstack/react-router'
 import { NotFound } from '@/common/components/not-found'
 import { usePermissions } from '@/common/contexts/permissions'
 import { PERMISSION_KEYS } from '@/common/contexts/permissions/permission-keys'
+import { ChatSearchProvider } from '@/features/chat/components/chat-search-provider'
+import { SearchChatsDialog } from '@/features/chat/components/search-chats-dialog'
 
 export const Route = createFileRoute('/playground')({
   component: PlaygroundLayout,
@@ -14,5 +16,10 @@ function PlaygroundLayout() {
     return <NotFound />
   }
 
-  return <Outlet />
+  return (
+    <ChatSearchProvider>
+      <Outlet />
+      <SearchChatsDialog />
+    </ChatSearchProvider>
+  )
 }

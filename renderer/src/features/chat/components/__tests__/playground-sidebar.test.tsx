@@ -83,6 +83,12 @@ describe('PlaygroundSidebar', () => {
       expect(link).toHaveAttribute('href', '/playground/agents')
     })
 
+    it('renders a Search chats button with the shortcut hint', () => {
+      renderSidebar()
+      const button = screen.getByRole('button', { name: /search chats/i })
+      expect(button).toHaveTextContent(/ctrl k|⌘k/i)
+    })
+
     it('renders the Archived link pointing to /playground/archived', () => {
       renderSidebar()
       expect(screen.getByRole('link', { name: /archived/i })).toHaveAttribute(
