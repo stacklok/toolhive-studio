@@ -123,6 +123,18 @@ export type AuthTokenValidatorConfig = {
    */
   jwksurl?: string
   /**
+   * RequiredSubject, when non-empty, requires the token's "sub" claim to equal
+   * this value exactly. Tokens with a missing or empty "sub" are rejected.
+   * If RequiredSubjectPrefix is also set, both checks must pass.
+   */
+  requiredSubject?: string
+  /**
+   * RequiredSubjectPrefix, when non-empty, requires the token's "sub" claim to
+   * start with this value. Tokens with a missing or empty "sub" are rejected.
+   * If RequiredSubject is also set, both checks must pass.
+   */
+  requiredSubjectPrefix?: string
+  /**
    * ResourceURL is the explicit resource URL for OAuth discovery (RFC 9728)
    */
   resourceURL?: string
@@ -520,6 +532,11 @@ export type AuthserverJwtBearerInboundGrantRunConfig = {
 }
 
 export type AuthserverJwtBearerIssuerPolicyRunConfig = {
+  /**
+   * AcceptedAssertionTypes mirrors JWTBearerGrantPolicy.AcceptedAssertionTypes
+   * for the canonical config path; unset accepts both jwt_bearer and id_jag.
+   */
+  accepted_assertion_types?: Array<GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerAssertionType>
   accepted_audiences?: Array<string>
   issuer_ref?: string
   max_assertion_age?: string
@@ -1407,6 +1424,9 @@ export type GithubComStacklokToolhivePkgAuthUpstreamswapConfig = {
    */
   provider_name?: string
 }
+
+export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerAssertionType =
+  'jwt_bearer' | 'id_jag'
 
 export type GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerSubjectBinding =
   {
@@ -5334,6 +5354,18 @@ export type TokenexchangeConfig = {
  * inbound_grants.jwt_bearer.issuer_policies.
  */
 export type TokenexchangeJwtBearerGrantPolicy = {
+  /**
+   * AcceptedAssertionTypes selects which assertion form(s) this issuer's
+   * jwt-bearer grant accepts. nil/empty accepts both jwt_bearer and id_jag
+   * (the behavior before this field existed). Set {id_jag} to restrict an IdP
+   * issuer to Cross-App-Access grants so its other signed JWTs cannot be
+   * redeemed on the credential-free plain path; set {jwt_bearer} to refuse
+   * ID-JAG. Listing id_jag explicitly requires this AS's issuer to be
+   * accepted: AcceptedAudiences, when set, must include it, and when empty
+   * the issuer must not also be an allowed audience. SubjectBindings are shared by both forms. See
+   * docs/arch/17-token-exchange-delegation.md.
+   */
+  accepted_assertion_types?: Array<'jwt_bearer' | 'id_jag'>
   /**
    * AcceptedAudiences is the set of "this AS" identity strings an
    * assertion's "aud" claim must intersect — e.g. to support migrating
