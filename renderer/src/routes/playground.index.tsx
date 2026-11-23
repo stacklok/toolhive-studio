@@ -3,12 +3,12 @@ import log from 'electron-log/renderer'
 import { generateDraftThreadId } from '@/features/chat/lib/thread-id'
 
 async function resolveInitialThreadId(): Promise<string | null> {
-  const [allThreads, activeId] = await Promise.all([
-    window.electronAPI.chat.getAllThreads(),
+  const [summaries, activeId] = await Promise.all([
+    window.electronAPI.chat.listThreads(),
     window.electronAPI.chat.getActiveThreadId(),
   ])
 
-  const sorted = [...allThreads].sort(
+  const sorted = [...summaries].sort(
     (a, b) => b.lastEditTimestamp - a.lastEditTimestamp
   )
 

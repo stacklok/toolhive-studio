@@ -26,6 +26,19 @@ export interface ChatSettingsThread {
   enabledSkills?: string[] | null
 }
 
+/**
+ * Lightweight thread row for list views (sidebar, index redirect). Never
+ * includes messages — hydrating every message of every thread is what made
+ * the playground slow to open with a large history.
+ */
+export interface ThreadSummary {
+  id: string
+  title?: string
+  starred: boolean
+  lastEditTimestamp: number
+  createdAt: number
+}
+
 export type ThreadMessage = UIMessage<{
   createdAt?: number
   model?: string

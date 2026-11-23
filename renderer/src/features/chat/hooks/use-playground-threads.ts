@@ -37,18 +37,11 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
     async function loadThreads() {
       try {
         setIsLoading(true)
-        const allThreads = await window.electronAPI.chat.getAllThreads()
-        const sorted = [...allThreads].sort(
-          (a, b) => b.lastEditTimestamp - a.lastEditTimestamp
-        )
-        const lightweight: PlaygroundThread[] = sorted.map(
-          ({ id, title, starred, lastEditTimestamp, createdAt }) => ({
-            id,
-            title,
-            starred,
-            lastEditTimestamp,
-            createdAt,
-          })
+        // Summaries only — loading full threads here hydrated every
+        // message of every chat just to render titles.
+        const summaries = await window.electronAPI.chat.listThreads()
+        const lightweight: PlaygroundThread[] = [...summaries].sort(
+          sortByRecent
         )
         // Seed the URL-driven id as a pending draft if not in the DB
         // (fresh visit / deep-link). Atomic with the load so the persist

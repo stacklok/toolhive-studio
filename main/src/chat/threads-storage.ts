@@ -3,9 +3,13 @@ import type { LanguageModelUsage } from 'ai'
 import type { UIMessage } from 'ai'
 import { runChatSyncOr, runChatToResultSync } from './runtime'
 import { ThreadsService } from './threads/threads-service'
-import type { ChatSettingsThread, ThreadMessage } from './threads/types'
+import type {
+  ChatSettingsThread,
+  ThreadMessage,
+  ThreadSummary,
+} from './threads/types'
 
-export type { ChatSettingsThread } from './threads/types'
+export type { ChatSettingsThread, ThreadSummary } from './threads/types'
 
 export function createThread(
   title?: string,
@@ -26,9 +30,9 @@ export function getThread(threadId: string): ChatSettingsThread | null {
   )
 }
 
-export function getAllThreads(): ChatSettingsThread[] {
+export function listThreads(): ThreadSummary[] {
   return runChatSyncOr(
-    ThreadsService.use((s) => s.getAllThreads()),
+    ThreadsService.use((s) => s.listThreads()),
     []
   )
 }
