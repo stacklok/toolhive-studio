@@ -5,7 +5,7 @@ import {
   useCallback,
   useEffect,
 } from 'react'
-import { Pencil, Star, StarOff, Trash2 } from 'lucide-react'
+import { Archive, Pencil, Star, StarOff, Trash2 } from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { cn } from '@/common/lib/utils'
 import { useConfirm } from '@/common/hooks/use-confirm'
@@ -15,6 +15,7 @@ interface ThreadTitleBarProps {
   starred?: boolean
   onRename?: (title: string) => void
   onToggleStar?: () => void
+  onArchive?: () => void
   onDelete?: () => void
 }
 
@@ -23,6 +24,7 @@ export function ThreadTitleBar({
   starred,
   onRename,
   onToggleStar,
+  onArchive,
   onDelete,
 }: ThreadTitleBarProps): ReactElement {
   const [isRenaming, setIsRenaming] = useState(false)
@@ -122,6 +124,21 @@ export function ThreadTitleBar({
           ) : (
             <StarOff className="h-3.5 w-3.5" />
           )}
+        </Button>
+      )}
+
+      {/* Action: archive */}
+      {onArchive && (
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground hover:text-foreground h-7 w-7
+            shrink-0"
+          onClick={onArchive}
+          aria-label="Archive thread"
+          title="Archive"
+        >
+          <Archive className="h-3.5 w-3.5" />
         </Button>
       )}
 

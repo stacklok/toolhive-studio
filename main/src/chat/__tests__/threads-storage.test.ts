@@ -5,6 +5,8 @@ import { installChatTestRuntimeHooks } from '../runtime/test-runtime'
 const mockWriteThread = vi.hoisted(() => vi.fn())
 const mockWriteActiveThread = vi.hoisted(() => vi.fn())
 const mockReadThread = vi.hoisted(() => vi.fn())
+const mockWriteThreadArchived = vi.hoisted(() => vi.fn(() => true))
+const mockReadActiveThreadId = vi.hoisted(() => vi.fn())
 
 vi.mock('../../db/writers/threads-writer', () => ({
   writeThread: mockWriteThread,
@@ -14,12 +16,14 @@ vi.mock('../../db/writers/threads-writer', () => ({
   writeThreadSelectedModel: vi.fn(),
   writeThreadEnabledMcpTools: vi.fn(),
   writeThreadEnabledSkills: vi.fn(),
+  writeThreadArchived: mockWriteThreadArchived,
 }))
 
 vi.mock('../../db/readers/threads-reader', () => ({
   readThread: mockReadThread,
-  readThreadSummaries: vi.fn(() => []),
-  readActiveThreadId: vi.fn(),
+  readThreadSummaries: vi.fn(() => ({ threads: [], nextCursor: null })),
+  readThreadSummary: vi.fn(() => null),
+  readActiveThreadId: mockReadActiveThreadId,
   readThreadCount: vi.fn(() => 0),
   readThreadSelectedModel: vi.fn(() => null),
   readThreadEnabledMcpTools: vi.fn(() => ({})),
@@ -51,7 +55,7 @@ vi.mock('electron', () => ({
   },
 }))
 
-import { createThread } from '../threads-storage'
+import { createThread, setThreadArchived } from '../threads-storage'
 
 installChatTestRuntimeHooks()
 
@@ -98,5 +102,45 @@ describe('createThread', () => {
     expect(result.error).toContain('thread_draft_42')
     expect(mockWriteThread).not.toHaveBeenCalled()
     expect(mockWriteActiveThread).not.toHaveBeenCalled()
+  })
+})
+
+describe('setThreadArchived', () => {
+  it('stamps archived_at and clears the active thread when it is archived', () => {
+    mockReadActiveThreadId.mockReturnValue('t1')
+
+    const result = setThreadArchived('t1', true)
+
+    expect(result).toEqual({ success: true })
+    expect(mockWriteThreadArchived).toHaveBeenCalledWith(
+      't1',
+      expect.any(Number)
+    )
+    expect(mockWriteActiveThread).toHaveBeenCalledWith(undefined)
+  })
+
+  it('leaves the active thread alone when archiving another thread', () => {
+    mockReadActiveThreadId.mockReturnValue('other')
+
+    setThreadArchived('t1', true)
+
+    expect(mockWriteActiveThread).not.toHaveBeenCalled()
+  })
+
+  it('clears archived_at when unarchiving', () => {
+    const result = setThreadArchived('t1', false)
+
+    expect(result).toEqual({ success: true })
+    expect(mockWriteThreadArchived).toHaveBeenCalledWith('t1', null)
+    expect(mockReadActiveThreadId).not.toHaveBeenCalled()
+  })
+
+  it('fails when the thread does not exist', () => {
+    mockWriteThreadArchived.mockReturnValueOnce(false)
+
+    const result = setThreadArchived('missing', true)
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('Thread not found')
   })
 })

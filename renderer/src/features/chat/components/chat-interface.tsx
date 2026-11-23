@@ -17,6 +17,7 @@ import {
 } from './chat-composer-context'
 import { Separator } from '@/common/components/ui/separator'
 import { ThreadTitleBar } from './thread-title-bar'
+import { ArchivedThreadBanner } from './archived-thread-banner'
 import { hasCredentials } from '../lib/utils'
 import { getEmptyStateCopy } from '../lib/empty-state-copy'
 import { useAgents, useThreadAgentId } from '../../agents/hooks/use-agents'
@@ -30,6 +31,10 @@ interface ChatInterfaceProps {
   onRenameThread?: (title: string) => void
   onToggleStar?: () => void
   onDeleteThread?: () => void
+  /** Archived threads stay readable but show an "Unarchive" banner. */
+  threadArchived?: boolean
+  onArchiveThread?: () => void
+  onUnarchiveThread?: () => void
 }
 
 export function ChatInterface({
@@ -39,6 +44,9 @@ export function ChatInterface({
   onRenameThread,
   onToggleStar,
   onDeleteThread,
+  threadArchived = false,
+  onArchiveThread,
+  onUnarchiveThread,
 }: ChatInterfaceProps = {}) {
   const {
     status,
@@ -152,8 +160,12 @@ export function ChatInterface({
           starred={threadStarred}
           onRename={onRenameThread}
           onToggleStar={onToggleStar}
+          onArchive={threadArchived ? undefined : onArchiveThread}
           onDelete={onDeleteThread}
         />
+      )}
+      {threadId && threadArchived && (
+        <ArchivedThreadBanner onUnarchive={onUnarchiveThread} />
       )}
       {hasMessages && <Separator />}
       <ChatComposerProvider value={composerValue}>

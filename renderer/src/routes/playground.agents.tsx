@@ -4,6 +4,7 @@ import { PlaygroundSidebar } from '@/features/chat/components/playground-sidebar
 import { usePlaygroundThreads } from '@/features/chat/hooks/use-playground-threads'
 import { useStreamingThreads } from '@/features/chat/hooks/use-streaming-threads'
 import { clearThreadDraft } from '@/features/chat/hooks/use-thread-draft'
+import { useArchiveThreadHandler } from '@/features/chat/hooks/use-archive-thread-handler'
 
 export const Route = createFileRoute('/playground/agents')({
   component: PlaygroundAgents,
@@ -15,12 +16,22 @@ function PlaygroundAgents() {
   const {
     threads,
     hasThreads,
+    hasMoreThreads,
+    isLoadingMore,
+    loadMoreThreads,
     createThread,
     deleteThread,
+    archiveThread,
+    unarchiveThread,
     renameThread,
     toggleStarThread,
   } = usePlaygroundThreads(null)
   const streamingThreadIds = useStreamingThreads()
+  const handleArchiveThread = useArchiveThreadHandler({
+    archiveThread,
+    unarchiveThread,
+    activeThreadId: null,
+  })
 
   const handleSelectThread = (id: string) => {
     void navigate({
@@ -63,6 +74,10 @@ function PlaygroundAgents() {
           onDeleteThread={(id) => void handleDeleteThread(id)}
           onRenameThread={renameThread}
           onToggleStar={toggleStarThread}
+          onArchiveThread={(id) => void handleArchiveThread(id)}
+          hasMoreThreads={hasMoreThreads}
+          isLoadingMore={isLoadingMore}
+          onLoadMoreThreads={() => void loadMoreThreads()}
         />
       )}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">

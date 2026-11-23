@@ -13,6 +13,7 @@ interface ExistingThreadColumns {
   selected_model: string | null
   enabled_mcp_tools: string | null
   enabled_skills: string | null
+  archived_at: number | null
 }
 
 export function writeThread(thread: ChatSettingsThread): void {
@@ -33,7 +34,7 @@ export function writeThread(thread: ChatSettingsThread): void {
         const previous = db
           .prepare(
             `SELECT agent_id, selected_provider, selected_model,
-                    enabled_mcp_tools, enabled_skills
+                    enabled_mcp_tools, enabled_skills, archived_at
              FROM threads WHERE id = ?`
           )
           .get(thread.id) as ExistingThreadColumns | undefined
@@ -88,14 +89,21 @@ export function writeThread(thread: ChatSettingsThread): void {
               ? (previous.enabled_skills ?? null)
               : JSON.stringify(globalSnapshot!.enabledSkills)
 
+        // INSERT OR REPLACE rewrites the whole row, so archived_at must be
+        // carried over explicitly or every message write would unarchive.
+        const nextArchivedAt =
+          thread.archivedAt !== undefined
+            ? thread.archivedAt
+            : (previous?.archived_at ?? null)
+
         db.prepare(
           `INSERT OR REPLACE INTO threads (
              id, title, created_at, last_edit_timestamp,
              title_edited_by_user, starred, agent_id,
              selected_provider, selected_model,
-             enabled_mcp_tools, enabled_skills
+             enabled_mcp_tools, enabled_skills, archived_at
            )
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         ).run(
           thread.id,
           thread.title ?? null,
@@ -107,7 +115,8 @@ export function writeThread(thread: ChatSettingsThread): void {
           nextSelectedProvider,
           nextSelectedModel,
           nextEnabledMcpTools,
-          nextEnabledSkills
+          nextEnabledSkills,
+          nextArchivedAt
         )
 
         db.prepare('DELETE FROM thread_messages WHERE thread_id = ?').run(
@@ -145,6 +154,30 @@ export function deleteThreadFromDb(threadId: string): void {
     () => {
       const db = getDb()
       db.prepare('DELETE FROM threads WHERE id = ?').run(threadId)
+    }
+  )
+}
+
+/**
+ * Sets or clears `archived_at` without touching `last_edit_timestamp`:
+ * archiving isn't an edit, so unarchiving puts the thread back in its
+ * original place. Returns false when the thread doesn't exist.
+ */
+export function writeThreadArchived(
+  threadId: string,
+  archivedAt: number | null
+): boolean {
+  if (!isDbWritable()) return false
+  return withDbSpan(
+    'DB write thread archived',
+    'db.write',
+    { 'db.thread_id': threadId },
+    () => {
+      const db = getDb()
+      const result = db
+        .prepare('UPDATE threads SET archived_at = ? WHERE id = ?')
+        .run(archivedAt, threadId)
+      return result.changes > 0
     }
   )
 }

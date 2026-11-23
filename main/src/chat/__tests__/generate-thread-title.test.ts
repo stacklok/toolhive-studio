@@ -28,7 +28,8 @@ vi.mock('ai', () => ({
 
 vi.mock('../../db/readers/threads-reader', () => ({
   readThread: mockGetThread,
-  readThreadSummaries: vi.fn(() => []),
+  readThreadSummaries: vi.fn(() => ({ threads: [], nextCursor: null })),
+  readThreadSummary: vi.fn(() => null),
   readActiveThreadId: vi.fn(),
   readThreadCount: vi.fn(() => 0),
   readThreadSelectedModel: mockReadThreadSelectedModel,
@@ -44,6 +45,7 @@ vi.mock('../../db/writers/threads-writer', () => ({
   writeThreadSelectedModel: vi.fn(),
   writeThreadEnabledMcpTools: vi.fn(),
   writeThreadEnabledSkills: vi.fn(),
+  writeThreadArchived: vi.fn(() => true),
 }))
 
 vi.mock('../../db/readers/agents-reader', () => ({

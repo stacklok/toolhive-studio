@@ -5,6 +5,9 @@ import {
   createThread,
   getThread,
   listThreads,
+  getThreadSummary,
+  setThreadArchived,
+  type ListThreadsOptions,
   updateThread,
   deleteThread,
   clearAllThreads,
@@ -40,7 +43,17 @@ export function register() {
   ipcMain.handle('chat:get-thread', (_, threadId: string) =>
     getThread(threadId)
   )
-  ipcMain.handle('chat:list-threads', () => listThreads())
+  ipcMain.handle('chat:list-threads', (_, options?: ListThreadsOptions) =>
+    listThreads(options)
+  )
+  ipcMain.handle('chat:get-thread-summary', (_, threadId: string) =>
+    getThreadSummary(threadId)
+  )
+  ipcMain.handle(
+    'chat:set-thread-archived',
+    (_, threadId: string, archived: boolean) =>
+      setThreadArchived(threadId, archived === true)
+  )
   ipcMain.handle(
     'chat:update-thread',
     (

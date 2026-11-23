@@ -8,6 +8,8 @@ export interface ChatSettingsThread {
   /** When true, auto-title generation will never overwrite this title. */
   titleEditedByUser?: boolean
   starred?: boolean
+  /** Epoch ms when the user archived the thread; null/absent = not archived. */
+  archivedAt?: number | null
   messages: ChatUIMessage[]
   lastEditTimestamp: number
   createdAt: number
@@ -37,6 +39,34 @@ export interface ThreadSummary {
   starred: boolean
   lastEditTimestamp: number
   createdAt: number
+  archivedAt: number | null
+}
+
+/**
+ * Keyset cursor for paging thread lists. `ts` is the sort key of the last
+ * row returned (`last_edit_timestamp`, or `archived_at` for the archived
+ * list); `id` breaks ties. Stable when threads move to the top mid-paging,
+ * unlike OFFSET.
+ */
+interface ThreadCursor {
+  ts: number
+  id: string
+}
+
+export interface ListThreadsOptions {
+  /** true = archived threads only (ordered by archived_at); default false. */
+  archived?: boolean
+  /** Restrict to starred (true) or non-starred (false) threads. */
+  starred?: boolean
+  /** Page size. Omit to return every matching row. */
+  limit?: number
+  cursor?: ThreadCursor | null
+}
+
+export interface ThreadPage {
+  threads: ThreadSummary[]
+  /** Pass back as `cursor` to load the next page; null = no more rows. */
+  nextCursor: ThreadCursor | null
 }
 
 export type ThreadMessage = UIMessage<{

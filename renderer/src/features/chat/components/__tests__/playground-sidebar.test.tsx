@@ -50,6 +50,10 @@ const defaultProps = {
   onDeleteThread: vi.fn(),
   onRenameThread: vi.fn(),
   onToggleStar: vi.fn(),
+  onArchiveThread: vi.fn(),
+  hasMoreThreads: false,
+  isLoadingMore: false,
+  onLoadMoreThreads: vi.fn(),
 }
 
 function renderSidebar(props: Partial<typeof defaultProps> = {}) {
@@ -66,6 +70,8 @@ describe('PlaygroundSidebar', () => {
       onDeleteThread: vi.fn(),
       onRenameThread: vi.fn(),
       onToggleStar: vi.fn(),
+      onArchiveThread: vi.fn(),
+      onLoadMoreThreads: vi.fn(),
     })
   })
 
@@ -75,6 +81,35 @@ describe('PlaygroundSidebar', () => {
       const link = screen.getByRole('link', { name: /agents/i })
       expect(link).toBeInTheDocument()
       expect(link).toHaveAttribute('href', '/playground/agents')
+    })
+
+    it('renders the Archived link pointing to /playground/archived', () => {
+      renderSidebar()
+      expect(screen.getByRole('link', { name: /archived/i })).toHaveAttribute(
+        'href',
+        '/playground/archived'
+      )
+    })
+  })
+
+  describe('show more', () => {
+    it('is hidden when there are no more threads', () => {
+      renderSidebar({ hasMoreThreads: false })
+      expect(
+        screen.queryByRole('button', { name: /show more/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it('calls onLoadMoreThreads when clicked', async () => {
+      const onLoadMoreThreads = vi.fn()
+      renderSidebar({ hasMoreThreads: true, onLoadMoreThreads })
+      await userEvent.click(screen.getByRole('button', { name: /show more/i }))
+      expect(onLoadMoreThreads).toHaveBeenCalledTimes(1)
+    })
+
+    it('is disabled while the next page is loading', () => {
+      renderSidebar({ hasMoreThreads: true, isLoadingMore: true })
+      expect(screen.getByRole('button', { name: /show more/i })).toBeDisabled()
     })
   })
 
@@ -194,6 +229,25 @@ describe('PlaygroundSidebar', () => {
         await screen.findByRole('menuitem', { name: /^star$/i })
       )
       expect(onToggleStar).toHaveBeenCalledWith('thread-1')
+    })
+
+    it('calls onArchiveThread with thread id when Archive is clicked', async () => {
+      const onArchiveThread = vi.fn()
+      renderSidebar({ onArchiveThread })
+      await openMenu()
+      await userEvent.click(
+        await screen.findByRole('menuitem', { name: /archive/i })
+      )
+      expect(onArchiveThread).toHaveBeenCalledWith('thread-1')
+    })
+
+    it('hides Archive for pending drafts', async () => {
+      renderSidebar({ threads: [makeThread({ pending: true })] })
+      await openMenu()
+      await screen.findByRole('menuitem', { name: /rename/i })
+      expect(
+        screen.queryByRole('menuitem', { name: /archive/i })
+      ).not.toBeInTheDocument()
     })
 
     it('enters rename mode when Rename is clicked in menu', async () => {

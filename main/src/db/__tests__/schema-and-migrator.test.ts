@@ -5,6 +5,7 @@ import { up as applyMigration002 } from '../migrations/002-thread-title-flag'
 import { up as applyMigration003 } from '../migrations/003-thread-starred'
 import { up as applyMigration006 } from '../migrations/006-enabled-skills'
 import { up as applyMigration007 } from '../migrations/007-per-thread-settings'
+import { up as applyMigration008 } from '../migrations/008-thread-archived'
 
 vi.mock('electron', () => ({
   app: { getPath: vi.fn(() => ':memory:') },
@@ -240,6 +241,42 @@ describe('003-thread-starred migration', () => {
       .prepare('SELECT starred FROM threads WHERE id = ?')
       .get('t2') as { starred: number }
     expect(row.starred).toBe(1)
+  })
+})
+
+describe('008-thread-archived migration', () => {
+  let db: Database.Database
+
+  beforeEach(() => {
+    db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    applyInitialSchema(db)
+    applyMigration003(db)
+  })
+
+  afterEach(() => {
+    db.close()
+  })
+
+  it('adds a nullable archived_at column that defaults to NULL', () => {
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp) VALUES ('t1', 'Hello', 1000, 2000)"
+    ).run()
+
+    applyMigration008(db)
+
+    const row = db
+      .prepare('SELECT archived_at FROM threads WHERE id = ?')
+      .get('t1') as { archived_at: number | null }
+    expect(row.archived_at).toBeNull()
+  })
+
+  it('creates the sidebar index', () => {
+    applyMigration008(db)
+    const indexes = db.prepare("PRAGMA index_list('threads')").all() as {
+      name: string
+    }[]
+    expect(indexes.map((i) => i.name)).toContain('idx_threads_sidebar')
   })
 })
 

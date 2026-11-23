@@ -24,6 +24,7 @@ vi.mock('electron-log/renderer', () => ({
 
 const mockChatAPI = {
   listThreads: vi.fn(),
+  getThreadSummary: vi.fn(),
   getActiveThreadId: vi.fn(),
   createChatThread: vi.fn(),
 }
@@ -34,7 +35,7 @@ beforeEach(() => {
     ...window.electronAPI,
     chat: mockChatAPI as unknown as typeof window.electronAPI.chat,
   }
-  mockChatAPI.listThreads.mockResolvedValue([])
+  setDbThreads([])
   mockChatAPI.getActiveThreadId.mockResolvedValue(undefined)
   // Kept for assertions that the IPC is NOT called now that drafts are
   // generated locally — no test expects a successful response.
@@ -60,9 +61,27 @@ const makeDbThread = (overrides: Record<string, unknown> = {}) => ({
   starred: false,
   lastEditTimestamp: 2000,
   createdAt: 1000,
-  messages: [],
+  archivedAt: null as number | null,
   ...overrides,
 })
+
+/** In-memory stand-in for the main-process thread table. */
+function setDbThreads(list: ReturnType<typeof makeDbThread>[]) {
+  mockChatAPI.listThreads.mockImplementation(
+    async (opts: { limit?: number } = {}) => {
+      const rows = list
+        .filter((t) => !t.archivedAt)
+        .sort((a, b) => b.lastEditTimestamp - a.lastEditTimestamp)
+      return {
+        threads: opts.limit ? rows.slice(0, opts.limit) : rows,
+        nextCursor: null,
+      }
+    }
+  )
+  mockChatAPI.getThreadSummary.mockImplementation(
+    async (id: string) => list.find((t) => t.id === id) ?? null
+  )
+}
 
 function renderIndexRoute() {
   const IndexComponent = PlaygroundIndexRoute.options.component as () => null
@@ -116,7 +135,7 @@ function renderIndexRoute() {
 describe('Playground index route (/playground/)', () => {
   it('redirects to the stored active thread when it exists', async () => {
     mockChatAPI.getActiveThreadId.mockResolvedValue('active-thread')
-    mockChatAPI.listThreads.mockResolvedValue([
+    setDbThreads([
       makeDbThread({ id: 'active-thread', lastEditTimestamp: 1000 }),
       makeDbThread({ id: 'other-thread', lastEditTimestamp: 2000 }),
     ])
@@ -132,7 +151,7 @@ describe('Playground index route (/playground/)', () => {
 
   it('falls back to most recent thread when stored active ID is stale', async () => {
     mockChatAPI.getActiveThreadId.mockResolvedValue('deleted-thread')
-    mockChatAPI.listThreads.mockResolvedValue([
+    setDbThreads([
       makeDbThread({ id: 'recent', lastEditTimestamp: 3000 }),
       makeDbThread({ id: 'old', lastEditTimestamp: 1000 }),
     ])
@@ -146,9 +165,7 @@ describe('Playground index route (/playground/)', () => {
 
   it('falls back to most recent thread when no stored active ID exists', async () => {
     mockChatAPI.getActiveThreadId.mockResolvedValue(undefined)
-    mockChatAPI.listThreads.mockResolvedValue([
-      makeDbThread({ id: 'newest', lastEditTimestamp: 5000 }),
-    ])
+    setDbThreads([makeDbThread({ id: 'newest', lastEditTimestamp: 5000 })])
 
     const { router } = renderIndexRoute()
 
@@ -159,7 +176,7 @@ describe('Playground index route (/playground/)', () => {
 
   it('redirects to a locally-generated draft thread when no DB threads exist', async () => {
     mockChatAPI.getActiveThreadId.mockResolvedValue(undefined)
-    mockChatAPI.listThreads.mockResolvedValue([])
+    setDbThreads([])
 
     const { router } = renderIndexRoute()
 
@@ -171,5 +188,19 @@ describe('Playground index route (/playground/)', () => {
     // Drafts are generated in the renderer — no IPC round-trip and no
     // empty row written to SQLite until the user sends a message.
     expect(mockChatAPI.createChatThread).not.toHaveBeenCalled()
+  })
+
+  it('skips a stored active thread that has been archived', async () => {
+    mockChatAPI.getActiveThreadId.mockResolvedValue('archived')
+    setDbThreads([
+      makeDbThread({ id: 'archived', lastEditTimestamp: 9000, archivedAt: 1 }),
+      makeDbThread({ id: 'live', lastEditTimestamp: 1000 }),
+    ])
+
+    const { router } = renderIndexRoute()
+
+    await waitFor(() =>
+      expect(router.state.location.pathname).toBe('/playground/chat/live')
+    )
   })
 })
