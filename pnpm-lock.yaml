@@ -274,8 +274,8 @@ importers:
         specifier: ^8.4.0
         version: 8.4.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))
       '@sentry/vite-plugin':
-        specifier: ^11.13.0
-        version: 11.14.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))
+        specifier: ^11.16.0
+        version: 11.16.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))
       '@streamdown/cjk':
         specifier: ^1.0.5
         version: 1.0.5(@types/mdast@4.0.4)(micromark-util-types@2.0.2)(micromark@4.0.2(supports-color@8.1.1))(react@19.3.1)(supports-color@8.1.1)(unified@11.0.5)
@@ -2849,8 +2849,8 @@ packages:
       webpack:
         optional: true
 
-  '@sentry/bundler-plugins@11.14.0':
-    resolution: {integrity: sha512-Afi4P+OLJP/fRjbt3h4r8ujBC9KulU9RB1pBhe8PgGHddo5hpXdn2eoDQMHPTnADqNONqqCP1DzbGwFmxVQkXA==}
+  '@sentry/bundler-plugins@11.16.0':
+    resolution: {integrity: sha512-HGP4ppnqHwGKlibB08PCicBcVbjeC1utzwXHTTqDeZVACSpkBqRnhHKH53iHvXnoEaIbePyOcntJS6loEbxd8Q==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
     peerDependencies:
       rollup: '>=3.2.0'
@@ -2865,16 +2865,16 @@ packages:
     resolution: {integrity: sha512-kYq9/HJ/l6MYP/srIc20dy1W4mWyJfCF0OWFF+RhBGZwyr/wCmtabRFKyw7kqM+DTwZXQOjSTSZUcJhDowcInQ==}
     engines: {node: '>=14'}
 
-  '@sentry/conventions@0.33.0':
-    resolution: {integrity: sha512-5aa3g/VOnMoL8yHbfkYIWBYC3BLgMudgRNBTKNMrcMEj1mE9aKIt/CYCG7sasijhiSU4nTcSEzyM2voIVzLCng==}
+  '@sentry/conventions@0.34.0':
+    resolution: {integrity: sha512-sGYLaq/zyRTOCoadW3Z66q6WHp16stnwezGK45B50mGO6QUTl/ttzsPpy+oxZlj2pKARyOohZ1pX9grdpMxo2Q==}
     engines: {node: '>=14'}
 
   '@sentry/core@11.10.0':
     resolution: {integrity: sha512-l/OtTo1v+TQgZtHG2Q5N4IX+gFdAE1tZ27K/P21UCzJglWk54TPEm+d9T2lulPqMK06kZcLwDgRAhE2GO4YS5w==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
 
-  '@sentry/core@11.14.0':
-    resolution: {integrity: sha512-toRRdaZnm0anz/4gEkzyZC0yTCvR4R7U+024WQfjCwgklIFaYo9mjIBoElU8MJ1Sske0/RyvA0zltHfra6PvsQ==}
+  '@sentry/core@11.16.0':
+    resolution: {integrity: sha512-hu7gw///rDLwVYKmkAgztXUx0sFkpxG1zDwnuHBYCXqHRaEwzEJ/ntBZfAmLbjOSIsg5dcM07AI09KSicFeXBw==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
 
   '@sentry/electron@8.4.0':
@@ -2915,8 +2915,8 @@ packages:
     resolution: {integrity: sha512-m/MVCvPzQJJZZCTFlVPCrTuoncT7SR80+QKg1K7ul25AsL0byABr5KsHCbXVpOYXLVz04Omk+pOOR5Cv2IAlrA==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
 
-  '@sentry/vite-plugin@11.14.0':
-    resolution: {integrity: sha512-hX0fIQy9nMnFk5aIN72Z/uU8HzHFBefCXQ65lmO89Oyl0SUCW/6TxNn0deTZySDih+ov6O5FLIH1MauJdt+PxA==}
+  '@sentry/vite-plugin@11.16.0':
+    resolution: {integrity: sha512-IalsyOsfkD5oT1TMo55jNvI5pNhFWpv6e5nZqudR+BUL0cmgtay2vmvQyIpeM0L6Gv50fjoz9akeh/DJ3aoUBg==}
     engines: {node: '>=20.19.0 <22.0.0 || >=22.12.0 <23.0.0 || >=23.2.0'}
 
   '@shikijs/core@4.6.0':
@@ -6617,8 +6617,8 @@ packages:
     engines: {node: '>=20.0'}
     hasBin: true
 
-  sentry@0.49.0:
-    resolution: {integrity: sha512-9tjS0jTx5FQzhwAGhpcnwvqE0MlQiwJtunsIUNqGkw6E9CBOMbijlamIDUqvZTDtJAveVwa9L5ziP44bOJUzcQ==}
+  sentry@0.50.0:
+    resolution: {integrity: sha512-2BCdoK4xO3mN4c0QTXaMtJBJ9rjL5v1VawaV7Wd605hVWVrpZTipLbjGHEFavS8IliI0W68TGi8CuScbHALPjA==}
     engines: {node: '>=20.0'}
     hasBin: true
 
@@ -10019,28 +10019,28 @@ snapshots:
     optionalDependencies:
       webpack: 5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32)
 
-  '@sentry/bundler-plugins@11.14.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))':
+  '@sentry/bundler-plugins@11.16.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))':
     dependencies:
-      '@sentry/core': 11.14.0
+      '@sentry/core': 11.16.0
       dotenv: 17.4.2
       glob: 14.0.6
       magic-string: 1.4.5
       oxc-parser: 0.152.0
-      sentry: 0.49.0
+      sentry: 0.50.0
     optionalDependencies:
       webpack: 5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32)
 
   '@sentry/conventions@0.29.0': {}
 
-  '@sentry/conventions@0.33.0': {}
+  '@sentry/conventions@0.34.0': {}
 
   '@sentry/core@11.10.0':
     dependencies:
       '@sentry/conventions': 0.29.0
 
-  '@sentry/core@11.14.0':
+  '@sentry/core@11.16.0':
     dependencies:
-      '@sentry/conventions': 0.33.0
+      '@sentry/conventions': 0.34.0
 
   '@sentry/electron@8.4.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))':
     dependencies:
@@ -10097,9 +10097,9 @@ snapshots:
       '@sentry/conventions': 0.29.0
       '@sentry/core': 11.10.0
 
-  '@sentry/vite-plugin@11.14.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))':
+  '@sentry/vite-plugin@11.16.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))':
     dependencies:
-      '@sentry/bundler-plugins': 11.14.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))
+      '@sentry/bundler-plugins': 11.16.0(webpack@5.106.2(esbuild@0.28.1)(lightningcss@1.33.0)(postcss@8.5.32))
     transitivePeerDependencies:
       - rollup
       - webpack
@@ -14409,7 +14409,7 @@ snapshots:
 
   sentry@0.45.0: {}
 
-  sentry@0.49.0: {}
+  sentry@0.50.0: {}
 
   seroval-plugins@1.6.12(seroval@1.6.12):
     dependencies:
