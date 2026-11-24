@@ -108,7 +108,7 @@ function PlaygroundChat() {
 
   return (
     <div className="absolute inset-0 flex">
-      {hasThreads && (
+      {showThread && (
         <PlaygroundSidebar
           threads={threads}
           activeThreadId={threadId}
@@ -126,11 +126,15 @@ function PlaygroundChat() {
       )}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <ChatInterface
-          threadId={showThread ? threadId : undefined}
+          // Always the URL id: passing undefined (e.g. for a frame after the
+          // last chat is archived or deleted) switches ChatInterface to its
+          // legacy auto-select path, which creates an empty "Chat" row.
+          threadId={threadId}
           threadTitle={activeThread?.title ?? persistedThread?.title}
           threadStarred={activeThread?.starred ?? persistedThread?.starred}
           threadArchived={isArchived}
-          // Archived chats are read-only until unarchived.
+          // Title and star stay frozen while archived: the sidebar doesn't
+          // list the chat, so changes there would have nowhere to show.
           onRenameThread={
             hasThreads && !isArchived
               ? (title) => renameThread(threadId, title)

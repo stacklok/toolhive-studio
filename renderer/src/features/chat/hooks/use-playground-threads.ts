@@ -61,6 +61,23 @@ function mergeThreads(
   return [...byId.values()].sort(sortByRecent)
 }
 
+const THREAD_CHANGED_KEY = ['chat', 'threadChanged'] as const
+
+/**
+ * Asks every mounted `usePlaygroundThreads` to re-read `threadId` and drops
+ * the cached full thread. Each route owns its own hook instance, so a
+ * callback that outlives its route can't update the live sidebar directly.
+ */
+function signalThreadChanged(
+  queryClient: ReturnType<typeof useQueryClient>,
+  threadId: string
+) {
+  queryClient.setQueryData(THREAD_CHANGED_KEY, {
+    threadId,
+    timestamp: Date.now(),
+  })
+}
+
 export function usePlaygroundThreads(activeThreadId: string | null) {
   const queryClient = useQueryClient()
   const [threads, setThreads] = useState<PlaygroundThread[]>([])
@@ -350,9 +367,9 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
         )
         if (!result.success) throw new Error(result.error)
         await refreshThread(threadId)
-        queryClient.invalidateQueries({
-          queryKey: chatThreadQueryOptions(threadId).queryKey,
-        })
+        // The Undo toast can outlive the route that archived the chat, so
+        // also tell whichever sidebar is mounted now to pick it back up.
+        signalThreadChanged(queryClient, threadId)
         queryClient.invalidateQueries({
           queryKey: archivedThreadsQueryOptions().queryKey,
         })
@@ -413,7 +430,8 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
         event.type === 'updated' &&
         event.query.queryKey[0] === 'chat' &&
         (event.query.queryKey[1] === 'streamingComplete' ||
-          event.query.queryKey[1] === 'threadStarted')
+          event.query.queryKey[1] === 'threadStarted' ||
+          event.query.queryKey[1] === THREAD_CHANGED_KEY[1])
       ) {
         const data = event.query.state.data as
           { threadId: string; timestamp: number } | undefined

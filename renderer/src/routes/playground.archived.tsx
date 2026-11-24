@@ -16,7 +16,6 @@ function PlaygroundArchived() {
 
   const {
     threads,
-    hasThreads,
     hasMoreThreads,
     isLoadingMore,
     loadMoreThreads,
@@ -62,22 +61,22 @@ function PlaygroundArchived() {
 
   return (
     <div className="absolute inset-0 flex">
-      {hasThreads && (
-        <PlaygroundSidebar
-          threads={threads}
-          activeThreadId={null}
-          streamingThreadIds={streamingThreadIds}
-          onSelectThread={openThread}
-          onCreateThread={() => void handleCreateThread()}
-          onDeleteThread={(id) => void handleDeleteThread(id)}
-          onRenameThread={renameThread}
-          onToggleStar={toggleStarThread}
-          onArchiveThread={(id) => void handleArchiveThread(id)}
-          hasMoreThreads={hasMoreThreads}
-          isLoadingMore={isLoadingMore}
-          onLoadMoreThreads={() => void loadMoreThreads()}
-        />
-      )}
+      {/* Always shown, even with every chat archived: it holds New chat and
+          the way back out of this page. */}
+      <PlaygroundSidebar
+        threads={threads}
+        activeThreadId={null}
+        streamingThreadIds={streamingThreadIds}
+        onSelectThread={openThread}
+        onCreateThread={() => void handleCreateThread()}
+        onDeleteThread={(id) => void handleDeleteThread(id)}
+        onRenameThread={renameThread}
+        onToggleStar={toggleStarThread}
+        onArchiveThread={(id) => void handleArchiveThread(id)}
+        hasMoreThreads={hasMoreThreads}
+        isLoadingMore={isLoadingMore}
+        onLoadMoreThreads={() => void loadMoreThreads()}
+      />
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <ArchivedThreadsPage
           onOpenThread={openThread}

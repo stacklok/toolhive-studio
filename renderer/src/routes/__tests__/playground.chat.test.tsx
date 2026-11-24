@@ -188,6 +188,22 @@ describe('Playground chat route (/playground/chat/$threadId)', () => {
         ).not.toBeInTheDocument()
       })
     })
+
+    it('keeps passing the URL thread id to ChatInterface', async () => {
+      // Happens for a frame after the last chat is archived or deleted.
+      // Undefined would trigger ChatInterface's legacy auto-select, which
+      // creates an empty "Chat" row.
+      mockThreadsReturn.isLoading = false
+      mockThreadsReturn.hasThreads = false
+      mockThreadsReturn.threads = []
+      renderChatRoute('thread-1')
+      await waitFor(() => {
+        expect(screen.getByTestId('chat-interface')).toHaveAttribute(
+          'data-thread-id',
+          'thread-1'
+        )
+      })
+    })
   })
 
   describe('has threads state', () => {

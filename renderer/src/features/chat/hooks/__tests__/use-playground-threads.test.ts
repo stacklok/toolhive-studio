@@ -782,6 +782,38 @@ describe('usePlaygroundThreads', () => {
       expect(mockChatAPI.setThreadArchived).toHaveBeenCalledWith('back', false)
       expect(result.current.threads.map((t) => t.id)).toContain('back')
     })
+    it('restores the thread in a sidebar mounted by another route', async () => {
+      // Undo toast fired after navigating away: the hook that archived the
+      // chat is gone, a different instance owns the visible sidebar.
+      mockChatAPI.getThreadSummary.mockResolvedValue(
+        makeDbThread({ id: 'back', title: 'Back again' })
+      )
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      })
+      const archivedFrom = renderHook(() => usePlaygroundThreads(null), {
+        wrapper: createWrapper(queryClient),
+      })
+      const mountedNow = renderHook(() => usePlaygroundThreads(null), {
+        wrapper: createWrapper(queryClient),
+      })
+      await waitFor(() => {
+        expect(archivedFrom.result.current.isLoading).toBe(false)
+        expect(mountedNow.result.current.isLoading).toBe(false)
+      })
+      const { unarchiveThread } = archivedFrom.result.current
+      archivedFrom.unmount()
+
+      await act(async () => {
+        await unarchiveThread('back')
+      })
+
+      await waitFor(() =>
+        expect(mountedNow.result.current.threads.map((t) => t.id)).toContain(
+          'back'
+        )
+      )
+    })
   })
 
   describe('refreshThread on an archived thread', () => {
