@@ -706,6 +706,41 @@ describe('usePlaygroundThreads', () => {
   })
 
   describe('archiveThread', () => {
+    it('keeps a chat archived from the sidebar out when reopened later', async () => {
+      // Repro: open X, switch away, archive X from the menu, reopen X from
+      // the Archived page while its full thread is still cached.
+      setDbThreads([
+        makeDbThread({ id: 'x', lastEditTimestamp: 3000 }),
+        makeDbThread({ id: 'y', lastEditTimestamp: 2000 }),
+      ])
+      const queryClient = new QueryClient({
+        defaultOptions: { queries: { retry: false } },
+      })
+      queryClient.setQueryData(['chat', 'thread', 'x'], {
+        thread: makeDbThread({ id: 'x', archivedAt: null }),
+        messages: [],
+      })
+      const sidebar = renderHook(() => usePlaygroundThreads('y'), {
+        wrapper: createWrapper(queryClient),
+      })
+      await waitFor(() => expect(sidebar.result.current.isLoading).toBe(false))
+      await act(async () => {
+        await sidebar.result.current.archiveThread('x')
+      })
+      sidebar.unmount()
+      // Main now lists X as archived.
+      setDbThreads([
+        makeDbThread({ id: 'x', lastEditTimestamp: 3000, archivedAt: 9000 }),
+        makeDbThread({ id: 'y', lastEditTimestamp: 2000 }),
+      ])
+
+      const reopened = renderHook(() => usePlaygroundThreads('x'), {
+        wrapper: createWrapper(queryClient),
+      })
+      await waitFor(() => expect(reopened.result.current.isLoading).toBe(false))
+      expect(reopened.result.current.threads.map((t) => t.id)).toEqual(['y'])
+    })
+
     it('removes the thread, calls IPC, and returns the next id', async () => {
       setDbThreads([
         makeDbThread({ id: 'a', lastEditTimestamp: 3000 }),

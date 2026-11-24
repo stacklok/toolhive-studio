@@ -97,6 +97,24 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
   })
 
   /**
+   * Writes the new archived state into the cached full thread. Invalidating
+   * isn't enough: nothing observes the query once the user has left that
+   * chat, so it isn't refetched, and the route loader's `ensureQueryData`
+   * returns the stale copy. `resolveUnlistedThread` would then read
+   * `archivedAt: null` and put an archived chat back in Recents.
+   */
+  const setCachedArchivedAt = useCallback(
+    (threadId: string, archivedAt: number | null) => {
+      queryClient.setQueryData(
+        chatThreadQueryOptions(threadId).queryKey,
+        (old) =>
+          old?.thread ? { ...old, thread: { ...old.thread, archivedAt } } : old
+      )
+    },
+    [queryClient]
+  )
+
+  /**
    * An id from the URL that isn't in the loaded list is either a real thread
    * outside the first page, an archived thread, or a brand-new draft. The
    * `/playground/chat/$threadId` loader has already put the thread in the
@@ -229,18 +247,10 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
     const reusable = findReusableDraftId()
     if (reusable) return reusable
 
-    const id = generateDraftThreadId()
-    const now = Date.now()
-    const draft: PlaygroundThread = {
-      id,
-      title: undefined,
-      lastEditTimestamp: now,
-      createdAt: now,
-      pending: true,
-    }
+    const draft = makePendingDraft(generateDraftThreadId())
     setThreads((prev) => [draft, ...prev])
     trackEvent('Playground: create thread')
-    return id
+    return draft.id
   }, [findReusableDraftId])
 
   /**
@@ -344,6 +354,7 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
         await refreshThread(threadId)
         return { success: false }
       }
+      setCachedArchivedAt(threadId, Date.now())
       queryClient.invalidateQueries({
         queryKey: chatThreadQueryOptions(threadId).queryKey,
       })
@@ -355,7 +366,7 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
       })
       return { success: true, nextId: remaining[0]?.id ?? null }
     },
-    [activeThreadId, queryClient, refreshThread]
+    [activeThreadId, queryClient, refreshThread, setCachedArchivedAt]
   )
 
   const unarchiveThread = useCallback(
@@ -366,6 +377,7 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
           false
         )
         if (!result.success) throw new Error(result.error)
+        setCachedArchivedAt(threadId, null)
         await refreshThread(threadId)
         // The Undo toast can outlive the route that archived the chat, so
         // also tell whichever sidebar is mounted now to pick it back up.
@@ -380,7 +392,7 @@ export function usePlaygroundThreads(activeThreadId: string | null) {
         return false
       }
     },
-    [queryClient, refreshThread]
+    [queryClient, refreshThread, setCachedArchivedAt]
   )
 
   const renameThread = useCallback(

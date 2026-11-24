@@ -131,4 +131,21 @@ describe('ArchivedThreadsPage', () => {
       screen.queryByRole('button', { name: /show more/i })
     ).not.toBeInTheDocument()
   })
+
+  it('shows an error with a retry instead of an empty list when loading fails', async () => {
+    listThreads.mockRejectedValueOnce(new Error('db locked'))
+    renderPage()
+
+    expect(
+      await screen.findByText("Couldn't load archived chats")
+    ).toBeInTheDocument()
+    expect(screen.queryByText('No archived chats')).not.toBeInTheDocument()
+
+    listThreads.mockResolvedValue({
+      threads: [makeSummary()],
+      nextCursor: null,
+    })
+    await userEvent.click(screen.getByRole('button', { name: 'Try again' }))
+    expect(await screen.findByText('Archived chat')).toBeInTheDocument()
+  })
 })

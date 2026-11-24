@@ -278,6 +278,22 @@ describe('008-thread-archived migration', () => {
     }[]
     expect(indexes.map((i) => i.name)).toContain('idx_threads_sidebar')
   })
+
+  it('serves the most-recent query without sorting', () => {
+    applyMigration008(db)
+    const plan = (
+      db
+        .prepare(
+          `EXPLAIN QUERY PLAN SELECT id FROM threads WHERE archived_at IS NULL
+           ORDER BY last_edit_timestamp DESC, id DESC LIMIT 1`
+        )
+        .all() as { detail: string }[]
+    )
+      .map((r) => r.detail)
+      .join('\n')
+    expect(plan).toContain('idx_threads_recent')
+    expect(plan).not.toContain('TEMP B-TREE')
+  })
 })
 
 describe('006-enabled-skills migration', () => {

@@ -1,6 +1,13 @@
 import type { ReactElement } from 'react'
 import { useInfiniteQuery } from '@tanstack/react-query'
-import { Archive, ArchiveRestore, Loader2, Star, Trash2 } from 'lucide-react'
+import {
+  AlertCircle,
+  Archive,
+  ArchiveRestore,
+  Loader2,
+  Star,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@/common/components/ui/button'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import { archivedThreadsQueryOptions } from '../lib/archived-threads-query'
@@ -18,8 +25,16 @@ export function ArchivedThreadsPage({
   onDeleteThread,
 }: ArchivedThreadsPageProps): ReactElement {
   const confirm = useConfirm()
-  const { data, isLoading, hasNextPage, isFetchingNextPage, fetchNextPage } =
-    useInfiniteQuery(archivedThreadsQueryOptions())
+  const {
+    data,
+    isLoading,
+    isError,
+    isRefetching,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteQuery(archivedThreadsQueryOptions())
   const threads = data?.pages.flatMap((p) => p.threads) ?? []
 
   return (
@@ -35,6 +50,32 @@ export function ArchivedThreadsPage({
       <div className="min-h-0 flex-1 overflow-auto">
         {isLoading ? (
           <div className="text-muted-foreground text-sm">Loading…</div>
+        ) : isError && threads.length === 0 ? (
+          // Without this, a failed load reads as "No archived chats".
+          <div
+            role="alert"
+            className="mx-auto flex max-w-md flex-col items-center
+              justify-center py-16 text-center"
+          >
+            <AlertCircle className="text-destructive mb-4 h-12 w-12" />
+            <h3 className="text-lg font-semibold">
+              Couldn't load archived chats
+            </h3>
+            <p className="text-muted-foreground mt-1 mb-4 text-sm">
+              Your archived chats are still saved. Try again.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => void refetch()}
+              disabled={isRefetching}
+            >
+              {isRefetching && (
+                <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+              )}
+              Try again
+            </Button>
+          </div>
         ) : threads.length === 0 ? (
           <div
             className="mx-auto flex max-w-md flex-col items-center

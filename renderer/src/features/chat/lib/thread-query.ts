@@ -26,8 +26,11 @@ export function chatThreadQueryOptions(threadId: string | null | undefined) {
       }
     },
     // Messages mutate during streaming via React Query cache invalidation
-    // from `usePlaygroundThreads`; a 0 staleTime guarantees the loader sees
-    // fresh data on revisit right after a completion signal fires.
+    // from `usePlaygroundThreads`. The route loader's `ensureQueryData` still
+    // returns whatever is cached, even if invalidated; the 0 staleTime makes
+    // the component's `useQuery` refetch on mount. State the loader must get
+    // right immediately (e.g. `archivedAt`) is written into the cache with
+    // `setQueryData` instead.
     staleTime: 0,
   })
 }
