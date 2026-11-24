@@ -1,5 +1,28 @@
 import type Database from 'better-sqlite3'
-import { extractSearchText } from '../thread-search-text'
+
+/**
+ * Frozen copy of the text extraction as of this migration: only `text`
+ * parts, joined with newlines. Deliberately not imported from app code, so
+ * every user who runs 009 gets the same backfill even if the live
+ * extraction (`thread-search-text.ts`) changes later.
+ */
+function extractTextParts(partsList: unknown[]): string {
+  const chunks: string[] = []
+  for (const parts of partsList) {
+    if (!Array.isArray(parts)) continue
+    for (const part of parts) {
+      if (
+        part &&
+        typeof part === 'object' &&
+        (part as { type?: unknown }).type === 'text' &&
+        typeof (part as { text?: unknown }).text === 'string'
+      ) {
+        chunks.push((part as { text: string }).text)
+      }
+    }
+  }
+  return chunks.join('\n')
+}
 
 export function up(db: Database.Database): void {
   db.exec(`
@@ -49,7 +72,7 @@ export function up(db: Database.Database): void {
       rowid,
       thread.id,
       thread.title ?? '',
-      extractSearchText(partsList)
+      extractTextParts(partsList)
     )
   }
 }

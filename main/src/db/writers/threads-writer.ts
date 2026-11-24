@@ -172,6 +172,13 @@ function reindexThread(
   let rowid: number | bigint
   if (existing) {
     rowid = existing.rowid
+    // Streaming snapshots often change no indexed text (tool calls,
+    // reasoning, metadata). Comparing strings is far cheaper than
+    // re-tokenizing the whole chat.
+    const indexed = db
+      .prepare('SELECT title, body FROM thread_search WHERE rowid = ?')
+      .get(rowid) as { title: string; body: string } | undefined
+    if (indexed && indexed.title === title && indexed.body === body) return
     db.prepare('DELETE FROM thread_search WHERE rowid = ?').run(rowid)
   } else {
     rowid = db

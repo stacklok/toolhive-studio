@@ -195,4 +195,38 @@ describe('SearchChatsDialog', () => {
     expect(screen.queryByText('Search hit')).not.toBeInTheDocument()
     expect(searchThreads).not.toHaveBeenCalled()
   })
+
+  it('resets the search when closed with Cmd+K / Ctrl+K', async () => {
+    searchThreads.mockResolvedValue([row({ id: 'hit', title: 'Search hit' })])
+    renderDialog()
+    await userEvent.keyboard('{Control>}k{/Control}')
+    await userEvent.type(
+      await screen.findByPlaceholderText('Search chats…'),
+      'foo'
+    )
+    await screen.findByText('Search hit')
+
+    await userEvent.keyboard('{Control>}k{/Control}')
+    await waitFor(() =>
+      expect(
+        screen.queryByPlaceholderText('Search chats…')
+      ).not.toBeInTheDocument()
+    )
+    await userEvent.keyboard('{Control>}k{/Control}')
+
+    expect(await screen.findByPlaceholderText('Search chats…')).toHaveValue('')
+    expect(await screen.findByText('Recent chat')).toBeInTheDocument()
+    expect(screen.queryByText('Search hit')).not.toBeInTheDocument()
+  })
+
+  it('keeps the hidden dialog heading out of the page while closed', async () => {
+    renderDialog()
+    expect(
+      screen.queryByRole('heading', { name: 'Search chats' })
+    ).not.toBeInTheDocument()
+    await userEvent.click(screen.getByText('open'))
+    expect(
+      await screen.findByRole('heading', { name: 'Search chats' })
+    ).toBeInTheDocument()
+  })
 })

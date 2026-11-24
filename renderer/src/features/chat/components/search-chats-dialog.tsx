@@ -113,24 +113,28 @@ export function SearchChatsDialog(): ReactElement {
     setSelectionRowsKey(rowsKey)
     setSelectedId('')
   }
+  // Reset on every close, whichever path closed it: Esc and click-outside
+  // go through onOpenChange, but ⌘K and selecting a result call setOpen
+  // directly.
+  const [wasOpen, setWasOpen] = useState(isOpen)
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen)
+    if (!isOpen) {
+      setInput('')
+      setQuery('')
+      setSelectedId('')
+    }
+  }
   const activeId = rows.some((r) => r.id === selectedId)
     ? selectedId
     : (rows[0]?.id ?? '')
-
-  const handleOpenChange = (open: boolean) => {
-    setOpen(open)
-    if (!open) {
-      setInput('')
-      setQuery('')
-    }
-  }
 
   const handleSelect = (row: SearchRow) => {
     trackEvent('Playground: select search result', {
       'search.has_query': isSearching,
       'thread.archived': row.archivedAt !== null,
     })
-    handleOpenChange(false)
+    setOpen(false)
     void navigate({
       to: '/playground/chat/$threadId',
       params: { threadId: row.id },
@@ -138,14 +142,15 @@ export function SearchChatsDialog(): ReactElement {
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogHeader className="sr-only">
-        <DialogTitle>Search chats</DialogTitle>
-        <DialogDescription>
-          Search playground chats by title or message text
-        </DialogDescription>
-      </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={setOpen}>
       <DialogContent className="overflow-hidden p-0 sm:max-w-xl">
+        {/* Inside the content so it only exists in the portal while open. */}
+        <DialogHeader className="sr-only">
+          <DialogTitle>Search chats</DialogTitle>
+          <DialogDescription>
+            Search playground chats by title or message text
+          </DialogDescription>
+        </DialogHeader>
         {/* Results are ranked by the main process — disable cmdk's own
             fuzzy filter so it doesn't hide or reorder them. */}
         <Command

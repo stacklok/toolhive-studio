@@ -448,6 +448,24 @@ describe('threads writer/reader', () => {
       expect(searchThreads('bravo')).toEqual([])
     })
 
+    it('skips the reindex when the indexed text did not change', () => {
+      // Every FTS delete+insert writes new segment rows; a skipped reindex
+      // leaves the index storage untouched.
+      const segments = () =>
+        testDb.prepare('SELECT count(*) AS n FROM thread_search_data').get()
+      writeThread(withText('t1', 'First', 'alpha'))
+      const before = segments()
+      writeThread({
+        ...withText('t1', 'First', 'alpha'),
+        lastEditTimestamp: 2000,
+      })
+      expect(segments()).toEqual(before)
+
+      writeThread(withText('t1', 'First', 'bravo'))
+      expect(segments()).not.toEqual(before)
+      expect(searchThreads('bravo')).toHaveLength(1)
+    })
+
     it('keeps one index row per thread, keyed by a stable rowid', () => {
       const indexRows = () =>
         testDb
