@@ -330,6 +330,7 @@ export type {
   GetRegistryByRegistryNameV01xDevToolhiveSkillsResponses,
   GithubComStacklokToolhivePkgAuthAwsstsConfig,
   GithubComStacklokToolhivePkgAuthAwsstsRoleMapping,
+  GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerAssertionType,
   GithubComStacklokToolhivePkgAuthserverServerTokenexchangeJwtBearerSubjectBinding,
   GithubComStacklokToolhivePkgAuthUpstreamswapConfig,
   GithubComStacklokToolhivePkgAuthzConfig,
