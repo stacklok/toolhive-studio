@@ -1,6 +1,7 @@
 import { getDb } from '../database'
 import { withDbSpan } from '../telemetry'
 import type { ChatSettingsThread } from '../../chat/threads-storage'
+import type { ThreadSummary } from '../../chat/threads/types'
 
 interface DbThread {
   id: string
@@ -90,13 +91,35 @@ export function readThread(threadId: string): ChatSettingsThread | null {
   )
 }
 
-export function readAllThreads(): ChatSettingsThread[] {
-  return withDbSpan('DB read all threads', 'db.read', {}, () => {
+interface DbThreadSummary {
+  id: string
+  title: string | null
+  starred: number
+  created_at: number
+  last_edit_timestamp: number
+}
+
+/**
+ * Reads thread metadata only — no `thread_messages` access, no JSON parsing.
+ * Ordered most-recent first.
+ */
+export function readThreadSummaries(): ThreadSummary[] {
+  return withDbSpan('DB read thread summaries', 'db.read', {}, () => {
     const db = getDb()
     const rows = db
-      .prepare('SELECT * FROM threads ORDER BY last_edit_timestamp DESC')
-      .all() as DbThread[]
-    return rows.map(hydrateThread)
+      .prepare(
+        `SELECT id, title, starred, created_at, last_edit_timestamp
+         FROM threads
+         ORDER BY last_edit_timestamp DESC, id DESC`
+      )
+      .all() as DbThreadSummary[]
+    return rows.map((row) => ({
+      id: row.id,
+      title: row.title ?? undefined,
+      starred: row.starred === 1,
+      createdAt: row.created_at,
+      lastEditTimestamp: row.last_edit_timestamp,
+    }))
   })
 }
 

@@ -25,7 +25,7 @@ vi.mock('../../db/writers/threads-writer', () => ({
 
 vi.mock('../../db/readers/threads-reader', () => ({
   readThread: mockReadThread,
-  readAllThreads: vi.fn(() => []),
+  readThreadSummaries: vi.fn(() => []),
   readActiveThreadId: vi.fn(),
   readThreadCount: vi.fn(() => 0),
   readThreadSelectedModel: vi.fn(() => null),

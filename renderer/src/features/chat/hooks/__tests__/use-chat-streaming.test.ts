@@ -63,7 +63,7 @@ const mockChatAPI = {
   saveSelectedModel: vi.fn(),
   saveSettings: vi.fn(),
   clearSettings: vi.fn(),
-  getAllThreads: vi.fn(),
+  listThreads: vi.fn(),
   setActiveThreadId: vi.fn(),
   createChatThread: vi.fn(),
   ensureThreadExists: vi.fn(),
@@ -129,7 +129,7 @@ describe('useChatStreaming', () => {
     mockChatAPI.saveSelectedModel.mockResolvedValue({ success: true })
     mockChatAPI.saveSettings.mockResolvedValue({ success: true })
     mockChatAPI.clearSettings.mockResolvedValue({ success: true })
-    mockChatAPI.getAllThreads.mockResolvedValue([])
+    mockChatAPI.listThreads.mockResolvedValue([])
     mockChatAPI.setActiveThreadId.mockResolvedValue({ success: true })
     mockChatAPI.createChatThread.mockResolvedValue({
       success: true,

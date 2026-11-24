@@ -6,6 +6,7 @@ import type {
   ChatUIMessage,
   ChatRequest,
 } from '../../../main/src/chat/types'
+import type { ThreadSummary } from '../../../main/src/chat/threads/types'
 import type {
   AgentConfig,
   CreateAgentInput,
@@ -111,7 +112,7 @@ export const chatApi = {
       ipcRenderer.invoke('chat:create-thread', title, initialMessages),
     getThread: (threadId: string) =>
       ipcRenderer.invoke('chat:get-thread', threadId),
-    getAllThreads: () => ipcRenderer.invoke('chat:get-all-threads'),
+    listThreads: () => ipcRenderer.invoke('chat:list-threads'),
     updateThread: (threadId: string, updates: unknown) =>
       ipcRenderer.invoke('chat:update-thread', threadId, updates),
     deleteThread: (threadId: string) =>
@@ -401,18 +402,7 @@ export interface ChatAPI {
       createdAt: number
       agentId?: string | null
     } | null>
-    getAllThreads: () => Promise<
-      Array<{
-        id: string
-        title?: string
-        titleEditedByUser?: boolean
-        starred?: boolean
-        messages: ChatUIMessage[]
-        lastEditTimestamp: number
-        createdAt: number
-        agentId?: string | null
-      }>
-    >
+    listThreads: () => Promise<ThreadSummary[]>
     updateThread: (
       threadId: string,
       updates: unknown

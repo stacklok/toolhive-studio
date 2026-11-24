@@ -62,7 +62,7 @@ import {
 } from '../writers/threads-writer'
 import {
   readThread,
-  readAllThreads,
+  readThreadSummaries,
   readActiveThreadId,
   readThreadCount,
 } from '../readers/threads-reader'
@@ -283,13 +283,26 @@ describe('threads writer/reader', () => {
     expect(readThread('nonexistent')).toBeNull()
   })
 
-  it('reads all threads ordered by last_edit_timestamp DESC', () => {
+  it('reads thread summaries ordered by last_edit_timestamp DESC', () => {
     writeThread({ ...sampleThread, id: 'old', lastEditTimestamp: 1000 })
     writeThread({ ...sampleThread, id: 'new', lastEditTimestamp: 3000 })
-    const threads = readAllThreads()
+    const threads = readThreadSummaries()
     expect(threads).toHaveLength(2)
     expect(threads[0]!.id).toBe('new')
     expect(threads[1]!.id).toBe('old')
+  })
+
+  it('reads thread summaries without messages', () => {
+    writeThread({ ...sampleThread, starred: true })
+    expect(readThreadSummaries()).toEqual([
+      {
+        id: 'thread-1',
+        title: 'Test Thread',
+        starred: true,
+        createdAt: 1000,
+        lastEditTimestamp: 2000,
+      },
+    ])
   })
 
   it('deletes a thread and its messages', () => {
@@ -303,7 +316,7 @@ describe('threads writer/reader', () => {
     writeThread(sampleThread)
     writeThread({ ...sampleThread, id: 'thread-2' })
     clearAllThreadsFromDb()
-    expect(readAllThreads()).toHaveLength(0)
+    expect(readThreadSummaries()).toHaveLength(0)
   })
 
   it('writes and reads active thread', () => {

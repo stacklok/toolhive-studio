@@ -11,7 +11,7 @@ import {
 import { writeThreadAgentId } from '../../db/writers/agents-writer'
 import {
   readThread,
-  readAllThreads,
+  readThreadSummaries,
   readActiveThreadId,
   readThreadCount,
   readThreadSelectedModel,
@@ -44,7 +44,8 @@ const makeThreadsRepository = Effect.sync(() => ({
   readThread: (threadId: string) =>
     wrapSync('readThread', () => readThread(threadId)),
 
-  readAllThreads: () => wrapSync('readAllThreads', () => readAllThreads()),
+  readThreadSummaries: () =>
+    wrapSync('readThreadSummaries', () => readThreadSummaries()),
 
   readActiveThreadId: () =>
     wrapSync('readActiveThreadId', () => readActiveThreadId() ?? undefined),

@@ -28,7 +28,7 @@ vi.mock('ai', () => ({
 
 vi.mock('../../db/readers/threads-reader', () => ({
   readThread: mockGetThread,
-  readAllThreads: vi.fn(() => []),
+  readThreadSummaries: vi.fn(() => []),
   readActiveThreadId: vi.fn(),
   readThreadCount: vi.fn(() => 0),
   readThreadSelectedModel: mockReadThreadSelectedModel,

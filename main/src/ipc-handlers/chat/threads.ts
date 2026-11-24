@@ -4,7 +4,7 @@ import type { UIMessage } from 'ai'
 import {
   createThread,
   getThread,
-  getAllThreads,
+  listThreads,
   updateThread,
   deleteThread,
   clearAllThreads,
@@ -40,7 +40,7 @@ export function register() {
   ipcMain.handle('chat:get-thread', (_, threadId: string) =>
     getThread(threadId)
   )
-  ipcMain.handle('chat:get-all-threads', () => getAllThreads())
+  ipcMain.handle('chat:list-threads', () => listThreads())
   ipcMain.handle(
     'chat:update-thread',
     (

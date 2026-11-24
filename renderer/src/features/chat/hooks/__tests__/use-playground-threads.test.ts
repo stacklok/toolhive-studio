@@ -13,7 +13,7 @@ vi.mock('electron-log/renderer', () => ({
 // ---------------------------------------------------------------------------
 
 const mockChatAPI = {
-  getAllThreads: vi.fn(),
+  listThreads: vi.fn(),
   setActiveThreadId: vi.fn(),
   createChatThread: vi.fn(),
   deleteThread: vi.fn(),
@@ -48,7 +48,7 @@ beforeEach(() => {
     chat: mockChatAPI as unknown as typeof window.electronAPI.chat,
     on: vi.fn().mockReturnValue(mockUnsubscribeStreamState),
   }
-  mockChatAPI.getAllThreads.mockResolvedValue([])
+  mockChatAPI.listThreads.mockResolvedValue([])
   mockChatAPI.setActiveThreadId.mockResolvedValue(undefined)
   mockChatAPI.createChatThread.mockResolvedValue({
     success: true,
@@ -70,7 +70,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('loads threads from electronAPI and sorts by lastEditTimestamp desc', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'old', lastEditTimestamp: 1000 }),
         makeDbThread({ id: 'new', lastEditTimestamp: 3000 }),
       ])
@@ -83,7 +83,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('calls setActiveThreadId with the provided activeThreadId via IPC', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'thread-from-url' }),
       ])
       renderHook(() => usePlaygroundThreads('thread-from-url'), {
@@ -97,7 +97,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('updates setActiveThreadId when activeThreadId changes', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'thread-a' }),
         makeDbThread({ id: 'thread-b' }),
       ])
@@ -118,7 +118,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('clears the active thread id when activeThreadId becomes null', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'thread-a' }),
       ])
       let activeId: string | null = 'thread-a'
@@ -141,7 +141,7 @@ describe('usePlaygroundThreads', () => {
 
     it('does not call setActiveThreadId for a pending draft id', async () => {
       // Drafts have no DB row; the IPC would reject with `Thread not found`.
-      mockChatAPI.getAllThreads.mockResolvedValue([])
+      mockChatAPI.listThreads.mockResolvedValue([])
       const { result } = renderHook(
         () => usePlaygroundThreads('thread_url_draft'),
         { wrapper: createWrapper() }
@@ -157,7 +157,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('maps starred field from DB thread', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'starred-thread', starred: true }),
       ])
       const { result } = renderHook(
@@ -171,7 +171,7 @@ describe('usePlaygroundThreads', () => {
     it('seeds the URL-driven activeThreadId as a pending draft when not in the DB', async () => {
       // Fresh-visit / deep-link case: keeps `hasThreads` true so the
       // sidebar renders and ChatInterface skips the legacy auto-create.
-      mockChatAPI.getAllThreads.mockResolvedValue([])
+      mockChatAPI.listThreads.mockResolvedValue([])
       const { result } = renderHook(
         () => usePlaygroundThreads('thread_url_draft'),
         { wrapper: createWrapper() }
@@ -186,7 +186,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('does not seed when the URL activeThreadId is already in the loaded DB threads', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'thread-1' }),
       ])
       const { result } = renderHook(() => usePlaygroundThreads('thread-1'), {
@@ -198,7 +198,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('does not seed when activeThreadId is null', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([])
+      mockChatAPI.listThreads.mockResolvedValue([])
       const { result } = renderHook(() => usePlaygroundThreads(null), {
         wrapper: createWrapper(),
       })
@@ -210,7 +210,7 @@ describe('usePlaygroundThreads', () => {
 
   describe('createThread', () => {
     it('generates a draft id locally, prepends a pending entry, and skips IPC', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'existing' }),
       ])
       const { result } = renderHook(() => usePlaygroundThreads('existing'), {
@@ -230,7 +230,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('reuses an existing empty draft instead of generating another one', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([])
+      mockChatAPI.listThreads.mockResolvedValue([])
       const { result } = renderHook(() => usePlaygroundThreads(null), {
         wrapper: createWrapper(),
       })
@@ -254,7 +254,7 @@ describe('usePlaygroundThreads', () => {
 
   describe('deleteThread', () => {
     it('removes the thread from the list', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'thread-1' }),
       ])
       const { result } = renderHook(() => usePlaygroundThreads('thread-1'), {
@@ -270,7 +270,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('returns the next thread ID when the deleted thread has a successor', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'active', lastEditTimestamp: 2000 }),
         makeDbThread({ id: 'next', lastEditTimestamp: 1000 }),
       ])
@@ -290,9 +290,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('returns a success result with null nextId when the last thread is deleted', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
-        makeDbThread({ id: 'only' }),
-      ])
+      mockChatAPI.listThreads.mockResolvedValue([makeDbThread({ id: 'only' })])
       const { result } = renderHook(() => usePlaygroundThreads('only'), {
         wrapper: createWrapper(),
       })
@@ -310,7 +308,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('returns a failure result and does not change state when deleteThread returns failure', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'thread-1' }),
       ])
       mockChatAPI.deleteThread.mockResolvedValue({
@@ -335,7 +333,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('removes a pending draft locally without calling deleteThread IPC', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([])
+      mockChatAPI.listThreads.mockResolvedValue([])
       const { result } = renderHook(() => usePlaygroundThreads(null), {
         wrapper: createWrapper(),
       })
@@ -363,7 +361,7 @@ describe('usePlaygroundThreads', () => {
 
   describe('updateThreadTitle', () => {
     it('updates title locally without calling IPC', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 't1', title: 'Old' }),
       ])
       const { result } = renderHook(() => usePlaygroundThreads('t1'), {
@@ -384,7 +382,7 @@ describe('usePlaygroundThreads', () => {
 
   describe('renameThread', () => {
     it('calls updateThread IPC with titleEditedByUser: true and refreshes', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 't1', title: 'Old' }),
       ])
       mockChatAPI.getThread.mockResolvedValue(
@@ -412,7 +410,7 @@ describe('usePlaygroundThreads', () => {
 
   describe('toggleStarThread', () => {
     it('flips starred flag optimistically and calls updateThread IPC', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 't1', starred: false }),
       ])
       const { result } = renderHook(() => usePlaygroundThreads('t1'), {
@@ -433,7 +431,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('flips back to false when already starred', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 't1', starred: true }),
       ])
       const { result } = renderHook(() => usePlaygroundThreads('t1'), {
@@ -454,7 +452,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('is a no-op for an unknown thread id', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([makeDbThread({ id: 't1' })])
+      mockChatAPI.listThreads.mockResolvedValue([makeDbThread({ id: 't1' })])
       const { result } = renderHook(() => usePlaygroundThreads('t1'), {
         wrapper: createWrapper(),
       })
@@ -470,7 +468,7 @@ describe('usePlaygroundThreads', () => {
 
   describe('refreshThread', () => {
     it('merges updated thread data into the list', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 't1', title: 'Before' }),
       ])
       mockChatAPI.getThread.mockResolvedValue(
@@ -491,7 +489,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('prepends a new thread to the list when it is not found', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([])
+      mockChatAPI.listThreads.mockResolvedValue([])
       mockChatAPI.getThread.mockResolvedValue(
         makeDbThread({ id: 'brand-new', title: 'New' })
       )
@@ -509,7 +507,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('does nothing when getThread returns null', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([makeDbThread({ id: 't1' })])
+      mockChatAPI.listThreads.mockResolvedValue([makeDbThread({ id: 't1' })])
       mockChatAPI.getThread.mockResolvedValue(null)
       const { result } = renderHook(() => usePlaygroundThreads('t1'), {
         wrapper: createWrapper(),
@@ -527,7 +525,7 @@ describe('usePlaygroundThreads', () => {
 
   describe('query cache subscription', () => {
     it('calls refreshThread when streamingComplete query is updated', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'streaming-thread' }),
       ])
       mockChatAPI.getThread.mockResolvedValue(
@@ -566,7 +564,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('calls refreshThread when chat:stream:state reports finished', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'bg-thread', title: 'Old title' }),
       ])
       mockChatAPI.getThread.mockResolvedValue(
@@ -576,7 +574,7 @@ describe('usePlaygroundThreads', () => {
       renderHook(() => usePlaygroundThreads('bg-thread'), {
         wrapper: createWrapper(),
       })
-      await waitFor(() => expect(mockChatAPI.getAllThreads).toHaveBeenCalled())
+      await waitFor(() => expect(mockChatAPI.listThreads).toHaveBeenCalled())
 
       const onCalls = vi.mocked(window.electronAPI.on).mock.calls
       const streamStateHandler = onCalls.find(
@@ -594,7 +592,7 @@ describe('usePlaygroundThreads', () => {
     })
 
     it('calls refreshThread when chat:thread:updated is broadcast', async () => {
-      mockChatAPI.getAllThreads.mockResolvedValue([
+      mockChatAPI.listThreads.mockResolvedValue([
         makeDbThread({ id: 'titled-thread', title: 'Old title' }),
       ])
       mockChatAPI.getThread.mockResolvedValue(
