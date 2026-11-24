@@ -1,9 +1,14 @@
 import { getDb } from '../database'
 import { withDbSpan } from '../telemetry'
 import type { ChatSettingsThread } from '../../chat/threads-storage'
+import {
+  SEARCH_HIGHLIGHT_END,
+  SEARCH_HIGHLIGHT_START,
+} from '@common/chat/thread-search'
 import type {
   ListThreadsOptions,
   ThreadPage,
+  ThreadSearchResult,
   ThreadSummary,
 } from '../../chat/threads/types'
 
@@ -186,6 +191,59 @@ export function readThreadSummaries(
       }
     }
   )
+}
+
+/**
+ * Turns free text into a safe FTS5 query: every whitespace-separated token
+ * becomes a quoted prefix term (`"foo"*`), ANDed together. Quoting means
+ * user input can never be parsed as FTS syntax (NEAR, column filters, `-`).
+ * Returns null when there is nothing searchable.
+ */
+export function toFtsQuery(input: string): string | null {
+  const terms = input
+    .split(/\s+/)
+    .map((token) => token.replace(/"/g, '""'))
+    .filter((token) => /[\p{L}\p{N}]/u.test(token))
+    .map((token) => `"${token}"*`)
+  return terms.length > 0 ? terms.join(' ') : null
+}
+
+const SEARCH_RESULT_LIMIT = 20
+
+/**
+ * Full-text search over thread titles and message text, archived threads
+ * included. Ranked by bm25 with titles weighted 10x over message bodies.
+ */
+export function searchThreads(query: string): ThreadSearchResult[] {
+  return withDbSpan('DB search threads', 'db.read', {}, () => {
+    const match = toFtsQuery(query)
+    if (!match) return []
+    const db = getDb()
+    const rows = db
+      .prepare(
+        `SELECT t.id, t.title, t.starred, t.created_at,
+                t.last_edit_timestamp, t.archived_at,
+                snippet(thread_search, 2, ?, ?, '…', 16) AS snippet
+         FROM thread_search
+         JOIN threads t ON t.id = thread_search.thread_id
+         WHERE thread_search MATCH ?
+         ORDER BY bm25(thread_search, 0.0, 10.0, 1.0), t.last_edit_timestamp DESC
+         LIMIT ?`
+      )
+      .all(
+        SEARCH_HIGHLIGHT_START,
+        SEARCH_HIGHLIGHT_END,
+        match,
+        SEARCH_RESULT_LIMIT
+      ) as (DbThreadSummary & { snippet: string | null })[]
+    return rows.map((row) => ({
+      ...toSummary(row),
+      // snippet() returns leading body text even when only the title hit.
+      snippet: row.snippet?.includes(SEARCH_HIGHLIGHT_START)
+        ? row.snippet
+        : null,
+    }))
+  })
 }
 
 export function readThreadSummary(threadId: string): ThreadSummary | null {

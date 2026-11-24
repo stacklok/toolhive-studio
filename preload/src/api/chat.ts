@@ -9,6 +9,7 @@ import type {
 import type {
   ListThreadsOptions,
   ThreadPage,
+  ThreadSearchResult,
   ThreadSummary,
 } from '../../../main/src/chat/threads/types'
 import type {
@@ -120,6 +121,8 @@ export const chatApi = {
       ipcRenderer.invoke('chat:list-threads', options),
     getThreadSummary: (threadId: string) =>
       ipcRenderer.invoke('chat:get-thread-summary', threadId),
+    searchThreads: (query: string) =>
+      ipcRenderer.invoke('chat:search-threads', query),
     setThreadArchived: (threadId: string, archived: boolean) =>
       ipcRenderer.invoke('chat:set-thread-archived', threadId, archived),
     updateThread: (threadId: string, updates: unknown) =>
@@ -414,6 +417,7 @@ export interface ChatAPI {
     } | null>
     listThreads: (options?: ListThreadsOptions) => Promise<ThreadPage>
     getThreadSummary: (threadId: string) => Promise<ThreadSummary | null>
+    searchThreads: (query: string) => Promise<ThreadSearchResult[]>
     setThreadArchived: (
       threadId: string,
       archived: boolean

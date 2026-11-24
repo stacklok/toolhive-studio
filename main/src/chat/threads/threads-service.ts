@@ -81,6 +81,11 @@ const makeThreadsService = Effect.gen(function* () {
           )
         ),
 
+    searchThreads: (query: string) =>
+      repo
+        .searchThreads(query)
+        .pipe(Effect.catchTag('StorageError', () => Effect.succeed([]))),
+
     getThreadSummary: (threadId: string) =>
       repo
         .readThreadSummary(threadId)

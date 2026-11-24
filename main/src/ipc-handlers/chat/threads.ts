@@ -6,6 +6,7 @@ import {
   getThread,
   listThreads,
   getThreadSummary,
+  searchThreads,
   setThreadArchived,
   type ListThreadsOptions,
   updateThread,
@@ -45,6 +46,9 @@ export function register() {
   )
   ipcMain.handle('chat:list-threads', (_, options?: ListThreadsOptions) =>
     listThreads(options)
+  )
+  ipcMain.handle('chat:search-threads', (_, query: string) =>
+    searchThreads(typeof query === 'string' ? query : '')
   )
   ipcMain.handle('chat:get-thread-summary', (_, threadId: string) =>
     getThreadSummary(threadId)

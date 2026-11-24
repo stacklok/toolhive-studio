@@ -8,6 +8,7 @@ import type {
   ListThreadsOptions,
   ThreadMessage,
   ThreadPage,
+  ThreadSearchResult,
   ThreadSummary,
 } from './threads/types'
 
@@ -41,6 +42,13 @@ export function listThreads(options?: ListThreadsOptions): ThreadPage {
   return runChatSyncOr(
     ThreadsService.use((s) => s.listThreads(options)),
     { threads: [], nextCursor: null }
+  )
+}
+
+export function searchThreads(query: string): ThreadSearchResult[] {
+  return runChatSyncOr(
+    ThreadsService.use((s) => s.searchThreads(query)),
+    []
   )
 }
 

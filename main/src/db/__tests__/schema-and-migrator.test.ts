@@ -6,6 +6,7 @@ import { up as applyMigration003 } from '../migrations/003-thread-starred'
 import { up as applyMigration006 } from '../migrations/006-enabled-skills'
 import { up as applyMigration007 } from '../migrations/007-per-thread-settings'
 import { up as applyMigration008 } from '../migrations/008-thread-archived'
+import { up as applyMigration009 } from '../migrations/009-thread-search'
 
 vi.mock('electron', () => ({
   app: { getPath: vi.fn(() => ':memory:') },
@@ -293,6 +294,65 @@ describe('008-thread-archived migration', () => {
       .join('\n')
     expect(plan).toContain('idx_threads_recent')
     expect(plan).not.toContain('TEMP B-TREE')
+  })
+})
+
+describe('009-thread-search migration', () => {
+  let db: Database.Database
+
+  beforeEach(() => {
+    db = new Database(':memory:')
+    db.pragma('foreign_keys = ON')
+    applyInitialSchema(db)
+  })
+
+  afterEach(() => {
+    db.close()
+  })
+
+  it('backfills the index from existing text parts only', () => {
+    db.prepare(
+      "INSERT INTO threads (id, title, created_at, last_edit_timestamp) VALUES ('t1', 'Deploy notes', 1000, 2000)"
+    ).run()
+    const insert = db.prepare(
+      'INSERT INTO thread_messages (id, thread_id, role, parts, metadata, position) VALUES (?, ?, ?, ?, ?, ?)'
+    )
+    insert.run(
+      'm1',
+      't1',
+      'user',
+      JSON.stringify([{ type: 'text', text: 'rollback the canary' }]),
+      '{}',
+      0
+    )
+    insert.run(
+      'm2',
+      't1',
+      'assistant',
+      JSON.stringify([{ type: 'tool-x', output: 'secretoutput' }]),
+      '{}',
+      1
+    )
+    insert.run('m3', 't1', 'assistant', 'not json', '{}', 2)
+
+    applyMigration009(db)
+
+    const match = (q: string) =>
+      db
+        .prepare(
+          'SELECT thread_id FROM thread_search WHERE thread_search MATCH ?'
+        )
+        .all(q)
+    expect(match('canary')).toEqual([{ thread_id: 't1' }])
+    expect(match('deploy')).toEqual([{ thread_id: 't1' }])
+    expect(match('secretoutput')).toEqual([])
+    expect(
+      db
+        .prepare(
+          'SELECT i.thread_id FROM thread_search_ids i JOIN thread_search s ON s.rowid = i.rowid'
+        )
+        .all()
+    ).toEqual([{ thread_id: 't1' }])
   })
 })
 
