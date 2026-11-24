@@ -14,11 +14,12 @@ interface ContainerEngineStatus {
 
 const tryCommand = async (command: string): Promise<boolean> => {
   try {
-    await execAsync(command)
+    await execAsync(command, { windowsHide: true })
     return true
   } catch {
     try {
       await execAsync(command, {
+        windowsHide: true,
         env: { ...process.env, PATH: createEnhancedPath() },
       })
       return true
