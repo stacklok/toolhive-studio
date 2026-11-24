@@ -346,6 +346,13 @@ describe('009-thread-search migration', () => {
     expect(match('canary')).toEqual([{ thread_id: 't1' }])
     expect(match('deploy')).toEqual([{ thread_id: 't1' }])
     expect(match('secretoutput')).toEqual([])
+    expect(
+      db
+        .prepare(
+          'SELECT i.thread_id FROM thread_search_ids i JOIN thread_search s ON s.rowid = i.rowid'
+        )
+        .all()
+    ).toEqual([{ thread_id: 't1' }])
   })
 })
 

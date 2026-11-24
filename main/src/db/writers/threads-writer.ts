@@ -1,3 +1,4 @@
+import type Database from 'better-sqlite3'
 import { getDb, isDbWritable } from '../database'
 import { withDbSpan } from '../telemetry'
 import {
@@ -143,12 +144,8 @@ export function writeThread(thread: ChatSettingsThread): void {
         }
 
         // Keep the search index in the same transaction as the messages.
-        db.prepare('DELETE FROM thread_search WHERE thread_id = ?').run(
-          thread.id
-        )
-        db.prepare(
-          'INSERT INTO thread_search (thread_id, title, body) VALUES (?, ?, ?)'
-        ).run(
+        reindexThread(
+          db,
           thread.id,
           thread.title ?? '',
           extractSearchText(thread.messages.map((m) => m.parts))
@@ -156,6 +153,41 @@ export function writeThread(thread: ChatSettingsThread): void {
       })()
     }
   )
+}
+
+/**
+ * Replaces a thread's search row. Goes through `thread_search_ids` so the
+ * delete is a rowid lookup: FTS5 can't index `thread_id`, and filtering on
+ * it scans the whole index on every streaming snapshot.
+ */
+function reindexThread(
+  db: Database.Database,
+  threadId: string,
+  title: string,
+  body: string
+): void {
+  const existing = db
+    .prepare('SELECT rowid FROM thread_search_ids WHERE thread_id = ?')
+    .get(threadId) as { rowid: number } | undefined
+  let rowid: number | bigint
+  if (existing) {
+    rowid = existing.rowid
+    db.prepare('DELETE FROM thread_search WHERE rowid = ?').run(rowid)
+  } else {
+    rowid = db
+      .prepare('INSERT INTO thread_search_ids (thread_id) VALUES (?)')
+      .run(threadId).lastInsertRowid
+  }
+  db.prepare(
+    'INSERT INTO thread_search (rowid, thread_id, title, body) VALUES (?, ?, ?, ?)'
+  ).run(rowid, threadId, title, body)
+}
+
+function unindexThread(db: Database.Database, threadId: string): void {
+  db.prepare(
+    'DELETE FROM thread_search WHERE rowid = (SELECT rowid FROM thread_search_ids WHERE thread_id = ?)'
+  ).run(threadId)
+  db.prepare('DELETE FROM thread_search_ids WHERE thread_id = ?').run(threadId)
 }
 
 export function deleteThreadFromDb(threadId: string): void {
@@ -167,9 +199,7 @@ export function deleteThreadFromDb(threadId: string): void {
     () => {
       const db = getDb()
       db.transaction(() => {
-        db.prepare('DELETE FROM thread_search WHERE thread_id = ?').run(
-          threadId
-        )
+        unindexThread(db, threadId)
         db.prepare('DELETE FROM threads WHERE id = ?').run(threadId)
       })()
     }
@@ -207,6 +237,7 @@ export function clearAllThreadsFromDb(): void {
     db.transaction(() => {
       db.prepare('DELETE FROM thread_messages').run()
       db.prepare('DELETE FROM thread_search').run()
+      db.prepare('DELETE FROM thread_search_ids').run()
       db.prepare('DELETE FROM threads').run()
       db.prepare('DELETE FROM active_thread').run()
     })()

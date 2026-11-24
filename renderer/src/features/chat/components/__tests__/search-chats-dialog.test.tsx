@@ -146,4 +146,53 @@ describe('SearchChatsDialog', () => {
       params: { threadId: 'first' },
     })
   })
+
+  it('opens the new top result when the same chats come back reordered', async () => {
+    searchThreads.mockImplementation(async (q: string) =>
+      q === 'ab'
+        ? [row({ id: 'b', title: 'Chat B' }), row({ id: 'a', title: 'Chat A' })]
+        : [row({ id: 'a', title: 'Chat A' }), row({ id: 'b', title: 'Chat B' })]
+    )
+    renderDialog()
+    await userEvent.click(screen.getByText('open'))
+    const input = await screen.findByPlaceholderText('Search chats…')
+    await userEvent.type(input, 'a')
+    await screen.findByText('Chat A')
+    await waitFor(() => expect(searchThreads).toHaveBeenLastCalledWith('a'))
+    // Move the selection, so the user has picked something in this list.
+    await userEvent.keyboard('{ArrowDown}')
+
+    await userEvent.type(input, 'b')
+    await waitFor(() => expect(searchThreads).toHaveBeenLastCalledWith('ab'))
+    await waitFor(() =>
+      expect(screen.getByText('Chat B').closest('[cmdk-item]')).toHaveAttribute(
+        'aria-selected',
+        'true'
+      )
+    )
+    await userEvent.keyboard('{Enter}')
+
+    expect(mockNavigate).toHaveBeenLastCalledWith({
+      to: '/playground/chat/$threadId',
+      params: { threadId: 'b' },
+    })
+  })
+
+  it('reopens on recent chats after closing mid-debounce', async () => {
+    searchThreads.mockResolvedValue([row({ id: 'hit', title: 'Search hit' })])
+    renderDialog()
+    await userEvent.click(screen.getByText('open'))
+    await userEvent.type(
+      await screen.findByPlaceholderText('Search chats…'),
+      'hit'
+    )
+    // Close before the 150 ms debounce fires.
+    await userEvent.keyboard('{Escape}')
+    await new Promise((resolve) => setTimeout(resolve, 250))
+
+    await userEvent.click(screen.getByText('open'))
+    expect(await screen.findByText('Recent chat')).toBeInTheDocument()
+    expect(screen.queryByText('Search hit')).not.toBeInTheDocument()
+    expect(searchThreads).not.toHaveBeenCalled()
+  })
 })

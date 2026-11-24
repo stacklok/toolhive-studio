@@ -448,6 +448,29 @@ describe('threads writer/reader', () => {
       expect(searchThreads('bravo')).toEqual([])
     })
 
+    it('keeps one index row per thread, keyed by a stable rowid', () => {
+      const indexRows = () =>
+        testDb
+          .prepare(
+            `SELECT i.thread_id, i.rowid AS idRowid, s.rowid AS ftsRowid
+             FROM thread_search_ids i JOIN thread_search s ON s.rowid = i.rowid`
+          )
+          .all() as { thread_id: string; idRowid: number; ftsRowid: number }[]
+      writeThread(withText('t1', 'First', 'alpha'))
+      writeThread(withText('t2', 'Second', 'charlie'))
+      const before = indexRows()
+      writeThread(withText('t1', 'First', 'bravo'))
+      expect(indexRows()).toEqual(before)
+      expect(
+        testDb.prepare('SELECT count(*) AS n FROM thread_search').get()
+      ).toEqual({ n: 2 })
+
+      deleteThreadFromDb('t1')
+      expect(indexRows()).toEqual([before.find((r) => r.thread_id === 't2')])
+      clearAllThreadsFromDb()
+      expect(indexRows()).toEqual([])
+    })
+
     it('treats FTS syntax in user input as plain text', () => {
       writeThread(withText('t1', 'Chat', 'plain text'))
       expect(() => searchThreads('title: OR AND "')).not.toThrow()

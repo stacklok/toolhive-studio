@@ -11,6 +11,14 @@ export function up(db: Database.Database): void {
       body,
       tokenize = 'unicode61 remove_diacritics 2'
     );
+
+    -- Keyed lookup from thread id to its FTS rowid. FTS5 can't index
+    -- thread_id for equality, so without this every reindex (several per
+    -- second while a reply streams) would scan the whole index.
+    CREATE TABLE thread_search_ids (
+      rowid INTEGER PRIMARY KEY,
+      thread_id TEXT NOT NULL UNIQUE
+    );
   `)
 
   // Backfill from existing history.
@@ -21,8 +29,11 @@ export function up(db: Database.Database): void {
   const selectParts = db.prepare(
     'SELECT parts FROM thread_messages WHERE thread_id = ? ORDER BY position'
   )
+  const insertId = db.prepare(
+    'INSERT INTO thread_search_ids (thread_id) VALUES (?)'
+  )
   const insert = db.prepare(
-    'INSERT INTO thread_search (thread_id, title, body) VALUES (?, ?, ?)'
+    'INSERT INTO thread_search (rowid, thread_id, title, body) VALUES (?, ?, ?, ?)'
   )
   for (const thread of threads) {
     const rows = selectParts.all(thread.id) as { parts: string }[]
@@ -33,6 +44,12 @@ export function up(db: Database.Database): void {
         return null
       }
     })
-    insert.run(thread.id, thread.title ?? '', extractSearchText(partsList))
+    const rowid = insertId.run(thread.id).lastInsertRowid
+    insert.run(
+      rowid,
+      thread.id,
+      thread.title ?? '',
+      extractSearchText(partsList)
+    )
   }
 }

@@ -71,10 +71,12 @@ export function SearchChatsDialog(): ReactElement {
   const navigate = useNavigate()
   const [input, setInput] = useState('')
   const [query, setQuery] = useState('')
-  const updateQuery = useDebouncedCallback(
-    (value: string) => setQuery(value.trim()),
-    DEBOUNCE_MS
-  )
+  const updateQuery = useDebouncedCallback((value: string) => {
+    // The dialog stays mounted, so a keystroke debounced just before closing
+    // can fire after the reset. Drop it unless it still matches the input.
+    if (!isOpen || value !== input) return
+    setQuery(value.trim())
+  }, DEBOUNCE_MS)
 
   const isSearching = query.length > 0
 
@@ -100,6 +102,17 @@ export function SearchChatsDialog(): ReactElement {
   // make Enter a no-op after typing. Keep the selection controlled and fall
   // back to the top result.
   const [selectedId, setSelectedId] = useState('')
+  // A new result set (new query, or the same ids in a new order) starts
+  // again from the top; arrow-key choices only survive a refetch that
+  // returns the same list.
+  const rowsKey = `${isSearching ? `q:${query}` : 'recent'}|${rows
+    .map((r) => r.id)
+    .join(',')}`
+  const [selectionRowsKey, setSelectionRowsKey] = useState(rowsKey)
+  if (selectionRowsKey !== rowsKey) {
+    setSelectionRowsKey(rowsKey)
+    setSelectedId('')
+  }
   const activeId = rows.some((r) => r.id === selectedId)
     ? selectedId
     : (rows[0]?.id ?? '')
