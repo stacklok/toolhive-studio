@@ -25,7 +25,11 @@ import {
 import type { PathConfigStatus } from './types'
 import log from '../logger'
 
-const execAsync = promisify(exec)
+const execAsyncRaw = promisify(exec)
+
+// Hide the console window that would otherwise flash on Windows for each call
+const execAsync = (command: string) =>
+  execAsyncRaw(command, { windowsHide: true })
 
 const escapeRegex = (str: string): string =>
   str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')

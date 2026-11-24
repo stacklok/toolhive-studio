@@ -28,6 +28,7 @@ const getCliVersion = async (cliPath: string): Promise<string | null> => {
   try {
     const { stdout } = await execFileAsync(cliPath, ['version'], {
       timeout: 5000,
+      windowsHide: true,
     })
     return parseVersionOutput(stdout)
   } catch {
