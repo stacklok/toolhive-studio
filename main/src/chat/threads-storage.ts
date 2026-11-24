@@ -5,11 +5,18 @@ import { runChatSyncOr, runChatToResultSync } from './runtime'
 import { ThreadsService } from './threads/threads-service'
 import type {
   ChatSettingsThread,
+  ListThreadsOptions,
   ThreadMessage,
+  ThreadPage,
   ThreadSummary,
 } from './threads/types'
 
-export type { ChatSettingsThread, ThreadSummary } from './threads/types'
+export type {
+  ChatSettingsThread,
+  ListThreadsOptions,
+  ThreadPage,
+  ThreadSummary,
+} from './threads/types'
 
 export function createThread(
   title?: string,
@@ -30,10 +37,28 @@ export function getThread(threadId: string): ChatSettingsThread | null {
   )
 }
 
-export function listThreads(): ThreadSummary[] {
+export function listThreads(options?: ListThreadsOptions): ThreadPage {
   return runChatSyncOr(
-    ThreadsService.use((s) => s.listThreads()),
-    []
+    ThreadsService.use((s) => s.listThreads(options)),
+    { threads: [], nextCursor: null }
+  )
+}
+
+export function getThreadSummary(threadId: string): ThreadSummary | null {
+  return runChatSyncOr(
+    ThreadsService.use((s) => s.getThreadSummary(threadId)),
+    null
+  )
+}
+
+export function setThreadArchived(
+  threadId: string,
+  archived: boolean
+): { success: boolean; error?: string } {
+  return runChatToResultSync(
+    ThreadsService.use((s) => s.setThreadArchived(threadId, archived)).pipe(
+      Effect.as({})
+    )
   )
 }
 

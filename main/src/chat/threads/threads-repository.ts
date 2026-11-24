@@ -7,11 +7,13 @@ import {
   writeThreadSelectedModel,
   writeThreadEnabledMcpTools,
   writeThreadEnabledSkills,
+  writeThreadArchived,
 } from '../../db/writers/threads-writer'
 import { writeThreadAgentId } from '../../db/writers/agents-writer'
 import {
   readThread,
   readThreadSummaries,
+  readThreadSummary,
   readActiveThreadId,
   readThreadCount,
   readThreadSelectedModel,
@@ -20,7 +22,11 @@ import {
 } from '../../db/readers/threads-reader'
 import { readThreadAgentId } from '../../db/readers/agents-reader'
 import { StorageError, ThreadNotFoundError } from '../runtime/errors'
-import type { ChatSettingsThread, ThreadMessage } from './types'
+import type {
+  ChatSettingsThread,
+  ListThreadsOptions,
+  ThreadMessage,
+} from './types'
 
 function wrapSync<A>(
   operation: string,
@@ -44,8 +50,16 @@ const makeThreadsRepository = Effect.sync(() => ({
   readThread: (threadId: string) =>
     wrapSync('readThread', () => readThread(threadId)),
 
-  readThreadSummaries: () =>
-    wrapSync('readThreadSummaries', () => readThreadSummaries()),
+  readThreadSummaries: (options?: ListThreadsOptions) =>
+    wrapSync('readThreadSummaries', () => readThreadSummaries(options)),
+
+  readThreadSummary: (threadId: string) =>
+    wrapSync('readThreadSummary', () => readThreadSummary(threadId)),
+
+  writeThreadArchived: (threadId: string, archivedAt: number | null) =>
+    wrapSync('writeThreadArchived', () =>
+      writeThreadArchived(threadId, archivedAt)
+    ),
 
   readActiveThreadId: () =>
     wrapSync('readActiveThreadId', () => readActiveThreadId() ?? undefined),

@@ -3,21 +3,16 @@ import log from 'electron-log/renderer'
 import { generateDraftThreadId } from '@/features/chat/lib/thread-id'
 
 async function resolveInitialThreadId(): Promise<string | null> {
-  const [summaries, activeId] = await Promise.all([
-    window.electronAPI.chat.listThreads(),
-    window.electronAPI.chat.getActiveThreadId(),
-  ])
+  const activeId = await window.electronAPI.chat.getActiveThreadId()
+  if (activeId) {
+    // Archived threads are never reopened automatically.
+    const active = await window.electronAPI.chat.getThreadSummary(activeId)
+    if (active && !active.archivedAt) return active.id
+  }
 
-  const sorted = [...summaries].sort(
-    (a, b) => b.lastEditTimestamp - a.lastEditTimestamp
-  )
-
-  const activeThread = activeId
-    ? sorted.find((t) => t.id === activeId)
-    : undefined
-
-  const target = activeThread ?? sorted[0]
-  if (target) return target.id
+  // Most recent unarchived thread, starred or not.
+  const { threads } = await window.electronAPI.chat.listThreads({ limit: 1 })
+  if (threads[0]) return threads[0].id
 
   // No persisted threads — generate a draft id locally instead of
   // writing an empty row to the DB. The thread is promoted to a real

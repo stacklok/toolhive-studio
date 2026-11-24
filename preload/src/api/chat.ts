@@ -6,7 +6,11 @@ import type {
   ChatUIMessage,
   ChatRequest,
 } from '../../../main/src/chat/types'
-import type { ThreadSummary } from '../../../main/src/chat/threads/types'
+import type {
+  ListThreadsOptions,
+  ThreadPage,
+  ThreadSummary,
+} from '../../../main/src/chat/threads/types'
 import type {
   AgentConfig,
   CreateAgentInput,
@@ -112,7 +116,12 @@ export const chatApi = {
       ipcRenderer.invoke('chat:create-thread', title, initialMessages),
     getThread: (threadId: string) =>
       ipcRenderer.invoke('chat:get-thread', threadId),
-    listThreads: () => ipcRenderer.invoke('chat:list-threads'),
+    listThreads: (options?: ListThreadsOptions) =>
+      ipcRenderer.invoke('chat:list-threads', options),
+    getThreadSummary: (threadId: string) =>
+      ipcRenderer.invoke('chat:get-thread-summary', threadId),
+    setThreadArchived: (threadId: string, archived: boolean) =>
+      ipcRenderer.invoke('chat:set-thread-archived', threadId, archived),
     updateThread: (threadId: string, updates: unknown) =>
       ipcRenderer.invoke('chat:update-thread', threadId, updates),
     deleteThread: (threadId: string) =>
@@ -397,12 +406,18 @@ export interface ChatAPI {
       title?: string
       titleEditedByUser?: boolean
       starred?: boolean
+      archivedAt?: number | null
       messages: ChatUIMessage[]
       lastEditTimestamp: number
       createdAt: number
       agentId?: string | null
     } | null>
-    listThreads: () => Promise<ThreadSummary[]>
+    listThreads: (options?: ListThreadsOptions) => Promise<ThreadPage>
+    getThreadSummary: (threadId: string) => Promise<ThreadSummary | null>
+    setThreadArchived: (
+      threadId: string,
+      archived: boolean
+    ) => Promise<{ success: boolean; error?: string }>
     updateThread: (
       threadId: string,
       updates: unknown

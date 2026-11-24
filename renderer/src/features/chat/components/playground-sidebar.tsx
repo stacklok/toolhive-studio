@@ -6,6 +6,7 @@ import {
   useEffect,
 } from 'react'
 import {
+  Archive,
   Bot,
   Loader2,
   MoreHorizontal,
@@ -27,6 +28,7 @@ import {
 import { cn } from '@/common/lib/utils'
 import { useConfirm } from '@/common/hooks/use-confirm'
 import type { PlaygroundThread } from '../hooks/use-playground-threads'
+import { formatRelativeTime } from '../lib/format-relative-time'
 
 interface PlaygroundSidebarProps {
   threads: PlaygroundThread[]
@@ -39,23 +41,11 @@ interface PlaygroundSidebarProps {
   onDeleteThread: (threadId: string) => void
   onRenameThread: (threadId: string, title: string) => void
   onToggleStar: (threadId: string) => void
-}
-
-function formatRelativeTime(timestamp: number): string {
-  const now = Date.now()
-  const diff = now - timestamp
-  const minutes = Math.floor(diff / 60_000)
-  const hours = Math.floor(diff / 3_600_000)
-  const days = Math.floor(diff / 86_400_000)
-
-  if (minutes < 1) return 'just now'
-  if (minutes < 60) return `${minutes}m ago`
-  if (hours < 24) return `${hours}h ago`
-  if (days < 7) return `${days}d ago`
-  return new Date(timestamp).toLocaleDateString(undefined, {
-    month: 'short',
-    day: 'numeric',
-  })
+  onArchiveThread: (threadId: string) => void
+  /** More Recents exist beyond the loaded pages. */
+  hasMoreThreads?: boolean
+  isLoadingMore?: boolean
+  onLoadMoreThreads?: () => void
 }
 
 function ThreadItem({
@@ -66,6 +56,7 @@ function ThreadItem({
   onDelete,
   onRename,
   onToggleStar,
+  onArchive,
 }: {
   thread: PlaygroundThread
   isActive: boolean
@@ -74,6 +65,7 @@ function ThreadItem({
   onDelete: () => void
   onRename: (title: string) => void
   onToggleStar: () => void
+  onArchive: () => void
 }): ReactElement {
   const [isRenaming, setIsRenaming] = useState(false)
   const [draftTitle, setDraftTitle] = useState('')
@@ -229,6 +221,18 @@ function ThreadItem({
                 <Pencil className="mr-2 h-3.5 w-3.5" />
                 Rename
               </DropdownMenuItem>
+              {/* Drafts have no DB row yet, so there's nothing to archive. */}
+              {!thread.pending && (
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onArchive()
+                  }}
+                >
+                  <Archive className="mr-2 h-3.5 w-3.5" />
+                  Archive
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 onClick={async (e) => {
@@ -278,12 +282,17 @@ export function PlaygroundSidebar({
   onDeleteThread,
   onRenameThread,
   onToggleStar,
+  onArchiveThread,
+  hasMoreThreads = false,
+  isLoadingMore = false,
+  onLoadMoreThreads,
 }: PlaygroundSidebarProps): ReactElement {
   const starredThreads = threads.filter((t) => t.starred)
   const recentThreads = threads.filter((t) => !t.starred)
   const hasStarred = starredThreads.length > 0
   const pathname = useRouterState({ select: (s) => s.location.pathname })
   const isAgentsActive = pathname.startsWith('/playground/agents')
+  const isArchivedActive = pathname.startsWith('/playground/archived')
 
   const renderItem = (thread: PlaygroundThread) => (
     <ThreadItem
@@ -295,6 +304,7 @@ export function PlaygroundSidebar({
       onDelete={() => onDeleteThread(thread.id)}
       onRename={(title) => onRenameThread(thread.id, title)}
       onToggleStar={() => onToggleStar(thread.id)}
+      onArchive={() => onArchiveThread(thread.id)}
     />
   )
 
@@ -321,6 +331,22 @@ export function PlaygroundSidebar({
           </Link>
         </Button>
         <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className={cn(
+            'w-full justify-start gap-2 px-2',
+            isArchivedActive
+              ? 'bg-accent text-accent-foreground'
+              : 'text-muted-foreground'
+          )}
+        >
+          <Link to="/playground/archived" aria-label="Archived">
+            <Archive className="h-4 w-4 shrink-0" />
+            Archived
+          </Link>
+        </Button>
+        <Button
           variant="ghost"
           size="sm"
           onClick={onCreateThread}
@@ -342,6 +368,21 @@ export function PlaygroundSidebar({
             </>
           )}
           {recentThreads.map(renderItem)}
+          {hasMoreThreads && onLoadMoreThreads && (
+            <li className="pt-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onLoadMoreThreads}
+                disabled={isLoadingMore}
+                className="text-muted-foreground w-full justify-start gap-2 px-2
+                  text-xs"
+              >
+                {isLoadingMore && <Loader2 className="h-3 w-3 animate-spin" />}
+                Show more
+              </Button>
+            </li>
+          )}
         </ul>
       </nav>
     </aside>

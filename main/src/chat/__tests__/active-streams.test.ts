@@ -21,11 +21,13 @@ vi.mock('../../db/writers/threads-writer', () => ({
   writeThreadSelectedModel: vi.fn(),
   writeThreadEnabledMcpTools: vi.fn(),
   writeThreadEnabledSkills: vi.fn(),
+  writeThreadArchived: vi.fn(() => true),
 }))
 
 vi.mock('../../db/readers/threads-reader', () => ({
   readThread: mockReadThread,
-  readThreadSummaries: vi.fn(() => []),
+  readThreadSummaries: vi.fn(() => ({ threads: [], nextCursor: null })),
+  readThreadSummary: vi.fn(() => null),
   readActiveThreadId: vi.fn(),
   readThreadCount: vi.fn(() => 0),
   readThreadSelectedModel: vi.fn(() => null),

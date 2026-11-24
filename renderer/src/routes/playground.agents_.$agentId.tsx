@@ -5,6 +5,7 @@ import { AgentDetailPage } from '@/features/agents/components/agent-detail-page'
 import { PlaygroundSidebar } from '@/features/chat/components/playground-sidebar'
 import { useAgent } from '@/features/agents/hooks/use-agents'
 import { usePlaygroundThreads } from '@/features/chat/hooks/use-playground-threads'
+import { useArchiveThreadHandler } from '@/features/chat/hooks/use-archive-thread-handler'
 import { useStreamingThreads } from '@/features/chat/hooks/use-streaming-threads'
 import { clearThreadDraft } from '@/features/chat/hooks/use-thread-draft'
 
@@ -24,8 +25,18 @@ function PlaygroundAgentDetail() {
     deleteThread,
     renameThread,
     toggleStarThread,
+    archiveThread,
+    unarchiveThread,
+    hasMoreThreads,
+    isLoadingMore,
+    loadMoreThreads,
   } = usePlaygroundThreads(null)
   const streamingThreadIds = useStreamingThreads()
+  const handleArchiveThread = useArchiveThreadHandler({
+    archiveThread,
+    unarchiveThread,
+    activeThreadId: null,
+  })
 
   useEffect(() => {
     if (isFetched && !agent) {
@@ -75,6 +86,10 @@ function PlaygroundAgentDetail() {
           onDeleteThread={(id) => void handleDeleteThread(id)}
           onRenameThread={renameThread}
           onToggleStar={toggleStarThread}
+          onArchiveThread={(id) => void handleArchiveThread(id)}
+          hasMoreThreads={hasMoreThreads}
+          isLoadingMore={isLoadingMore}
+          onLoadMoreThreads={() => void loadMoreThreads()}
         />
       )}
       <div className="flex min-w-0 flex-1 flex-col overflow-y-auto">

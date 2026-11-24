@@ -64,7 +64,8 @@ vi.mock('../../db/readers/chat-settings-reader', () => ({
 vi.mock('../../db/readers/threads-reader', () => ({
   readThreadEnabledMcpTools: mockReadThreadEnabledMcpTools,
   readThread: vi.fn(),
-  readThreadSummaries: vi.fn(() => []),
+  readThreadSummaries: vi.fn(() => ({ threads: [], nextCursor: null })),
+  readThreadSummary: vi.fn(() => null),
   readActiveThreadId: vi.fn(),
   readThreadCount: vi.fn(() => 0),
   readThreadSelectedModel: vi.fn(() => null),

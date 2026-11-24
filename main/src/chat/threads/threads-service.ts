@@ -4,7 +4,13 @@ import {
   ThreadNotFoundError,
 } from '../runtime/errors'
 import { ThreadsRepository } from './threads-repository'
-import type { ChatSettingsThread, ThreadMessage, ThreadUpdates } from './types'
+import type {
+  ChatSettingsThread,
+  ListThreadsOptions,
+  ThreadMessage,
+  ThreadPage,
+  ThreadUpdates,
+} from './types'
 
 function generateThreadId(): string {
   return `thread_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
@@ -66,10 +72,42 @@ const makeThreadsService = Effect.gen(function* () {
         .readThread(threadId)
         .pipe(Effect.catchTag('StorageError', () => Effect.succeed(null))),
 
-    listThreads: () =>
+    listThreads: (options?: ListThreadsOptions) =>
       repo
-        .readThreadSummaries()
-        .pipe(Effect.catchTag('StorageError', () => Effect.succeed([]))),
+        .readThreadSummaries(options)
+        .pipe(
+          Effect.catchTag('StorageError', () =>
+            Effect.succeed<ThreadPage>({ threads: [], nextCursor: null })
+          )
+        ),
+
+    getThreadSummary: (threadId: string) =>
+      repo
+        .readThreadSummary(threadId)
+        .pipe(Effect.catchTag('StorageError', () => Effect.succeed(null))),
+
+    setThreadArchived: (threadId: string, archived: boolean) =>
+      Effect.gen(function* () {
+        const updated = yield* repo.writeThreadArchived(
+          threadId,
+          archived ? Date.now() : null
+        )
+        if (!updated) {
+          return yield* Effect.fail(
+            new ThreadNotFoundError({
+              threadId,
+              userMessage: 'Thread not found',
+            })
+          )
+        }
+        // Don't reopen an archived thread on the next launch.
+        if (archived) {
+          const activeThreadId = yield* repo.readActiveThreadId()
+          if (activeThreadId === threadId) {
+            yield* repo.writeActiveThread(undefined)
+          }
+        }
+      }),
 
     updateThread: (threadId: string, updates: ThreadUpdates) =>
       Effect.gen(function* () {

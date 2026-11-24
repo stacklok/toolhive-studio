@@ -59,10 +59,12 @@ import {
   deleteThreadFromDb,
   clearAllThreadsFromDb,
   writeActiveThread,
+  writeThreadArchived,
 } from '../writers/threads-writer'
 import {
   readThread,
   readThreadSummaries,
+  readThreadSummary,
   readActiveThreadId,
   readThreadCount,
 } from '../readers/threads-reader'
@@ -286,23 +288,88 @@ describe('threads writer/reader', () => {
   it('reads thread summaries ordered by last_edit_timestamp DESC', () => {
     writeThread({ ...sampleThread, id: 'old', lastEditTimestamp: 1000 })
     writeThread({ ...sampleThread, id: 'new', lastEditTimestamp: 3000 })
-    const threads = readThreadSummaries()
-    expect(threads).toHaveLength(2)
-    expect(threads[0]!.id).toBe('new')
-    expect(threads[1]!.id).toBe('old')
+    const { threads, nextCursor } = readThreadSummaries()
+    expect(threads.map((t) => t.id)).toEqual(['new', 'old'])
+    expect(nextCursor).toBeNull()
   })
 
   it('reads thread summaries without messages', () => {
     writeThread({ ...sampleThread, starred: true })
-    expect(readThreadSummaries()).toEqual([
+    expect(readThreadSummaries().threads).toEqual([
       {
         id: 'thread-1',
         title: 'Test Thread',
         starred: true,
         createdAt: 1000,
         lastEditTimestamp: 2000,
+        archivedAt: null,
       },
     ])
+    expect(readThreadSummary('thread-1')?.title).toBe('Test Thread')
+    expect(readThreadSummary('missing')).toBeNull()
+  })
+
+  it('pages summaries with a keyset cursor, breaking timestamp ties by id', () => {
+    for (const [id, ts] of [
+      ['a', 1000],
+      ['b', 2000],
+      ['c', 2000],
+      ['d', 3000],
+      ['e', 4000],
+    ] as const) {
+      writeThread({ ...sampleThread, id, lastEditTimestamp: ts })
+    }
+
+    const first = readThreadSummaries({ limit: 2 })
+    expect(first.threads.map((t) => t.id)).toEqual(['e', 'd'])
+    expect(first.nextCursor).toEqual({ ts: 3000, id: 'd' })
+
+    const second = readThreadSummaries({ limit: 2, cursor: first.nextCursor })
+    expect(second.threads.map((t) => t.id)).toEqual(['c', 'b'])
+
+    const third = readThreadSummaries({ limit: 2, cursor: second.nextCursor })
+    expect(third.threads.map((t) => t.id)).toEqual(['a'])
+    expect(third.nextCursor).toBeNull()
+  })
+
+  it('filters summaries by starred', () => {
+    writeThread({ ...sampleThread, id: 'fav', starred: true })
+    writeThread({ ...sampleThread, id: 'plain' })
+    expect(
+      readThreadSummaries({ starred: true }).threads.map((t) => t.id)
+    ).toEqual(['fav'])
+    expect(
+      readThreadSummaries({ starred: false }).threads.map((t) => t.id)
+    ).toEqual(['plain'])
+  })
+
+  it('separates archived threads and orders them by archived_at', () => {
+    writeThread({ ...sampleThread, id: 'live', lastEditTimestamp: 1000 })
+    writeThread({ ...sampleThread, id: 'arch-old', lastEditTimestamp: 9000 })
+    writeThread({ ...sampleThread, id: 'arch-new', lastEditTimestamp: 1 })
+    writeThreadArchived('arch-old', 100)
+    writeThreadArchived('arch-new', 200)
+
+    expect(readThreadSummaries().threads.map((t) => t.id)).toEqual(['live'])
+    const archived = readThreadSummaries({ archived: true, limit: 1 })
+    expect(archived.threads.map((t) => t.id)).toEqual(['arch-new'])
+    expect(archived.nextCursor).toEqual({ ts: 200, id: 'arch-new' })
+  })
+
+  it('archives without touching last_edit_timestamp and survives rewrites', () => {
+    writeThread(sampleThread)
+    expect(writeThreadArchived('thread-1', 5000)).toBe(true)
+    expect(writeThreadArchived('missing', 5000)).toBe(false)
+
+    // A message-only rewrite (no archivedAt on the input) must not unarchive.
+    writeThread({ ...sampleThread, lastEditTimestamp: 6000 })
+    const thread = readThread('thread-1')
+    expect(thread!.archivedAt).toBe(5000)
+
+    writeThreadArchived('thread-1', null)
+    const summary = readThreadSummary('thread-1')
+    expect(summary!.archivedAt).toBeNull()
+    expect(summary!.lastEditTimestamp).toBe(6000)
   })
 
   it('deletes a thread and its messages', () => {
@@ -316,7 +383,7 @@ describe('threads writer/reader', () => {
     writeThread(sampleThread)
     writeThread({ ...sampleThread, id: 'thread-2' })
     clearAllThreadsFromDb()
-    expect(readThreadSummaries()).toHaveLength(0)
+    expect(readThreadSummaries().threads).toHaveLength(0)
   })
 
   it('writes and reads active thread', () => {

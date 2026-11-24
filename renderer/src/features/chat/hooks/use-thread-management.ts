@@ -33,15 +33,12 @@ export function useThreadManagement(externalThreadId?: string | null) {
         setAutoIsLoading(true)
         setError(null)
 
-        const allThreads = await window.electronAPI.chat.listThreads()
+        const { threads: recent } = await window.electronAPI.chat.listThreads({
+          limit: 1,
+        })
+        const mostRecentThread = recent[0]
 
-        if (allThreads && allThreads.length > 0) {
-          const mostRecentThread = allThreads.reduce((latest, current) => {
-            return current.lastEditTimestamp > latest.lastEditTimestamp
-              ? current
-              : latest
-          })
-
+        if (mostRecentThread) {
           setAutoThreadId(mostRecentThread.id)
           window.electronAPI.chat.setActiveThreadId(mostRecentThread.id)
         } else {

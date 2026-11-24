@@ -1,9 +1,12 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import { ChatInterface } from '@/features/chat/components/chat-interface'
 import { PlaygroundSidebar } from '@/features/chat/components/playground-sidebar'
 import { usePlaygroundThreads } from '@/features/chat/hooks/use-playground-threads'
 import { useStreamingThreads } from '@/features/chat/hooks/use-streaming-threads'
 import { clearThreadDraft } from '@/features/chat/hooks/use-thread-draft'
+import { useArchiveThreadHandler } from '@/features/chat/hooks/use-archive-thread-handler'
 import { chatThreadQueryOptions } from '@/features/chat/lib/thread-query'
 
 function ChatLoadingDots() {
@@ -39,18 +42,34 @@ function PlaygroundChat() {
     threads,
     isLoading,
     hasThreads,
+    hasMoreThreads,
+    isLoadingMore,
+    loadMoreThreads,
     createThread,
     deleteThread,
+    archiveThread,
+    unarchiveThread,
     renameThread,
     toggleStarThread,
   } = usePlaygroundThreads(threadId)
   const streamingThreadIds = useStreamingThreads()
+  const handleArchiveThread = useArchiveThreadHandler({
+    archiveThread,
+    unarchiveThread,
+    activeThreadId: threadId,
+  })
+  // Primed by the route loader. Archived threads aren't in the sidebar list,
+  // so their title/star/archived state comes from here.
+  const { data: threadData } = useQuery(chatThreadQueryOptions(threadId))
+  const persistedThread = threadData?.thread ?? null
+  const isArchived = !!persistedThread?.archivedAt
 
   if (isLoading) {
     return <ChatLoadingDots />
   }
 
   const activeThread = threads.find((t) => t.id === threadId)
+  const showThread = hasThreads || isArchived
 
   const handleSelectThread = (id: string) => {
     void navigate({
@@ -89,7 +108,7 @@ function PlaygroundChat() {
 
   return (
     <div className="absolute inset-0 flex">
-      {hasThreads && (
+      {showThread && (
         <PlaygroundSidebar
           threads={threads}
           activeThreadId={threadId}
@@ -99,21 +118,45 @@ function PlaygroundChat() {
           onDeleteThread={(id) => void handleDeleteThread(id)}
           onRenameThread={renameThread}
           onToggleStar={toggleStarThread}
+          onArchiveThread={(id) => void handleArchiveThread(id)}
+          hasMoreThreads={hasMoreThreads}
+          isLoadingMore={isLoadingMore}
+          onLoadMoreThreads={() => void loadMoreThreads()}
         />
       )}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <ChatInterface
-          threadId={hasThreads ? threadId : undefined}
-          threadTitle={activeThread?.title}
-          threadStarred={activeThread?.starred}
+          // Always the URL id: passing undefined (e.g. for a frame after the
+          // last chat is archived or deleted) switches ChatInterface to its
+          // legacy auto-select path, which creates an empty "Chat" row.
+          threadId={threadId}
+          threadTitle={activeThread?.title ?? persistedThread?.title}
+          threadStarred={activeThread?.starred ?? persistedThread?.starred}
+          threadArchived={isArchived}
+          // Title and star stay frozen while archived: the sidebar doesn't
+          // list the chat, so changes there would have nowhere to show.
           onRenameThread={
-            hasThreads ? (title) => renameThread(threadId, title) : undefined
+            hasThreads && !isArchived
+              ? (title) => renameThread(threadId, title)
+              : undefined
           }
           onToggleStar={
-            hasThreads ? () => toggleStarThread(threadId) : undefined
+            hasThreads && !isArchived
+              ? () => toggleStarThread(threadId)
+              : undefined
           }
           onDeleteThread={
-            hasThreads ? () => void handleDeleteThread(threadId) : undefined
+            showThread ? () => void handleDeleteThread(threadId) : undefined
+          }
+          onArchiveThread={
+            activeThread && !activeThread.pending
+              ? () => void handleArchiveThread(threadId)
+              : undefined
+          }
+          onUnarchiveThread={() =>
+            void unarchiveThread(threadId).then((ok) => {
+              if (!ok) toast.error('Failed to unarchive chat')
+            })
           }
         />
       </div>

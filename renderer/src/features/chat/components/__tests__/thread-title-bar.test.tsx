@@ -252,4 +252,23 @@ describe('ThreadTitleBar', () => {
       expect(message).toContain('New chat')
     })
   })
+
+  describe('archive', () => {
+    it('does not render the archive button when onArchive is not provided', () => {
+      renderBar()
+      expect(
+        screen.queryByRole('button', { name: /archive thread/i })
+      ).not.toBeInTheDocument()
+    })
+
+    it('calls onArchive without asking for confirmation', async () => {
+      const onArchive = vi.fn()
+      renderBar({ onArchive })
+      await userEvent.click(
+        screen.getByRole('button', { name: /archive thread/i })
+      )
+      expect(onArchive).toHaveBeenCalledTimes(1)
+      expect(mockConfirm).not.toHaveBeenCalled()
+    })
+  })
 })
