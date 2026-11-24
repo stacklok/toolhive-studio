@@ -14,7 +14,7 @@ jobs:
   bug-fix:
     name: Bug Fix Agent
     if: >-
-      github.event.label.name == 'auto-fix'
+      github.event.label.name == 'agent-fix'
       && contains(github.event.issue.labels.*.name, 'Bug')
     uses: ./.github/workflows/_bug-fix-agent.yml
     with:
