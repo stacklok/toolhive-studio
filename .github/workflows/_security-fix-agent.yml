@@ -7,33 +7,29 @@ concurrency:
   group: security-fix-agent
   cancel-in-progress: true
 
+# The work is split in two jobs on separate runners:
+# - `remediate` runs the agents, `pnpm install` and tests. Code from
+#   dependencies runs there, so it gets no write credentials at all.
+# - `publish` runs on a fresh runner, takes only the allowed files from the
+#   artifact, and is the only job that mints the GitHub App token.
 jobs:
   remediate:
     name: Auto-Remediate Vulnerabilities
     runs-on: ubuntu-latest
     timeout-minutes: 45
     permissions:
-      contents: write
-      pull-requests: write
-      issues: write
-      id-token: write
+      contents: read
+      pull-requests: read
+    outputs:
+      has_changes: ${{ steps.changes.outputs.has_changes }}
+      fingerprint: ${{ steps.fingerprint.outputs.hash }}
     env:
       ANTHROPIC_BASE_URL: ${{ vars.ANTHROPIC_BASE_URL }}
     steps:
-      - name: Generate GitHub App token
-        id: app-token
-        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
-        with:
-          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
-          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
-
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ github.event.repository.default_branch }}
-          token: ${{ steps.app-token.outputs.token }}
-          # Do not leave the App token on disk: the agent steps below can run
-          # arbitrary code (pnpm install, tests) and must not be able to read it.
           persist-credentials: false
 
       - name: Compute dependency fingerprint
@@ -45,7 +41,7 @@ jobs:
       - name: Check for existing remediation PR
         id: existing
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           BRANCH="security/auto-remediate-vulns"
           BASE="${{ github.event.repository.default_branch }}"
@@ -75,6 +71,9 @@ jobs:
         uses: anthropics/claude-code-action@acfe7992852970efb4fee683d63d628e3e52df67 # v1.0.286
         with:
           anthropic_api_key: ${{ secrets.STACKLOK_GATEWAY_KEY_SECURITY_FIX }}
+          # Read-only token: without it the action exchanges OIDC for a
+          # Claude GitHub App token with write access.
+          github_token: ${{ github.token }}
           prompt: |
             Read .claude/skills/security-vuln-remediation/SKILL.md and follow it.
             Run grype and pnpm audit to identify all current vulnerabilities.
@@ -94,6 +93,7 @@ jobs:
         uses: anthropics/claude-code-action@acfe7992852970efb4fee683d63d628e3e52df67 # v1.0.286
         with:
           anthropic_api_key: ${{ secrets.STACKLOK_GATEWAY_KEY_SECURITY_FIX }}
+          github_token: ${{ github.token }}
           prompt: |
             Read .claude/skills/security-vuln-remediation/SKILL.md and remediation-plan.md.
             Implement every fix described in the remediation plan:
@@ -121,54 +121,154 @@ jobs:
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
 
-      - name: Create branch and commit
-        if: steps.existing.outputs.skip != 'true' && steps.changes.outputs.has_changes == 'true'
-        id: push
+      - name: Collect remediation files
+        if: steps.changes.outputs.has_changes == 'true'
+        env:
+          OUT_DIR: ${{ runner.temp }}/security-remediation
+        run: |
+          set -euo pipefail
+          mkdir -p "$OUT_DIR"
+          for FILE in package.json pnpm-workspace.yaml pnpm-lock.yaml .grype.yaml; do
+            if [ -L "$FILE" ] || [ ! -f "$FILE" ]; then
+              echo "::error::$FILE is missing or not a regular file"
+              exit 1
+            fi
+          done
+          cp package.json pnpm-workspace.yaml pnpm-lock.yaml "$OUT_DIR/"
+          # Renamed so upload-artifact does not skip it as a hidden file.
+          cp .grype.yaml "$OUT_DIR/grype.yaml"
+          for FILE in remediation-title.txt pr-body.md remediation-plan.md; do
+            if [ -f "$FILE" ] && [ ! -L "$FILE" ]; then
+              cp "$FILE" "$OUT_DIR/"
+            fi
+          done
+
+      - name: Upload remediation files
+        if: steps.changes.outputs.has_changes == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: security-remediation
+          path: ${{ runner.temp }}/security-remediation/
+          retention-days: 1
+          if-no-files-found: error
+
+  publish:
+    name: Publish Remediation PR
+    needs: remediate
+    if: needs.remediate.outputs.has_changes == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    env:
+      BRANCH: security/auto-remediate-vulns
+      BASE: ${{ github.event.repository.default_branch }}
+      # Disable git hooks for every git command in this job.
+      GIT_CONFIG_COUNT: '1'
+      GIT_CONFIG_KEY_0: core.hooksPath
+      GIT_CONFIG_VALUE_0: /dev/null
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+
+      - name: Download remediation files
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: security-remediation
+          path: ${{ runner.temp }}/security-remediation
+
+      # Only these four files are taken from the remediate job. Nothing from
+      # the repository or the artifact is executed in this job.
+      - name: Apply remediation files
+        id: apply
+        run: |
+          set -euo pipefail
+          for PAIR in package.json:package.json pnpm-workspace.yaml:pnpm-workspace.yaml \
+            pnpm-lock.yaml:pnpm-lock.yaml grype.yaml:.grype.yaml; do
+            SRC="$RUNNER_TEMP/security-remediation/${PAIR%%:*}"
+            DEST="${PAIR#*:}"
+            if [ -L "$SRC" ] || [ ! -f "$SRC" ]; then
+              echo "::error::${PAIR%%:*} is missing or not a regular file in the artifact"
+              exit 1
+            fi
+            cp "$SRC" "$DEST"
+          done
+
+          if git diff --quiet -- package.json pnpm-workspace.yaml pnpm-lock.yaml .grype.yaml; then
+            echo "::notice::No changes to publish"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+
+          DEFAULT_TITLE="fix(security): auto-remediate vulnerabilities"
+          TITLE=""
+          if [ -f "$RUNNER_TEMP/security-remediation/remediation-title.txt" ]; then
+            TITLE=$(head -n 1 "$RUNNER_TEMP/security-remediation/remediation-title.txt" | tr -d '\r' | cut -c1-200)
+          fi
+          printf '%s' "${TITLE:-$DEFAULT_TITLE}" > "$RUNNER_TEMP/pr-title.txt"
+
+          if [ -f "$RUNNER_TEMP/security-remediation/pr-body.md" ]; then
+            BODY_FILE="$RUNNER_TEMP/security-remediation/pr-body.md"
+          elif [ -f "$RUNNER_TEMP/security-remediation/remediation-plan.md" ]; then
+            BODY_FILE="$RUNNER_TEMP/security-remediation/remediation-plan.md"
+          else
+            BODY_FILE=""
+          fi
+          {
+            if [ -n "$BODY_FILE" ]; then
+              head -c 60000 "$BODY_FILE"
+            else
+              echo "Automated security vulnerability remediation."
+            fi
+            printf '\n\n<!-- fingerprint:%s -->\n' "${{ needs.remediate.outputs.fingerprint }}"
+          } > "$RUNNER_TEMP/pr-body.md"
+
+      - name: Generate GitHub App token
+        if: steps.apply.outputs.has_changes == 'true'
+        id: app-token
+        uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3
+        with:
+          app-id: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_ID }}
+          private-key: ${{ secrets.TOOLHIVE_STUDIO_CI_APP_KEY }}
+
+      - name: Create branch and push
+        if: steps.apply.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          # Disable git hooks for every git command in this step: the agent
-          # could have left hooks in .husky/ or .git/hooks.
-          GIT_CONFIG_COUNT: '1'
-          GIT_CONFIG_KEY_0: core.hooksPath
-          GIT_CONFIG_VALUE_0: /dev/null
         run: |
-          BRANCH="security/auto-remediate-vulns"
+          set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -B "$BRANCH"
-          TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
           git add package.json pnpm-workspace.yaml pnpm-lock.yaml .grype.yaml
-          git diff --cached --quiet && exit 0
-          git commit -m "$TITLE"
-          AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')
-          echo "::add-mask::$AUTH"
-          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $AUTH" \
+          git commit -F "$RUNNER_TEMP/pr-title.txt"
+          # --config-env keeps the credential out of git's process arguments.
+          GIT_AUTH_HEADER="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')"
+          echo "::add-mask::$GIT_AUTH_HEADER"
+          export GIT_AUTH_HEADER
+          git --config-env=http.https://github.com/.extraheader=GIT_AUTH_HEADER \
             push --force -u origin "$BRANCH"
-          echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
       - name: Create or update Pull Request
-        if: steps.existing.outputs.skip != 'true' && steps.changes.outputs.has_changes == 'true'
+        if: steps.apply.outputs.has_changes == 'true'
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          BRANCH="${{ steps.push.outputs.branch }}"
-          BASE="${{ github.event.repository.default_branch }}"
-          TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
-          BODY=$(cat pr-body.md 2>/dev/null || cat remediation-plan.md 2>/dev/null || echo "Automated security vulnerability remediation.")
-          FOOTER="<!-- fingerprint:${{ steps.fingerprint.outputs.hash }} -->"
-          BODY="${BODY}
-
-          ${FOOTER}"
-
+          set -euo pipefail
+          TITLE=$(cat "$RUNNER_TEMP/pr-title.txt")
           EXISTING_PR=$(gh pr list --head "$BRANCH" --base "$BASE" --state open --json number --jq '.[0].number // empty')
 
           if [ -n "$EXISTING_PR" ]; then
-            gh pr edit "$EXISTING_PR" --title "$TITLE" --body "$BODY"
+            gh pr edit "$EXISTING_PR" --title "$TITLE" --body-file "$RUNNER_TEMP/pr-body.md"
           else
             gh label create security --description "Security vulnerability remediation" --color D93F0B 2>/dev/null || true
             gh pr create \
               --title "$TITLE" \
-              --body "$BODY" \
+              --body-file "$RUNNER_TEMP/pr-body.md" \
               --base "$BASE" \
               --head "$BRANCH" \
               --label "security"
