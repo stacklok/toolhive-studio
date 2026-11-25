@@ -12,6 +12,9 @@ concurrency:
 #   dependencies runs there, so it gets no write credentials at all.
 # - `publish` runs on a fresh runner, takes only the allowed files from the
 #   artifact, and is the only job that mints the GitHub App token.
+# Both jobs check out `github.sha`, so the PR branch is based on the same
+# commit the agent worked on. Outputs of `remediate` are untrusted and are
+# never interpolated into shell scripts in `publish`.
 jobs:
   remediate:
     name: Auto-Remediate Vulnerabilities
@@ -22,14 +25,13 @@ jobs:
       pull-requests: read
     outputs:
       has_changes: ${{ steps.changes.outputs.has_changes }}
-      fingerprint: ${{ steps.fingerprint.outputs.hash }}
     env:
       ANTHROPIC_BASE_URL: ${{ vars.ANTHROPIC_BASE_URL }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Compute dependency fingerprint
@@ -168,10 +170,12 @@ jobs:
       GIT_CONFIG_KEY_0: core.hooksPath
       GIT_CONFIG_VALUE_0: /dev/null
     steps:
+      # Same commit as `remediate`: copying whole files onto a newer default
+      # branch would silently revert changes merged in between.
       - name: Checkout Repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ github.event.repository.default_branch }}
+          ref: ${{ github.sha }}
           persist-credentials: false
 
       - name: Download remediation files
@@ -186,6 +190,10 @@ jobs:
         id: apply
         run: |
           set -euo pipefail
+          # Fingerprint of the base files, computed here instead of trusting
+          # an output of the remediate job.
+          FINGERPRINT=$(sha256sum package.json pnpm-workspace.yaml pnpm-lock.yaml .grype.yaml 2>/dev/null | sha256sum | cut -d' ' -f1)
+
           for PAIR in package.json:package.json pnpm-workspace.yaml:pnpm-workspace.yaml \
             pnpm-lock.yaml:pnpm-lock.yaml grype.yaml:.grype.yaml; do
             SRC="$RUNNER_TEMP/security-remediation/${PAIR%%:*}"
@@ -224,7 +232,7 @@ jobs:
             else
               echo "Automated security vulnerability remediation."
             fi
-            printf '\n\n<!-- fingerprint:%s -->\n' "${{ needs.remediate.outputs.fingerprint }}"
+            printf '\n\n<!-- fingerprint:%s -->\n' "$FINGERPRINT"
           } > "$RUNNER_TEMP/pr-body.md"
 
       - name: Generate GitHub App token
