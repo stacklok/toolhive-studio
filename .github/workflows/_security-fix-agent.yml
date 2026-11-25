@@ -126,6 +126,11 @@ jobs:
         id: push
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          # Disable git hooks for every git command in this step: the agent
+          # could have left hooks in .husky/ or .git/hooks.
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: core.hooksPath
+          GIT_CONFIG_VALUE_0: /dev/null
         run: |
           BRANCH="security/auto-remediate-vulns"
           git config user.name "github-actions[bot]"
@@ -134,12 +139,10 @@ jobs:
           TITLE=$(cat remediation-title.txt 2>/dev/null || echo "fix(security): auto-remediate vulnerabilities")
           git add package.json pnpm-workspace.yaml pnpm-lock.yaml .grype.yaml
           git diff --cached --quiet && exit 0
-          # Disable hooks: the agent could have edited .husky/ or .git/hooks.
-          git -c core.hooksPath=/dev/null commit -m "$TITLE"
+          git commit -m "$TITLE"
           AUTH=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 | tr -d '\n')
           echo "::add-mask::$AUTH"
-          git -c core.hooksPath=/dev/null \
-            -c http.https://github.com/.extraheader="AUTHORIZATION: basic $AUTH" \
+          git -c http.https://github.com/.extraheader="AUTHORIZATION: basic $AUTH" \
             push --force -u origin "$BRANCH"
           echo "branch=$BRANCH" >> $GITHUB_OUTPUT
 
