@@ -871,8 +871,8 @@ export type AuthserverRunConfig = {
    * When true, the embedded auth server handles OAuth flows for clients, but instead of
    * injecting upstream IdP tokens the proxy strips the client's credential headers
    * (Authorization, Cookie, Proxy-Authorization) after the JWT is validated — the
-   * backend receives an unauthenticated request. Incompatible with token exchange
-   * and AWS STS, which would re-add credentials after the strip.
+   * backend receives an unauthenticated request. Incompatible with token exchange,
+   * AWS STS and OBO, which would re-add credentials after the strip.
    */
   disable_upstream_token_injection?: boolean
   /**
@@ -1258,6 +1258,75 @@ export type AuthserverUserInfoRunConfig = {
   http_method?: string
 }
 
+/**
+ * AWSStsConfig contains AWS STS token exchange configuration for accessing AWS services
+ */
+export type AwsstsConfig = {
+  /**
+   * FallbackRoleArn is the IAM role ARN to assume when no role mapping matches.
+   */
+  fallback_role_arn?: string
+  /**
+   * Region is the AWS region for STS and SigV4 signing.
+   */
+  region?: string
+  /**
+   * RoleClaim is the JWT claim to use for role mapping (default: "groups").
+   */
+  role_claim?: string
+  /**
+   * RoleMappings maps JWT claim values to IAM roles with priority.
+   */
+  role_mappings?: Array<AwsstsRoleMapping>
+  /**
+   * Service is the AWS service name for SigV4 signing (default: "aws-mcp").
+   */
+  service?: string
+  /**
+   * SessionDuration is the duration in seconds for assumed role credentials (default: 3600).
+   */
+  session_duration?: number
+  /**
+   * SessionNameClaim is the JWT claim to use for role session name (default: "sub").
+   */
+  session_name_claim?: string
+  /**
+   * SubjectProviderName identifies which upstream provider's access token to use
+   * for STS AssumeRoleWithWebIdentity. Used by vMCP only. When empty, the bearer
+   * token from the incoming HTTP request is used.
+   */
+  subject_provider_name?: string
+}
+
+export type AwsstsRoleMapping = {
+  /**
+   * Claim is the simple claim value to match (e.g., group name).
+   * Internally compiles to a CEL expression: "<claim_value>" in claims["<role_claim>"]
+   * Mutually exclusive with Matcher.
+   */
+  claim?: string
+  /**
+   * Matcher is a CEL expression for complex matching against JWT claims.
+   * The expression has access to a "claims" variable containing all JWT claims.
+   * Examples:
+   * - "admins" in claims["groups"]
+   * - claims["sub"] == "user123" && !("act" in claims)
+   * Mutually exclusive with Claim.
+   */
+  matcher?: string
+  /**
+   * Priority determines selection order (lower number = higher priority).
+   * When multiple mappings match, the one with the lowest priority is selected.
+   * When nil (omitted), the mapping has the lowest possible priority, and
+   * configuration order acts as tie-breaker via stable sort.
+   */
+  priority?: number
+  /**
+   * RoleArn is the IAM role ARN to assume when this mapping matches.
+   */
+  role_arn?: string
+}
+
 export type CoreWorkload = {
   /**
    * CreatedAt is the timestamp when the workload was created.
@@ -1333,75 +1402,6 @@ export type CoreWorkload = {
    * URL is the URL of the workload exposed by the ToolHive proxy.
    */
   url?: string
-}
-
-/**
- * AWSStsConfig contains AWS STS token exchange configuration for accessing AWS services
- */
-export type GithubComStacklokToolhivePkgAuthAwsstsConfig = {
-  /**
-   * FallbackRoleArn is the IAM role ARN to assume when no role mapping matches.
-   */
-  fallback_role_arn?: string
-  /**
-   * Region is the AWS region for STS and SigV4 signing.
-   */
-  region?: string
-  /**
-   * RoleClaim is the JWT claim to use for role mapping (default: "groups").
-   */
-  role_claim?: string
-  /**
-   * RoleMappings maps JWT claim values to IAM roles with priority.
-   */
-  role_mappings?: Array<GithubComStacklokToolhivePkgAuthAwsstsRoleMapping>
-  /**
-   * Service is the AWS service name for SigV4 signing (default: "aws-mcp").
-   */
-  service?: string
-  /**
-   * SessionDuration is the duration in seconds for assumed role credentials (default: 3600).
-   */
-  session_duration?: number
-  /**
-   * SessionNameClaim is the JWT claim to use for role session name (default: "sub").
-   */
-  session_name_claim?: string
-  /**
-   * SubjectProviderName identifies which upstream provider's access token to use
-   * for STS AssumeRoleWithWebIdentity. Used by vMCP only. When empty, the bearer
-   * token from the incoming HTTP request is used.
-   */
-  subject_provider_name?: string
-}
-
-export type GithubComStacklokToolhivePkgAuthAwsstsRoleMapping = {
-  /**
-   * Claim is the simple claim value to match (e.g., group name).
-   * Internally compiles to a CEL expression: "<claim_value>" in claims["<role_claim>"]
-   * Mutually exclusive with Matcher.
-   */
-  claim?: string
-  /**
-   * Matcher is a CEL expression for complex matching against JWT claims.
-   * The expression has access to a "claims" variable containing all JWT claims.
-   * Examples:
-   * - "admins" in claims["groups"]
-   * - claims["sub"] == "user123" && !("act" in claims)
-   * Mutually exclusive with Claim.
-   */
-  matcher?: string
-  /**
-   * Priority determines selection order (lower number = higher priority).
-   * When multiple mappings match, the one with the lowest priority is selected.
-   * When nil (omitted), the mapping has the lowest possible priority, and
-   * configuration order acts as tie-breaker via stable sort.
-   */
-  priority?: number
-  /**
-   * RoleArn is the IAM role ARN to assume when this mapping matches.
-   */
-  role_arn?: string
 }
 
 /**
@@ -1935,7 +1935,7 @@ export type GithubComStacklokToolhivePkgRunnerRunConfig = {
    * AuthzConfigPath is the path to the authorization configuration file
    */
   authz_config_path?: string
-  aws_sts_config?: GithubComStacklokToolhivePkgAuthAwsstsConfig
+  aws_sts_config?: AwsstsConfig
   /**
    * BaseName is the base name used for the container (without prefixes)
    */
