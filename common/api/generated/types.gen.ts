@@ -202,7 +202,10 @@ export type AuthserverDcrUpstreamConfig = {
    * token_endpoint_auth_methods_supported, and scopes_supported from the
    * response. Per RFC 8414 §3.3, the document's "issuer" field must
    * exactly match the upstream issuer configured on the parent
-   * run-config.
+   * run-config, except that an origin-only issuer may differ by a
+   * trailing "/" (for example https://idp.example.com and
+   * https://idp.example.com/ are treated as equal). Scheme, host, port
+   * and any path must still match exactly.
    *
    * Use this field when the upstream publishes discovery metadata at a
    * path that differs from the issuer-derived well-known paths — for
@@ -368,6 +371,15 @@ export type AuthserverDelegateClientIdjagTarget = {
 }
 
 export type AuthserverDelegateClientRunConfig = {
+  /**
+   * AccessTokenLifespan is the lifetime of the access tokens this client
+   * obtains by redeeming an ID-JAG, as a Go duration string. If omitted, the
+   * server's access_token_lifespan applies. When set it must be at least 2s
+   * and at most 24h. It is an upper bound: a token never outlives the
+   * assertion it was redeemed from, and a token that carries the
+   * delegated-access marker is capped further. Other grants ignore it.
+   */
+  access_token_lifespan?: string
   /**
    * Audiences are output only: the upper bound on the audiences of the
    * access tokens this client can obtain through any grant. They must be a
