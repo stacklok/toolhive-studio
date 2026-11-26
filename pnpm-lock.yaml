@@ -512,7 +512,7 @@ importers:
         specifier: ^0.6.4
         version: 0.6.4
       knip:
-        specifier: ^6.47.0
+        specifier: ^6.48.0
         version: 6.48.0
       lint-staged:
         specifier: ^17.6.1
